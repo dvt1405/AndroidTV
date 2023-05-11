@@ -25,5 +25,11 @@ data class ExtensionsConfig(
                 "https://raw.githubusercontent.com/phuhdtv/vietngatv/master/vietngatv.m3u"
             )
         }
+        val test2 by lazy {
+            ExtensionsConfig(
+                "Test K+",
+                "https://s.id/nhamng"
+            )
+        }
     }
 }

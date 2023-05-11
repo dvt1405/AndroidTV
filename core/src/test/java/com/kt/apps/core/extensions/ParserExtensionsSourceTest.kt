@@ -12,8 +12,8 @@ import org.junit.Test
 
 
 class ParserExtensionsSourceTest {
-
-    private val url = "http://m3u.at/SamsungTV"
+    private val testUrl2 = "http://m3u.at/SamsungTV"
+    private val testUrl1 = "https://s.id/nhamng"
     private lateinit var parserExtensionsSource: ParserExtensionsSource
     private lateinit var okHttpClient: OkHttpClient
     private lateinit var storage: IKeyValueStorage
@@ -25,7 +25,7 @@ class ParserExtensionsSourceTest {
         RxJavaPlugins.setIoSchedulerHandler { Schedulers.trampoline() }
         config = ExtensionsConfig(
             "IP TV",
-            url
+            testUrl1
         )
         storage = KeyValueStorageForTesting()
         okHttpClient = OkHttpClient.Builder()

@@ -17,7 +17,8 @@ val listShortLink by lazy {
         "ow.ly",
         "tinyurl.com",
         "tiny.cc",
-        "bit.do"
+        "bit.do",
+        "cocc.me"
     )
 }
 fun String.formatDateTime(

@@ -78,8 +78,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private var mPlaybackInfoLiveView: TextView? = null
     private var mBrowseDummyView: FrameLayout? = null
     protected var onItemClickedListener: OnItemViewClickedListener? = null
-    private val mChildLaidOutListener = OnChildLaidOutListener { _, _, position, _ ->
-        Logger.d(this@BasePlaybackFragment, message = "childLaidOutPosition: $position")
+    private val mChildLaidOutListener = OnChildLaidOutListener { _, _, _, _ ->
     }
     private val mGlueHost by lazy {
         BasePlaybackSupportFragmentGlueHost(this@BasePlaybackFragment)

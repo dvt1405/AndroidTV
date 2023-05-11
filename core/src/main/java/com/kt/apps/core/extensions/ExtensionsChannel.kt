@@ -20,7 +20,8 @@ data class ExtensionsChannel(
     val isHls: Boolean,
     val catchupSource: String = "",
     val userAgent: String = "",
-    val referer: String = ""
+    val referer: String = "",
+    val props: Map<String, String> = mapOf()
 ) : Parcelable {
     override fun toString(): String {
         return Gson().toJson(this)
