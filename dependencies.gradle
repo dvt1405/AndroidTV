@@ -97,6 +97,7 @@ ext {
             ui          : 'com.google.android.exoplayer:exoplayer-ui:2.18.1',
             hls         : 'com.google.android.exoplayer:exoplayer-hls:2.18.1',
             ima         : 'com.google.android.exoplayer:extension-ima:2.18.1',
+            dash        : 'com.google.android.exoplayer:exoplayer-dash:2.18.1',
             mediaSession: 'com.google.android.exoplayer:extension-mediasession:2.18.1'
     ]
 
