@@ -173,7 +173,8 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
                         referer = tvChannel.referer,
                         linkStream = listOf(realUrl),
                         true,
-                        isHls = realUrl.contains("m3u8")
+                        isHls = realUrl.contains("m3u8"),
+                        headers = tvChannel.props
                     )
                 }, {
                     playVideo(
@@ -182,7 +183,8 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
                         referer = tvChannel.referer,
                         linkStream = listOf(linkToPlay),
                         true,
-                        isHls = linkToPlay.contains("m3u8")
+                        isHls = linkToPlay.contains("m3u8"),
+                        headers = tvChannel.props
                     )
                 })
             disposable.add(lastExpandUrlTask!!)
@@ -194,7 +196,8 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
                 referer = tvChannel.referer,
                 linkStream = listOf(linkToPlay),
                 true,
-                isHls = linkToPlay.contains("m3u8")
+                isHls = linkToPlay.contains("m3u8"),
+                headers = tvChannel.props
             )
         }
 

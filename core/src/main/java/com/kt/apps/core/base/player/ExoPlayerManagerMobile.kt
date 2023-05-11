@@ -21,9 +21,10 @@ class ExoPlayerManagerMobile @Inject constructor(
     override fun playVideo(
         data: List<LinkStream>,
         isHls: Boolean,
-        playerListener: Player.Listener?
+        playerListener: Player.Listener?,
+        headers: Map<String, String>?
     ) {
-        super.playVideo(data, isHls, playerListener)
+        super.playVideo(data, isHls, playerListener, headers)
         mExoPlayer?.play()
     }
 

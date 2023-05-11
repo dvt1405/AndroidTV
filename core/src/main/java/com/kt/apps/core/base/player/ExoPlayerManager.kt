@@ -24,11 +24,6 @@ class ExoPlayerManager @Inject constructor(
             _playerAdapter = LeanbackPlayerAdapter(_application, mExoPlayer!!, 5)
         }
     }
-
-    override fun playVideo(data: List<LinkStream>, isHls: Boolean, playerListener: Player.Listener?) {
-        super.playVideo(data, isHls, playerListener)
-    }
-
     override fun onAudioLossFocus() {
         super.onAudioFocus()
         _playerAdapter?.pause()

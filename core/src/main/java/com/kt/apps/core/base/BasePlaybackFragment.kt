@@ -307,11 +307,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         referer: String,
         linkStream: List<String>,
         isLive: Boolean,
-        isHls: Boolean
+        isHls: Boolean,
+        headers: Map<String, String> = mapOf()
     ) {
         playVideo(title, subTitle, linkStream.map {
             LinkStream(it, referer, title)
-        }, mPlayerListener, isLive, isHls)
+        }, mPlayerListener, isLive, isHls, headers)
     }
 
     fun playVideo(
@@ -319,10 +320,11 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         linkStreams: List<LinkStream>,
         listener: Player.Listener? = null,
         isLive: Boolean,
-        isHls: Boolean
+        isHls: Boolean,
+        headers: Map<String, String> = mapOf()
     ) {
         mGlueHost.setSurfaceHolderCallback(null)
-        exoPlayerManager.playVideo(linkStreams, isHls, listener ?: mPlayerListener)
+        exoPlayerManager.playVideo(linkStreams, isHls, listener ?: mPlayerListener, headers)
         mTransportControlGlue = PlaybackTransportControlGlue(activity, exoPlayerManager.playerAdapter)
         mTransportControlGlue.host = mGlueHost
         mTransportControlGlue.title = title
