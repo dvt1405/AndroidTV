@@ -20,6 +20,8 @@ import com.kt.apps.core.utils.trustEveryone
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import org.json.JSONObject
+import tv.broadpeak.smartlib.SmartLib
+import tv.broadpeak.smartlib.session.streaming.StreamingSessionOptions
 
 abstract class AbstractExoPlayerManager(
     private val _application: CoreApp,
@@ -140,6 +142,7 @@ abstract class AbstractExoPlayerManager(
         isHls: Boolean,
         headers: Map<String, String>? = null
     ): List<MediaSource> {
+        val streamSession = SmartLib.getInstance().createStreamingSession(StreamingSessionOptions.create())
         val dfSource: DefaultHttpDataSource.Factory = DefaultHttpDataSource.Factory()
         val defaultHeader = getDefaultHeaders(data.first().referer, data.first())
         headers?.let { prop -> defaultHeader.putAll(prop) }
@@ -177,10 +180,19 @@ abstract class AbstractExoPlayerManager(
                     }
                 }
 
+                streamSession.attachPlayer(mExoPlayer!!)
+                val result = streamSession.getURL(uriBuilder.build().toString())
+                val url = if (!result.isError) {
+                    Logger.d(this@AbstractExoPlayerManager, "ResultUrl", result.url)
+                    result.url
+                } else {
+                    uriBuilder.build().toString()
+                }
+
                 DashMediaSource.Factory(dfSource)
                     .createMediaSource(
                         MediaItem.Builder()
-                            .setUri(uriBuilder.build())
+                            .setUri(url)
                             .build()
                     )
             } else {

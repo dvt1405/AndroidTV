@@ -13,6 +13,9 @@ dependencyResolutionManagement {
         google()
         jcenter()
         mavenCentral()
+        maven {
+            url "https://delivery-platform.broadpeak.tv/android/repository/all"
+        }
     }
 }
 rootProject.name = "XemTv"
