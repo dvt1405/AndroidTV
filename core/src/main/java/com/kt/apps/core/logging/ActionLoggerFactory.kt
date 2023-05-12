@@ -10,8 +10,8 @@ class ActionLoggerFactory @Inject constructor(
     fun <T : IActionLogger> createLogger(loggerClass: Class<T>): T {
         Logger.d(this, "RequestCreator", loggerClass.name)
 
-        creators.forEach { t, u ->
-            Logger.d(this, "Creators", t.name)
+        for ((clazz) in creators) {
+            Logger.d(this, "Creators", clazz.name)
         }
         var creator = creators[loggerClass]
         if (creator == null) {
