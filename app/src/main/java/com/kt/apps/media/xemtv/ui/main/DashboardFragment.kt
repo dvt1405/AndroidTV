@@ -161,28 +161,6 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
-    private val displayVersionName: String
-        get() {
-            return StringBuilder().append(getString(R.string.app_name))
-                .append(
-                    if (BuildConfig.isBeta) {
-                        "_BETA"
-                    } else {
-                        ""
-                    }
-                )
-                .append(".")
-                .append(BuildConfig.VERSION_NAME)
-                .append(
-                    if (BuildConfig.DEBUG) {
-                        "-" + BuildConfig.BUILD_TYPE
-                    } else {
-                        ""
-                    }
-                )
-                .toString()
-        }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initAction()
@@ -241,7 +219,6 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         }
 
         Logger.d(this, message = "initAction")
-        requireView().findViewById<TextView>(R.id.app_version).text = displayVersionName
         activity?.intent?.data?.let {
             selectPageRowByUri(it)
         }

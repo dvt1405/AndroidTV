@@ -73,6 +73,7 @@
             android:paddingVertical="16dp"
             tools:text="iMedia.Beta.230613"
             android:gravity="center"
+            android:visibility="gone"
             android:layout_gravity="start|bottom"
             android:textAppearance="@style/TextAppearance.Leanback.DetailsDescriptionBody"
             android:textSize="12sp" />
