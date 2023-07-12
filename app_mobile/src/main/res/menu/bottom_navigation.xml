@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/search"
+        android:enabled="false"
+        android:icon="@drawable/ic_search_24p"
+        android:title="Tìm kiếm"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/tv"
+        android:enabled="true"
+        android:icon="@drawable/ic_tv"
+        android:title="Truyền Hình" />
+
+    <item
+        android:id="@+id/radio"
+        android:enabled="true"
+        android:icon="@drawable/ic_radio"
+        android:title="Truyền Thanh" />
+
+    <item
+        android:id="@+id/football"
+        android:enabled="true"
+        android:icon="@drawable/ic_soccer_ball"
+        android:title="Bóng đá"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/extension"
+        android:enabled="true"
+        android:icon="@drawable/iptv"
+        android:title="IPTV"
+        android:visible="true" />
+
+</menu>

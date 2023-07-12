@@ -25,7 +25,7 @@
                 />
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/fragment_container_channels"
-                android:name="com.kt.apps.media.mobile.ui.fragments.channels.ChannelFragment"
+                android:name="com.kt.apps.media.mobile.ui.fragments.dashboard.DashboardFragment"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 app:layout_constraintVertical_bias="0.0" />

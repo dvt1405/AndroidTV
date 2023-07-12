@@ -1,6 +1,8 @@
 package com.kt.apps.media.mobile.ui.fragments.models
 
 import android.net.Uri
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Transformations
 import androidx.work.WorkManager
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.DataState
@@ -27,9 +29,36 @@ class TVChannelViewModel @Inject constructor(
     private val app: App,
     private val workManager: WorkManager
 ) : BaseTVChannelViewModel(interactors) {
+    val wrapperListChannel: LiveData<DataState<Map<String, List<TVChannel>>>> = Transformations.map(
+        _listTvChannelLiveData
+    ) {
+        return@map when (it) {
+            is DataState.Success -> {
+                DataState.Success(it.data.groupBy {
+                    it.tvGroup
+                })
+            }
+
+            is DataState.None -> DataState.None()
+
+            is DataState.Update -> {
+                DataState.Update(it.data.groupBy {
+                    it.tvGroup
+                })
+            }
+
+            is DataState.Loading -> DataState.Loading()
+
+            is DataState.Error -> DataState.Error(it.throwable)
+
+            else -> {
+                throw IllegalStateException()
+            }
+        }
+    }
 
     override fun getListTVChannel(forceRefresh: Boolean, sourceFrom: TVDataSourceFrom) {
-        if(app.isNetworkAvailable())
+        if (app.isNetworkAvailable())
             super.getListTVChannel(forceRefresh, sourceFrom)
         else {
             if (interactors.getListChannel.cacheData != null) {
@@ -47,7 +76,8 @@ class TVChannelViewModel @Inject constructor(
         else
             _tvWithLinkStreamLiveData.postValue(DataState.Error(NoNetworkException()))
     }
-    fun playMobileTvByDeepLinks(uri: Uri) : Boolean {
+
+    fun playMobileTvByDeepLinks(uri: Uri): Boolean {
         !(uri.host?.contentEquals(Constants.DEEPLINK_HOST) ?: return false)
         val lastPath = uri.pathSegments.last() ?: return false
         _tvWithLinkStreamLiveData.postValue(DataState.Loading())
@@ -55,7 +85,7 @@ class TVChannelViewModel @Inject constructor(
         return true
     }
 
-    fun  getExtensionChannel(tvChannel: ExtensionsChannel) {
+    fun getExtensionChannel(tvChannel: ExtensionsChannel) {
         val linkToPlay = tvChannel.tvStreamLink
         if (linkToPlay.isShortLink()) {
             compositeDisposable.add(
@@ -64,10 +94,12 @@ class TVChannelViewModel @Inject constructor(
                     .subscribeOn(AndroidSchedulers.mainThread())
                     .subscribe {
                         _tvWithLinkStreamLiveData.postValue(
-                            DataState.Success(TVChannelLinkStream(
-                                TVChannel.fromChannelExtensions(tvChannel),
-                                arrayListOf(it)
-                            ))
+                            DataState.Success(
+                                TVChannelLinkStream(
+                                    TVChannel.fromChannelExtensions(tvChannel),
+                                    arrayListOf(it)
+                                )
+                            )
                         )
                     }
             )
@@ -80,10 +112,12 @@ class TVChannelViewModel @Inject constructor(
                     .subscribeOn(AndroidSchedulers.mainThread())
                     .subscribe {
                         _tvWithLinkStreamLiveData.postValue(
-                            DataState.Success(TVChannelLinkStream(
-                                TVChannel.fromChannelExtensions(tvChannel),
-                                arrayListOf(linkToPlay)
-                            ))
+                            DataState.Success(
+                                TVChannelLinkStream(
+                                    TVChannel.fromChannelExtensions(tvChannel),
+                                    arrayListOf(linkToPlay)
+                                )
+                            )
                         )
                     }
             )
