@@ -577,7 +577,11 @@ class SearchView @JvmOverloads constructor(
                     || mSearchSrcTextView!!.selectionStart == 0)
             && ((direction == View.FOCUS_LEFT) || (direction == View.FOCUS_UP))
         ) {
-            return focused
+            return if (direction == View.FOCUS_UP) {
+                focused
+            } else {
+                super.focusSearch(focused, direction)
+            }
         } else if (focused == mSearchSrcTextView
             && direction == View.FOCUS_RIGHT
             && (mSearchSrcTextView?.isEmpty == true
