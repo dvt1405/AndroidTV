@@ -28,7 +28,8 @@ class SearchForText @Inject constructor(
     sealed class SearchResult {
         class ExtensionsChannelWithCategory(
             val data: ExtensionsChannelDBWithCategoryViews,
-            val highlightTitle: SpannableString
+            val highlightTitle: SpannableString,
+            val score: Int,
         ) : SearchResult()
 
         data class TV(
@@ -48,6 +49,10 @@ class SearchForText @Inject constructor(
         val limit = params[EXTRA_LIMIT] as? Int ?: 0
         val offset = params[EXTRA_OFFSET] as? Int ?: 0
         val filter = params[EXTRA_FILTER] as? String
+        val queryNormalize = query.lowercase()
+            .replaceVNCharsToLatinChars()
+            .trim()
+
         val filterHighlight = query.lowercase()
             .replaceVNCharsToLatinChars()
             .split(" ")
@@ -71,10 +76,15 @@ class SearchForText @Inject constructor(
             .searchByNameQuery(getSqlQuery(query, filter, limit, offset))
             .map {
                 val list = it.map {
+                    val calculateScore = calculateScore(it.tvChannelName, queryNormalize, filterHighlight)
+                    val calculateScore2 = calculateScore(it.categoryName, queryNormalize, filterHighlight)
                     SearchResult.ExtensionsChannelWithCategory(
                         it,
-                        getHighlightTitle(it.tvChannelName, filterHighlight)
+                        getHighlightTitle(it.tvChannelName, filterHighlight),
+                        calculateScore + calculateScore2
                     )
+                }.sortedBy {
+                    it.score
                 }
                 list.groupBy {
                     it.data.categoryName
@@ -138,40 +148,29 @@ class SearchForText @Inject constructor(
             }
 
         var regexSplit = ""
-        var oderBy = ""
         var orderCount = 1
         var filterById = ""
         if (!filter?.trim().isNullOrBlank() && filter != FILTER_ALL_IPTV) {
             filterById = " AND configSourceUrl='$filter' "
         }
-        oderBy += "ORDER BY CASE WHEN tvChannelName = '$queryString' THEN $orderCount "
         orderCount++
-        oderBy += "WHEN tvChannelName LIKE '$queryString%' THEN $orderCount "
         orderCount++
-        oderBy += "WHEN tvChannelName LIKE '%$queryString%' THEN $orderCount "
         orderCount++
         if (splitStr.size > 1) {
             regexSplit = splitStr.map {
-                return@map "OR tvChannelName MATCH '*$it *' "
+                return@map "OR tvChannelName MATCH '*$it *' OR categoryName MATCH '*$it *'"
             }.reduceIndexed { index, acc, s ->
                 if (index == 0) {
-                    oderBy += "WHEN tvChannelName LIKE '${splitStr[index]} %' THEN $orderCount "
                     orderCount++
                 }
-                oderBy += "WHEN tvChannelName MATCH '%${splitStr[index]} %' THEN $orderCount "
                 orderCount++
                 "$acc$s"
             }
         }
 
-        if (oderBy.isNotBlank()) {
-            oderBy+="ELSE $orderCount " +
-                    "END "
-        }
-
         val queryStr = "SELECT extensionSourceId as configSourceUrl, tvGroup as categoryName, tvChannelName, " +
                 "logoChannel, tvStreamLink, sourceFrom FROM ExtensionsChannelFts4 " +
-                "WHERE tvChannelName MATCH '*$queryString*' $regexSplit$filterById" +
+                "WHERE (tvChannelName MATCH '*$queryString*' OR categoryName MATCH '*$queryString*' $regexSplit)$filterById" +
                 "LIMIT $limit " +
                 "OFFSET $offset "
 
@@ -350,6 +349,58 @@ class SearchForText @Inject constructor(
             }
             return spannableString
         }
+        fun calculateScore(text: String, queryNormalize: String, pattern: List<String>): Int {
+            var score = INIT_SCORE
+            val textNormalize = text.trim().lowercase()
+                .replaceVNCharsToLatinChars()
+            if (textNormalize.equals(queryNormalize, ignoreCase = true)) {
+                return 0
+            }
+
+            val lowerStrLatin = text.trim().lowercase()
+                .replaceVNCharsToLatinChars()
+                .split(" ")
+                .filter {
+                    it.isNotBlank()
+                }
+
+            if (lowerStrLatin.contains(queryNormalize)) {
+                score -= pattern.size
+            }
+
+            var child = ""
+            for (i in pattern.indices) {
+                val childPattern = pattern[i]
+                if (i == 0) {
+                    child = childPattern
+                } else {
+                    child += " $childPattern"
+                }
+                if (textNormalize.contains(child)) {
+                    score -= if (textNormalize.indexOf(child) == 0) {
+                        (i * 2)
+                    } else {
+                        (i + 1)
+                    }
+                }
+                for (j in lowerStrLatin.indices) {
+                    if (lowerStrLatin[j] == childPattern) {
+                        score--
+                        if (j == i) {
+                            score -= 2
+                        }
+                    }
+                }
+            }
+
+            if (lowerStrLatin.size == pattern.size) {
+                score--
+            }
+
+            return score
+        }
+
+        private const val INIT_SCORE = 100
     }
 
 }
