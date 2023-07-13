@@ -36,11 +36,10 @@
 
         <ImageView
             android:id="@+id/search_mag_icon"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_gravity="center_vertical"
-            android:layout_marginStart="20dp"
+            android:layout_marginStart="16dp"
             android:focusable="false"
             android:scaleType="centerInside"
             android:src="@drawable/ic_search_24p"
@@ -55,7 +54,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:background="@null"
+            android:includeFontPadding="false"
             android:dropDownAnchor="@id/search_edit_frame"
             android:dropDownHeight="wrap_content"
             android:dropDownHorizontalOffset="0dip"
@@ -65,24 +64,26 @@
             android:focusedByDefault="true"
             android:imeOptions="actionSearch"
             android:inputType="text|textAutoComplete|textNoSuggestions"
-            android:paddingStart="@dimen/abc_dropdownitem_text_padding_left"
-            android:paddingEnd="@dimen/abc_dropdownitem_text_padding_right"
             android:singleLine="true"
+            android:layout_marginStart="12dp"
             android:textCursorDrawable="@drawable/edittext_cursor"
-            tools:ignore="UnusedAttribute" />
+            tools:ignore="UnusedAttribute"
+            tools:text="Test search query"/>
 
         <ImageView
             android:id="@+id/search_close_btn"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="20dp"
+            android:layout_marginEnd="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/abc_searchview_description_clear"
             android:focusable="true"
             android:padding="12dp"
+            android:elevation="1dp"
             android:src="@drawable/ic_round_close_24"
-            tools:visibility="visible" />
+            tools:visibility="visible"
+            tools:targetApi="s" />
 
     </LinearLayout>
 </LinearLayout>
