@@ -86,6 +86,7 @@ class FragmentTVGrid : BaseGridViewFragment<FragmentTvGridBinding>() {
         tvChannelViewModel.tvChannelLiveData.observe(viewLifecycleOwner) {
             when (it) {
                 is DataState.Success -> {
+                    (mAdapter as ArrayObjectAdapter).clear()
                     binding.title.text = filterGroup
                     val channelWithCategory = it.data
                         .filter(filterTVByGroup(filterGroup, filterType))
