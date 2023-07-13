@@ -33,13 +33,17 @@ class SearchViewModels @Inject constructor(
         get() = _searchQueryLiveData
 
     var searchTask: Disposable? = null
+    private var _lastSearchQuery: String? = null
     private val _logSearchQuery by lazy {
         LogSearchQuery("", -1, actionLogger)
     }
+    val lastSearchQuery: String?
+        get() = _lastSearchQuery
     fun querySearch(query: String?, filter: String? = null, page: Int = 0) {
         query ?: return
         compositeDisposable.clear()
         _searchQueryLiveData.postValue(DataState.Loading())
+        _lastSearchQuery = query
         searchTask?.let {
             it.dispose()
             compositeDisposable.remove(it)

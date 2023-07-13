@@ -71,11 +71,28 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         return R.layout.base_lb_search_fragment
     }
 
+    private var mContainerListAlignTop: Int = 35.dpToPx()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        context ?: return
+        val ta = requireContext().obtainStyledAttributes(
+            com.kt.apps.resources.R.style.Theme_BaseLeanBack_SearchScreen,
+            androidx.leanback.R.styleable.LeanbackTheme
+        )
+        mContainerListAlignTop = ta.getDimension(
+            androidx.leanback.R.styleable.LeanbackTheme_browseRowsMarginTop,
+            requireContext().resources.getDimensionPixelSize(
+                androidx.leanback.R.dimen.lb_browse_rows_margin_top
+            ).toFloat()
+        ).toInt()
+        ta.recycle()
+    }
+
     override fun getMainFragmentAdapter(): BrowseSupportFragment.MainFragmentAdapter<*> {
         if (mMainFragmentAdapter == null) {
             mMainFragmentAdapter = object : MainFragmentAdapter(this) {
                 override fun setAlignment(windowAlignOffsetFromTop: Int) {
-                    super.setAlignment(35.dpToPx())
+                    super.setAlignment(mContainerListAlignTop)
                 }
             }
         }
@@ -88,10 +105,14 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         _searchView = rootView.findViewById(R.id.search_view)
         _btnVoice = rootView.findViewById(androidx.appcompat.R.id.search_voice_btn)
         _btnClose = rootView.findViewById(androidx.appcompat.R.id.search_close_btn)
+        _emptySearchIcon = rootView.findViewById(R.id.ic_empty_search)
         autoCompleteView = _searchView?.searchEdtAutoComplete
         _searchFilter = arguments?.getString(EXTRA_QUERY_FILTER)
         _queryHint = arguments?.getString(EXTRA_QUERY_HINT).takeIf {
             !it.isNullOrBlank()
+        }
+        viewModel.lastSearchQuery?.let {
+            autoCompleteView?.setText(it)
         }
 
         adapter = mRowsAdapter
@@ -233,7 +254,6 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                     return@OnFocusSearchListener _btnClose
                 } else if (direction == View.FOCUS_LEFT) {
                     if (verticalGridView.selectedSubPosition == 0){
-                        Log.e("TAG", "selectedSubPosition")
                         return@OnFocusSearchListener null
                     }
                 }
@@ -268,6 +288,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         {
             when (it) {
                 is DataState.Success -> {
+                    Log.e("TAG", "it.data.isEmpty(): ${it.data.isEmpty()}")
                     if (it.data.isEmpty()) {
                         _emptySearchIcon?.visible()
                     } else {

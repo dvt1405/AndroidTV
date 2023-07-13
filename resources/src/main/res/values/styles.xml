@@ -57,6 +57,7 @@
 
     <style name="Theme.BaseLeanBack.SearchScreen" parent="Theme.BaseLeanBack">
         <item name="browsePaddingStart">40dp</item>
+        <item name="browseRowsMarginTop">35dp</item>
     </style>
 
     <!--    Copy from leanback-->
