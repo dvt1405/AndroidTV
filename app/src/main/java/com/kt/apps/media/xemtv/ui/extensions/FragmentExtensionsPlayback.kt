@@ -23,7 +23,6 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logStreamingTV
 import com.kt.apps.core.utils.expandUrl
 import com.kt.apps.core.utils.isShortLink
-import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
@@ -152,7 +151,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
                         .setTitle(it.data.category)
                         .setMessage(spannableString)
                         .setPositiveButton("Có") { dialog, which ->
-                            fadeInOverlay()
+                            showAllOverlayElements()
                             exoPlayerManager.exoPlayer?.seekTo(historyData.currentPosition)
                             dialog.dismiss()
                         }
@@ -211,14 +210,14 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
 
             useMainSource -> {
                 itemToPlay?.let {
-                    playVideo(it, useCatchup = false, hideGridView = false)
+                    playVideo(it, useCatchup = false, refreshProgramForChannel = false)
                 }
                 retryTimes[itemToPlay!!.channelId] = retriedTimes + 1
             }
 
             !itemToPlay?.catchupSource.isNullOrBlank() -> {
                 itemToPlay?.let {
-                    playVideo(it, useCatchup = true, hideGridView = false)
+                    playVideo(it, useCatchup = true, refreshProgramForChannel = false)
                 }
                 retryTimes[itemToPlay!!.channelId] = retriedTimes + 1
             }
@@ -232,9 +231,10 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
     private fun playVideo(
         extensionsChannel: ExtensionsChannel,
         useCatchup: Boolean = false,
-        hideGridView: Boolean = true
+        refreshProgramForChannel: Boolean = true
     ) {
-        if (hideGridView) {
+        progressManager.show()
+        if (refreshProgramForChannel) {
             extensionsViewModel.loadProgramForChannel(extensionsChannel, extension.type)
         }
         lastExpandUrlTask?.let { disposable.remove(it) }
@@ -263,7 +263,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
             linkToPlay
         )
 
-        if (hideGridView) {
+        if (refreshProgramForChannel) {
             showInfo(extensionsChannel)
         }
 
@@ -275,15 +275,15 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ realUrl ->
                     if (isDetached) return@subscribe
-                    playWhenReady(extensionsChannel, realUrl, false)
+                    playWhenReady(extensionsChannel, realUrl)
                 }, {
                     if (isDetached) return@subscribe
-                    playWhenReady(extensionsChannel, linkToPlay, false)
+                    playWhenReady(extensionsChannel, linkToPlay)
                 })
             disposable.add(lastExpandUrlTask!!)
 
         } else if (linkToPlay.contains(".m3u8")) {
-            playWhenReady(extensionsChannel, linkToPlay, false)
+            playWhenReady(extensionsChannel, linkToPlay)
         } else {
             disposable.add(Observable.fromCallable {
                 linkToPlay.expandUrl()
@@ -292,10 +292,10 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ realUrl ->
                     if (isDetached) return@subscribe
-                    playWhenReady(extensionsChannel, realUrl, false)
+                    playWhenReady(extensionsChannel, realUrl)
                 }, {
                     if (isDetached) return@subscribe
-                    playWhenReady(extensionsChannel, linkToPlay, false)
+                    playWhenReady(extensionsChannel, linkToPlay)
                 }))
 
         }
@@ -303,8 +303,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
 
     private fun FragmentExtensionsPlayback.playWhenReady(
         extensionsChannel: ExtensionsChannel,
-        linkToPlay: String,
-        hideGridView: Boolean
+        linkToPlay: String
     ) {
         extensionsViewModel.getHistoryForItem(extensionsChannel, linkToPlay)
         playVideo(
@@ -320,8 +319,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
             isHls = linkToPlay.contains("m3u8"),
             headers = extensionsChannel.props,
             isLive = extension.type == ExtensionsConfig.Type.FOOTBALL,
-            listener = null,
-            hideGridView = hideGridView
+            forceShowVideoInfoContainer = false
         )
     }
 

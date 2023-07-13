@@ -3,6 +3,7 @@ package com.kt.apps.media.xemtv.ui.playback
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import com.kt.apps.core.base.leanback.ArrayObjectAdapter
@@ -269,20 +270,22 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
 
     private fun playVideo(tvChannelLinkStream: TVChannelLinkStream) {
         playVideo(
-            linkStreams = tvChannelLinkStream.linkStream.map {
-                LinkStream(
-                    it,
-                    tvChannelLinkStream.channel.referer,
-                    streamId = tvChannelLinkStream.channel.channelId,
-                    isHls = it.contains("m3u8")
-                )
-            },
+            linkStreams = tvChannelLinkStream.linkStream
+                .filter {
+                    Uri.parse(it).host != null
+                }.map {
+                    LinkStream(
+                        it,
+                        tvChannelLinkStream.channel.referer,
+                        streamId = tvChannelLinkStream.channel.channelId,
+                        isHls = it.contains("m3u8")
+                    )
+                },
             playItemMetaData = tvChannelLinkStream.channel.getMapData(),
             isHls = tvChannelLinkStream.channel.isHls,
             headers = null,
             isLive = true,
-            listener = null,
-            hideGridView = true
+            forceShowVideoInfoContainer = true
         )
         tvChannelViewModel.loadProgramForChannel(tvChannelLinkStream.channel)
         Logger.d(this, message = "PlayVideo: $tvChannelLinkStream")
