@@ -7,12 +7,6 @@
         <item name="android:progressBarStyleLarge">@style/ThemeProgressLarge</item>
     </style>
 
-    <style name="ImageCardViewStyleTitleDefault" parent="Widget.Leanback.ImageCardView.TitleStyle">
-        <item name="android:ellipsize">marquee</item>
-        <item name="android:marqueeRepeatLimit">3</item>
-        <item name="android:singleLine">true</item>
-    </style>
-
     <style name="ImageCardViewStyleTitle" parent="Widget.Leanback.ImageCardViewStyle">
         <item name="lbImageCardViewType">Title</item>
         <item name="android:background">@null</item>

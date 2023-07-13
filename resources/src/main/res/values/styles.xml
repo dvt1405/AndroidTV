@@ -13,6 +13,7 @@
         <item name="sweet_alert_content_text_color">@color/white</item>
         <item name="sweet_alert_btn_confirm_default_focus">true</item>
         <item name="sweet_alert_bg_drawable">@null</item>
+        <item name="imageCardViewTitleStyle">@style/ImageCardViewStyleTitleDefault</item>
     </style>
 
     <style name="ThemeCompat" parent="Theme.AppCompat">
@@ -123,6 +124,13 @@
         <item name="android:textAppearance">@style/TextAppearance.AppCompat.Widget.Button.Colored
         </item>
     </style>
+
+    <style name="ImageCardViewStyleTitleDefault" parent="Widget.Leanback.ImageCardView.TitleStyle">
+        <item name="android:ellipsize">marquee</item>
+        <item name="android:marqueeRepeatLimit">3</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
 
 
 </resources>
