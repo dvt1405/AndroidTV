@@ -37,7 +37,7 @@ class NavDrawerView @JvmOverloads constructor(
         fun onProgress(progress: Float)
     }
 
-    private var selectedItem: Int = 0
+    private var selectedItemId: Int = 0
     private var menu = NavigationMenu(context)
     private var _onAnimatedFraction: AnimateFractionChange? = null
     private val _enablePositionMap by lazy {
@@ -65,7 +65,7 @@ class NavDrawerView @JvmOverloads constructor(
                     super.onAnimationEnd(animation)
                     forEachIndexed { _, childView ->
                         childView.isPressed = false
-                        childView.isSelected = childView.tag == selectedItem
+                        childView.isSelected = childView.tag == selectedItemId
                     }
                     _isOpen = true
                     _isAnimating.set(false)
@@ -95,7 +95,7 @@ class NavDrawerView @JvmOverloads constructor(
                     super.onAnimationEnd(animation)
                     forEachIndexed { index, childView ->
                         childView.isSelected = false
-                        childView.isPressed = childView.tag == selectedItem
+                        childView.isPressed = childView.tag == selectedItemId
                         val headerTitle = childView.findViewById<TextView>(R.id.row_header)
                         headerTitle?.visibility = INVISIBLE
                     }
@@ -111,6 +111,10 @@ class NavDrawerView @JvmOverloads constructor(
         val childSpacingBetween = typedArray.getDimensionPixelSize(
             R.styleable.NavDrawerView_childSpacingBetween,
             com.kt.apps.resources.R.dimen.nav_spacing_between
+        )
+        val defaultSelectedItemPosition = typedArray.getInteger(
+            R.styleable.NavDrawerView_defaultSelectedPosition,
+            0
         )
         if (typedArray.hasValue(R.styleable.NavDrawerView_navMenu)) {
             val menuResId = typedArray.getResourceId(
@@ -136,8 +140,8 @@ class NavDrawerView @JvmOverloads constructor(
                     ViewGroup.LayoutParams.WRAP_CONTENT
                 )
                 if (isItemEnabled) {
-                    if (firstInit) {
-                        selectedItem = menuItem.itemId
+                    if (firstInit && defaultSelectedItemPosition == i) {
+                        selectedItemId = menuItem.itemId
                         firstEnableItem = i
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             childItemView.isFocusedByDefault = true
@@ -162,7 +166,7 @@ class NavDrawerView @JvmOverloads constructor(
                 childItemView.setOnFocusChangeListener { v, hasFocus ->
                     Logger.d(this@NavDrawerView, message = "OnFocusChange: $i, $hasFocus")
                     if (!isOpen) {
-                        childItemView.isPressed = childItemView.tag == selectedItem
+                        childItemView.isPressed = childItemView.tag == selectedItemId
                         icon.isSelected = false
                         title.isSelected = false
                     }
@@ -222,7 +226,7 @@ class NavDrawerView @JvmOverloads constructor(
         val itemId = menu.getItem(position.takeIf {
             it > -1
         } ?: 0).itemId
-        selectedItem = itemId
+        selectedItemId = itemId
         if (invalidate) {
             var isFocused = false
             for (i in 0 until childCount) {
@@ -257,7 +261,7 @@ class NavDrawerView @JvmOverloads constructor(
 
     override fun requestFocus(direction: Int, previouslyFocusedRect: Rect?): Boolean {
         forEachIndexed { _, view ->
-            if (view.tag == selectedItem) {
+            if (view.tag == selectedItemId) {
                 return view.requestFocus(direction, previouslyFocusedRect)
             }
         }
@@ -299,7 +303,7 @@ class NavDrawerView @JvmOverloads constructor(
         }
         if (direction == FOCUS_DOWN) {
             for (i in 0 until childCount) {
-                if (getChildAt(i).tag == selectedItem) {
+                if (getChildAt(i).tag == selectedItemId) {
                     if (i == childCount - 1) return getChildAt(i)
                     setItemSelected((i + 1) % childCount, false)
                     return getChildAt((i + 1) % childCount)
@@ -309,7 +313,7 @@ class NavDrawerView @JvmOverloads constructor(
 
         if (direction == FOCUS_UP) {
             for (i in 0 until childCount) {
-                if (getChildAt(i).tag == selectedItem) {
+                if (getChildAt(i).tag == selectedItemId) {
                     if (i == 0) return getChildAt(i)
                     setItemSelected((i + childCount - 1) % childCount, false)
                     return getChildAt((i + childCount - 1) % childCount)
@@ -317,12 +321,12 @@ class NavDrawerView @JvmOverloads constructor(
             }
         }
 
-        if (focused?.tag == selectedItem && direction == FOCUS_RIGHT) {
+        if (focused?.tag == selectedItemId && direction == FOCUS_RIGHT) {
             return parent.focusSearch(focused, direction)
         }
 
         for (i in 0 until childCount) {
-            if (getChildAt(i).tag == selectedItem) {
+            if (getChildAt(i).tag == selectedItemId) {
                 return getChildAt(i)
             }
         }
