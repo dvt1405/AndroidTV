@@ -160,7 +160,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     if (player.playbackState == Player.STATE_BUFFERING) {
                         progressManager.show()
                     } else {
-                        progressManager.hide()
+                        if (player.playbackState != Player.STATE_IDLE) {
+                            progressManager.hide()
+                        }
                     }
                 }
             }
@@ -1068,11 +1070,6 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     fun showErrorDialogWithErrorCode(errorCode: Int) {
-        if (progressManager.isShowing) {
-            handleUI(OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY, false)
-        } else {
-            handleUI(OverlayUIState.STATE_INIT, false)
-        }
         showErrorDialog(
             content = getString(
                 com.kt.apps.resources.R.string.error_playback_popup_content_text,
@@ -1089,6 +1086,13 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 }
             },
             onShowListener = {
+                progressManager.hide()
+                if (overlaysUIState == OverlayUIState.STATE_HIDDEN
+                    || overlaysUIState == OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY
+                    || overlaysUIState == OverlayUIState.STATE_INIT
+                ) {
+                    handleUI(OverlayUIState.STATE_INIT, false)
+                }
             }
         )
     }
