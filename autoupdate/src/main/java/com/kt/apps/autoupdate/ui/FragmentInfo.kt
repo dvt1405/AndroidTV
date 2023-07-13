@@ -41,6 +41,24 @@ class FragmentInfo : BaseFragment<FragmentInfoBinding>(), BrowseSupportFragment.
             )
         }
 
+        binding.fbGroupLink.setOnClickListener {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(binding.fbGroupLink.text.trim().toString())
+                )
+            )
+        }
+
+        binding.zaloGroupLink.setOnClickListener {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse(binding.zaloGroupLink.text.trim().toString())
+                )
+            )
+        }
+
         (binding.root as BrowseFrameLayout).setOnFocusSearchListener { focused, direction ->
             if (direction == View.FOCUS_LEFT) {
                 return@setOnFocusSearchListener null
