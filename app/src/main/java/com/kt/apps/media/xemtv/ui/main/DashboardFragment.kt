@@ -179,42 +179,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
     private fun initAction() {
         navDrawerView.onNavDrawerItemSelected = object : INavDrawerItemSelected {
             override fun onSelected(position: Int, itemSelected: Int) {
-
-                when (itemSelected) {
-                    com.kt.apps.media.xemtv.R.id.search -> {
-                        navDrawerView.forceCloseNav()
-                        _mainHandler.removeCallbacksAndMessages(navDrawerView)
-                        val message = Message.obtain(_mainHandler) {
-                            startActivity(
-                                Intent(
-                                    requireContext(),
-                                    TVSearchActivity::class.java
-                                )
-                            )
-                        }
-                        message.obj = navDrawerView
-                        _mainHandler.sendMessageDelayed(message, NavDrawerView.DEFAULT_DURATION)
-                    }
-
-                    R.id.info -> {
-                        navDrawerView.forceCloseNav()
-                        _mainHandler.removeCallbacksAndMessages(navDrawerView)
-                        val message = Message.obtain(_mainHandler) {
-                            startActivity(
-                                Intent(
-                                    requireContext(),
-                                    AppUpdateActivity::class.java
-                                )
-                            )
-                        }
-                        message.obj = navDrawerView
-                        _mainHandler.sendMessageDelayed(message, NavDrawerView.DEFAULT_DURATION)
-                    }
-
-                    else -> {
-                        onRowSelected(position)
-                    }
-                }
+                onRowSelected(position)
             }
         }
 
@@ -415,26 +380,32 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         val defaultPages by lazy {
             if (BuildConfig.isBeta) {
                 mapOf(
+                    DashboardPageRowFactory.ROW_SEARCH to "Tìm kiếm",
                     DashboardPageRowFactory.ROW_TV to "Truyền hình",
                     DashboardPageRowFactory.ROW_RADIO to "Phát thanh",
                     DashboardPageRowFactory.ROW_FOOTBALL to "Bóng đá",
                     DashboardPageRowFactory.ROW_IPTV to "IPTV",
+                    DashboardPageRowFactory.ROW_INFO to "Thông tin"
                 )
             } else {
                 mapOf(
+                    DashboardPageRowFactory.ROW_SEARCH to "Tìm kiếm",
                     DashboardPageRowFactory.ROW_TV to "Truyền hình",
                     DashboardPageRowFactory.ROW_RADIO to "Phát thanh",
                     DashboardPageRowFactory.ROW_IPTV to "IPTV",
+                    DashboardPageRowFactory.ROW_INFO to "Thông tin"
                 )
             }
         }
         private val defaultPagesIcon by lazy {
             mapOf(
+                DashboardPageRowFactory.ROW_SEARCH to R.drawable.ic_search_24p,
                 DashboardPageRowFactory.ROW_TV to R.drawable.ic_tv,
                 DashboardPageRowFactory.ROW_FOOTBALL to R.drawable.ic_soccer_ball,
                 DashboardPageRowFactory.ROW_RADIO to R.drawable.ic_radio,
                 DashboardPageRowFactory.ROW_ADD_EXTENSION to com.kt.apps.media.xemtv.R.drawable.round_add_circle_outline_24,
-                DashboardPageRowFactory.ROW_IPTV to R.drawable.iptv
+                DashboardPageRowFactory.ROW_IPTV to R.drawable.iptv,
+                DashboardPageRowFactory.ROW_INFO to R.drawable.ic_outline_info_24,
             )
         }
 

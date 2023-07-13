@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Parcelable
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +24,7 @@ import com.kt.apps.core.base.IKeyCodeHandler
 import com.kt.apps.core.base.leanback.ArrayObjectAdapter
 import com.kt.apps.core.base.leanback.BrowseFrameLayout
 import com.kt.apps.core.base.leanback.BrowseFrameLayout.OnChildFocusListener
+import com.kt.apps.core.base.leanback.BrowseSupportFragment
 import com.kt.apps.core.base.leanback.HeaderItem
 import com.kt.apps.core.base.leanback.ListRow
 import com.kt.apps.core.base.leanback.ListRowPresenter
@@ -33,6 +35,7 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
+import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.visible
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
 import com.kt.apps.media.xemtv.presenter.SearchPresenter
@@ -64,6 +67,18 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
     override fun getLayoutResourceId(): Int {
         return R.layout.base_lb_search_fragment
+    }
+
+    override fun getMainFragmentAdapter(): BrowseSupportFragment.MainFragmentAdapter<*> {
+        if (mMainFragmentAdapter == null) {
+            mMainFragmentAdapter = object : MainFragmentAdapter(this) {
+                override fun setAlignment(windowAlignOffsetFromTop: Int) {
+                    super.setAlignment(35.dpToPx())
+                }
+            }
+        }
+
+        return mMainFragmentAdapter
     }
 
     override fun initView(rootView: View) {
@@ -173,8 +188,10 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                         _searchView?.searchEdtAutoComplete?.requestFocus()
                         return@setOnDispatchKeyListener true
                     } else if (focused == _searchView?.searchEdtAutoComplete) {
-                        activity?.finish()
-                        return@setOnDispatchKeyListener true
+                        if (activity is TVSearchActivity) {
+                            activity?.finish()
+                            return@setOnDispatchKeyListener true
+                        }
                     }
                     return@setOnDispatchKeyListener false
                 }
@@ -212,6 +229,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                     return@OnFocusSearchListener _btnClose
                 } else if (focused == verticalGridView && direction == View.FOCUS_UP) {
                     return@OnFocusSearchListener _btnClose
+                } else if (direction == View.FOCUS_LEFT) {
+                    if (verticalGridView.selectedSubPosition == 0){
+                        Log.e("TAG", "selectedSubPosition")
+                        return@OnFocusSearchListener null
+                    }
                 }
                 return@OnFocusSearchListener focused
             }

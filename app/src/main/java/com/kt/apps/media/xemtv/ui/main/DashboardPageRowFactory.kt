@@ -5,6 +5,7 @@ import android.graphics.drawable.ColorDrawable
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.leanback.app.BackgroundManager
+import com.kt.apps.autoupdate.ui.FragmentInfo
 import com.kt.apps.core.base.leanback.Row
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.R
@@ -52,8 +53,14 @@ class DashboardPageRowFactory(
                 TVSearchFragment()
             }
 
+            ROW_INFO -> {
+                backgroundManager.drawable = ContextCompat.getDrawable(CoreApp.getInstance(), R.drawable.tv_bg)
+                FragmentInfo()
+            }
+
             ROW_ADD_EXTENSION -> {
-                return FragmentDashboardExtensions()
+                backgroundManager.drawable = ContextCompat.getDrawable(CoreApp.getInstance(), R.drawable.tv_bg)
+                FragmentDashboardExtensions()
             }
 
             else -> {

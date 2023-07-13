@@ -46,6 +46,15 @@
         <item name="android:numColumns">auto_fit</item>
     </style>
 
+    <style name="BaseGridViewStyle.NoPadding" parent="BaseGridViewStyle">
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="browseRowsMarginTop">0dp</item>
+        <item name="android:gravity">start</item>
+    </style>
+
     <style name="ThemeProgressLarge">
         <item name="android:indeterminateDrawable">@drawable/default_progress_bar_layer_list</item>
         <item name="android:minWidth">54dp</item>

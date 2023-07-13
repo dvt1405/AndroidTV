@@ -28,12 +28,27 @@
 
         </com.kt.apps.core.base.leanback.BrowseFrameLayout>
 
-        <com.kt.apps.core.base.leanback.VerticalGridView
-            android:id="@+id/container_list"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#DD000000"
-            android:nextFocusUp="@id/search_voice_btn"
-            android:visibility="visible" />
+            android:background="#DD000000">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/ic_empty_search"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="center"
+                android:alpha="0.15"
+                android:src="@drawable/ic_search_24p"
+                android:visibility="visible" />
+
+            <com.kt.apps.core.base.leanback.VerticalGridView
+                android:id="@+id/container_list"
+                style="@style/BaseGridViewStyle.NoPadding"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:nextFocusUp="@id/search_voice_btn"
+                android:visibility="visible" />
+        </FrameLayout>
     </LinearLayout>
 </com.kt.apps.core.base.leanback.BrowseFrameLayout>
