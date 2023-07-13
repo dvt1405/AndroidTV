@@ -11,6 +11,7 @@ import com.kt.apps.media.xemtv.R
 import com.kt.apps.media.xemtv.databinding.ActivityMainBinding
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.extensions.ExtensionsViewModel
+import com.kt.apps.media.xemtv.ui.search.SearchViewModels
 import javax.inject.Inject
 
 /**
@@ -33,6 +34,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         ViewModelProvider(this, factory)[ExtensionsViewModel::class.java]
     }
 
+    private val searchViewModel by lazy {
+        ViewModelProvider(this, factory)[SearchViewModels::class.java]
+    }
+
     override val layoutRes: Int
         get() = R.layout.activity_main
 
@@ -42,6 +47,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     override fun initAction(savedInstanceState: Bundle?) {
         FragmentInfo.appVersion = BuildConfig.VERSION_NAME
+        searchViewModel.querySearch("")
         supportFragmentManager.beginTransaction()
             .replace(R.id.main_browse_fragment, DashboardFragment())
             .commitNow()
