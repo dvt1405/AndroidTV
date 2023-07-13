@@ -39,6 +39,12 @@ class SearchViewModels @Inject constructor(
     }
     val lastSearchQuery: String?
         get() = _lastSearchQuery
+    fun queryDefaultSearch() {
+        if (_lastSearchQuery.isNullOrBlank()) {
+            querySearch("")
+        }
+    }
+
     fun querySearch(query: String?, filter: String? = null, page: Int = 0) {
         query ?: return
         compositeDisposable.clear()
@@ -79,6 +85,8 @@ class SearchViewModels @Inject constructor(
     val selectedItemLiveData: LiveData<DataState<Any>>
         get() = _selectedItemLiveData
 
+    private var getResulItemTask: Disposable? = null
+
     fun getResultForItem(
         searchItem: SearchForText.SearchResult,
         query: String,
@@ -87,62 +95,60 @@ class SearchViewModels @Inject constructor(
             query = query,
             searchResult = searchItem
         )
-        when (searchItem) {
+        getResulItemTask?.dispose()
+        getResulItemTask = when (searchItem) {
             is SearchForText.SearchResult.TV -> {
                 _selectedItemLiveData.postValue(DataState.Loading())
-                add(
-                    roomDataBase.tvChannelDao()
-                        .getChannelWithUrl(searchItem.data.channelId)
-                        .map {
-                            TVChannelLinkStream(
-                                it.mapToTVChannel(),
-                                it.urls.map { it.url }
-                            )
-                        }
-                        .subscribeOn(Schedulers.io())
-                        .subscribe({
-                            _selectedItemLiveData.postValue(DataState.Success(it))
-                        }, {
-                            Logger.e(this@SearchViewModels, "${it.message}", it)
-                            _selectedItemLiveData.postValue(DataState.Error(it))
-                        })
-                )
+                roomDataBase.tvChannelDao()
+                    .getChannelWithUrl(searchItem.data.channelId)
+                    .map {
+                        TVChannelLinkStream(
+                            it.mapToTVChannel(),
+                            it.urls.map { it.url }
+                        )
+                    }
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({
+                        _selectedItemLiveData.postValue(DataState.Success(it))
+                    }, {
+                        Logger.e(this@SearchViewModels, "${it.message}", it)
+                        _selectedItemLiveData.postValue(DataState.Error(it))
+                    })
             }
 
             is SearchForText.SearchResult.ExtensionsChannelWithCategory -> {
                 _selectedItemLiveData.postValue(DataState.Loading())
-                add(
-                    roomDataBase.extensionsChannelDao()
-                        .getConfigAndChannelByStreamLink(searchItem.data.tvStreamLink)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe({
-                            _selectedItemLiveData.postValue(DataState.Success(it))
-                        }, {
-                            Logger.e(this@SearchViewModels, "${it.message}", it)
-                            _selectedItemLiveData.postValue(DataState.Error(it))
-                        })
-                )
+                roomDataBase.extensionsChannelDao()
+                    .getConfigAndChannelByStreamLink(searchItem.data.tvStreamLink)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({
+                        _selectedItemLiveData.postValue(DataState.Success(it))
+                    }, {
+                        Logger.e(this@SearchViewModels, "${it.message}", it)
+                        _selectedItemLiveData.postValue(DataState.Error(it))
+                    })
+
             }
 
             is SearchForText.SearchResult.History -> {
                 _selectedItemLiveData.postValue(DataState.Loading())
-                add(
-                    roomDataBase.extensionsChannelDao()
-                        .getConfigAndChannelByIdAndCategory(
-                            searchItem.data.category,
-                            searchItem.data.itemId,
-                            searchItem.data.displayName
-                        )
-                        .subscribeOn(Schedulers.io())
-                        .subscribe({
-                            _selectedItemLiveData.postValue(DataState.Success(it))
-                        }, {
-                            Logger.e(this@SearchViewModels, "${it.message}", it)
-                            _selectedItemLiveData.postValue(DataState.Error(it))
-                        })
-                )
+                roomDataBase.extensionsChannelDao()
+                    .getConfigAndChannelByIdAndCategory(
+                        searchItem.data.category,
+                        searchItem.data.itemId,
+                        searchItem.data.displayName
+                    )
+                    .subscribeOn(Schedulers.io())
+                    .subscribe({
+                        _selectedItemLiveData.postValue(DataState.Success(it))
+                    }, {
+                        Logger.e(this@SearchViewModels, "${it.message}", it)
+                        _selectedItemLiveData.postValue(DataState.Error(it))
+                    })
+
             }
         }
+        add(getResulItemTask!!)
     }
 
     fun getDefaultSearchList() {
@@ -158,6 +164,11 @@ class SearchViewModels @Inject constructor(
                 _searchQueryLiveData.postValue(DataState.Error(it))
             })
         add(searchTask!!)
+    }
+
+    fun clearLastSelectedItem() {
+        getResulItemTask?.dispose()
+        _selectedItemLiveData.postValue(DataState.None())
     }
 
     class LogSearchQuery(

@@ -33,6 +33,7 @@ import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
 import com.kt.apps.media.xemtv.ui.extensions.FragmentAddExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
+import com.kt.apps.media.xemtv.ui.search.SearchViewModels
 import com.kt.apps.media.xemtv.ui.search.TVSearchActivity
 import com.kt.apps.media.xemtv.ui.tv.BaseTabLayoutFragment
 import dagger.android.AndroidInjector
@@ -62,8 +63,8 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         })
     }
 
-    private val _mainHandler by lazy {
-        Handler(Looper.getMainLooper())
+    private val searchViewModels by lazy {
+        ViewModelProvider(requireActivity(), viewModelFactory)[SearchViewModels::class.java]
     }
 
     private val childFocusSearchListener by lazy {
@@ -179,6 +180,11 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
     private fun initAction() {
         navDrawerView.onNavDrawerItemSelected = object : INavDrawerItemSelected {
             override fun onSelected(position: Int, itemSelected: Int) {
+                if (position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_SEARCH)) {
+                    searchViewModels.queryDefaultSearch()
+                } else {
+                    searchViewModels.clearLastSelectedItem()
+                }
                 onRowSelected(position)
             }
         }
@@ -253,6 +259,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 ContextCompat.getDrawable(requireContext(), R.drawable.tv_bg)
             }
         }
+        searchViewModels.queryDefaultSearch()
     }
     override fun onDestroyView() {
         firstInit = true
@@ -273,6 +280,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
 
     override fun onPause() {
         super.onPause()
+        searchViewModels.clearLastSelectedItem()
 //        navDrawerView.setItemSelected(selectedPosition, true)
     }
 
