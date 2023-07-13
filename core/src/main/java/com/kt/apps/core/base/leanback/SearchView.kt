@@ -96,8 +96,7 @@ class SearchView @JvmOverloads constructor(
         }
         Logger.d(
             this@SearchView,
-            message = "mTextListener.onKey(" + keyCode + "," + event + "), selection: "
-                    + mSearchSrcTextView!!.listSelection
+            message = "mTextListener.onKey($keyCode,$event), selection: "
         )
         if (event.hasNoModifiers()
             && event.action == KeyEvent.ACTION_UP
@@ -580,10 +579,9 @@ class SearchView @JvmOverloads constructor(
         ) {
             return focused
         } else if (focused == mSearchSrcTextView
-            && (mSearchSrcTextView?.isEmpty == true
-                    || mSearchSrcTextView!!.selectionEnd == mSearchSrcTextView?.text?.length?.minus(1)
-                    )
             && direction == View.FOCUS_RIGHT
+            && (mSearchSrcTextView?.isEmpty == true
+                    || mSearchSrcTextView!!.selectionEnd == mSearchSrcTextView?.text?.length)
         ) {
             return mCloseButton
         }
