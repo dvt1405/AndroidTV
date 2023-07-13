@@ -42,7 +42,7 @@ dependencies {
     implementation retrofitDependencies.values()
     implementation okhttpDependencies.values()
     kapt complier.values()
-    implementation platform('com.google.firebase:firebase-bom:30.2.0')
+    implementation platform("com.google.firebase:firebase-bom:$firebaseBomVersion")
     implementation firebaseDependencies.values()
     implementation externalDependencies.values()
     implementation authen.values()
