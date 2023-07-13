@@ -28,9 +28,9 @@ class MediaHistoryRepositoryImpl @Inject constructor(
         mutableMapOf<String, Disposable>()
     }
 
-    override fun saveHistoryItem(item: HistoryMediaItemDTO) {
-        val insertSource = _historyDao.getItem(item.itemId)
-            .delay(10, TimeUnit.SECONDS)
+    override fun saveHistoryItem(item: HistoryMediaItemDTO, delayInSeconds: Long) {
+        val insertSource = _historyDao.getItemEqualStreamLink(item.itemId, item.linkPlay)
+            .delay(delayInSeconds, TimeUnit.SECONDS)
             .filter { oldItem ->
                 oldItem.currentPosition > item.currentPosition
             }

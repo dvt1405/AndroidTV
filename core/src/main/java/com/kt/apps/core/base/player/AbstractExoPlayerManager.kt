@@ -5,6 +5,7 @@ import android.app.Application
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.core.os.bundleOf
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
@@ -125,6 +126,7 @@ abstract class AbstractExoPlayerManager(
     }
 
     open fun prepare() {
+        saveHistory()
         mExoPlayer?.stop()
         mExoPlayer?.release()
         mExoPlayer = buildExoPlayer()
@@ -284,6 +286,19 @@ abstract class AbstractExoPlayerManager(
         }
     }
 
+    private fun saveHistory() {
+        exoPlayer ?: return
+        val mediaItem = exoPlayer?.currentMediaItem ?: return
+        if (exoPlayer!!.contentDuration > 2 * 60_000 && exoPlayer!!.contentPosition > 60_000) {
+            val historyMediaItemDTO = HistoryMediaItemDTO.mapFromMediaItem(
+                mediaItem,
+                exoPlayer!!.contentPosition,
+                exoPlayer!!.contentDuration
+            )
+            _historyManager.saveHistoryItem(historyMediaItemDTO, 0L)
+        }
+    }
+
     abstract fun detach(listener: Player.Listener? = null)
 
 
@@ -302,6 +317,7 @@ abstract class AbstractExoPlayerManager(
     }
 
     override fun onActivityPaused(activity: Activity) {
+        saveHistory()
     }
 
     override fun onActivityStopped(activity: Activity) {
