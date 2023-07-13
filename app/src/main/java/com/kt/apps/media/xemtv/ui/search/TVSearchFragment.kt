@@ -36,6 +36,7 @@ import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.visible
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
 import com.kt.apps.media.xemtv.presenter.SearchPresenter
@@ -63,6 +64,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
     private var _rootView: BrowseFrameLayout? = null
     private var _btnClose: ImageView? = null
     private var _btnVoice: ImageView? = null
+    private var _emptySearchIcon: ImageView? = null
     private var autoCompleteView: SearchView.SearchAutoComplete? = null
 
     override fun getLayoutResourceId(): Int {
@@ -266,6 +268,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         {
             when (it) {
                 is DataState.Success -> {
+                    if (it.data.isEmpty()) {
+                        _emptySearchIcon?.visible()
+                    } else {
+                        _emptySearchIcon?.gone()
+                    }
                     verticalGridView?.visible()
                     val channelWithCategory = it.data
                     mRowsAdapter.clear()
@@ -438,6 +445,16 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         _queryHint = queryHint
         setQueryHint(_searchView, queryHint)
         _searchView?.searchEdtAutoComplete?.setText(query)
+    }
+
+    override fun onDestroyView() {
+        _searchView = null
+        _rootView = null
+        _btnClose = null
+        _btnVoice = null
+        _emptySearchIcon = null
+        autoCompleteView = null
+        super.onDestroyView()
     }
 
     companion object {

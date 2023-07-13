@@ -55,6 +55,23 @@
         <item name="android:gravity">start</item>
     </style>
 
+    <style name="Theme.BaseLeanBack.SearchScreen" parent="Theme.BaseLeanBack">
+        <item name="browsePaddingStart">40dp</item>
+    </style>
+
+    <!--    Copy from leanback-->
+    <style name="BaseRowHorizontalGridView">
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">true</item>
+        <item name="android:paddingStart">?attr/browsePaddingStart</item>
+        <item name="android:paddingEnd">?attr/browsePaddingEnd</item>
+        <item name="android:paddingBottom">@dimen/lb_browse_item_vertical_spacing</item>
+        <item name="android:paddingTop">@dimen/lb_browse_item_vertical_spacing</item>
+        <item name="android:horizontalSpacing">@dimen/lb_browse_item_horizontal_spacing</item>
+        <item name="android:verticalSpacing">@dimen/lb_browse_item_vertical_spacing</item>
+        <item name="focusOutFront">true</item>
+    </style>
+
     <style name="ThemeProgressLarge">
         <item name="android:indeterminateDrawable">@drawable/default_progress_bar_layer_list</item>
         <item name="android:minWidth">54dp</item>
