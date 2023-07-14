@@ -17,6 +17,7 @@ import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class SearchViewModels @Inject constructor(
@@ -48,6 +49,9 @@ class SearchViewModels @Inject constructor(
     fun querySearch(query: String?, filter: String? = null, page: Int = 0) {
         query ?: return
         compositeDisposable.clear()
+        if (_lastSearchQuery == query.trim() && _searchQueryLiveData.value is DataState.Loading) {
+            return
+        }
         _searchQueryLiveData.postValue(DataState.Loading())
         _lastSearchQuery = query
         searchTask?.let {
@@ -55,6 +59,7 @@ class SearchViewModels @Inject constructor(
             compositeDisposable.remove(it)
         }
         searchTask = searchForText(query, filter, limit = 1500, offset = page * 1500)
+            .delay(300, TimeUnit.MILLISECONDS)
             .doOnDispose {
                 mHandler.removeCallbacks(_logSearchQuery)
             }
