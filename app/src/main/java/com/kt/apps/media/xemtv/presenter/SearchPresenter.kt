@@ -2,9 +2,6 @@ package com.kt.apps.media.xemtv.presenter
 
 import android.graphics.Color
 import android.graphics.drawable.Drawable
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.style.ForegroundColorSpan
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
@@ -16,6 +13,7 @@ import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.getKeyForLocalLogo
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
 import com.kt.apps.core.utils.loadImgByUrl
+import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 import kotlin.properties.Delegates
 
@@ -32,6 +30,12 @@ class SearchPresenter : Presenter() {
                 ?.split(" ")
                 ?.filter {
                     it.isNotBlank()
+                }?.flatMap {
+                    val unSpecialChar = it.removeAllSpecialChars()
+                    if (it != unSpecialChar) {
+                        return@flatMap listOf(it, unSpecialChar)
+                    }
+                    return@flatMap listOf(it)
                 }
         }
         get() = _filterHighlight?.reduce { acc, s ->
@@ -109,10 +113,6 @@ class SearchPresenter : Presenter() {
 
     }
 
-    private fun getHighlightTitle(realTitle: String): SpannableString {
-        return getHighlightTitle(realTitle, _filterHighlight)
-    }
-
     override fun onUnbindViewHolder(viewHolder: ViewHolder) {
         val cardView = viewHolder.view as ImageCardView
         cardView.badgeImage = null
@@ -129,37 +129,5 @@ class SearchPresenter : Presenter() {
     companion object {
         private const val CARD_WIDTH = 313
         private const val CARD_HEIGHT = 176
-        private val HIGH_LIGHT_COLOR by lazy {
-            Color.parseColor("#fb8500")
-        }
-        private val FOREGROUND_HIGH_LIGHT_COLOR by lazy {
-            ForegroundColorSpan(HIGH_LIGHT_COLOR)
-        }
-
-        fun getHighlightTitle(realTitle: String, _filterHighlight: List<String>?): SpannableString {
-            val spannableString = SpannableString(realTitle)
-            val lowerRealTitle = realTitle.trim()
-                .lowercase()
-                .replaceVNCharsToLatinChars()
-
-            val titleLength = lowerRealTitle.length
-            _filterHighlight?.forEach { searchKey ->
-                var index = lowerRealTitle.indexOf(searchKey)
-                while (index > -1 && index + searchKey.length <= titleLength) {
-                    spannableString.setSpan(
-                        ForegroundColorSpan(HIGH_LIGHT_COLOR),
-                        index,
-                        index + searchKey.length,
-                        Spannable.SPAN_EXCLUSIVE_INCLUSIVE
-                    )
-                    val startIndex = index + searchKey.length
-                    if (startIndex >= titleLength) {
-                        break
-                    }
-                    index = lowerRealTitle.indexOf(searchKey, startIndex)
-                }
-            }
-            return spannableString
-        }
     }
 }

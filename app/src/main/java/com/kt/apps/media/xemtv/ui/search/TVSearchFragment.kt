@@ -288,7 +288,6 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         {
             when (it) {
                 is DataState.Success -> {
-                    Log.e("TAG", "it.data.isEmpty(): ${it.data.isEmpty()}")
                     if (it.data.isEmpty()) {
                         _emptySearchIcon?.visible()
                     } else {
@@ -306,7 +305,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                         } catch (e: Exception) {
                             HeaderItem(group)
                         }
-                        headerItem.contentDescription = SearchPresenter.getHighlightTitle(
+                        headerItem.contentDescription = SearchForText.getHighlightTitle(
                             headerItem.name,
                             childPresenter.filterKeyWords
                         )
