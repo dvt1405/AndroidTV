@@ -223,11 +223,11 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
         throw Throwable("Return to parent focus search")
     }
 
-    override fun requestFocusChildContent(): View {
+    override fun requestFocusChildContent(): View? {
         return viewPager
     }
 
-    class ExtensionsChannelViewPager(fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager) {
+    class ExtensionsChannelViewPager(fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
         private val _totalList by lazy {
             mutableListOf<ExtensionsConfig>()
         }

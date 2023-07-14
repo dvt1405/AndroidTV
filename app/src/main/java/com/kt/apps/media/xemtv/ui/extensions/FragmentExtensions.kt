@@ -4,9 +4,9 @@ import android.content.Intent
 import android.os.Parcelable
 import android.view.View
 import androidx.core.os.bundleOf
+import androidx.lifecycle.LiveData
 import com.kt.apps.core.base.leanback.*
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.observe
 import com.kt.apps.core.base.BaseRowSupportFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.adapter.leanback.applyLoading
@@ -20,7 +20,6 @@ import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.xemtv.R
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
 import com.kt.apps.media.xemtv.ui.playback.PlaybackActivity
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import javax.inject.Inject
 
 class FragmentExtensions : BaseRowSupportFragment() {
@@ -79,45 +78,65 @@ class FragmentExtensions : BaseRowSupportFragment() {
         adapter = mRowsAdapter
         Logger.e(this, message = "$extensions")
         mRowsAdapter.applyLoading(R.layout.item_tv_loading_presenter)
-        extensionsViewModel.loadChannelForConfig(extensions.sourceUrl)
-            .observe(viewLifecycleOwner) { dataState ->
-                when(dataState) {
-                    is DataState.Success -> {
-                        this@FragmentExtensions.tvList = dataState.data
-                        val channelWithCategory = tvList!!.groupBy {
-                            it.tvGroup
-                        }.toSortedMap()
-                        mRowsAdapter.clear()
-                        val childPresenter = DashboardTVChannelPresenter()
-                        for ((group, channelList) in channelWithCategory) {
-                            val headerItem = try {
-                                val gr = TVChannelGroup.valueOf(group)
-                                HeaderItem(gr.value)
-                            } catch (e: Exception) {
-                                HeaderItem(group)
-                            }
-                            val adapter = ArrayObjectAdapter(childPresenter)
-                            for (channel in channelList) {
-                                adapter.add(channel)
-                            }
-                            mRowsAdapter.add(ListRow(headerItem, adapter))
-                        }
-                    }
-
-                    is DataState.Error -> {
-                        showErrorDialog(content = dataState.throwable.message)
-                        Logger.e(this, exception = dataState.throwable)
-                    }
-
-                    else -> {
-
-                    }
-                }
-            }
     }
 
+    private var liveData: LiveData<DataState<List<ExtensionsChannel>>>? = null
+    private var dataLoaded: Boolean = false
     override fun onStart() {
         super.onStart()
+        liveData = extensionsViewModel.loadChannelForConfig(extensions.sourceUrl)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        liveData?.observe(viewLifecycleOwner) { dataState ->
+            when (dataState) {
+                is DataState.Success -> {
+                    if (dataLoaded && mRowsAdapter.size() > 0) {
+                        return@observe
+                    }
+                    this@FragmentExtensions.tvList = dataState.data
+                    val channelWithCategory = tvList!!.groupBy {
+                        it.tvGroup
+                    }.toSortedMap()
+                    mRowsAdapter.clear()
+                    val childPresenter = DashboardTVChannelPresenter()
+                    for ((group, channelList) in channelWithCategory) {
+                        val headerItem = try {
+                            val gr = TVChannelGroup.valueOf(group)
+                            HeaderItem(gr.value)
+                        } catch (e: Exception) {
+                            HeaderItem(group)
+                        }
+                        val adapter = ArrayObjectAdapter(childPresenter)
+                        for (channel in channelList) {
+                            adapter.add(channel)
+                        }
+                        mRowsAdapter.add(ListRow(headerItem, adapter))
+                        dataLoaded = true
+                    }
+                }
+
+                is DataState.Error -> {
+                    dataLoaded = true
+                    showErrorDialog(content = dataState.throwable.message)
+                    Logger.e(this, exception = dataState.throwable)
+                }
+
+                is DataState.Loading -> {
+                    dataLoaded = false
+                }
+
+                else -> {
+
+                }
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        liveData?.removeObservers(viewLifecycleOwner)
     }
 
     override fun onDetach() {
