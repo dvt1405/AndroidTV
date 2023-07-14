@@ -2,4 +2,11 @@
 <resources>
     <string name="error_playback_popup_content_text">Lỗi nguồn phát nội dung hoặc nội dung được bảo vệ.\nMã lỗi: %d</string>
     <string name="error_playback_popup_title_text">Lỗi phát video</string>
+
+    <string name="nav_search_title">Tìm kiếm</string>
+    <string name="nav_tv_title">Truyền hình</string>
+    <string name="nav_radio_title">Phát thanh</string>
+    <string name="nav_football_title">Bóng đá</string>
+    <string name="nav_iptv_title">IPTV</string>
+    <string name="nav_info_title">Thông tin</string>
 </resources>

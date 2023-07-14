@@ -2,34 +2,34 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/search"
-        android:enabled="false"
+        android:enabled="true"
         android:icon="@drawable/ic_search_24p"
-        android:title="Tìm kiếm"
+        android:title="@string/nav_search_title"
         android:visible="true" />
 
     <item
         android:id="@+id/tv"
         android:enabled="true"
         android:icon="@drawable/ic_tv"
-        android:title="Truyền Hình" />
+        android:title="@string/nav_tv_title" />
 
     <item
         android:id="@+id/radio"
         android:enabled="true"
         android:icon="@drawable/ic_radio"
-        android:title="Phát thanh" />
+        android:title="@string/nav_radio_title" />
 
     <item
         android:id="@+id/extension"
         android:enabled="true"
         android:icon="@drawable/iptv"
-        android:title="IPTV"
+        android:title="@string/nav_iptv_title"
         android:visible="true" />
 
     <item
         android:id="@+id/info"
-        android:enabled="false"
+        android:enabled="true"
         android:icon="@drawable/ic_outline_info_24"
-        android:title="Thông tin"
+        android:title="@string/nav_info_title"
         android:visible="true" />
 </menu>
