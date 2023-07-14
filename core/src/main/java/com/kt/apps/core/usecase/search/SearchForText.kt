@@ -46,7 +46,7 @@ class SearchForText @Inject constructor(
 
     override fun prepareExecute(params: Map<String, Any>): Maybe<Map<String, List<SearchResult>>> {
         val defaultListItem = params[EXTRA_DEFAULT_HISTORY] as? Boolean ?: false
-        val query = params[EXTRA_QUERY] as? String ?: ""
+        val query = (params[EXTRA_QUERY] as? String ?: "").trim()
         val limit = params[EXTRA_LIMIT] as? Int ?: 1500
         val offset = params[EXTRA_OFFSET] as? Int ?: 0
         val filter = params[EXTRA_FILTER] as? String
@@ -342,7 +342,7 @@ class SearchForText @Inject constructor(
         }
 
         fun getHighlightTitle(realTitle: String, _filterHighlight: List<String>?): SpannableString {
-            val spannableString = SpannableString(realTitle)
+            val spannableString = SpannableString(realTitle.trim())
             val lowerRealTitle = realTitle.trim()
                 .lowercase()
                 .replaceVNCharsToLatinChars()
