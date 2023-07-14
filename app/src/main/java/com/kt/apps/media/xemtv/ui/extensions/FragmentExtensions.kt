@@ -89,6 +89,7 @@ class FragmentExtensions : BaseRowSupportFragment() {
 
     override fun onResume() {
         super.onResume()
+        extensionsViewModel.setCurrentDisplayData(liveData)
         liveData?.observe(viewLifecycleOwner) { dataState ->
             when (dataState) {
                 is DataState.Success -> {

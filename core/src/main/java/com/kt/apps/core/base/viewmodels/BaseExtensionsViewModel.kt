@@ -87,7 +87,13 @@ open class BaseExtensionsViewModel @Inject constructor(
         Logger.e(this, message = "id = $id")
         _extensionsChannelListCache[id] = WeakReference(channelList)
     }
+    private var _currentLiveDataConfig: LiveData<DataState<List<ExtensionsChannel>>>? = null
+    val currentLiveDataConfig: LiveData<DataState<List<ExtensionsChannel>>>?
+        get() = _currentLiveDataConfig
 
+    fun setCurrentDisplayData(currentDisplayData: LiveData<DataState<List<ExtensionsChannel>>>?) {
+        _currentLiveDataConfig = currentDisplayData
+    }
     fun loadChannelForConfig(configId: String): LiveData<DataState<List<ExtensionsChannel>>> {
         if (_extensionsChannelListCache[configId] != null
             && !_extensionsChannelListCache[configId]!!.get().isNullOrEmpty()

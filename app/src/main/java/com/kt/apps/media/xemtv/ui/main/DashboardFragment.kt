@@ -240,7 +240,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
             if (mMainFragment is BaseTabLayoutFragment) {
                 (mMainFragment as BaseTabLayoutFragment)
                     .requestFocusChildContent()
-                    .requestFocus()
+                    ?.requestFocus()
                 navDrawerView.setEnableSelectedItem(selectedPosition, true)
             }
         }

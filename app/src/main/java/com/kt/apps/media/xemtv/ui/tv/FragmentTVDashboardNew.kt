@@ -30,7 +30,7 @@ import javax.inject.Inject
 abstract class BaseTabLayoutFragment : BaseRowSupportFragment() {
     abstract val currentPage: Int
     abstract val tabLayout: LeanbackTabLayout
-    abstract fun requestFocusChildContent(): View
+    abstract fun requestFocusChildContent(): View?
 
     class LoadingFragment : BaseRowSupportFragment() {
         override fun initView(rootView: View) {
@@ -281,8 +281,17 @@ class FragmentTVDashboardNew : BaseTabLayoutFragment() {
         }
     }
 
-    override fun requestFocusChildContent(): View {
-        return viewPager
+    override fun requestFocusChildContent(): View? {
+        return if (viewPager.adapter is TVViewPager) {
+            val adapter = viewPager.adapter as TVViewPager
+            if (adapter.isLoading) {
+                return null
+            } else {
+                viewPager
+            }
+        } else {
+            viewPager
+        }
     }
 
     companion object {

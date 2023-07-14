@@ -15,6 +15,7 @@ import androidx.leanback.tab.LeanbackViewPager
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.tabs.TabLayout
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.leanback.GuidedStepSupportFragment
 import com.kt.apps.core.extensions.ExtensionsConfig
@@ -60,9 +61,13 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
     }
 
     private var _btnAddSource: MaterialButton? = null
+    private var _tabLayout: LeanbackTabLayout? = null
+    private var _viewPager: LeanbackViewPager? = null
 
     override fun initView(rootView: View) {
         _btnAddSource = rootView.findViewById(R.id.btn_add_source)
+        _viewPager = rootView.findViewById(R.id.view_pager)
+        _tabLayout = rootView.findViewById(R.id.tab_layout)
     }
 
     override fun initAction(rootView: View) {
@@ -171,6 +176,8 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
 
     override fun onDestroyView() {
         _btnAddSource = null
+        _viewPager = null
+        _tabLayout = null
         super.onDestroyView()
     }
 
@@ -178,6 +185,15 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
         focused: View?,
         direction: Int
     ): View? {
+        if (focused is TabLayout.TabView && direction == View.FOCUS_DOWN) {
+            return if (extensionsViewModel.currentLiveDataConfig?.value is DataState.Loading
+                || extensionsViewModel.currentLiveDataConfig?.value is DataState.Error
+            ) {
+                return focused
+            } else {
+                viewPager
+            }
+        }
         if (focused == _btnAddSource) {
             if (
                 pagerAdapter.count == 0
@@ -192,7 +208,13 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
                     return tabLayout.getTabAt(0)?.view
                 }
             } else if (direction == View.FOCUS_DOWN) {
-                return viewPager
+                return if (extensionsViewModel.currentLiveDataConfig?.value is DataState.Loading
+                    || extensionsViewModel.currentLiveDataConfig?.value is DataState.Error
+                ) {
+                    return focused
+                } else {
+                    viewPager
+                }
             } else if (direction == View.FOCUS_UP) {
                 startActivity(
                     Intent(
@@ -224,7 +246,7 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
     }
 
     override fun requestFocusChildContent(): View? {
-        return viewPager
+        return _viewPager
     }
 
     class ExtensionsChannelViewPager(fragmentManager: FragmentManager) : FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
