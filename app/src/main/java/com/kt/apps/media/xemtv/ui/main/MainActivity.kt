@@ -2,6 +2,7 @@ package com.kt.apps.media.xemtv.ui.main
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.autoupdate.ui.FragmentInfo
 import com.kt.apps.core.base.BaseActivity
@@ -51,6 +52,22 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.main_browse_fragment, DashboardFragment())
             .commitNow()
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        supportFragmentManager.findFragmentById(R.id.main_browse_fragment)
+            .takeIf {
+                it is DashboardFragment
+            }?.let {
+                it as DashboardFragment
+            }?.let {
+                if (it.disableFocusSearch
+                    && keyCode != KeyEvent.KEYCODE_BACK
+                ) {
+                    return true
+                }
+            }
+        return super.onKeyDown(keyCode, event)
     }
 
     override fun onNewIntent(intent: Intent?) {

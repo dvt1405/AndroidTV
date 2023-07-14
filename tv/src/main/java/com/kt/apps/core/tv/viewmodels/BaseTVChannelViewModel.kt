@@ -95,6 +95,13 @@ open class BaseTVChannelViewModel constructor(
         add(lastTVStreamLinkTask!!)
     }
 
+    fun cancelCurrentGetStreamLinkTask() {
+        lastTVStreamLinkTask?.let {
+            compositeDisposable.remove(it)
+            it.dispose()
+        }
+    }
+
     fun playTvByDeepLinks(uri: Uri) {
         !(uri.host?.contentEquals(Constants.DEEPLINK_HOST) ?: return)
         val lastPath = uri.pathSegments.last() ?: return

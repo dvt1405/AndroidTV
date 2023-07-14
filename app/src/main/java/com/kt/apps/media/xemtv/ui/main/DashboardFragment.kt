@@ -36,6 +36,7 @@ import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
 import com.kt.apps.media.xemtv.ui.search.SearchViewModels
 import com.kt.apps.media.xemtv.ui.search.TVSearchActivity
 import com.kt.apps.media.xemtv.ui.tv.BaseTabLayoutFragment
+import com.kt.apps.media.xemtv.ui.tv.FragmentTVDashboardNew
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
@@ -66,6 +67,12 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
     private val searchViewModels by lazy {
         ViewModelProvider(requireActivity(), viewModelFactory)[SearchViewModels::class.java]
     }
+    val disableFocusSearch: Boolean
+        get() = if (mMainFragment is FragmentTVDashboardNew) {
+            (mMainFragment as FragmentTVDashboardNew).isProgressShowing()
+        } else {
+            false
+        }
 
     private val childFocusSearchListener by lazy {
         object : BrowseFrameLayout.OnFocusSearchListener {
@@ -337,6 +344,12 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 if (this is FragmentDashboardExtensions) {
                     if (!isShowingHeaders && this.btnAddSource?.isFocused == true) {
                         navDrawerView.requestFocus()
+                        return
+                    }
+                }
+                if (this is FragmentTVDashboardNew) {
+                    if (this.isProgressShowing()) {
+                        this.dismissProgressAndCancelCurrentTask()
                         return
                     }
                 }

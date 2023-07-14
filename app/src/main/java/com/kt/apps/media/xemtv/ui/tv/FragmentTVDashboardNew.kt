@@ -261,6 +261,15 @@ class FragmentTVDashboardNew : BaseTabLayoutFragment() {
         }
     }
 
+    fun isProgressShowing(): Boolean {
+        return progressManager.isShowing
+    }
+
+    fun dismissProgressAndCancelCurrentTask() {
+        progressManager.hide()
+        tvChannelViewModel.cancelCurrentGetStreamLinkTask()
+    }
+
     private fun filterByType() = { channel: TVChannel ->
         if (type == PlaybackActivity.Type.TV) {
             !channel.isRadio
