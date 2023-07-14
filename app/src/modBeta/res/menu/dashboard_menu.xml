@@ -17,7 +17,7 @@
         android:id="@+id/radio"
         android:enabled="true"
         android:icon="@drawable/ic_radio"
-        android:title="Truyền Thanh" />
+        android:title="Phát thanh" />
 
     <item
         android:id="@+id/football"
