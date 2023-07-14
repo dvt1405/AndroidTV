@@ -1,22 +1,18 @@
 package com.kt.apps.media.xemtv.ui.main
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.Message
 import android.view.*
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.leanback.app.*
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.tabs.TabLayout
-import com.kt.apps.autoupdate.ui.AppUpdateActivity
 import com.kt.apps.core.Constants
 import com.kt.apps.core.R
 import com.kt.apps.core.base.IKeyCodeHandler
@@ -31,10 +27,10 @@ import com.kt.apps.core.utils.leanback.findCurrentFocusedView
 import com.kt.apps.core.utils.leanback.findCurrentSelectedPosition
 import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
+import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.extensions.FragmentAddExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
 import com.kt.apps.media.xemtv.ui.search.SearchViewModels
-import com.kt.apps.media.xemtv.ui.search.TVSearchActivity
 import com.kt.apps.media.xemtv.ui.tv.BaseTabLayoutFragment
 import com.kt.apps.media.xemtv.ui.tv.FragmentTVDashboardNew
 import dagger.android.AndroidInjector
@@ -212,6 +208,9 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
             rowsAdapter.add(pageRow)
         }
         startEntranceTransition()
+        Handler(Looper.getMainLooper()).postDelayed({
+            navDrawerView.setCloseState()
+        }, 200)
     }
 
     fun selectPageRowByUri(uri: Uri) {
@@ -362,7 +361,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                         if (currentTabSelected >= 0) {
                             this.tabLayout.getTabAt(currentTabSelected)?.view?.requestFocus()
                         } else {
-                            this.tabLayout.getTabAt(0)?.view?.requestFocus()
+                            navDrawerView.openNav()
                         }
                     } else {
                         navDrawerView.requestFocus()

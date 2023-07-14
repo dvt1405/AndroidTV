@@ -63,12 +63,19 @@ class NavDrawerView @JvmOverloads constructor(
             this.addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator?) {
                     super.onAnimationEnd(animation)
+                    var childSelected: View? = null
                     forEachIndexed { _, childView ->
                         childView.isPressed = false
                         childView.isSelected = childView.tag == selectedItemId
+                        if (childView.isSelected) {
+                            childSelected = childView
+                        }
                     }
                     _isOpen = true
                     _isAnimating.set(false)
+                    if (this@NavDrawerView.focusedChild == null) {
+                        childSelected?.requestFocus()
+                    }
                 }
             })
         }
@@ -275,7 +282,7 @@ class NavDrawerView @JvmOverloads constructor(
         }
     }
 
-    fun forceCloseNav() {
+    private fun forceCloseNav() {
         _isOpen = false
         _isAnimating.set(true)
         openNavigator.cancel()
@@ -285,6 +292,17 @@ class NavDrawerView @JvmOverloads constructor(
             headerTitle?.text = null
         }
         closeAnimator.start()
+    }
+
+    fun setCloseState() {
+        forEachIndexed { _, childView ->
+            childView.isSelected = false
+            childView.isPressed = childView.tag == selectedItemId
+            val headerTitle = childView.findViewById<TextView>(R.id.row_header)
+            headerTitle?.visibility = INVISIBLE
+        }
+        _isOpen = false
+        _isAnimating.set(false)
     }
 
     override fun focusSearch(focused: View?, direction: Int): View {
