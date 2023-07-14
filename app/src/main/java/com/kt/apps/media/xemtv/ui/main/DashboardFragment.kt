@@ -89,12 +89,6 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                     && focused is TabLayout.TabView
                     && direction == View.FOCUS_UP
                 ) {
-                    startActivity(
-                        Intent(
-                            requireContext(),
-                            TVSearchActivity::class.java
-                        )
-                    )
                     return focused
                 }
 
