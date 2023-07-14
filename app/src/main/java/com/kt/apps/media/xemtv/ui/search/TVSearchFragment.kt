@@ -372,20 +372,20 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString(EXTRA_QUERY_FILTER, _searchFilter)
-        outState.putString(EXTRA_QUERY_HINT, _queryHint)
+//        outState.putString(EXTRA_QUERY_FILTER, _searchFilter)
+//        outState.putString(EXTRA_QUERY_HINT, _queryHint)
     }
 
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
-        if (savedInstanceState != null) {
-            savedInstanceState.getString(EXTRA_QUERY_FILTER)?.let {
-                _searchFilter = it
-            }
-            savedInstanceState.getString(EXTRA_QUERY_HINT).takeIf {
-                !it.isNullOrBlank()
-            }
-        }
+//        if (savedInstanceState != null) {
+//            savedInstanceState.getString(EXTRA_QUERY_FILTER)?.let {
+//                _searchFilter = it
+//            }
+//            savedInstanceState.getString(EXTRA_QUERY_HINT).takeIf {
+//                !it.isNullOrBlank()
+//            }
+//        }
     }
 
     override fun onDpadCenter() {

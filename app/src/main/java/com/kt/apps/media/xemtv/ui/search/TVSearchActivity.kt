@@ -27,10 +27,10 @@ class TVSearchActivity : BaseActivity<ActivityTvSearchBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.getDefaultSearchList()
     }
 
     override fun initView(savedInstanceState: Bundle?) {
+        viewModel.getDefaultSearchList()
         setBackgroundOverlay()
         commitSearchFragment(intent)
     }
