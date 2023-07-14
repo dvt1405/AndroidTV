@@ -302,4 +302,7 @@ object Constants {
     const val REGEX_VN_I = "[íìỉĩị]"
     const val REGEX_VN_O = "[oóòỏõọôốồổỗộơớờởỡợ]"
     const val REGEX_VN_U = "[uúùủũụưứừửữự]"
+    val regexHttp by lazy {
+        Regex("[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)")
+    }
 }

@@ -1,7 +1,7 @@
 package com.kt.apps.media.xemtv.ui.extensions
 
 import android.os.Bundle
-import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,14 +12,17 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseRowSupportFragment
 import com.kt.apps.core.base.DataState
+import com.kt.apps.core.base.leanback.BrowseFrameLayout
 import com.kt.apps.core.base.receiver.NetworkChangeReceiver.Companion.isNetworkAvailable
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.xemtv.R
+import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
 
@@ -43,6 +46,23 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
     }
 
     override fun initView(rootView: View) {
+        (rootView as BrowseFrameLayout).setOnFocusSearchListener { focused, direction ->
+            if (progressManager.isShowing) {
+                return@setOnFocusSearchListener focused
+            }
+            return@setOnFocusSearchListener null
+        }
+        rootView.setOnDispatchKeyListener { v, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK && (event.action == KeyEvent.ACTION_DOWN)) {
+                if (progressManager.isShowing) {
+                    progressManager.hide()
+                    extensionsViewModel.addExtensionConfigLiveData.removeObservers(viewLifecycleOwner)
+                    extensionsViewModel.removePendingIPTVSource()
+                    return@setOnDispatchKeyListener true
+                }
+            }
+            return@setOnDispatchKeyListener false
+        }
     }
 
     override fun onResume() {
@@ -126,10 +146,19 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
             showErrorDialog(content = "Tên nguồn không được bỏ trống")
             return
         }
+        val inputTextUrl = view?.findViewById<TextInputEditText>(R.id.textInputEditText_2)
+        if (inputTextUrl?.text.isNullOrBlank()) {
+            showErrorDialog(
+                content = "Đường dẫn không được bỏ trống")
+            return
+        }
         val sourceUrl = view?.findViewById<TextInputLayout>(R.id.textInputLayout_2)?.prefixText.toString() +
-                view?.findViewById<TextInputEditText>(R.id.textInputEditText_2)?.text.toString()
-        if (!sourceUrl.startsWith("http")) {
-            showErrorDialog(content = "Đường dẫn không hợp lệ! Đường dẫn phải phải bắt đầu bằng: \"http\"")
+                inputTextUrl?.text.toString()
+
+        if (!Constants.regexHttp.matches(sourceUrl)) {
+            showErrorDialog(
+                titleText = "Lỗi",
+                content = "Đường dẫn không hợp lệ! Vui lòng kiểm tra lại")
             return
         }
         val type = when (view?.findViewById<ChipGroup>(R.id.type_group)
@@ -143,6 +172,10 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
             sourceUrl,
             type
         )
+        if (!requireContext().isNetworkAvailable()) {
+            showErrorDialog(content = "Vui lòng kết nối internet và thử lại")
+            return
+        }
         extensionsViewModel.addIPTVSource(extensionsConfig)
         extensionsViewModel.addExtensionConfigLiveData.removeObservers(viewLifecycleOwner)
         extensionsViewModel.addExtensionConfigLiveData.observe(viewLifecycleOwner,
@@ -172,7 +205,9 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
                         is DataState.Error -> {
                             progressManager.hide()
                             if (context?.isNetworkAvailable() == true) {
-                                showErrorDialog(content = "Định dạng nguồn kênh chưa được hỗ trợ!")
+                                showErrorDialog(
+                                    titleText = "Lỗi thêm nguồn video",
+                                    content = t.throwable.message)
                             } else {
                                 showErrorDialog(content = "Vui lòng kiểm tra kết nối internet và thử lại!")
                             }
