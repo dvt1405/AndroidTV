@@ -3,11 +3,15 @@ package com.kt.apps.media.mobile.ui.fragments.dashboard
 import android.os.Bundle
 import androidx.core.view.children
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.google.android.material.navigation.NavigationBarMenu
+import com.google.android.material.navigation.NavigationBarView
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentDashboardBinding
 import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.DashboardPagerAdapter
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.ui.fragments.models.WrappedTVChannelViewModel
 import javax.inject.Inject
 
 class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
@@ -30,16 +34,21 @@ class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
     override fun initView(savedInstanceState: Bundle?) {
         binding.viewpager.adapter = _adapter
         binding.viewpager.isUserInputEnabled = false
-        tvViewModel.getListTVChannel(false)
+        (binding.bottomNavigation as NavigationBarView).apply {
+            labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
+        }
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        _adapter.onRefresh(binding.bottomNavigation.menu.children.map {
+
+        _adapter.onRefresh((binding.bottomNavigation as NavigationBarView).menu.children.map {
             it.itemId
         })
-        binding.bottomNavigation.setOnItemSelectedListener {
+        (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener {
             binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
             return@setOnItemSelectedListener true
         }
+
+        tvViewModel.getListTVChannel(false)
     }
 }

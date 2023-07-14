@@ -27,9 +27,7 @@ import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityMainBinding
 import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
-import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
-import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
-import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.ui.fragments.models.*
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
 import com.kt.apps.media.mobile.utils.debounce
@@ -37,14 +35,16 @@ import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.apps.media.mobile.utils.groupAndSort
 import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.skeleton.KunSkeleton
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.reflect.KClass
 
-class ChannelFragment : BaseFragment<ActivityMainBinding>() {
+open abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
 
     override val layoutResId: Int
         get() = R.layout.activity_main
@@ -57,33 +57,6 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
     private val isLandscape: Boolean
         get() = resources.getBoolean(R.bool.is_landscape)
 
-    private val defaultSection by lazy {
-        arrayListOf<SectionItem>(
-            SectionItemElement.MenuItem(
-                displayTitle = "TV",
-                id = R.id.tv,
-                icon = resources.getDrawable(com.kt.apps.core.R.drawable.ic_tv)
-            ),
-            SectionItemElement.MenuItem(
-                displayTitle = "Radio",
-                id = R.id.radio,
-                icon = resources.getDrawable(com.kt.apps.core.R.drawable.ic_radio)
-            )
-        )
-    }
-
-    private val addExtensionSection by lazy {
-        if (BuildConfig.isBeta)
-            arrayListOf(
-                SectionItemElement.MenuItem(
-                    displayTitle = "Thêm nguồn",
-                    id = R.id.add_extension,
-                    icon = resources.getDrawable(R.drawable.round_add_circle_outline_24)
-                )
-            )
-        else emptyList()
-    }
-
     //Views
     private val swipeRefreshLayout by lazy {
         binding.swipeRefreshLayout
@@ -91,10 +64,6 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
 
     private val mainRecyclerView by lazy {
         binding.mainChannelRecyclerView
-    }
-
-    private val sectionRecyclerView by lazy {
-        binding.sectionRecyclerView
     }
 
     private val skeletonScreen by lazy {
@@ -108,71 +77,14 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
             .build()
     }
 
-    private val _tvChannelData by lazy {
-        MutableStateFlow<List<TVChannel>>(emptyList())
-    }
-
-    private val debounceOnScrollListener by lazy {
-        debounce<Unit>(300, viewLifecycleOwner.lifecycleScope) {
-            if (adapter.listItem.isEmpty()) {
-                return@debounce
-            }
-            (mainRecyclerView.layoutManager as LinearLayoutManager).findFirstCompletelyVisibleItemPosition()
-                .let { if (it == NO_POSITION) (mainRecyclerView.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition() else it }
-                .takeIf { it != NO_POSITION }
-                ?.run {
-                    Log.d(TAG, "debounceOnScrollListener: $this")
-                    val id = findMenuIdByItemPosition(this)
-                    val adapterId = sectionAdapter.selectForId(id)
-                    sectionRecyclerView.fastSmoothScrollToPosition(adapterId)
-                }
-        }
-    }
-
-    private fun findMenuIdByItemPosition(position: Int): Int {
-        return adapter.listItem[position].second.firstOrNull()?.let {
-            (it as? ChannelElement.ExtensionChannelElement)?.model?.sourceFrom
-        }?.let { _cacheMenuItem[it] } ?: kotlin.run {
-            val itemTitle = adapter.listItem[position].first
-            if (itemTitle == TVChannelGroup.VOV.value || itemTitle == TVChannelGroup.VOH.value) {
-                R.id.radio
-            } else {
-                R.id.tv
-            }
-        }
-    }
-
-    private val _onScrollListener by lazy {
-        object : OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                debounceOnScrollListener(Unit)
-            }
-        }
-    }
-
-    private val sectionAdapter by lazy {
-        SectionAdapter(requireContext()).apply {
-            onItemRecyclerViewCLickListener = { item, _ ->
-                if (onChangeItem(item)) {
-                    this.currentSelectedItem = item
-                }
-            }
-            onItemLongCLickListener = { item ->
-                showAlertRemoveExtension(item.displayTitle)
-                true
-            }
-        }
-    }
-
     private val adapter by lazy {
         TVDashboardAdapter().apply {
             onChildItemClickListener = { item, _ ->
                 when (item) {
                     is ChannelElement.TVChannelElement -> onClickItemChannel(item.model)
-                    is ChannelElement.ExtensionChannelElement -> tvChannelViewModel?.getExtensionChannel(
-                        item.model
-                    )
+//                    is ChannelElement.ExtensionChannelElement -> tvChannelViewModel?.getExtensionChannel(
+//                        item.model
+//                    )
                 }
             }
         }
@@ -184,11 +96,7 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
         }
     }
 
-    private val tvChannelViewModel: TVChannelViewModel? by lazy {
-        activity?.run {
-            ViewModelProvider(this, factory)[TVChannelViewModel::class.java]
-        }
-    }
+    abstract val tvChannelViewModel: ChannelsModelAdapter?
 
     private val networkStateViewModel: NetworkStateViewModel? by lazy {
         activity?.run {
@@ -202,15 +110,15 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
         }
     }
 
-    private val listTVChannelObserver: Observer<DataState<List<TVChannel>>> by lazy {
-        Observer { dataState ->
-            when (dataState) {
-                is DataState.Success -> _tvChannelData.value = dataState.data
-                is DataState.Error -> swipeRefreshLayout.isRefreshing = false
-                else -> {}
-            }
-        }
-    }
+//    private val listTVChannelObserver: Observer<DataState<List<TVChannel>>> by lazy {
+//        Observer { dataState ->
+//            when (dataState) {
+//                is DataState.Success -> _tvChannelData.value = dataState.data
+//                is DataState.Error -> swipeRefreshLayout.isRefreshing = false
+//                else -> {}
+//            }
+//        }
+//    }
 
     private var _cacheMenuItem: MutableMap<String, Int> = mutableMapOf<String, Int>()
     override fun initView(savedInstanceState: Bundle?) {
@@ -229,90 +137,77 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
             }
         }
 
-        sectionRecyclerView.apply {
-            adapter = this@ChannelFragment.sectionAdapter
-            layoutManager = LinearLayoutManager(context).apply {
-                orientation = if (isLandscape) VERTICAL else HORIZONTAL
-            }
-        }
-        sectionAdapter.onRefresh(defaultSection + addExtensionSection, notifyDataSetChange = true)
-        _tvChannelData.value = emptyList()
-
         skeletonScreen.run()
     }
 
 
     override fun initAction(savedInstanceState: Bundle?) {
-        tvChannelViewModel?.apply {
-            tvChannelLiveData.observe(this@ChannelFragment, listTVChannelObserver)
-        }
+        tvChannelViewModel
         playbackViewModel
         extensionsViewModel?.loadExtensionData()
 
         with(binding.swipeRefreshLayout) {
             setDistanceToTriggerSync(screenHeight / 3)
             setOnRefreshListener {
-                _tvChannelData.value = emptyList()
                 skeletonScreen.run()
                 tvChannelViewModel?.getListTVChannel(true)
             }
         }
-        with(binding.mainChannelRecyclerView) {
-            addOnScrollListener(_onScrollListener)
-        }
-
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-                launch {
-                    _tvChannelData.collectLatest { tvChannel ->
-                        delay(500)
-                        if (tvChannel.isNotEmpty())
-                            reloadOriginalSource(tvChannel)
-                    }
+            launch(CoroutineExceptionHandler { context, throwable ->
+                swipeRefreshLayout.isRefreshing = false
+            }) {
+                tvChannelViewModel?.listChannels?.collectLatest { tvChannel ->
+                    delay(500)
+                    if (tvChannel.isNotEmpty())
+                        reloadOriginalSource(tvChannel)
                 }
-                if (isLandscape)
-                    launch {
-                        playbackViewModel?.state?.collectLatest {state ->
-                            with(mainRecyclerView) {
-                                when (state) {
-                                    PlaybackViewModel.State.IDLE -> setPadding(0, 0, 0, 0)
-                                    PlaybackViewModel.State.LOADING, PlaybackViewModel.State.LOADING -> {
-                                        setPadding(0,0,0,(screenHeight * 0.4).toInt())
-                                        clipToPadding = false
-                                    }
-                                    else -> { }
+            }
+            if (isLandscape)
+                launch {
+                    playbackViewModel?.state?.collectLatest { state ->
+                        with(mainRecyclerView) {
+                            when (state) {
+                                PlaybackViewModel.State.IDLE -> setPadding(0, 0, 0, 0)
+                                PlaybackViewModel.State.LOADING, PlaybackViewModel.State.LOADING -> {
+                                    setPadding(0, 0, 0, (screenHeight * 0.4).toInt())
+                                    clipToPadding = false
                                 }
+                                else -> {}
                             }
                         }
                     }
-
-                launch {
-                    extensionsViewModel?.perExtensionChannelData?.collect {
-                        appendExtensionSource(it)
-                    }
                 }
 
-                launch {
-                    extensionsViewModel?.extensionsConfigs?.collectLatest {
-                        reloadNavigationBar(it)
-                    }
+            launch {
+                extensionsViewModel?.perExtensionChannelData?.collect {
+                    appendExtensionSource(it)
                 }
+            }
 
-                launch {
-                    networkStateViewModel?.networkStatus?.collectLatest {
+            launch {
+                extensionsViewModel?.extensionsConfigs?.collectLatest {
+                    reloadNavigationBar(it)
+                }
+            }
+
+            launch {
+                networkStateViewModel?.networkStatus?.collectLatest {
 //                        Toast.makeText(this@ChannelFragment.context, "$it", Toast.LENGTH_LONG).show()
-                        if (it == NetworkState.Connected) {
-                            if (adapter.itemCount == 0) {
-                                tvChannelViewModel?.getListTVChannel(forceRefresh = true)
-                            } else if (skeletonScreen.isRunning) {
-                                skeletonScreen.hide()
-                            }
+                    if (it == NetworkState.Connected) {
+                        if (adapter.itemCount == 0) {
+//                                tvChannelViewModel?.getListTVChannel(forceRefresh = true)
+                        } else if (skeletonScreen.isRunning) {
+                            skeletonScreen.hide()
                         }
-                        if (it == NetworkState.Connected && adapter.itemCount == 0)
-                            tvChannelViewModel?.getListTVChannel(forceRefresh = true)
                     }
+                    if (it == NetworkState.Connected && adapter.itemCount == 0)
+                        tvChannelViewModel?.getListTVChannel(forceRefresh = true)
                 }
+            }
         }
 
+//        tvChannelViewModel?.getListTVChannel(savedInstanceState != null)
         tvChannelViewModel?.getListTVChannel(savedInstanceState != null)
     }
 
@@ -321,10 +216,6 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
         mainRecyclerView.clearOnScrollListeners()
     }
 
-    override fun onStart() {
-        super.onStart()
-        mainRecyclerView.addOnScrollListener(_onScrollListener)
-    }
     private fun reloadOriginalSource(data: List<TVChannel>) {
         val grouped = groupAndSort(data).map {
             Pair(
@@ -336,8 +227,6 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
         extensionsViewModel?.perExtensionChannelData?.replayCache?.forEach {
             appendExtensionSource(it)
         }
-        sectionAdapter.onRefresh(defaultSection + addExtensionSection, notifyDataSetChange = true)
-        sectionRecyclerView.fastSmoothScrollToPosition(0)
         skeletonScreen.hide {
             scrollToPosition(0)
         }
@@ -451,13 +340,9 @@ class ChannelFragment : BaseFragment<ActivityMainBinding>() {
                 icon = resources.getDrawable(R.drawable.round_add_circle_outline_24)
             )
         }
-        sectionAdapter.onRefresh(
-            defaultSection + extraSection + addExtensionSection,
-            notifyDataSetChange = true
-        )
     }
 
     private fun onClickItemChannel(channel: TVChannel) {
-        tvChannelViewModel?.loadLinkStreamForChannel(channel)
+//        tvChannelViewModel?.loadLinkStreamForChannel(channel)
     }
 }

@@ -2,7 +2,9 @@ package com.kt.apps.media.mobile.ui.main
 
 import android.util.Log
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
@@ -14,6 +16,7 @@ import com.kt.apps.core.utils.loadImgByDrawableIdResName
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
+import com.kt.apps.media.mobile.utils.LinearLayoutPagerManager
 
 interface IChannelElement {
     val name: String
@@ -69,20 +72,14 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
 //        Logger.d(this, message = "${binding.tvChannelChildRecyclerView.width}")
         Log.d(TAG, "bindItem: ${item.first} $position")
         binding.title.text = item.first
-        val layoutManager = object : GridLayoutManager(
-            binding.root.context,
-            spanCount,
-            VERTICAL,
-            false
-        ) {
-            override fun canScrollVertically(): Boolean {
-                return false
-            }
 
-            override fun canScrollHorizontally(): Boolean {
-                return false
-            }
-        }
+        val layoutManager = LinearLayoutPagerManager(
+            binding.root.context,
+            LinearLayoutManager.HORIZONTAL,
+            false,
+            spanCount
+        )
+
         layoutManager.initialPrefetchItemCount = item.second.size
         layoutManager.isItemPrefetchEnabled = true
         binding.tvChannelChildRecyclerView.layoutManager = layoutManager

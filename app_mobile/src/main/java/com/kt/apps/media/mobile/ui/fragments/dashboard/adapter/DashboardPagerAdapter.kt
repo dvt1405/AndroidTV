@@ -5,6 +5,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
+import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
 
 class DashboardPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
     private val _listItem by lazy {
@@ -20,10 +21,11 @@ class DashboardPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateA
 
     override fun createFragment(position: Int): Fragment {
         return when (_listItem[position]) {
-            R.id.tv, R.id.radio -> FragmentTVDashboard()
-            R.id.extension -> FragmentTVDashboard() //FragmentIptvDashboard()
-            R.id.search -> FragmentTVDashboard() //FragmentSearch()
-            R.id.football -> FragmentTVDashboard()
+            R.id.tv -> FragmentTVDashboard(TVDashboardHelper())
+            R.id.radio -> FragmentTVDashboard(RadioDashboardHelper())
+            R.id.extension -> TVChannelsFragment() //FragmentIptvDashboard()
+            R.id.search -> TVChannelsFragment() //FragmentSearch()
+            R.id.football -> TVChannelsFragment()
 //            R.id.info -> FragmentTVDashboard() //FragmentInfo()
             else -> throw IllegalStateException("Not support for item: ${_listItem[position]}")
         }

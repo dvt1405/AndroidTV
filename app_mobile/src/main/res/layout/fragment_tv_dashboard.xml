@@ -8,14 +8,29 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        >
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"
-            app:tabMode="scrollable"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:tabBackground="@drawable/tabs_selector"
+            app:tabTextColor="@color/white"
+            app:tabSelectedTextColor="@color/black"
+            android:background="@color/transparent"
+            app:tabIndicatorColor="@color/transparent"
+            app:tabMode="scrollable"
+            app:tabPaddingStart="40dp"
+            app:tabPaddingEnd="40dp"
+            app:tabPaddingTop="6dp"
+            app:tabPaddingBottom="6dp"
+            app:tabMinWidth="20dp"
+            app:tabTextAppearance="@style/TabTextAppearance"
+            />
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewpager"
@@ -24,6 +39,8 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tab_layout" />
+            app:layout_constraintTop_toBottomOf="@id/tab_layout"
+            android:layout_marginTop="32dp"
+            />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

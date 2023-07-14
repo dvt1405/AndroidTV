@@ -8,59 +8,19 @@
 
     </data>
 
-    <FrameLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fitsSystemWindows="true">
-
-
-        <LinearLayout
+        android:id="@+id/swipe_refresh_layout"
+        android:layout_height="match_parent">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/main_channel_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/black">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="96dp"
-                android:layout_height="match_parent">
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/section_recycler_view"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:fadingEdge="vertical"
-                    android:layout_gravity="center_vertical"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintLeft_toLeftOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
-                    />
-                <View
-                    android:id="@+id/separator"
-                    android:layout_width="1dp"
-                    android:layout_height="match_parent"
-                    android:background="@color/lines_colors"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintTop_toBottomOf="parent"
-                    app:layout_constraintRight_toRightOf="parent"
-                    />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                android:layout_width="match_parent"
-                android:id="@+id/swipe_refresh_layout"
-                android:layout_height="match_parent">
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/main_channel_recycler_view"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:fadingEdge="vertical"
-                    android:clipToPadding="false"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
-        </LinearLayout>
-
-    </FrameLayout>
+            android:fadingEdge="vertical"
+            android:clipToPadding="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:requiresFadingEdge="vertical"
+            />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </layout>

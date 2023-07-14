@@ -2,27 +2,29 @@ package com.kt.apps.media.mobile.ui.fragments.tv.adapter
 
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.kt.apps.core.tv.model.TVChannelGroup
-import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVChannelList
+import com.kt.apps.media.mobile.R
+import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.IDashboardHelper
 
-class TVDashboardAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
+class TVDashboardAdapter(val fragment: Fragment, private val helper: IDashboardHelper) : FragmentStateAdapter(fragment){
 
     private val _listItemCategory by lazy {
         mutableListOf<String>()
     }
 
     override fun getItemCount(): Int {
-        return _listItemCategory.size
+        return _listItemCategory.size + 1
     }
 
     override fun createFragment(position: Int): Fragment {
-        return FragmentTVChannelList.newInstance(_listItemCategory[position])
+        return if (position == 0 ) {
+            return helper.totalFragment()
+        } else helper.perChannelFragment(_listItemCategory[position - 1])
     }
 
     fun getTitleForPage(position: Int): CharSequence {
-        return TVChannelGroup.valueOf(
-            _listItemCategory[position]
-        ).value
+        return if (position == 0) {
+            fragment.getString(R.string.all)
+        } else _listItemCategory[position - 1]
     }
 
     fun onRefresh(listItemCategory: Set<String>) {

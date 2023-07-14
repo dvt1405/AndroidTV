@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <data>
 
@@ -21,24 +22,27 @@
         tools:background="@color/black"
         tools:targetApi="m">
 
-        <ImageView
-            android:id="@+id/logo"
+        <com.google.android.material.imageview.ShapeableImageView
+            app:shapeAppearance="@style/RoundedCornersImageView"
             android:layout_width="200dp"
-            android:layout_height="112dp"
-            android:contentDescription="TODO" />
+            android:layout_height="120dp"
+            android:id="@+id/logo"/>
+
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="match_parent"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
             android:paddingVertical="10dp"
-            android:gravity="center"
+            android:gravity="left"
             android:singleLine="true"
-            android:textSize="20sp"
+            android:textSize="14sp"
             android:textColor="@color/white"
             android:text="@{item.name}"
-            tools:text="Channel name" />
+            tools:text="Channel name"
+            android:padding="8dp"
+            />
     </LinearLayout>
 </layout>

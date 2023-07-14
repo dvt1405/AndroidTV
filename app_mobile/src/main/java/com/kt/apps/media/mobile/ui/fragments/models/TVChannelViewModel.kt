@@ -18,45 +18,24 @@ import com.kt.apps.core.utils.isShortLink
 import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.isNetworkAvailable
 import com.kt.apps.media.mobile.models.NoNetworkException
+import com.kt.apps.media.mobile.utils.asFlow
+import com.kt.apps.media.mobile.utils.groupAndSort
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-class TVChannelViewModel @Inject constructor(
+open class TVChannelViewModel @Inject constructor(
     private val interactors: TVChannelInteractors,
     private val app: App,
     private val workManager: WorkManager
 ) : BaseTVChannelViewModel(interactors) {
-    val wrapperListChannel: LiveData<DataState<Map<String, List<TVChannel>>>> = Transformations.map(
-        _listTvChannelLiveData
-    ) {
-        return@map when (it) {
-            is DataState.Success -> {
-                DataState.Success(it.data.groupBy {
-                    it.tvGroup
-                })
-            }
-
-            is DataState.None -> DataState.None()
-
-            is DataState.Update -> {
-                DataState.Update(it.data.groupBy {
-                    it.tvGroup
-                })
-            }
-
-            is DataState.Loading -> DataState.Loading()
-
-            is DataState.Error -> DataState.Error(it.throwable)
-
-            else -> {
-                throw IllegalStateException()
-            }
-        }
-    }
-
     override fun getListTVChannel(forceRefresh: Boolean, sourceFrom: TVDataSourceFrom) {
         if (app.isNetworkAvailable())
             super.getListTVChannel(forceRefresh, sourceFrom)

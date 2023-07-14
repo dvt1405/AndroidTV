@@ -31,6 +31,7 @@ import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.ui.fragments.models.WrappedTVChannelViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -53,8 +54,8 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     private var layoutHandler: ComplexLayoutHandler? = null
 
-    private val tvChannelViewModel: TVChannelViewModel? by lazy {
-        ViewModelProvider(this, factory)[TVChannelViewModel::class.java].apply {
+    private val tvChannelViewModel: TVChannelViewModel by lazy {
+        ViewModelProvider(this, factory)[WrappedTVChannelViewModel::class.java].apply {
             this.tvWithLinkStreamLiveData.observe(this@ComplexActivity, linkStreamDataObserver)
         }
     }
@@ -141,7 +142,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                                 if (state.error != null && state.error is PlaybackFailException) {
                                     logger.logPlaybackShowError(
                                         state.error.error,
-                                        tvChannelViewModel?.lastWatchedChannel?.channel?.tvChannelName ?: ""
+                                        tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: ""
                                     )
                                     handleError(state.error)
                                 }
@@ -184,7 +185,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         if (deeplink.host?.equals(Constants.HOST_TV) == true || deeplink.host?.equals(Constants.HOST_RADIO) == true) {
             if(deeplink.path?.contains("channel") == true) {
-                tvChannelViewModel?.playMobileTvByDeepLinks(uri = deeplink)
+                tvChannelViewModel.playMobileTvByDeepLinks(uri = deeplink)
                 intent.data = null
             } else {
                 intent.data = null
@@ -198,7 +199,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             is TimeoutException -> showErrorAlert("Đã xảy ra lỗi, hãy kiểm tra kết nối mạng")
             is PlaybackFailException -> {
                 val error = throwable.error
-                val channelName = (tvChannelViewModel?.lastWatchedChannel?.channel?.tvChannelName ?: "")
+                val channelName = (tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "")
                 val message = "Kênh $channelName hiện tại đang lỗi hoặc chưa hỗ trợ nội dung miễn phí: ${error.errorCode} ${error.message}"
                 showErrorAlert(message)
             }
