@@ -135,6 +135,7 @@ class SearchView @JvmOverloads constructor(
             return hint
         }
         set(value) {
+            mSearchSrcTextView?.hint = value
             mQueryHint = value
         }
 
