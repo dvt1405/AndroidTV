@@ -46,7 +46,7 @@ class SearchForText @Inject constructor(
     override fun prepareExecute(params: Map<String, Any>): Maybe<Map<String, List<SearchResult>>> {
         val defaultListItem = params[EXTRA_DEFAULT_HISTORY] as? Boolean ?: false
         val query = params[EXTRA_QUERY] as? String ?: ""
-        val limit = params[EXTRA_LIMIT] as? Int ?: 0
+        val limit = params[EXTRA_LIMIT] as? Int ?: 1500
         val offset = params[EXTRA_OFFSET] as? Int ?: 0
         val filter = params[EXTRA_FILTER] as? String
         val queryNormalize = query.lowercase()
@@ -157,8 +157,12 @@ class SearchForText @Inject constructor(
         orderCount++
         orderCount++
         if (splitStr.size > 1) {
-            regexSplit = splitStr.map {
-                return@map "OR tvChannelName MATCH '*$it *' OR categoryName MATCH '*$it *'"
+            regexSplit = splitStr.mapIndexed { index, s ->
+                if (index == splitStr.size - 1) {
+                    return@mapIndexed "OR tvChannelName MATCH '*$s*' OR categoryName MATCH '*$s*'"
+                } else {
+                    return@mapIndexed "OR tvChannelName MATCH '*$s *' OR categoryName MATCH '*$s *'"
+                }
             }.reduceIndexed { index, acc, s ->
                 if (index == 0) {
                     orderCount++

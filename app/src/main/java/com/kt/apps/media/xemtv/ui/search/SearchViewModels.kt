@@ -48,7 +48,6 @@ class SearchViewModels @Inject constructor(
 
     fun querySearch(query: String?, filter: String? = null, page: Int = 0) {
         query ?: return
-        compositeDisposable.clear()
         if (_lastSearchQuery == query.trim() && _searchQueryLiveData.value is DataState.Loading) {
             return
         }
@@ -157,6 +156,9 @@ class SearchViewModels @Inject constructor(
     }
 
     fun getDefaultSearchList() {
+        if (searchTask != null && _searchQueryLiveData.value is DataState.Loading) {
+            return
+        }
         _searchQueryLiveData.postValue(DataState.Loading())
         searchTask?.let {
             it.dispose()
