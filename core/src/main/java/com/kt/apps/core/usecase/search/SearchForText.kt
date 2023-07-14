@@ -14,6 +14,7 @@ import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCateg
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.usecase.history.GetListHistory
+import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Single
@@ -58,6 +59,12 @@ class SearchForText @Inject constructor(
             .split(" ")
             .filter {
                 it.isNotBlank()
+            }.flatMap {
+                val unSpecialChar = it.removeAllSpecialChars()
+                if (it != unSpecialChar) {
+                    return@flatMap listOf(it, unSpecialChar)
+                }
+                return@flatMap listOf(it)
             }
         val tvChannelSource: Single<Map<String, List<SearchResult>>> = roomDataBase.tvChannelDao()
             .searchChannelByName(query)
@@ -145,6 +152,12 @@ class SearchForText @Inject constructor(
         val splitStr = queryString.lowercase().split(" ")
             .filter {
                 it.isNotBlank()
+            }.flatMap {
+                val unSpecialChar = it.removeAllSpecialChars()
+                if (it != unSpecialChar) {
+                    return@flatMap listOf(it, unSpecialChar)
+                }
+                return@flatMap listOf(it)
             }
 
         var regexSplit = ""
@@ -158,10 +171,10 @@ class SearchForText @Inject constructor(
         orderCount++
         if (splitStr.size > 1) {
             regexSplit = splitStr.mapIndexed { index, s ->
-                if (index == splitStr.size - 1) {
-                    return@mapIndexed "OR tvChannelName MATCH '*$s*' OR categoryName MATCH '*$s*'"
+                return@mapIndexed if (index == splitStr.size - 1 || index == 0) {
+                    "OR tvChannelName MATCH '*$s*' OR categoryName MATCH '*$s*'"
                 } else {
-                    return@mapIndexed "OR tvChannelName MATCH '*$s *' OR categoryName MATCH '*$s *'"
+                    "OR tvChannelName MATCH '*$s *' OR categoryName MATCH '*$s *'"
                 }
             }.reduceIndexed { index, acc, s ->
                 if (index == 0) {
