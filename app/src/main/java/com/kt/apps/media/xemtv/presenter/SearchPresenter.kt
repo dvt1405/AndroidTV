@@ -25,7 +25,7 @@ class SearchPresenter : Presenter() {
 
     var filterString: String?
         set(value) {
-            _filterHighlight = value?.lowercase()
+            _filterHighlight = value?.lowercase()?.trim()
                 ?.replaceVNCharsToLatinChars()
                 ?.split(" ")
                 ?.filter {
