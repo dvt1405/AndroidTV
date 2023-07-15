@@ -20,6 +20,7 @@
             android:clipToPadding="false"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:requiresFadingEdge="vertical"
+            android:fadingEdgeLength="60dp"
             />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 

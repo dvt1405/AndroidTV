@@ -25,13 +25,16 @@
             tools:text="Title" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:fadingEdge="vertical"
+            android:fadingEdge="horizontal"
             android:id="@+id/tv_channel_child_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/item_channel" />
+            tools:listitem="@layout/item_channel"
+            android:requiresFadingEdge="horizontal"
+            android:fadingEdgeLength="32dp"
+            />
 
     </LinearLayout>
 </layout>

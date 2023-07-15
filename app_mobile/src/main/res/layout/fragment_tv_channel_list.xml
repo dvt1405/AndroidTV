@@ -16,7 +16,10 @@
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
         app:spanCount="3"
         tools:itemCount="20"
-        tools:spanCount="3">
+        tools:spanCount="3"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="60dp"
+        >
 
     </androidx.recyclerview.widget.RecyclerView>
 </layout>

@@ -48,13 +48,6 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
     override val itemLayoutRes: Int
         get() = R.layout.item_row_channel
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): BaseViewHolder<Pair<String, List<IChannelElement>>, ItemRowChannelBinding> {
-        return super.onCreateViewHolder(parent, viewType)
-    }
-
     override fun onRefresh(
         items: List<Pair<String, List<IChannelElement>>>,
         notifyDataSetChange: Boolean
