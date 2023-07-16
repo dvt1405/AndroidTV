@@ -5,4 +5,14 @@
     <item name="player_controller_container" type="id" />
     <item name="transition_show_video" type="id" />
     <item name="alert_message" type="id" />
+    <item name="fragment_container" type="id" />
+    <item name="on_live_list_recycler_view" type="id" />
+    <item name="on_live_title_container" type="id" />
+    <item name="on_live_icon" type="id" />
+    <item name="home_team" type="id" />
+    <item name="away_team" type="id" />
+    <item name="match_time" type="id" />
+    <item name="card_view" type="id" />
+    <item name="match_name" type="id" />
+    <item name="league" type="id" />
 </resources>

@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView.HORIZONTAL
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import androidx.recyclerview.widget.RecyclerView.VERTICAL
+import com.google.android.flexbox.FlexboxLayoutManager
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
@@ -34,6 +35,7 @@ import com.kt.apps.media.mobile.utils.debounce
 import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.apps.media.mobile.utils.groupAndSort
 import com.kt.apps.media.mobile.utils.screenHeight
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
@@ -44,7 +46,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.reflect.KClass
 
-open abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
+abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
 
     override val layoutResId: Int
         get() = R.layout.activity_main
@@ -90,6 +92,10 @@ open abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
     }
 
+    private val viewModel: ChannelFragmentViewModel by lazy {
+        ChannelFragmentViewModel(ViewModelProvider(requireActivity(), factory))
+    }
+
     private val playbackViewModel: PlaybackViewModel? by lazy {
         activity?.run {
             ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
@@ -110,16 +116,6 @@ open abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
     }
 
-//    private val listTVChannelObserver: Observer<DataState<List<TVChannel>>> by lazy {
-//        Observer { dataState ->
-//            when (dataState) {
-//                is DataState.Success -> _tvChannelData.value = dataState.data
-//                is DataState.Error -> swipeRefreshLayout.isRefreshing = false
-//                else -> {}
-//            }
-//        }
-//    }
-
     private var _cacheMenuItem: MutableMap<String, Int> = mutableMapOf<String, Int>()
     override fun initView(savedInstanceState: Bundle?) {
 
@@ -131,10 +127,6 @@ open abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
             }
             setHasFixedSize(true)
             setItemViewCacheSize(9)
-            doOnPreDraw {
-                val spanCount = 3.coerceAtLeast((mainRecyclerView.measuredWidth / 220.dpToPx()))
-                this@ChannelFragment.adapter.spanCount = spanCount
-            }
         }
 
         skeletonScreen.run()
@@ -247,51 +239,6 @@ open abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
     private fun scrollToPosition(index: Int) {
         Log.d(TAG, "scrollToPosition: $index")
         mainRecyclerView.fastSmoothScrollToPosition(index)
-    }
-
-
-    private fun onChangeItem(item: SectionItem): Boolean {
-
-        when (item.id) {
-            R.id.radio -> {
-                adapter.listItem.indexOfFirst {
-                    val channel = it.first
-                    (channel == TVChannelGroup.VOV.value || channel == TVChannelGroup.VOH.value)
-                }.takeIf { it != -1 }?.run {
-                    scrollToPosition(this)
-                }
-            }
-            R.id.tv -> scrollToPosition(0)
-            R.id.add_extension -> {
-                val dialog = AddExtensionFragment()
-                dialog.onSuccess = {
-                    it.dismiss()
-                    onAddedExtension()
-                }
-                dialog.show(this@ChannelFragment.parentFragmentManager, AddExtensionFragment.TAG)
-                return false
-            }
-            else -> {
-                val title = item.displayTitle
-                return (extensionsViewModel?.extensionsConfigs?.value ?: emptyList()).findLast {
-                    it.sourceName == title
-                }?.run {
-                    adapter.listItem.indexOfFirst {
-                        val channel = it.second.firstOrNull()
-                        (channel as? ChannelElement.ExtensionChannelElement)?.model?.sourceFrom?.equals(
-                            title
-                        ) == true
-                    }.takeIf {
-                        it != -1
-                    }?.run {
-                        scrollToPosition(this)
-                    }
-
-                    true
-                } ?: false
-            }
-        }
-        return true
     }
 
     private fun onAddedExtension() {

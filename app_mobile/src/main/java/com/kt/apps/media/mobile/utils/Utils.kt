@@ -17,12 +17,15 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
+import androidx.recyclerview.widget.RecyclerView
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelGroup
+import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.fadeIn
 import com.kt.apps.core.utils.fadeOut
+import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.App
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
@@ -159,6 +162,9 @@ inline fun <reified T> groupAndSort(list: List<T>): List<Pair<String, List<T>>> 
             .sortedWith(Comparator { o1, o2 ->
                 return@Comparator o1.first.compareTo(o2.first)
             })
+        FootballMatch::class -> list.groupBy { (it as FootballMatch).league }
+            .toList()
+            .sortedBy { it.first }
         else -> emptyList()
     }
 }
@@ -190,3 +196,16 @@ fun <T> LiveData<DataState<T>>.asFlow(): Flow<T> {
         }
     }
 }
+
+inline val channelItemDecoration
+    get() = object: RecyclerView.ItemDecoration() {
+        override fun getItemOffsets(
+            outRect: Rect,
+            view: View,
+            parent: RecyclerView,
+            state: RecyclerView.State
+        ) {
+            outRect.right = 40.dpToPx()
+            outRect.bottom = 40.dpToPx()
+        }
+    }

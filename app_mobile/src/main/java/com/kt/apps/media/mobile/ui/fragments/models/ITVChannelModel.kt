@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapLatest
 import kotlin.reflect.KClass
 
+typealias GroupTVChannel = Map<String, List<TVChannel>>
 interface IChannelsModelAdapter {
     val listChannels: Flow<List<TVChannel>>
     val groupTVChannel: Flow<GroupTVChannel>

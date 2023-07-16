@@ -74,6 +74,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.flexbox:flexbox:3.0.0'
     testImplementation testDependencies.values()
     kaptTest kotlinTestDependencies.values()
     kaptAndroidTest kotlinAndroidTestDependencies.values()
@@ -94,6 +95,7 @@ dependencies {
     implementation project(":core")
     implementation project(":tv")
     implementation project(":football")
+    implementation project(":resources")
     implementation 'com.pnikosis:materialish-progress:1.7'
     implementation otherLibs.values()
     implementation media.values()

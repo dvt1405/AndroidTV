@@ -1,11 +1,18 @@
 package com.kt.apps.media.mobile.ui.fragments.tv
 
+import android.graphics.Rect
 import android.os.Bundle
+import android.view.View
 import androidx.core.os.bundleOf
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.flexbox.AlignContent
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
@@ -13,6 +20,7 @@ import com.kt.apps.media.mobile.databinding.FragmentTvChannelListBinding
 import com.kt.apps.media.mobile.ui.fragments.models.ChannelsModelAdapter
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVChannelListAdapter
+import com.kt.apps.media.mobile.utils.channelItemDecoration
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -39,12 +47,13 @@ abstract class PerChannelListFragment : BaseFragment<FragmentTvChannelListBindin
     override fun initView(savedInstanceState: Bundle?) {
         with(binding.verticalRecyclerView) {
             adapter = _adapter
-            layoutManager = GridLayoutManager(requireContext(), 2)
-            setHasFixedSize(true)
-            doOnPreDraw {
-                val spanCount = 3.coerceAtLeast((measuredWidth / 220.dpToPx()))
-                layoutManager = GridLayoutManager(requireContext(), spanCount)
+            layoutManager = FlexboxLayoutManager(requireContext()).apply {
+                isItemPrefetchEnabled = true
+                flexDirection = FlexDirection.ROW
+                justifyContent = JustifyContent.FLEX_START
             }
+            setHasFixedSize(true)
+            addItemDecoration(channelItemDecoration)
         }
     }
 

@@ -5,15 +5,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.View
 import android.view.Window
-import android.widget.ImageView
-import android.widget.Toast
 import androidx.lifecycle.*
-import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.video.VideoSize
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.dialog.MaterialDialogs
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
@@ -31,10 +25,9 @@ import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
-import com.kt.apps.media.mobile.ui.fragments.models.WrappedTVChannelViewModel
+import com.kt.apps.media.mobile.viewmodels.ComplexViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
@@ -55,7 +48,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     private var layoutHandler: ComplexLayoutHandler? = null
 
     private val tvChannelViewModel: TVChannelViewModel by lazy {
-        ViewModelProvider(this, factory)[WrappedTVChannelViewModel::class.java].apply {
+        ViewModelProvider(this, factory)[TVChannelViewModel::class.java].apply {
             this.tvWithLinkStreamLiveData.observe(this@ComplexActivity, linkStreamDataObserver)
         }
     }
@@ -66,6 +59,10 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     private val networkStateViewModel: NetworkStateViewModel? by lazy {
         ViewModelProvider(this, factory)[NetworkStateViewModel::class.java]
+    }
+
+    private val viewModel: ComplexViewModel by lazy {
+        ComplexViewModel(ViewModelProvider(this, factory))
     }
 
     private val linkStreamDataObserver: Observer<DataState<TVChannelLinkStream>> by lazy {
@@ -128,8 +125,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    networkStateViewModel?.networkStatus?.
-                    collectLatest {state ->
+                    viewModel.networkStatus.collectLatest {state ->
                         if (state == NetworkState.Unavailable)
                             showNoNetworkAlert(autoHide = true)
                     }

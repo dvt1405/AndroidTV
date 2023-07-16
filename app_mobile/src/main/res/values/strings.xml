@@ -9,4 +9,7 @@
     <string name="no_internet">Không có kết nối mạng</string>
     <string name="error">Lỗi</string>
     <string name="all">Tất cả</string>
+    <string name="on_live_title">Đang diễn ra</string>
+    <string name="live">LIVE</string>
+    <string name="live_matches">Đang diễn ra</string>
 </resources>
