@@ -14,6 +14,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.AutoCompleteTextView
 import android.widget.ImageView
+import android.widget.ProgressBar
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
@@ -64,6 +65,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
     private var _rootView: BrowseFrameLayout? = null
     private var _btnClose: ImageView? = null
     private var _btnVoice: ImageView? = null
+    private var _loadingIcon: ProgressBar? = null
     private var _emptySearchIcon: ImageView? = null
     private var autoCompleteView: SearchView.SearchAutoComplete? = null
 
@@ -106,6 +108,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         _btnVoice = rootView.findViewById(androidx.appcompat.R.id.search_voice_btn)
         _btnClose = rootView.findViewById(androidx.appcompat.R.id.search_close_btn)
         _emptySearchIcon = rootView.findViewById(R.id.ic_empty_search)
+        _loadingIcon = rootView.findViewById(R.id.ic_loading)
         autoCompleteView = _searchView?.searchEdtAutoComplete
         _searchFilter = arguments?.getString(EXTRA_QUERY_FILTER)
         _queryHint = arguments?.getString(EXTRA_QUERY_HINT).takeIf {
@@ -286,6 +289,14 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
     private fun handleSearchResult(autoCompleteView: SearchView.SearchAutoComplete?): (t: DataState<Map<String, List<SearchForText.SearchResult>>>) -> Unit =
         {
+            if (it is DataState.Loading && !autoCompleteView?.text?.trim().isNullOrBlank()) {
+                _loadingIcon?.visible()
+                _loadingIcon?.isIndeterminate = true
+                _emptySearchIcon?.gone()
+            } else {
+                _loadingIcon?.isIndeterminate = false
+                _loadingIcon?.gone()
+            }
             when (it) {
                 is DataState.Success -> {
                     if (it.data.isEmpty()) {
