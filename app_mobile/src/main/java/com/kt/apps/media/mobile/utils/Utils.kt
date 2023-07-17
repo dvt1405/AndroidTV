@@ -18,6 +18,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.tv.model.TVChannel
@@ -78,6 +79,16 @@ fun EditText.onFocus(): Flow<Unit> {
     return callbackFlow {
         onFocusChangeListener = OnFocusChangeListener { v, hasFocus ->
 
+        }
+    }
+}
+
+fun SwipeRefreshLayout.onRefresh(): Flow<Unit> {
+    return callbackFlow {
+        val refreshListener: SwipeRefreshLayout.OnRefreshListener = SwipeRefreshLayout.OnRefreshListener { trySend(Unit) }
+        setOnRefreshListener(refreshListener)
+        awaitClose {
+            setOnRefreshListener(null)
         }
     }
 }

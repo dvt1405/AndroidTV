@@ -4,34 +4,21 @@ import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toast
-import androidx.core.view.doOnPreDraw
-import androidx.lifecycle.*
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.HORIZONTAL
-import androidx.recyclerview.widget.RecyclerView.NO_POSITION
-import androidx.recyclerview.widget.RecyclerView.OnScrollListener
-import androidx.recyclerview.widget.RecyclerView.VERTICAL
-import com.google.android.flexbox.FlexboxLayoutManager
 import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.tv.model.TVChannel
-import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
-import com.kt.apps.core.utils.showSuccessDialog
-import com.kt.apps.media.mobile.BuildConfig
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityMainBinding
 import com.kt.apps.media.mobile.models.NetworkState
-import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
-import com.kt.apps.media.mobile.ui.fragments.models.*
+import com.kt.apps.media.mobile.ui.fragments.models.ChannelsModelAdapter
+import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
-import com.kt.apps.media.mobile.utils.debounce
 import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.apps.media.mobile.utils.groupAndSort
 import com.kt.apps.media.mobile.utils.screenHeight
@@ -39,12 +26,19 @@ import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.reflect.KClass
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.filter
+import kotlin.collections.firstOrNull
+import kotlin.collections.forEach
+import kotlin.collections.isNotEmpty
+import kotlin.collections.map
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
 
 abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
 
@@ -110,11 +104,11 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
     }
 
-    private val extensionsViewModel: ExtensionsViewModel? by lazy {
-        activity?.run {
-            ViewModelProvider(this, factory)[ExtensionsViewModel::class.java]
-        }
-    }
+//    private val extensionsViewModel: ExtensionsViewModel? by lazy {
+//        activity?.run {
+//            ViewModelProvider(this, factory)[ExtensionsViewModel::class.java]
+//        }
+//    }
 
     private var _cacheMenuItem: MutableMap<String, Int> = mutableMapOf<String, Int>()
     override fun initView(savedInstanceState: Bundle?) {
@@ -136,7 +130,7 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
     override fun initAction(savedInstanceState: Bundle?) {
         tvChannelViewModel
         playbackViewModel
-        extensionsViewModel?.loadExtensionData()
+//        extensionsViewModel?.loadExtensionData()
 
         with(binding.swipeRefreshLayout) {
             setDistanceToTriggerSync(screenHeight / 3)
@@ -171,17 +165,17 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
                     }
                 }
 
-            launch {
-                extensionsViewModel?.perExtensionChannelData?.collect {
-                    appendExtensionSource(it)
-                }
-            }
+//            launch {
+//                extensionsViewModel?.perExtensionChannelData?.collect {
+//                    appendExtensionSource(it)
+//                }
+//            }
 
-            launch {
-                extensionsViewModel?.extensionsConfigs?.collectLatest {
-                    reloadNavigationBar(it)
-                }
-            }
+//            launch {
+//                extensionsViewModel?.extensionsConfigs?.collectLatest {
+//                    reloadNavigationBar(it)
+//                }
+//            }
 
             launch {
                 networkStateViewModel?.networkStatus?.collectLatest {
@@ -216,9 +210,9 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
         swipeRefreshLayout.isRefreshing = false
         adapter.onRefresh(grouped)
-        extensionsViewModel?.perExtensionChannelData?.replayCache?.forEach {
-            appendExtensionSource(it)
-        }
+//        extensionsViewModel?.perExtensionChannelData?.replayCache?.forEach {
+//            appendExtensionSource(it)
+//        }
         skeletonScreen.hide {
             scrollToPosition(0)
         }
@@ -241,12 +235,6 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         mainRecyclerView.fastSmoothScrollToPosition(index)
     }
 
-    private fun onAddedExtension() {
-        showSuccessDialog(
-            content = "Thêm nguồn kênh thành công!\r\nKhởi động lại ứng dụng để kiểm tra nguồn kênh"
-        )
-    }
-
     private fun showAlertRemoveExtension(sourceName: String) {
         AlertDialog.Builder(context, R.style.AlertDialogTheme).apply {
             setMessage("Bạn có muốn xóa nguồn $sourceName?")
@@ -265,7 +253,7 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
     }
 
     private fun deleteExtension(sourceName: String) {
-        extensionsViewModel?.deleteExtension(sourceName = sourceName)
+//        extensionsViewModel?.deleteExtension(sourceName = sourceName)
         adapter.listItem.filter {
             return@filter (it.second.firstOrNull() as? ChannelElement.ExtensionChannelElement)
                 ?.model

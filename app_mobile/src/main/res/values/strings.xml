@@ -1,5 +1,5 @@
 <resources>
-    <string name="add_extension">Thêm nguồn</string>
+    <string name="add_extension">Thêm nguồn IPTV</string>
     <string name="add_extension_source">Thêm nguồn video</string>
     <string name="source_name">Tên nguồn</string>
     <string name="source_link">Đường dẫn</string>
@@ -12,4 +12,5 @@
     <string name="on_live_title">Đang diễn ra</string>
     <string name="live">LIVE</string>
     <string name="live_matches">Đang diễn ra</string>
+    <string name="add_source_description">Chưa có nguồn IPTV. Thêm mới và bắt đầu thưởng thức.</string>
 </resources>

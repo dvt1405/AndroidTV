@@ -6,6 +6,7 @@ import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
 import java.util.Calendar
 import java.util.Locale
@@ -17,7 +18,7 @@ class MobileFootballViewModel(private val provider: ViewModelProvider) {
         provider[FootballViewModel::class.java]
     }
 
-    val listMatches: Flow<List<FootballMatch>>
+    private val listMatches: Flow<List<FootballMatch>>
         get() = footballViewModel.listFootMatchDataState.asFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -43,6 +44,10 @@ class MobileFootballViewModel(private val provider: ViewModelProvider) {
     fun getAllMatches() {
         footballViewModel.getAllMatches()
     }
+//    suspend fun getAllMatches(): Map<String, List<FootballMatch>> {
+//        footballViewModel.getAllMatches()
+//        return groupedMatches.first()
+//    }
 
     private fun FootballMatch.isLiveMatch(): Boolean {
         val calendar = Calendar.getInstance(Locale.TAIWAN)

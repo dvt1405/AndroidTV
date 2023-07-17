@@ -54,7 +54,6 @@ sealed class ChannelElement {
 
 
 class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, ItemRowChannelBinding>() {
-    var spanCount = 3
     var onChildItemClickListener: OnItemRecyclerViewCLickListener<IChannelElement>? = null
     override val itemLayoutRes: Int
         get() = R.layout.item_row_channel

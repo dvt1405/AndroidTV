@@ -1,34 +1,24 @@
 package com.kt.apps.media.mobile.ui.fragments.football.list
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.football.model.FootballMatch
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
+import com.kt.apps.media.mobile.utils.onRefresh
+import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.apps.media.mobile.viewmodels.MobileFootballViewModel
-import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [FootballListFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
 
     override val layoutResId: Int
@@ -39,6 +29,10 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
     @Inject
     lateinit var factory: ViewModelProvider.Factory
 
+    private val swipeRefreshLayout by lazy {
+        binding.swipeRefreshLayout
+    }
+
     private val viewModel: MobileFootballViewModel by lazy {
         MobileFootballViewModel(ViewModelProvider(requireActivity(), factory))
     }
@@ -46,6 +40,9 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
     private val _adapter = FootballListAdapter()
 
     override fun initView(savedInstanceState: Bundle?) {
+        binding.swipeRefreshLayout?.apply {
+            setDistanceToTriggerSync(screenHeight / 3)
+        }
         binding.mainChannelRecyclerView?.apply {
             adapter = _adapter
             layoutManager = LinearLayoutManager(this@FootballListFragment.context).apply {
@@ -59,25 +56,36 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            viewModel.groupedMatches
+        lifecycleScope.launchWhenStarted {
+            merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest {
+                loadAllMatches()
+            }
+        }
+    }
+
+    private fun loadAllMatches() {
+        CoroutineScope(Dispatchers.Main).launch {
+            swipeRefreshLayout?.isRefreshing = true
+            _adapter.onRefresh(emptyList())
+            viewModel.getAllMatches()
+            val list = viewModel.groupedMatches
                 .combine(viewModel.liveMatches, transform = { groupsMatches, liveMatches ->
                     val baseList = mutableListOf<FootballAdapterType>()
                     if (liveMatches.isNotEmpty()) {
-                        baseList.add(FootballAdapterType(
-                            Pair(getString(R.string.live_matches), liveMatches),
-                            true
-                        ))
+                        baseList.add(
+                            FootballAdapterType(
+                                Pair(getString(R.string.live_matches), liveMatches),
+                                true
+                            )
+                        )
                     }
                     baseList.addAll(groupsMatches.toList().map {
                         FootballAdapterType(it, false)
                     })
                     baseList
-                }).collectLatest {
-                    _adapter.onRefresh(it)
-                }
+                }).first()
+            _adapter.onRefresh(list)
+            swipeRefreshLayout?.isRefreshing = false
         }
-
-        viewModel.getAllMatches()
     }
 }
