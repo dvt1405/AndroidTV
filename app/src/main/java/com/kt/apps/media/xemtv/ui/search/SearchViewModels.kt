@@ -53,7 +53,12 @@ class SearchViewModels @Inject constructor(
             return
         }
         _searchQueryLiveData.postValue(DataState.Loading())
-        _lastSearchQuery = query.removeAllSpecialChars().trim()
+        _lastSearchQuery = query.lowercase().removeAllSpecialChars()
+            .trim()
+        while (_lastSearchQuery?.contains("  ") == true) {
+            _lastSearchQuery = _lastSearchQuery!!.replace("  ", " ")
+                .trim()
+        }
         searchTask?.let {
             it.dispose()
             compositeDisposable.remove(it)
