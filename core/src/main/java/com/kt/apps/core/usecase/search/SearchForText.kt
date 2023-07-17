@@ -57,30 +57,41 @@ class SearchForText @Inject constructor(
         val offset = params[EXTRA_OFFSET] as? Int ?: 0
         val filter = params[EXTRA_FILTER] as? String
         val cacheKey = query.lowercase().removeAllSpecialChars().trim()
-        val queryNormalize = query.lowercase()
+        var queryNormalize = query.lowercase()
             .replaceVNCharsToLatinChars()
             .trim()
+
+        while (queryNormalize.contains("  ")) {
+            queryNormalize = queryNormalize.replace("  ", " ")
+                .trim()
+        }
 
         val filterHighlight = query.lowercase()
             .replaceVNCharsToLatinChars()
             .split(" ")
             .filter {
-                it.isNotBlank()
+                it.isNotBlank() && it.isNotEmpty()
             }.flatMap {
                 val unSpecialChar = it.removeAllSpecialChars()
                 if (it != unSpecialChar) {
-                    return@flatMap listOf(it, unSpecialChar)
+                    return@flatMap listOf(unSpecialChar, it)
                 }
                 return@flatMap listOf(it)
             }
 
-        val extraQuery = getExtraQuery(query, "searchKey", "")
-        val rawQuery = if (query.isEmpty()) {
+        var searchQuery = query.lowercase().removeAllSpecialChars()
+        while (searchQuery.contains("  ")) {
+            searchQuery = searchQuery.replace("  ", " ")
+                .trim()
+        }
+
+        val extraQuery = getExtraQuery(searchQuery, "searchKey", "")
+        val rawQuery = if (searchQuery.isEmpty()) {
             "SELECT * FROM TVChannelFts4"
         } else {
             "SELECT * FROM TVChannelFts4 WHERE searchKey MATCH " +
                     "'*${
-                        query.replaceVNCharsToLatinChars()
+                        searchQuery.replaceVNCharsToLatinChars()
                             .removeAllSpecialChars()
                     }*'$extraQuery"
         }
@@ -99,7 +110,7 @@ class SearchForText @Inject constructor(
             }
 
         val extensionsSource: Single<Map<String, List<SearchResult>>> = roomDataBase.extensionsChannelDao()
-            .searchByNameQuery(getSqlQuery(query, filter, limit, offset))
+            .searchByNameQuery(getSqlQuery(searchQuery, filter, limit, offset))
             .map {
                 val list = it.map {
                     val calculateScore = calculateScore(it.tvChannelName, queryNormalize, filterHighlight)
@@ -129,7 +140,7 @@ class SearchForText @Inject constructor(
 
         val totalSearchResult =  when {
             filter == FILTER_ONLY_TV_CHANNEL -> tvChannelSource.toFlowable()
-            defaultListItem || query.isEmpty() -> historySource.toFlowable()
+            defaultListItem || searchQuery.isEmpty() -> historySource.toFlowable()
             filter == FILTER_ALL_IPTV -> extensionsSource.toFlowable()
             !filter?.trim().isNullOrBlank() -> {
                 extensionsSource.toFlowable()
@@ -280,11 +291,13 @@ class SearchForText @Inject constructor(
             val lowerRealTitle = realTitle.trim()
                 .lowercase()
                 .replaceVNCharsToLatinChars()
-
+            if (_filterHighlight.isNullOrEmpty()) {
+                return spannableString
+            }
             val titleLength = lowerRealTitle.length
-            _filterHighlight?.filter {
+            _filterHighlight.filter {
                 it.isNotBlank() && it.trim().isNotEmpty()
-            }?.forEach { searchKey ->
+            }.forEach { searchKey ->
                 var index = lowerRealTitle.indexOf(searchKey)
                 while (index > -1 && index + searchKey.length <= titleLength) {
                     spannableString.setSpan(
@@ -308,6 +321,9 @@ class SearchForText @Inject constructor(
                 .replaceVNCharsToLatinChars()
             if (textNormalize.equals(queryNormalize, ignoreCase = true)) {
                 return 0
+            }
+            if (textNormalize.equals(queryNormalize.removeAllSpecialChars(), ignoreCase = true)) {
+                return 1
             }
 
             val lowerStrLatin = text.trim().lowercase()

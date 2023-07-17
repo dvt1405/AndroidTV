@@ -54,16 +54,11 @@ class SearchViewModels @Inject constructor(
         }
         _searchQueryLiveData.postValue(DataState.Loading())
         _lastSearchQuery = query
-        var searchQuery = _lastSearchQuery!!.lowercase().removeAllSpecialChars()
-        while (searchQuery.contains("  ")) {
-            searchQuery = searchQuery.replace("  ", " ")
-                .trim()
-        }
         searchTask?.let {
             it.dispose()
             compositeDisposable.remove(it)
         }
-        searchTask = searchForText(searchQuery, filter, limit = 1500, offset = page * 1500)
+        searchTask = searchForText(query, filter, limit = 1500, offset = page * 1500)
             .delay(300, TimeUnit.MILLISECONDS)
             .doOnDispose {
                 mHandler.removeCallbacks(_logSearchQuery)
