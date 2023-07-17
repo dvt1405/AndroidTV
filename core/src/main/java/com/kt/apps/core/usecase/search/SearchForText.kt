@@ -66,8 +66,19 @@ class SearchForText @Inject constructor(
                 }
                 return@flatMap listOf(it)
             }
+
+        val rawQuery = if (query.isEmpty()) {
+            "SELECT * FROM TVChannelFts4"
+        } else {
+            "SELECT * FROM TVChannelFts4 WHERE searchKey MATCH " +
+                    "'*${
+                        query.replaceVNCharsToLatinChars()
+                            .removeAllSpecialChars()
+                    }*'"
+        }
+        Logger.d(this@SearchForText, "TVChannel", rawQuery)
         val tvChannelSource: Single<Map<String, List<SearchResult>>> = roomDataBase.tvChannelDao()
-            .searchChannelByName(query)
+            .searchChannelByNameFts4(SimpleSQLiteQuery(rawQuery))
             .map {
                 it.map {
                     SearchResult.TV(
@@ -161,14 +172,10 @@ class SearchForText @Inject constructor(
             }
 
         var regexSplit = ""
-        var orderCount = 1
         var filterById = ""
         if (!filter?.trim().isNullOrBlank() && filter != FILTER_ALL_IPTV) {
             filterById = " AND configSourceUrl='$filter' "
         }
-        orderCount++
-        orderCount++
-        orderCount++
         if (splitStr.size > 1) {
             regexSplit = splitStr.mapIndexed { index, s ->
                 return@mapIndexed if (index == splitStr.size - 1 || index == 0) {
@@ -177,10 +184,6 @@ class SearchForText @Inject constructor(
                     "OR tvChannelName MATCH '*$s *' OR categoryName MATCH '*$s *'"
                 }
             }.reduceIndexed { index, acc, s ->
-                if (index == 0) {
-                    orderCount++
-                }
-                orderCount++
                 "$acc$s"
             }
         }

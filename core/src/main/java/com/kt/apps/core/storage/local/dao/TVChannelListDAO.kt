@@ -5,8 +5,11 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Transaction
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.kt.apps.core.storage.local.dto.TVChannelDTO
+import com.kt.apps.core.storage.local.dto.TVChannelFts4WithUrls
 import com.kt.apps.core.storage.local.dto.TVChannelWithUrls
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
@@ -22,6 +25,10 @@ abstract class TVChannelListDAO {
     @Query("SELECT * FROM TVChannelDTO WHERE tvChannelName LIKE '%'||:channelName||'%'")
     @Transaction
     abstract fun searchChannelByName(channelName: String): Single<List<TVChannelWithUrls>>
+
+    @RawQuery
+    @Transaction
+    abstract fun searchChannelByNameFts4(rawQuery: SupportSQLiteQuery): Single<List<TVChannelFts4WithUrls>>
 
     @Query("SELECT * FROM TVChannelDTO WHERE channelId=:channelID")
     @Transaction
