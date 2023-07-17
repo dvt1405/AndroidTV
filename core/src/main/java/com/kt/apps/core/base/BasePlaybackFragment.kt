@@ -659,11 +659,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             OverlayUIState.STATE_HIDDEN -> {
                 fadeInAnimator.cancel()
                 fadeInAnimator.removeAllUpdateListeners()
-                fadeInAnimator.addUpdateListener(overlayRootContainerAnimationUpdateListener)
-                fadeInAnimator.addUpdateListener(btnPlayPauseAnimationUpdateListener)
-                fadeInAnimator.addUpdateListener(playbackInfoAnimationUpdateListener)
-                mGridViewHolder?.gridView?.clearFocus()
-                fadeInAnimator.reverse()
+                autoHideOverlayRunnable.run()
             }
         }
 
@@ -737,8 +733,20 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 })
             }
 
-            else -> {
+            OverlayUIState.STATE_HIDDEN -> {
+                fadeInAnimator.cancel()
                 playPauseBtn?.alpha = 0f
+                mGridViewOverlays?.translationY = mGridViewPickHeight
+                fadeInAnimator.removeAllUpdateListeners()
+                fadeInAnimator.addUpdateListener(overlayRootContainerAnimationUpdateListener)
+                fadeInAnimator.addUpdateListener(playbackInfoAnimationUpdateListener)
+                fadeInAnimator.start()
+            }
+
+            else -> {
+                if (!fadeInAnimator.isRunning) {
+                    playPauseBtn?.alpha = 0f
+                }
             }
         }
         focusedPlayBtnIfNotSeeking()
@@ -925,7 +933,11 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onDpadDown() {
         if (overlaysUIState == OverlayUIState.STATE_HIDDEN) {
-            handleUI(OverlayUIState.STATE_INIT, true)
+            if (progressManager.isShowing) {
+                handleUI(OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY, true)
+            } else {
+                handleUI(OverlayUIState.STATE_INIT, true)
+            }
         } else if (overlaysUIState == OverlayUIState.STATE_INIT
             || overlaysUIState == OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY
         ) {
@@ -968,10 +980,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 if (overlaysUIState == OverlayUIState.STATE_INIT
                     && playPauseBtn!!.alpha > 0f
                 ) {
-                    playPauseBtn?.alpha = 0f
-                    playPauseBtn?.visible()
                     playPauseBtn?.requestFocus()
-                    mHandler.removeCallbacks(autoHideOverlayRunnable)
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
