@@ -49,21 +49,21 @@ class SearchViewModels @Inject constructor(
 
     fun querySearch(query: String?, filter: String? = null, page: Int = 0) {
         query ?: return
-        if (_lastSearchQuery == query.trim() && _searchQueryLiveData.value is DataState.Loading) {
+        if (_lastSearchQuery?.trim() == query.trim() && _searchQueryLiveData.value is DataState.Loading) {
             return
         }
         _searchQueryLiveData.postValue(DataState.Loading())
-        _lastSearchQuery = query.lowercase().removeAllSpecialChars()
-            .trim()
-        while (_lastSearchQuery?.contains("  ") == true) {
-            _lastSearchQuery = _lastSearchQuery!!.replace("  ", " ")
+        _lastSearchQuery = query
+        var searchQuery = _lastSearchQuery!!.lowercase().removeAllSpecialChars()
+        while (searchQuery.contains("  ")) {
+            searchQuery = searchQuery.replace("  ", " ")
                 .trim()
         }
         searchTask?.let {
             it.dispose()
             compositeDisposable.remove(it)
         }
-        searchTask = searchForText(_lastSearchQuery!!, filter, limit = 1500, offset = page * 1500)
+        searchTask = searchForText(searchQuery, filter, limit = 1500, offset = page * 1500)
             .delay(300, TimeUnit.MILLISECONDS)
             .doOnDispose {
                 mHandler.removeCallbacks(_logSearchQuery)
