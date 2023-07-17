@@ -178,12 +178,6 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     updateProgress(player)
                     exoPlayerManager.exoPlayer?.setSeekParameters(SeekParameters(10_000L, 10_000L))
                 }
-//                if (playbackState == ExoPlayer.STATE_BUFFERING) {
-//                    if (progressManager.isShowing) {
-//                        Log.e("TAG", "ExoPlayer.STATE_BUFFERING")
-//                        progressManager.hide()
-//                    }
-//                }
             }
         }
     }
@@ -547,7 +541,8 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                             }
 
                             OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY -> {
-
+                                playPauseBtn?.animate()?.cancel()
+                                playPauseBtn?.alpha = 0f
                             }
                         }
                     }
@@ -744,9 +739,8 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             }
 
             else -> {
-                if (!fadeInAnimator.isRunning) {
-                    playPauseBtn?.alpha = 0f
-                }
+                playPauseBtn?.animate()?.cancel()
+                playPauseBtn?.alpha = 0f
             }
         }
         focusedPlayBtnIfNotSeeking()
