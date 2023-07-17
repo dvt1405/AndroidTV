@@ -6,6 +6,7 @@ import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
+import com.google.common.collect.MapMaker
 import com.kt.apps.core.base.rxjava.MaybeUseCase
 import com.kt.apps.core.di.CoreScope
 import com.kt.apps.core.logging.Logger
@@ -18,6 +19,7 @@ import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Single
+import java.util.concurrent.ConcurrentMap
 import javax.inject.Inject
 
 @CoreScope
@@ -25,7 +27,11 @@ class SearchForText @Inject constructor(
     private val roomDataBase: RoomDataBase,
     private val _getListHistory: GetListHistory
 ) : MaybeUseCase<Map<String, List<SearchForText.SearchResult>>>() {
-
+    private val cacheResultValue: ConcurrentMap<String, List<SearchResult>> by lazy {
+        MapMaker()
+            .weakValues()
+            .makeMap()
+    }
     sealed class SearchResult {
         class ExtensionsChannelWithCategory(
             val data: ExtensionsChannelDBWithCategoryViews,
@@ -50,6 +56,7 @@ class SearchForText @Inject constructor(
         val limit = params[EXTRA_LIMIT] as? Int ?: 1500
         val offset = params[EXTRA_OFFSET] as? Int ?: 0
         val filter = params[EXTRA_FILTER] as? String
+        val cacheKey = query.lowercase().removeAllSpecialChars().trim()
         val queryNormalize = query.lowercase()
             .replaceVNCharsToLatinChars()
             .trim()
@@ -119,7 +126,7 @@ class SearchForText @Inject constructor(
             }
             .switchIfEmpty(tvChannelSource)
 
-        return when {
+        val totalSearchResult =  when {
             filter == FILTER_ONLY_TV_CHANNEL -> tvChannelSource.toFlowable()
             defaultListItem || query.isEmpty() -> historySource.toFlowable()
             filter == FILTER_ALL_IPTV -> extensionsSource.toFlowable()
@@ -131,8 +138,38 @@ class SearchForText @Inject constructor(
             val list: MutableMap<String, List<SearchResult>> = t1.toMutableMap()
             list.putAll(t2)
             list
+        }.doOnSuccess {
+            synchronized(cacheResultValue) {
+                val keyCache = query.lowercase().removeAllSpecialChars().trim()
+                cacheResultValue[keyCache] = it.values.flatten()
+            }
+        }
+
+        return if (!cacheResultValue[cacheKey].isNullOrEmpty()) {
+            getResultFromCache(cacheKey)
+                .onErrorResumeNext {
+                    return@onErrorResumeNext totalSearchResult
+                }
+        } else {
+            totalSearchResult
         }
     }
+
+    private fun getResultFromCache(cacheKey: String) = Maybe.just(cacheResultValue[cacheKey]!!.groupBy {
+        when (it) {
+            is SearchResult.TV -> {
+                it.data.tvGroup
+            }
+
+            is SearchResult.ExtensionsChannelWithCategory -> {
+                it.data.categoryName
+            }
+
+            is SearchResult.History -> {
+                it.data.category
+            }
+        }
+    })
 
     operator fun invoke(
         query: String,
