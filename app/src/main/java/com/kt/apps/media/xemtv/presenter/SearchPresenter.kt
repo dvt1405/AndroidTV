@@ -29,7 +29,7 @@ class SearchPresenter : Presenter() {
                 ?.replaceVNCharsToLatinChars()
                 ?.split(" ")
                 ?.filter {
-                    it.isNotBlank()
+                    it.isNotBlank() && it.isNotEmpty()
                 }?.flatMap {
                     val unSpecialChar = it.removeAllSpecialChars()
                     if (it != unSpecialChar) {

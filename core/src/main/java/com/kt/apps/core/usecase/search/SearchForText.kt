@@ -267,129 +267,6 @@ class SearchForText @Inject constructor(
         const val FILTER_ONLY_TV_CHANNEL = "tv"
         const val FILTER_ALL_IPTV = "all_iptv"
         const val FILTER_FOOT_BALL = "football"
-        private val REGEX_VN = Regex(
-            "[aáàảãạăắằẳẵặđeéèẻẽẹêếềểễệoóòỏõọôốồổỗộơớờởỡợuúùủũụưứửữựừ]"
-        )
-        private val mapRegex by lazy {
-            mapOf(
-                "á" to "[aáàảãạăâ]",
-                "à" to "[aáàảãạăâ]",
-                "ả" to "[aáàảãạăâ]",
-                "ã" to "[aáàảãạăâ]",
-                "ạ" to "[aáàảãạăâ]",
-                "â" to "[aáàảãạăâ]",
-                "ấ" to "[aáàảãạăâ]",
-                "ầ" to "[aáàảãạăâ]",
-                "ẩ" to "[aáàảãạăâ]",
-                "ẫ" to "[aáàảãạăâ]",
-                "ậ" to "[aáàảãạăâ]",
-                "ă" to "[aáàảãạăâ]",
-                "ắ" to "[aáàảãạăâ]",
-                "ằ" to "[aáàảãạăâ]",
-                "ẳ" to "[aáàảãạăâ]",
-                "ẵ" to "[aáàảãạăâ]",
-                "ặ" to "[aáàảãạăâ]",
-                "đ" to "[dđ]",
-                "é" to "[eê]",
-                "è" to "[eê]",
-                "ẻ" to "[eê]",
-                "ẽ" to "[eê]",
-                "ẹ" to "[eê]",
-                "ê" to "[eê]",
-                "ế" to "[eê]",
-                "ề" to "[eê]",
-                "ể" to "[eê]",
-                "ễ" to "[eê]",
-                "ệ" to "e",
-                "ó" to "o",
-                "ò" to "o",
-                "ỏ" to "o",
-                "õ" to "o",
-                "ọ" to "o",
-                "ô" to "oz",
-                "ố" to "oz",
-                "ồ" to "oz",
-                "ổ" to "oz",
-                "ỗ" to "oz",
-                "ộ" to "oz",
-                "ơ" to "ozz",
-                "ớ" to "ozz",
-                "ờ" to "ozz",
-                "ở" to "ozz",
-                "ỡ" to "ozz",
-                "ợ" to "ozz",
-                "ư" to "uz",
-                "ứ" to "uz",
-                "ừ" to "uz",
-                "ữ" to "uz",
-                "ự" to "uz",
-                "ú" to "u",
-                "ù" to "u",
-                "ủ" to "u",
-                "ũ" to "u",
-                "ụ" to "u",
-            )
-        }
-        val map by lazy {
-            mapOf(
-                "á" to "a",
-                "à" to "a",
-                "ả" to "a",
-                "ã" to "a",
-                "ạ" to "a",
-                "â" to "a",
-                "ấ" to "azz",
-                "ầ" to "azz",
-                "ẩ" to "azz",
-                "ẫ" to "azz",
-                "ậ" to "azz",
-                "ă" to "az",
-                "ắ" to "az",
-                "ằ" to "az",
-                "ẳ" to "az",
-                "ẵ" to "az",
-                "ặ" to "az",
-                "đ" to "dz",
-                "é" to "e",
-                "è" to "e",
-                "ẻ" to "e",
-                "ẽ" to "e",
-                "ẹ" to "e",
-                "ê" to "e",
-                "ế" to "e",
-                "ề" to "e",
-                "ể" to "e",
-                "ễ" to "e",
-                "ệ" to "e",
-                "ó" to "o",
-                "ò" to "o",
-                "ỏ" to "o",
-                "õ" to "o",
-                "ọ" to "o",
-                "ô" to "oz",
-                "ố" to "oz",
-                "ồ" to "oz",
-                "ổ" to "oz",
-                "ỗ" to "oz",
-                "ộ" to "oz",
-                "ơ" to "ozz",
-                "ớ" to "ozz",
-                "ờ" to "ozz",
-                "ở" to "ozz",
-                "ỡ" to "ozz",
-                "ợ" to "ozz",
-                "ư" to "uz",
-                "ứ" to "uz",
-                "ừ" to "uz",
-                "ữ" to "uz",
-                "ự" to "uz",
-                "ú" to "u",
-                "ù" to "u",
-                "ủ" to "u",
-                "ũ" to "u",
-                "ụ" to "u",
-            )
-        }
 
         private val HIGH_LIGHT_COLOR by lazy {
             Color.parseColor("#fb8500")
@@ -405,7 +282,9 @@ class SearchForText @Inject constructor(
                 .replaceVNCharsToLatinChars()
 
             val titleLength = lowerRealTitle.length
-            _filterHighlight?.forEach { searchKey ->
+            _filterHighlight?.filter {
+                it.isNotBlank() && it.trim().isNotEmpty()
+            }?.forEach { searchKey ->
                 var index = lowerRealTitle.indexOf(searchKey)
                 while (index > -1 && index + searchKey.length <= titleLength) {
                     spannableString.setSpan(
