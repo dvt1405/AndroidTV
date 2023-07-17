@@ -74,6 +74,7 @@ class SearchForText @Inject constructor(
                 return@flatMap listOf(it)
             }
 
+        val extraQuery = getExtraQuery(query, "searchKey", "")
         val rawQuery = if (query.isEmpty()) {
             "SELECT * FROM TVChannelFts4"
         } else {
@@ -81,7 +82,7 @@ class SearchForText @Inject constructor(
                     "'*${
                         query.replaceVNCharsToLatinChars()
                             .removeAllSpecialChars()
-                    }*'"
+                    }*'$extraQuery"
         }
         Logger.d(this@SearchForText, "TVChannel", rawQuery)
         val tvChannelSource: Single<Map<String, List<SearchResult>>> = roomDataBase.tvChannelDao()
@@ -197,6 +198,30 @@ class SearchForText @Inject constructor(
         limit: Int,
         offset: Int
     ): SupportSQLiteQuery {
+        val extraQuery = getExtraQuery(queryString, "tvChannelName", "categoryName")
+        var filterById = ""
+        if (!filter?.trim().isNullOrBlank() && filter != FILTER_ALL_IPTV) {
+            filterById = " AND configSourceUrl='$filter'"
+        }
+        val queryStr = "SELECT extensionSourceId as configSourceUrl, tvGroup as categoryName, tvChannelName, " +
+                "logoChannel, tvStreamLink, sourceFrom FROM ExtensionsChannelFts4 " +
+                "WHERE (tvChannelName MATCH '*$queryString*' OR categoryName MATCH '*$queryString*'$extraQuery)$filterById " +
+                "LIMIT $limit " +
+                "OFFSET $offset"
+
+        Logger.d(
+            this, message = "Query: {" +
+                    "queryStr: $queryStr" +
+                    "}"
+        )
+        return SimpleSQLiteQuery(queryStr)
+    }
+
+    private fun getExtraQuery(
+        queryString: String,
+        channelNameField: String,
+        categoryField: String
+    ): String {
         val splitStr = queryString.lowercase().split(" ")
             .filter {
                 it.isNotBlank()
@@ -207,37 +232,29 @@ class SearchForText @Inject constructor(
                 }
                 return@flatMap listOf(it)
             }
-
         var regexSplit = ""
-        var filterById = ""
-        if (!filter?.trim().isNullOrBlank() && filter != FILTER_ALL_IPTV) {
-            filterById = " AND configSourceUrl='$filter' "
-        }
         if (splitStr.size > 1) {
             regexSplit = splitStr.mapIndexed { index, s ->
-                return@mapIndexed if (index == splitStr.size - 1 || index == 0) {
-                    "OR tvChannelName MATCH '*$s*' OR categoryName MATCH '*$s*'"
+                val filterCategory = if (categoryField.isNotBlank()) {
+                    if (index == splitStr.size - 1 || index == 0) {
+                        " OR $categoryField MATCH '*$s*'"
+                    } else {
+                        " OR $categoryField MATCH '*$s *'"
+                    }
                 } else {
-                    "OR tvChannelName MATCH '*$s *' OR categoryName MATCH '*$s *'"
+                    ""
                 }
-            }.reduceIndexed { index, acc, s ->
+                val filterName = if (index == splitStr.size - 1 || index == 0) {
+                    " OR $channelNameField MATCH '*$s*'"
+                } else {
+                    " OR $channelNameField MATCH '*$s *'"
+                }
+                return@mapIndexed "$filterName$filterCategory"
+            }.reduce { acc, s ->
                 "$acc$s"
             }
         }
-
-        val queryStr = "SELECT extensionSourceId as configSourceUrl, tvGroup as categoryName, tvChannelName, " +
-                "logoChannel, tvStreamLink, sourceFrom FROM ExtensionsChannelFts4 " +
-                "WHERE (tvChannelName MATCH '*$queryString*' OR categoryName MATCH '*$queryString*' $regexSplit)$filterById" +
-                "LIMIT $limit " +
-                "OFFSET $offset "
-
-        Logger.d(
-            this, message = "Query: {" +
-                    "queryStr: $queryStr" +
-                    "}"
-        )
-
-        return SimpleSQLiteQuery(queryStr)
+        return regexSplit
     }
 
     companion object {
