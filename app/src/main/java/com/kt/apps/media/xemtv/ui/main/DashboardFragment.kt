@@ -175,14 +175,18 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
     }
 
     private fun initAction() {
+        var lastSelectedItem = -1
         navDrawerView.onNavDrawerItemSelected = object : INavDrawerItemSelected {
             override fun onSelected(position: Int, itemSelected: Int) {
                 if (position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_SEARCH)) {
-                    searchViewModels.queryDefaultSearch()
+                    if (lastSelectedItem != position) {
+                        searchViewModels.queryDefaultSearch()
+                    }
                 } else {
                     searchViewModels.clearLastSelectedItem()
                 }
                 onRowSelected(position)
+                lastSelectedItem = position
             }
         }
 
