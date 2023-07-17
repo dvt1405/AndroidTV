@@ -63,6 +63,9 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
     private val searchViewModels by lazy {
         ViewModelProvider(requireActivity(), viewModelFactory)[SearchViewModels::class.java]
     }
+    private val tvChannelViewModel by lazy {
+        ViewModelProvider(requireActivity(), viewModelFactory)[TVChannelViewModel::class.java]
+    }
     val disableFocusSearch: Boolean
         get() = if (mMainFragment is FragmentTVDashboardNew) {
             (mMainFragment as FragmentTVDashboardNew).isProgressShowing()
@@ -184,6 +187,15 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                     }
                 } else {
                     searchViewModels.clearLastSelectedItem()
+                }
+
+                if (position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_TV)
+                    || position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_RADIO)
+                ) {
+                    if (lastSelectedItem != position) {
+                        tvChannelViewModel.cancelCurrentGetStreamLinkTask()
+                        tvChannelViewModel.clearCurrentPlayingChannelState()
+                    }
                 }
                 onRowSelected(position)
                 lastSelectedItem = position
