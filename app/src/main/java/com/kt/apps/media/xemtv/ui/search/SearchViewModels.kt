@@ -15,6 +15,7 @@ import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.tv.model.TVChannel.Companion.mapToTVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
+import com.kt.apps.core.utils.removeAllSpecialChars
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
@@ -52,19 +53,19 @@ class SearchViewModels @Inject constructor(
             return
         }
         _searchQueryLiveData.postValue(DataState.Loading())
-        _lastSearchQuery = query
+        _lastSearchQuery = query.removeAllSpecialChars().trim()
         searchTask?.let {
             it.dispose()
             compositeDisposable.remove(it)
         }
-        searchTask = searchForText(query, filter, limit = 1500, offset = page * 1500)
+        searchTask = searchForText(_lastSearchQuery!!, filter, limit = 1500, offset = page * 1500)
             .delay(300, TimeUnit.MILLISECONDS)
             .doOnDispose {
                 mHandler.removeCallbacks(_logSearchQuery)
             }
             .doOnSuccess {
                 mHandler.removeCallbacks(_logSearchQuery)
-                _logSearchQuery.queryText = query
+                _logSearchQuery.queryText = _lastSearchQuery!!
                 _logSearchQuery.queryResult = it.values.takeIf {
                     it.isNotEmpty()
                 }?.map {
@@ -96,7 +97,7 @@ class SearchViewModels @Inject constructor(
         query: String,
     ) {
         actionLogger.logSearchForTextAndPerformClick(
-            query = query,
+            query = query.removeAllSpecialChars(),
             searchResult = searchItem
         )
         getResulItemTask?.dispose()
