@@ -15,6 +15,7 @@ import com.kt.apps.core.logging.logStreamingTV
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
+import com.kt.apps.core.utils.removeAllSpecialChars
 import io.reactivex.rxjava3.disposables.Disposable
 import javax.inject.Inject
 
@@ -76,10 +77,7 @@ open class BaseTVChannelViewModel constructor(
         if (lastTVStreamLinkTask?.isDisposed != true) {
             lastTVStreamLinkTask?.dispose()
         }
-        _lastWatchedChannel = TVChannelLinkStream(
-            tvDetail,
-            listOf()
-        )
+        markLastWatchedChannel(tvDetail)
         lastTVStreamLinkTask = interactors.getChannelLinkStream(tvDetail, isBackup)
             .subscribe({
                 Logger.d(this, message = Gson().toJson(it))
@@ -142,6 +140,12 @@ open class BaseTVChannelViewModel constructor(
     fun markLastWatchedChannel(tvChannel: TVChannelLinkStream?) {
         _lastWatchedChannel = tvChannel
     }
+    fun markLastWatchedChannel(tvChannel: TVChannel) {
+        _lastWatchedChannel = TVChannelLinkStream(
+            tvChannel,
+            listOf()
+        )
+    }
 
     fun retryGetLastWatchedChannel() {
         _lastWatchedChannel?.let {
@@ -175,9 +179,38 @@ open class BaseTVChannelViewModel constructor(
         add(
             interactors.getCurrentProgrammeForChannel.invoke(channel.channelId)
                 .subscribe({
-                    _programmeForChannelLiveData.postValue(DataState.Success(it))
+                    if (it.channel == lastWatchedChannel
+                            ?.channel
+                            ?.channelId
+                            ?.removeAllSpecialChars()
+                            ?.removePrefix("viechannel")
+                    ) {
+                        _programmeForChannelLiveData.postValue(DataState.Success(it))
+                    } else {
+                        _programmeForChannelLiveData.postValue(
+                            DataState.Success(
+                                TVScheduler.Programme(
+                                    channel = channel.channelId
+                                        .removeAllSpecialChars()
+                                        .removePrefix("viechannel"),
+                                    title = "",
+                                    description = channel.tvGroup,
+                                )
+                            )
+                        )
+                    }
                 }, {
-                    _programmeForChannelLiveData.postValue(DataState.Error(it))
+                    _programmeForChannelLiveData.postValue(
+                        DataState.Success(
+                            TVScheduler.Programme(
+                                channel = channel.channelId
+                                    .removeAllSpecialChars()
+                                    .removePrefix("viechannel"),
+                                title = "",
+                                description = channel.tvGroup,
+                            )
+                        )
+                    )
                 })
         )
     }

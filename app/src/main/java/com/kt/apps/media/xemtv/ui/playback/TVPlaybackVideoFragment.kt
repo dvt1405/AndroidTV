@@ -1,6 +1,5 @@
 package com.kt.apps.media.xemtv.ui.playback
 
-import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -26,10 +25,8 @@ import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.removeAllSpecialChars
-import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
-import com.kt.apps.media.xemtv.ui.main.MainActivity
 import dagger.android.AndroidInjector
 import javax.inject.Inject
 import kotlin.math.max
@@ -74,7 +71,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                     newStreamList
                 )
                 tvChannelViewModel.markLastWatchedChannel(newChannelWithLink)
-                playVideo(newChannelWithLink)
+                playVideo(newChannelWithLink, false)
                 actionLogger.logPlaybackRetryPlayVideo(
                     error,
                     tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "Unknown",
@@ -148,11 +145,14 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         tvChannel?.let {
             mCurrentSelectedChannel = it.channel
             setBackgroundByStreamingType(it)
+            tvChannelViewModel.loadProgramForChannel(it.channel)
             playVideo(tvChannel)
             tvChannelViewModel.markLastWatchedChannel(it)
         }
         onItemClickedListener = OnItemViewClickedListener { itemViewHolder, item, rowViewHolder, row ->
-            tvChannelViewModel.getLinkStreamForChannel(item as TVChannel)
+            tvChannelViewModel.markLastWatchedChannel(item as TVChannel)
+            tvChannelViewModel.loadProgramForChannel(item)
+            tvChannelViewModel.getLinkStreamForChannel(item)
             (mAdapter as ArrayObjectAdapter).indexOf(item)
                 .takeIf {
                     it > -1
@@ -226,7 +226,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                 } else {
                     getBackgroundView()?.background = ColorDrawable(Color.TRANSPARENT)
                 }
-                playVideo(tvChannel)
+                playVideo(tvChannel, false)
                 Logger.d(this, message = "Play media source")
             }
 
@@ -267,7 +267,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         )
     }
 
-    private fun playVideo(tvChannelLinkStream: TVChannelLinkStream) {
+    private fun playVideo(tvChannelLinkStream: TVChannelLinkStream, showVideoInfo: Boolean = true) {
         playVideo(
             linkStreams = tvChannelLinkStream.linkStream
                 .filter {
@@ -284,9 +284,8 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             isHls = tvChannelLinkStream.channel.isHls,
             headers = null,
             isLive = true,
-            forceShowVideoInfoContainer = true
+            forceShowVideoInfoContainer = showVideoInfo
         )
-        tvChannelViewModel.loadProgramForChannel(tvChannelLinkStream.channel)
         Logger.d(this, message = "PlayVideo: $tvChannelLinkStream")
         if (tvChannelViewModel.tvChannelLiveData.value is DataState.Success) {
             val listChannel = (tvChannelViewModel.tvChannelLiveData.value as DataState.Success<List<TVChannel>>).data

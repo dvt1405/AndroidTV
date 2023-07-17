@@ -15,6 +15,9 @@ class GetCurrentProgrammeForChannel @Inject constructor(
         return when (val channel = params[EXTRA_CHANNEL]) {
             is String -> {
                 parser.getCurrentProgramForTVChannel(channel)
+                    .switchIfEmpty {
+                        it.onError(Throwable("Empty program for channel id: $channel"))
+                    }
             }
 
             is ExtensionsChannel -> {

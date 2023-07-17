@@ -767,7 +767,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         isLive: Boolean,
         forceShowVideoInfoContainer: Boolean
     ) {
-        progressManager.show()
+        if (!progressManager.isShowing) {
+            progressManager.show()
+        }
         mGlueHost.setSurfaceHolderCallback(null)
         exoPlayerManager.playVideo(
             linkStreams = linkStreams,
@@ -1086,6 +1088,8 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     || overlaysUIState == OverlayUIState.STATE_INIT
                 ) {
                     handleUI(OverlayUIState.STATE_INIT, false)
+                } else {
+                    mHandler.removeCallbacks(autoHideOverlayRunnable)
                 }
             },
             onShowListener = {
@@ -1095,6 +1099,8 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     || overlaysUIState == OverlayUIState.STATE_INIT
                 ) {
                     handleUI(OverlayUIState.STATE_INIT, false)
+                } else {
+                    mHandler.removeCallbacks(autoHideOverlayRunnable)
                 }
             }
         )
