@@ -97,7 +97,12 @@ fun getTimeAgo(timeInMilli: Long): String {
 }
 
 fun String.removeAllSpecialChars(): String {
-    return this.replace("[^\\dA-Za-z ]", "")
+    return this.replace(
+        Regex(
+            "[^0-9a-zA-Z+áàảãạăắằẳẵặâấầẩẫậeéèẻẽẹêếềểễệđ" +
+                    "íìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữự& ]"
+        ), ""
+    )
         .replace("\\s+", "+")
         .replace("-", "")
         .trim()
@@ -145,77 +150,6 @@ fun Map<String, String>.buildCookie(): String {
 
 fun Int.dpToPx(): Int {
     return (CoreApp.getInstance().resources.displayMetrics.scaledDensity * this).toInt()
-}
-
-fun getToken() {
-    val json = JSONObject()
-    val time = Date().time.toString()
-
-    json.put("time", time)
-    json.put("vip", false)
-    json.put("code", 1)
-
-    val signKey = java.lang.StringBuilder(mo9380r(CoreApp.getInstance()))
-        .reverse()
-        .toString()
-
-    json.put("key", signKey)
-
-    val token = m705f(json.toString())
-
-    Logger.d(
-        Any::class.java, "Token", "{" +
-                "signKey: $signKey,\n" +
-                "time: $time,\n" +
-                "token: $token,\n" +
-                "json: $json" +
-                "" +
-                "}"
-    )
-
-}
-
-
-fun m705f(str: String): String? {
-    return try {
-        val g: SecretKeySpec = m706g("com.monster.truyenhinh.bongda")
-        var bArr = ByteArray(16)
-        val bytes = str.toByteArray(charset("UTF-8"))
-        val instance: Cipher = Cipher.getInstance("AES/CBC/PKCS7Padding")
-        instance.init(1, g, IvParameterSpec(bArr))
-        android.util.Base64.encodeToString(instance.doFinal(bytes), 2)
-    } catch (e: UnsupportedEncodingException) {
-        throw GeneralSecurityException(e)
-    }
-}
-
-fun m706g(str: String): SecretKeySpec {
-    val instance: MessageDigest = MessageDigest.getInstance("SHA-256")
-    val bytes: ByteArray = str.toByteArray(StandardCharsets.UTF_8)
-    instance.update(bytes, 0, bytes.size)
-    return SecretKeySpec(instance.digest(), "AES")
-}
-
-fun mo9380r(context: Context): String {
-    var str = ""
-    try {
-        val signatureArr: Array<Signature> = context.packageManager.getPackageInfo("com.quang.monstertv", 64).signatures
-        var i = 0
-        val length = signatureArr.size
-        while (i < length) {
-            val signature: Signature = signatureArr[i]
-            i++
-            val instance = MessageDigest.getInstance("SHA-1")
-            instance.update(signature.toByteArray())
-            val a: String = String(instance.digest())
-//            C2299a.m12202l(a, "base16().encode(md.digest())")
-            Logger.d(Any::class.java,"signatureArr", str)
-            str = a
-        }
-    } catch (unused: Throwable) {
-        Logger.e(Any::class.java, exception = unused)
-    }
-    return str.uppercase(Locale.ROOT)
 }
 
 @Throws(Exception::class)
