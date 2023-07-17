@@ -239,9 +239,9 @@ abstract class RoomDataBase : RoomDatabase() {
             }
             return cursor
         }
-        private fun copyAndClose(c: Cursor): Cursor {
+        private fun copyAndClose(cursor: Cursor): Cursor {
             val matrixCursor: MatrixCursor
-            c.use { c ->
+            cursor.use { c ->
                 matrixCursor = MatrixCursor(c.columnNames, c.count)
                 while (c.moveToNext()) {
                     val row = arrayOfNulls<Any>(c.columnCount)
@@ -268,18 +268,18 @@ abstract class RoomDataBase : RoomDatabase() {
                 val cursor = query(sqLiteDatabase, SimpleSQLiteQuery("SELECT * FROM TVChannelDTO"),
                     true,
                     null)
-                cursor.use { cursor ->
-                    val indexOfTvGroup = CursorUtil.getColumnIndexOrThrow(cursor, "tvGroup")
-                    val indexOfLogoChannel = CursorUtil.getColumnIndexOrThrow(cursor, "logoChannel")
-                    val indexOfTvChannelName = CursorUtil.getColumnIndexOrThrow(cursor, "tvChannelName")
-                    val indexOfSourceFrom = CursorUtil.getColumnIndexOrThrow(cursor, "sourceFrom")
-                    val indexOfChannelId = CursorUtil.getColumnIndexOrThrow(cursor, "channelId")
-                    while (cursor.moveToNext()) {
-                        val channelId = cursor.getString(indexOfChannelId)
-                        val tvGroup = cursor.getString(indexOfTvGroup)
-                        val logoChannel = cursor.getString(indexOfLogoChannel)
-                        val tvChannelName = cursor.getString(indexOfTvChannelName)
-                        val tvSourceFrom = cursor.getString(indexOfSourceFrom)
+                cursor.use { c ->
+                    val indexOfTvGroup = CursorUtil.getColumnIndexOrThrow(c, "tvGroup")
+                    val indexOfLogoChannel = CursorUtil.getColumnIndexOrThrow(c, "logoChannel")
+                    val indexOfTvChannelName = CursorUtil.getColumnIndexOrThrow(c, "tvChannelName")
+                    val indexOfSourceFrom = CursorUtil.getColumnIndexOrThrow(c, "sourceFrom")
+                    val indexOfChannelId = CursorUtil.getColumnIndexOrThrow(c, "channelId")
+                    while (c.moveToNext()) {
+                        val channelId = c.getString(indexOfChannelId)
+                        val tvGroup = c.getString(indexOfTvGroup)
+                        val logoChannel = c.getString(indexOfLogoChannel)
+                        val tvChannelName = c.getString(indexOfTvChannelName)
+                        val tvSourceFrom = c.getString(indexOfSourceFrom)
                         tvChannelDTOS.add(
                             TVChannelDTO(
                                 channelId = channelId,
@@ -287,12 +287,13 @@ abstract class RoomDataBase : RoomDatabase() {
                                 logoChannel = logoChannel,
                                 tvChannelName = tvChannelName,
                                 sourceFrom = tvSourceFrom,
-                                searchKey = tvChannelName.replaceVNCharsToLatinChars()
+                                searchKey = tvChannelName.lowercase()
+                                    .replaceVNCharsToLatinChars()
                                     .removeAllSpecialChars()
                             )
                         )
                     }
-                    cursor.moveToPosition(-1)
+                    c.moveToPosition(-1)
                     sqLiteDatabase.setTransactionSuccessful()
                 }
             } finally {

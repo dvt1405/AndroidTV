@@ -17,6 +17,7 @@ import com.kt.apps.core.tv.datasource.needRefreshData
 import com.kt.apps.core.tv.di.TVScope
 import com.kt.apps.core.tv.model.*
 import com.kt.apps.core.tv.storage.TVStorage
+import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
@@ -266,7 +267,9 @@ class MainTVDataSource @Inject constructor(
                     channel.tvChannelName,
                     sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
                     channel.channelId,
-                    channel.tvChannelName.replaceVNCharsToLatinChars()
+                    channel.tvChannelName.lowercase()
+                        .replaceVNCharsToLatinChars()
+                        .removeAllSpecialChars()
                 )
             )
         }

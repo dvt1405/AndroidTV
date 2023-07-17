@@ -32,22 +32,23 @@ class SearchForText @Inject constructor(
             .weakValues()
             .makeMap()
     }
-    sealed class SearchResult {
+    sealed class SearchResult(open val score: Int) {
         class ExtensionsChannelWithCategory(
             val data: ExtensionsChannelDBWithCategoryViews,
             val highlightTitle: SpannableString,
-            val score: Int,
-        ) : SearchResult()
+            override val score: Int,
+        ) : SearchResult(score)
 
         data class TV(
             val data: TVChannelDTO,
             val urls: List<TVChannelDTO.TVChannelUrl>,
-            val highlightTitle: SpannableString
-        ) : SearchResult()
+            val highlightTitle: SpannableString,
+            override val score: Int,
+            ) : SearchResult(score)
 
         data class History(
             val data: HistoryMediaItemDTO
-        ) : SearchResult()
+        ) : SearchResult(0)
     }
 
     override fun prepareExecute(params: Map<String, Any>): Maybe<Map<String, List<SearchResult>>> {
@@ -85,31 +86,36 @@ class SearchForText @Inject constructor(
                 .trim()
         }
 
-        val extraQuery = getExtraQuery(searchQuery, "searchKey", "")
+        val extraQuery = getExtraQuery(searchQuery, "searchKey", "", false)
         val rawQuery = if (searchQuery.isEmpty()) {
             "SELECT * FROM TVChannelFts4"
         } else {
-            "SELECT * FROM TVChannelFts4 WHERE searchKey MATCH " +
-                    "'*${
-                        searchQuery.replaceVNCharsToLatinChars()
-                            .removeAllSpecialChars()
-                    }*'$extraQuery"
+            val q = searchQuery.replaceVNCharsToLatinChars()
+                .removeAllSpecialChars()
+            if (extraQuery.isNotEmpty()) {
+                "SELECT * FROM TVChannelFts4 WHERE ${extraQuery.trim().removePrefix("OR")}" +
+                        " OR searchKey LIKE '%$q%'" +
+                        ""
+            } else {
+                "SELECT * FROM TVChannelFts4 WHERE searchKey LIKE '%$q%'"
+            }
         }
         Logger.d(this@SearchForText, "TVChannel", rawQuery)
-        val tvChannelSource: Single<Map<String, List<SearchResult>>> = roomDataBase.tvChannelDao()
+        val tvChannelSource: Single<List<SearchResult>> = roomDataBase.tvChannelDao()
             .searchChannelByNameFts4(SimpleSQLiteQuery(rawQuery))
+            .onErrorReturnItem(listOf())
             .map {
                 it.map {
                     SearchResult.TV(
                         it.tvChannel, it.urls,
-                        getHighlightTitle(it.tvChannel.tvChannelName, filterHighlight)
+                        getHighlightTitle(it.tvChannel.tvChannelName, filterHighlight),
+                        calculateScore(it.tvChannel.tvChannelName, queryNormalize, filterHighlight)
+                                + calculateScore(it.tvChannel.tvGroup, queryNormalize, filterHighlight)
                     )
-                }.groupBy {
-                    it.data.tvGroup
                 }
             }
 
-        val extensionsSource: Single<Map<String, List<SearchResult>>> = roomDataBase.extensionsChannelDao()
+        val extensionsSource: Single<List<SearchResult>> = roomDataBase.extensionsChannelDao()
             .searchByNameQuery(getSqlQuery(searchQuery, filter, limit, offset))
             .map {
                 val list = it.map {
@@ -123,9 +129,7 @@ class SearchForText @Inject constructor(
                 }.sortedBy {
                     it.score
                 }
-                list.groupBy {
-                    it.data.categoryName
-                }
+                list
             }
 
         val historySource = _getListHistory.invoke()
@@ -134,7 +138,7 @@ class SearchForText @Inject constructor(
             }
             .map { itemList ->
                 val listSearchResult: List<SearchResult> = itemList.map { SearchResult.History(it) }
-                mapOf("Đã xem gần đây" to listSearchResult)
+                listSearchResult
             }
             .switchIfEmpty(tvChannelSource)
 
@@ -146,6 +150,29 @@ class SearchForText @Inject constructor(
                 extensionsSource.toFlowable()
             }
             else -> tvChannelSource.mergeWith(extensionsSource)
+                .reduce { t1, t2 ->
+                    val l = t1.toMutableList()
+                    l.addAll(t2)
+                    l
+                }.toFlowable()
+        }.map {
+            it.sortedBy {
+                it.score
+            }.groupBy {
+                when (it) {
+                    is SearchResult.History -> {
+                        "Đã xem gần đây"
+                    }
+
+                    is SearchResult.TV -> {
+                        it.data.tvGroup
+                    }
+
+                    is SearchResult.ExtensionsChannelWithCategory -> {
+                        it.data.categoryName
+                    }
+                }
+            }
         }.reduce { t1, t2 ->
             val list: MutableMap<String, List<SearchResult>> = t1.toMutableMap()
             list.putAll(t2)
@@ -231,7 +258,8 @@ class SearchForText @Inject constructor(
     private fun getExtraQuery(
         queryString: String,
         channelNameField: String,
-        categoryField: String
+        categoryField: String,
+        useFts4: Boolean = true
     ): String {
         val splitStr = queryString.lowercase().split(" ")
             .filter {
@@ -246,23 +274,28 @@ class SearchForText @Inject constructor(
         var regexSplit = ""
         if (splitStr.size > 1) {
             regexSplit = splitStr.mapIndexed { index, s ->
-                val filterCategory = if (categoryField.isNotBlank()) {
+                val match = if (useFts4) {
                     if (index == splitStr.size - 1 || index == 0) {
-                        " OR $categoryField MATCH '*$s*'"
+                        "MATCH '*$s*'"
                     } else {
-                        " OR $categoryField MATCH '*$s *'"
+                        "MATCH '*$s *'"
                     }
+                } else {
+                    "LIKE '%$s%'"
+                }
+                val filterCategory = if (categoryField.isNotBlank()) {
+                    "OR $categoryField $match"
                 } else {
                     ""
                 }
-                val filterName = if (index == splitStr.size - 1 || index == 0) {
-                    " OR $channelNameField MATCH '*$s*'"
-                } else {
-                    " OR $channelNameField MATCH '*$s *'"
-                }
+                val filterName = " OR $channelNameField $match"
                 return@mapIndexed "$filterName$filterCategory"
             }.reduce { acc, s ->
-                "$acc$s"
+                if (acc.contains(s)) {
+                    acc
+                } else {
+                    "$acc$s"
+                }
             }
         }
         return regexSplit
@@ -294,27 +327,71 @@ class SearchForText @Inject constructor(
             if (_filterHighlight.isNullOrEmpty()) {
                 return spannableString
             }
-            val titleLength = lowerRealTitle.length
             _filterHighlight.filter {
                 it.isNotBlank() && it.trim().isNotEmpty()
             }.forEach { searchKey ->
-                var index = lowerRealTitle.indexOf(searchKey)
-                while (index > -1 && index + searchKey.length <= titleLength) {
-                    spannableString.setSpan(
-                        ForegroundColorSpan(HIGH_LIGHT_COLOR),
-                        index,
-                        index + searchKey.length,
-                        Spannable.SPAN_EXCLUSIVE_INCLUSIVE
-                    )
-                    val startIndex = index + searchKey.length
-                    if (startIndex >= titleLength) {
-                        break
+                val listSpan = findSpan(lowerRealTitle, searchKey)
+                if (listSpan.isNotEmpty()) {
+                    for ((startIndex, endIndex) in listSpan) {
+                        spannableString.setSpan(
+                            ForegroundColorSpan(HIGH_LIGHT_COLOR),
+                            startIndex,
+                            endIndex + 1,
+                            Spannable.SPAN_EXCLUSIVE_INCLUSIVE
+                        )
                     }
-                    index = lowerRealTitle.indexOf(searchKey, startIndex)
                 }
             }
             return spannableString
         }
+
+        private fun findSpan(lowerRealTitle: String, searchKey: String): List<Pair<Int, Int>> {
+            var start = 0
+            var end = 0
+            val listSpan = mutableListOf<Pair<Int, Int>>()
+            var scanIndex = 0
+            for (i in lowerRealTitle.indices) {
+                val ch = lowerRealTitle[i]
+                if (ch == searchKey[scanIndex]) {
+                    if (scanIndex == 0) {
+                        start = i
+                    } else if (scanIndex == searchKey.length - 1) {
+                        end = i
+                    }
+                    scanIndex++
+                } else if (ch !in '0'..'9'
+                    && ch !in 'a'..'z'
+                    && ch != '+'
+                    && ch != ' '
+                ) {
+                    continue
+                } else if (ch == ' ') {
+                    scanIndex = 0
+                    start = 0
+                    end = 0
+                } else if (scanIndex > 0) {
+                    if (ch == searchKey[0]) {
+                        start = i
+                        scanIndex = 1
+                        end = 0
+                    } else {
+                        scanIndex = 0
+                        start = 0
+                        end = 0
+                    }
+                }
+                if (scanIndex >= searchKey.length) {
+                    if (end != 0) {
+                        listSpan.add(Pair(start, end))
+                    }
+                    start = 0
+                    end = 0
+                    scanIndex = 0
+                }
+            }
+            return listSpan
+        }
+
         fun calculateScore(text: String, queryNormalize: String, pattern: List<String>): Int {
             var score = INIT_SCORE
             val textNormalize = text.trim().lowercase()
