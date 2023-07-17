@@ -12,6 +12,7 @@ import com.kt.apps.core.base.leanback.PresenterSelector
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.observe
 import com.google.android.exoplayer2.PlaybackException
+import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.R
 import com.kt.apps.core.base.BasePlaybackFragment
 import com.kt.apps.core.base.DataState
@@ -235,12 +236,10 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
 
             is DataState.Error -> {
                 progressBarManager.hide()
-
-                showErrorDialog(content = dataState.throwable.message,
-                    onSuccessListener = {
-                        startActivity(Intent(requireContext(), MainActivity::class.java))
-                        requireActivity().finish()
-                    })
+                showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR)
+                tvChannelViewModel.lastWatchedChannel?.let {
+                    retryTimes[it.channel.channelId] = 0
+                }
             }
 
             else -> {

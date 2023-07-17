@@ -11,5 +11,6 @@ object ErrorCode {
     const val COMMENT_OVER_LOAD = 4402
     const val COMMENT_INVALID = 4401
 
+    const val GET_STREAM_LINK_ERROR = 4998
     const val UN_EXPECTED_ERROR = 4999
 }
