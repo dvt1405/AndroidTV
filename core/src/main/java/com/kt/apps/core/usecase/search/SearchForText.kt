@@ -116,7 +116,7 @@ class SearchForText @Inject constructor(
             }
 
         val extensionsSource: Single<List<SearchResult>> = roomDataBase.extensionsChannelDao()
-            .searchByNameQuery(getSqlQuery(searchQuery, filter, limit, offset))
+            .searchByNameQuery(getSqlQuery(query, filter, limit, offset))
             .map {
                 val list = it.map {
                     val calculateScore = calculateScore(it.tvChannelName, queryNormalize, filterHighlight)
@@ -347,7 +347,7 @@ class SearchForText @Inject constructor(
 
         private fun findSpan(lowerRealTitle: String, searchKey: String): List<Pair<Int, Int>> {
             var start = 0
-            var end = 0
+            var end = -1
             val listSpan = mutableListOf<Pair<Int, Int>>()
             var scanIndex = 0
             for (i in lowerRealTitle.indices) {
@@ -355,7 +355,8 @@ class SearchForText @Inject constructor(
                 if (ch == searchKey[scanIndex]) {
                     if (scanIndex == 0) {
                         start = i
-                    } else if (scanIndex == searchKey.length - 1) {
+                    }
+                    if (scanIndex == searchKey.length - 1) {
                         end = i
                     }
                     scanIndex++
@@ -368,24 +369,24 @@ class SearchForText @Inject constructor(
                 } else if (ch == ' ') {
                     scanIndex = 0
                     start = 0
-                    end = 0
+                    end = -1
                 } else if (scanIndex > 0) {
                     if (ch == searchKey[0]) {
                         start = i
                         scanIndex = 1
-                        end = 0
+                        end = -1
                     } else {
                         scanIndex = 0
                         start = 0
-                        end = 0
+                        end = -1
                     }
                 }
                 if (scanIndex >= searchKey.length) {
-                    if (end != 0) {
+                    if (end != -1) {
                         listSpan.add(Pair(start, end))
                     }
                     start = 0
-                    end = 0
+                    end = -1
                     scanIndex = 0
                 }
             }
@@ -403,14 +404,14 @@ class SearchForText @Inject constructor(
                 return 1
             }
 
-            val lowerStrLatin = text.trim().lowercase()
+            val wordArrLatin = text.trim().lowercase()
                 .replaceVNCharsToLatinChars()
                 .split(" ")
                 .filter {
                     it.isNotBlank()
                 }
 
-            if (lowerStrLatin.contains(queryNormalize)) {
+            if (wordArrLatin.contains(queryNormalize)) {
                 score -= pattern.size
             }
 
@@ -422,15 +423,17 @@ class SearchForText @Inject constructor(
                 } else {
                     child += " $childPattern"
                 }
-                if (textNormalize.contains(child)) {
-                    score -= if (textNormalize.indexOf(child) == 0) {
-                        (i * 2)
+                var index = textNormalize.indexOf(child)
+                while (index > -1 && index + child.length < textNormalize.length) {
+                    score -= if (index == 0 && i == 0) {
+                        3
                     } else {
-                        (i + 1)
+                        1
                     }
+                    index = textNormalize.indexOf(child, index + child.length)
                 }
-                for (j in lowerStrLatin.indices) {
-                    if (lowerStrLatin[j] == childPattern) {
+                for (j in wordArrLatin.indices) {
+                    if (wordArrLatin[j] == childPattern) {
                         score--
                         if (j == i) {
                             score -= 2
@@ -439,7 +442,7 @@ class SearchForText @Inject constructor(
                 }
             }
 
-            if (lowerStrLatin.size == pattern.size) {
+            if (wordArrLatin.size == pattern.size) {
                 score--
             }
 
