@@ -9,6 +9,7 @@ import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.viewmodels.ComplexViewModel
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
+import com.kt.apps.media.mobile.viewmodels.features.SearchViewModels
 import dagger.Binds
 import dagger.Module
 import dagger.multibindings.IntoMap
@@ -40,6 +41,12 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(FootballViewModel::class)
     abstract fun bindFootballViewModel(footballViewModel: FootballViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(SearchViewModels::class)
+    abstract fun bindSearchViewModel(footballViewModel: SearchViewModels): ViewModel
+
 
     @Binds
     abstract fun bindViewModelFactory(

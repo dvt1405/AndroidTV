@@ -218,18 +218,6 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
     }
 
-    private fun appendExtensionSource(data: Map<ExtensionsConfig, List<ExtensionsChannel>>) {
-        data.forEach { entry ->
-            val grouped = groupAndSort(entry.value).map {
-                Pair(
-                    "${it.first} (${entry.key.sourceName})",
-                    it.second.map { exChannel -> ChannelElement.ExtensionChannelElement(exChannel) }
-                )
-            }
-            adapter.onAdd(grouped)
-        }
-    }
-
     private fun scrollToPosition(index: Int) {
         Log.d(TAG, "scrollToPosition: $index")
         mainRecyclerView.fastSmoothScrollToPosition(index)

@@ -55,7 +55,7 @@ class PreloadDataWorker(private val context: Context, private val params: Worker
             "Truyen hinh VPT" to "https://hqth.me/vnptli",
             "Truyen hinh Viettel" to "https://hath.me/viettelv1",
             "VietSimpleTV" to "https://hqth.me/vietstv",
-            "KIPTV SPORT" to "http://hqth.me/kiptvs",
+            "KIPTV SPORT" to "https://hqth.me/kiptvs",
             "VthanhTV" to "http://vthanhtivi.pw",
             "Coocaa" to "http://hgth.me/coca",
             "Nguyen Kiet" to "https://hqth.me/ngkiettv1",

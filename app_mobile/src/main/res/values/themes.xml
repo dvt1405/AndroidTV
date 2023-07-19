@@ -12,6 +12,17 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@color/black</item>
         <item name="android:navigationBarColor">@color/black</item>
+
         <!-- Customize your theme here. -->
+
+        <item name="sweet_alert_btn_confirm_bg_drawable">@drawable/background_outline_circle</item>
+        <item name="sweet_alert_btn_confirm_text_color">@color/white</item>
+        <item name="sweet_alert_btn_confirm_text_size">14sp</item>
+        <item name="sweet_alert_title_text_color">@color/white</item>
+        <item name="sweet_alert_title_text_size">19sp</item>
+        <item name="sweet_alert_content_text_size">15sp</item>
+        <item name="sweet_alert_content_text_color">@color/white</item>
+        <item name="sweet_alert_btn_confirm_default_focus">true</item>
+        <item name="sweet_alert_bg_drawable">@null</item>
     </style>
 </resources>

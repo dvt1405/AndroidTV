@@ -126,7 +126,7 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
             showErrorDialog(content = "Tên nguồn không được bỏ trống")
             return
         }
-        val sourceUrl = view?.findViewById<TextInputLayout>(R.id.textInputLayout_2)?.prefixText.toString() +
+        var sourceUrl = view?.findViewById<TextInputLayout>(R.id.textInputLayout_2)?.prefixText.toString() +
                 view?.findViewById<TextInputEditText>(R.id.textInputEditText_2)?.text.toString()
         if (!sourceUrl.startsWith("http")) {
             showErrorDialog(content = "Đường dẫn không hợp lệ! Đường dẫn phải phải bắt đầu bằng: \"http\"")
@@ -138,6 +138,7 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
             R.id.type_movie -> ExtensionsConfig.Type.MOVIE
             else -> ExtensionsConfig.Type.TV_CHANNEL
         }
+        sourceUrl = sourceUrl.replace("https", "http")
         val extensionsConfig = ExtensionsConfig(
             view?.findViewById<TextInputEditText>(R.id.textInputEditText)?.text.toString(),
             sourceUrl,

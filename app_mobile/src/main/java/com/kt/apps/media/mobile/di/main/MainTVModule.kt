@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.di.main
 
+import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.di.viewmodels.ViewModelModule
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackFragment
@@ -10,7 +11,7 @@ import com.kt.apps.media.mobile.ui.fragments.football.list.FootballListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.lightweightchannels.LightweightChannelFragment
-import com.kt.apps.media.mobile.ui.fragments.tv.PerChannelListFragment
+import com.kt.apps.media.mobile.ui.fragments.search.SearchListFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
 import com.kt.apps.media.mobile.ui.fragments.tv.RadioPerChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.TVPerChannelListFragment
@@ -65,4 +66,10 @@ abstract class MainTVModule {
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentIptvList(): IptvChannelListFragment
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentSearchDashboard(): SearchDashboardFragment
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentSearchList(): SearchListFragment
 }

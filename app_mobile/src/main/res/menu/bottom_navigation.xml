@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/search"
-        android:enabled="false"
+        android:enabled="true"
         android:icon="@drawable/ic_search_24p"
         android:title="Tìm kiếm"
         android:visible="true" />

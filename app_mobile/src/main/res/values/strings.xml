@@ -1,16 +1,19 @@
 <resources>
     <string name="add_extension">Thêm nguồn IPTV</string>
+    <string name="add_extension_title">Tên IPTV</string>
     <string name="add_extension_source">Thêm nguồn video</string>
     <string name="source_name">Tên nguồn</string>
-    <string name="source_link">Đường dẫn</string>
+    <string name="source_link">Url</string>
     <string name="save">Lưu</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="no_internet">Không có kết nối mạng</string>
     <string name="error">Lỗi</string>
+    <string name="error_happen">Có lỗi xảy ra, hãy thử lại sau</string>
     <string name="all">Tất cả</string>
     <string name="on_live_title">Đang diễn ra</string>
     <string name="live">LIVE</string>
     <string name="live_matches">Đang diễn ra</string>
     <string name="add_source_description">Chưa có nguồn IPTV. Thêm mới và bắt đầu thưởng thức.</string>
+    <string name="search_input_placeholder">Nhập nội dung tìm kiếm</string>
 </resources>

@@ -69,6 +69,7 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
         tabLayout?.let {tabLayout ->
             binding.viewpager?.let {viewPager2 ->
                 viewPager2.adapter = _adapter
+                viewPager2.isUserInputEnabled = false
                 TabLayoutMediator(
                     tabLayout, viewPager2, true, false
                 ) { tab, position ->
@@ -83,6 +84,12 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             binding.addExtension?.clicks()?.collectLatest {
                 showAddIPTVDialog()
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            viewModel.addExtensionsConfig.collectLatest {
+                Log.d(TAG, "initAction: add source success")
             }
         }
 
@@ -112,8 +119,9 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
 
     private fun onAddedExtension() {
         Log.d(TAG, "onAddedExtension: success")
-//        showSuccessDialog(
-//            content = "Thêm nguồn kênh thành công!\r\nKhởi động lại ứng dụng để kiểm tra nguồn kênh"
-//        )
+//        showSuccessDialog()
+        showSuccessDialog(
+            content = "Thêm nguồn kênh thành công!\r\nKhởi động lại ứng dụng để kiểm tra nguồn kênh"
+        )
     }
 }

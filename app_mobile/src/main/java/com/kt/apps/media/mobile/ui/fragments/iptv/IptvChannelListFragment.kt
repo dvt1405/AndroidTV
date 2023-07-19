@@ -13,12 +13,16 @@ import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
 import com.kt.apps.media.mobile.ui.fragments.tv.PerChannelListFragment
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
-import com.kt.apps.media.mobile.utils.groupAndSort
-import com.kt.apps.media.mobile.utils.screenHeight
+import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.IPTVListViewModel
+import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -42,12 +46,31 @@ class IptvChannelListFragment : BaseFragment<FragmentFootballListBinding>(){
         }
     }
 
+    private val activityIndicator by lazy { ActivityIndicator() }
+
+    private val skeletonScreen by lazy {
+        binding.mainChannelRecyclerView?.let {
+            KunSkeleton.bind(it)
+                .adapter(_adapter)
+                .itemCount(10)
+                .recyclerViewLayoutItem(
+                    R.layout.item_row_channel_skeleton,
+                    R.layout.item_channel_skeleton
+                )
+                .build()
+        }
+    }
+
     private val _adapter by lazy {
         TVDashboardAdapter()
     }
 
     private val swipeRefreshLayout by lazy {
         binding.swipeRefreshLayout
+    }
+
+    private val viewSwitcher by lazy {
+        binding.viewSwitcher
     }
 
     override fun initView(savedInstanceState: Bundle?) {
@@ -67,23 +90,36 @@ class IptvChannelListFragment : BaseFragment<FragmentFootballListBinding>(){
 
     override fun initAction(savedInstanceState: Bundle?) {
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            loadData()
+            merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest(loadData)
+        }
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            activityIndicator.isLoading.collectLatest {
+                swipeRefreshLayout?.isRefreshing = it
+                if (it) {
+                    skeletonScreen?.run()
+                } else {
+                    skeletonScreen?.hide()
+                }
+            }
         }
     }
 
-    private fun loadData() {
-        CoroutineScope(Dispatchers.Main).launch(CoroutineExceptionHandler { coroutineContext, throwable ->
-            Log.d(TAG, "loadData: $throwable")
-        }) {
-            swipeRefreshLayout?.isRefreshing = true
-            val list = groupAndSort(viewModels?.loadData() ?: emptyList()).map {
-                Pair(
-                    it.first,
-                    it.second.map { channel -> ChannelElement.ExtensionChannelElement(channel) }
-                )
+    private val loadData: suspend (Unit) -> Unit = {
+        viewModels?.apply {
+            try {
+                viewSwitcher?.showContentView()
+                val list = loadDataAsync().trackActivity(activityIndicator).await()
+                val grouped = groupAndSort(list).map {
+                    Pair(
+                        it.first,
+                        it.second.map { channel -> ChannelElement.ExtensionChannelElement(channel) }
+                    )
+                }
+                _adapter.onRefresh(grouped)
+            } catch (e: Throwable) {
+                Log.d(TAG, "loadData: $e ")
+                viewSwitcher?.showError()
             }
-            _adapter.onRefresh(list)
-            swipeRefreshLayout?.isRefreshing = false
         }
     }
 

@@ -7,6 +7,7 @@ import com.kt.apps.media.mobile.utils.asFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
 
 class IPTVViewModel(private val provider: ViewModelProvider) {
     private val extensionViewModel: ExtensionsViewModel by lazy {
@@ -16,9 +17,7 @@ class IPTVViewModel(private val provider: ViewModelProvider) {
     val extensionConfigs: Flow<List<ExtensionsConfig>>
         get() = extensionViewModel.totalExtensionsConfig.asFlow()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val extensionsSourceName: Flow<List<String>>
-        get() = extensionConfigs.mapLatest {list ->
-            list.map { it.sourceName }
-        }
+    val addExtensionsConfig: Flow<ExtensionsConfig>
+        get() = extensionViewModel.addExtensionConfigLiveData.asFlow()
+            .onEach { extensionViewModel.loadAllListExtensionsChannelConfig() }
 }

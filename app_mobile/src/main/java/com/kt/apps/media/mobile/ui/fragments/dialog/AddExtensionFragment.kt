@@ -21,10 +21,8 @@ import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.hideKeyboard
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.AddExtensionDialogBinding
-import com.kt.apps.media.mobile.utils.clicks
-import com.kt.apps.media.mobile.utils.ktFadeIn
-import com.kt.apps.media.mobile.utils.ktFadeOut
-import com.kt.apps.media.mobile.utils.textChanges
+import com.kt.apps.media.mobile.utils.*
+import com.kt.apps.media.mobile.viewmodels.AddIptvViewModels
 import com.pnikosis.materialishprogress.ProgressWheel
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
@@ -43,15 +41,10 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
         object EDITING: State()
         object PROCESSING: State()
         data class ERROR(val errorText: String) : State()
+        object SUCCESS: State()
     }
     @Inject
     lateinit var factory: ViewModelProvider.Factory
-
-    @Inject
-    lateinit var parserExtensionsSource: ParserExtensionsSource
-
-    @Inject
-    lateinit var roomDataBase: RoomDataBase
 
     private val processState: MutableStateFlow<State> = MutableStateFlow(State.EDITING)
 
@@ -61,8 +54,8 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
         JobQueue()
     }
 
-    private val disposableContainer by lazy {
-        CompositeDisposable()
+    private val viewModel by lazy {
+        AddIptvViewModels(ViewModelProvider(requireActivity(), factory))
     }
 
     override val layoutResId: Int
@@ -97,12 +90,9 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
     private val errorText by lazy {
         binding.errorTextView
     }
-
-
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView: ")
     }
-
 
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
@@ -125,6 +115,7 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
                 }
             }
         }
+
         processState
             .distinctUntilChanged {
                 new, old ->  new == old
@@ -163,6 +154,7 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
                             fadeIn.await()
                         }
                     }
+                    else -> { }
             }
         }.launchIn(lifecycleScope)
 
@@ -172,13 +164,11 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
                 addExtensionsSource()
             }.launchIn(lifecycleScope)
 
-    }
-
-    private suspend fun parseFromRemote(extension: ExtensionsConfig): List<ExtensionsChannel> {
-        return lifecycleScope.async(Dispatchers.IO) {
-            return@async parserExtensionsSource.parseFromRemoteRx(extension)
-                .blockingGet(emptyList())
-        }.await()
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            viewModel.addExtensionsConfig.collectLatest {
+                Log.d(TAG, "addExtensionsConfig: $it")
+            }
+        }
     }
 
 
@@ -186,46 +176,20 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
         val name = sourceNameEditText.text.toString()
         val link = sourceLinkEditText.text.toString()
         if (validateInfo(name, link)) {
-            processState.emit(State.PROCESSING)
             val  extensionConfig = ExtensionsConfig(
                 name,
                 link
             )
-            try {
-                val list = parseFromRemote(extensionConfig)
-                if (list.isNotEmpty()) {
-                    disposableContainer.add(
-                        Single.fromCallable {
-                            val existList = roomDataBase.extensionsConfig().getAll()
-                                .blockingGet(emptyList())
-                            if (existList.indexOfFirst { it.sourceName == name } != -1)  {
-                                throw Error("Tên nguồn không được trùng")
-                            }
-                        }.flatMapCompletable {
-                            roomDataBase.extensionsConfig().insert(extensionConfig)
-                        }
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
-                            .subscribe({
-                                Log.d(TAG, "addExtensionsSource: Success")
-                                onSuccess(this)
-                            }, {
-                                processState.tryEmit(State.ERROR(it.localizedMessage ?: "Lỗi"))
-                            })
-                    )
-                } else {
-                    processState.emit(State.ERROR("Không thể tạo link"))
-                }
-            } catch (error: Error) {
-                processState.emit(State.ERROR("Không thể tạo link"))
+            CoroutineScope(Dispatchers.Main).launch(CoroutineExceptionHandler { _, throwable ->
+                Log.d(TAG, "addExtensionsSource: $throwable")
+                processState.value = State.ERROR("Không thể tạo link")
+            }) {
+                processState.value = State.PROCESSING
+                val result = viewModel.addIPTVSourceAsync(extensionConfig)
+                processState.value = State.SUCCESS
+                onSuccess(this@AddExtensionFragment)
             }
-
         }
-    }
-
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-
     }
     private fun validateInfo(name: String?, source: String?): Boolean {
         return (name?.isNotEmpty() == true

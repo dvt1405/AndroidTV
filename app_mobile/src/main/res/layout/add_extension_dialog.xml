@@ -4,147 +4,156 @@
     xmlns:wheel="http://schemas.android.com/apk/res-auto"
     >
     <data></data>
-    <LinearLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:background="@color/black"
-        android:padding="@dimen/common_padding"
+        app:strokeColor="@color/white"
+        app:strokeWidth="1dp"
         >
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/add_extension_source"
-            android:textSize="32sp"
-            style="@style/TextAppearance.Leanback.Title"
-            />
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/textInputLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:hint="@string/add_extension"
-            android:theme="@style/TextInputLayout"
-            app:hintTextColor="@color/box_stroke_color"
-            android:textColorHint="@color/edittext_border"
-            app:boxStrokeColor="@color/box_stroke_color"
-            app:boxBackgroundColor="#36FFFFFF"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/extension_source_name"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:imeOptions="actionNext"
-                android:paddingTop="10dp"
-                android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
-                android:nextFocusDown="@id/extension_source_link"
-                android:textColor="@color/white"
-                android:textSize="22sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/textInputLayout1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:hint="@string/source_link"
-            android:theme="@style/TextInputLayout"
-            app:hintTextColor="@color/box_stroke_color"
-            android:textColorHint="@color/edittext_border"
-            app:boxStrokeColor="@color/box_stroke_color"
-            app:boxBackgroundColor="#36FFFFFF"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusBottomEnd="8dp"
-            app:boxCornerRadiusBottomStart="8dp"
-            app:boxCornerRadiusTopEnd="8dp"
-            app:boxCornerRadiusTopStart="8dp">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/extension_source_link"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:imeOptions="actionDone"
-                android:inputType="textWebEmailAddress"
-                android:textColor="@color/white"
-                android:paddingTop="10dp"
-                android:textSize="22sp" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/save_button"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="@string/save"
-            android:backgroundTint="@color/button_background"
-            android:layout_marginTop="@dimen/common_padding"
-            android:textColor="@color/black"
-            />
-
-        <FrameLayout
-            android:id="@+id/progress_dialog"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:alpha="0"
-            android:background="#30ffffff"
-            android:visibility="gone"
-            android:layout_marginTop="@dimen/common_padding"
-
-            >
-
-            <com.pnikosis.materialishprogress.ProgressWheel
-                android:id="@+id/progressWheel"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:layout_gravity="center"
-                wheel:matProg_progressIndeterminate="true" />
-        </FrameLayout>
-
         <LinearLayout
-            android:id="@+id/error_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
             android:orientation="vertical"
-            android:layout_marginTop="@dimen/common_padding"
-            android:visibility="gone"
+            android:background="@color/black"
+            android:padding="@dimen/common_padding"
             >
-            <FrameLayout
-                android:id="@+id/error_frame"
-                android:layout_width="53dp"
-                android:layout_height="53dp"
-                android:layout_marginTop="5dp"
-                android:visibility="visible">
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:background="@drawable/error_circle" />
-
-                <ImageView
-                    android:id="@+id/error_x"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@string/app_name"
-                    android:scaleType="center"
-                    android:src="@drawable/error_center_x" />
-
-            </FrameLayout>
-
             <TextView
-                android:id="@+id/error_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/add_extension_source"
+                android:textSize="32sp"
+                style="@style/TextAppearance.Leanback.Title"
+                />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:hint="@string/add_extension_title"
+                android:theme="@style/TextInputLayout"
+                app:hintTextColor="@color/box_stroke_color"
+                android:textColorHint="@color/edittext_border"
+                app:boxStrokeColor="@color/box_stroke_color"
+                app:boxBackgroundColor="#36FFFFFF"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusTopStart="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/extension_source_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:imeOptions="actionNext"
+                    android:paddingTop="10dp"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                    android:nextFocusDown="@id/extension_source_link"
+                    android:textColor="@color/white"
+                    android:textSize="22sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayout1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:hint="@string/source_link"
+                android:theme="@style/TextInputLayout"
+                app:hintTextColor="@color/box_stroke_color"
+                android:textColorHint="@color/edittext_border"
+                app:boxStrokeColor="@color/box_stroke_color"
+                app:boxBackgroundColor="#36FFFFFF"
+                app:boxBackgroundMode="outline"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusTopStart="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/extension_source_link"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:imeOptions="actionDone"
+                    android:inputType="textWebEmailAddress"
+                    android:textColor="@color/white"
+                    android:paddingTop="10dp"
+                    android:textSize="22sp" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/save_button"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="@string/save"
+                android:backgroundTint="@color/button_background"
+                android:layout_marginTop="@dimen/common_padding"
+                android:textColor="@color/black"
+                />
+
+            <FrameLayout
+                android:id="@+id/progress_dialog"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/error_stroke_color"
+                android:layout_gravity="center"
+                android:alpha="0"
+                android:background="#30ffffff"
+                android:visibility="gone"
                 android:layout_marginTop="@dimen/common_padding"
-                android:text="Error"
-                />
+
+                >
+
+                <com.pnikosis.materialishprogress.ProgressWheel
+                    android:id="@+id/progressWheel"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    wheel:matProg_progressIndeterminate="true" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/error_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:layout_marginTop="@dimen/common_padding"
+                android:visibility="gone"
+                >
+                <FrameLayout
+                    android:id="@+id/error_frame"
+                    android:layout_width="53dp"
+                    android:layout_height="53dp"
+                    android:layout_marginTop="5dp"
+                    android:visibility="visible">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/error_circle" />
+
+                    <ImageView
+                        android:id="@+id/error_x"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@string/app_name"
+                        android:scaleType="center"
+                        android:src="@drawable/error_center_x" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/error_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/error_stroke_color"
+                    android:layout_marginTop="@dimen/common_padding"
+                    android:text="Error"
+                    />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
 </layout>

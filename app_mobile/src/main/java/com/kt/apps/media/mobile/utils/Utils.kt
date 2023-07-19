@@ -8,6 +8,7 @@ import android.net.ConnectivityManager
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewPropertyAnimator
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -19,6 +20,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.material.textfield.TextInputEditText
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.tv.model.TVChannel
@@ -111,6 +113,27 @@ fun ImageButton.clicks(): Flow<Unit> {
     }
 }
 
+fun EditText.onSubmit(callback: () -> Unit) {
+    setOnEditorActionListener { _, actionId, _ ->
+        if (actionId == EditorInfo.IME_ACTION_DONE) {
+            callback()
+            return@setOnEditorActionListener true
+        }
+        false
+    }
+}
+
+fun EditText.submits(): Flow<CharSequence?> {
+    return callbackFlow {
+        onSubmit {
+            trySend(text)
+        }
+        awaitClose {
+            onSubmit {   }
+        }
+    }
+}
+
 suspend fun View.ktFadeIn() = suspendCancellableCoroutine<Unit> { cont ->
     fadeIn(true) {
         cont.resume(Unit)
@@ -197,7 +220,7 @@ fun <T> LiveData<DataState<T>>.asFlow(): Flow<T> {
         val observer = Observer<DataState<T>> {value ->
             when (value) {
                 is DataState.Success -> trySend(value.data)
-                is DataState.Error -> throw  value.throwable
+                is DataState.Error -> close(value.throwable)
                 else -> { }
             }
         }

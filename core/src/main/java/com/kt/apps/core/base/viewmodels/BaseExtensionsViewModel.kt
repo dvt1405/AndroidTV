@@ -100,7 +100,6 @@ open class BaseExtensionsViewModel @Inject constructor(
                 .subscribeOn(Schedulers.io())
                 .flatMap {
                     parserExtensionsSource.parseFromRemoteRx(it)
-                        .onErrorComplete()
                 }
                 .retry { t1, t2 ->
                     return@retry t1 < 3

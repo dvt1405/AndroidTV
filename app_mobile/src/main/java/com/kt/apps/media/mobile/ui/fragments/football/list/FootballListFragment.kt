@@ -9,8 +9,10 @@ import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
+import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.onRefresh
 import com.kt.apps.media.mobile.utils.screenHeight
+import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.MobileFootballViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +30,8 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
 
     @Inject
     lateinit var factory: ViewModelProvider.Factory
+
+    private val loadingMatches: ActivityIndicator = ActivityIndicator()
 
     private val swipeRefreshLayout by lazy {
         binding.swipeRefreshLayout
@@ -57,18 +61,7 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
 
     override fun initAction(savedInstanceState: Bundle?) {
         lifecycleScope.launchWhenStarted {
-            merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest {
-                loadAllMatches()
-            }
-        }
-    }
-
-    private fun loadAllMatches() {
-        CoroutineScope(Dispatchers.Main).launch {
-            swipeRefreshLayout?.isRefreshing = true
-            _adapter.onRefresh(emptyList())
-            viewModel.getAllMatches()
-            val list = viewModel.groupedMatches
+            viewModel.groupedMatches
                 .combine(viewModel.liveMatches, transform = { groupsMatches, liveMatches ->
                     val baseList = mutableListOf<FootballAdapterType>()
                     if (liveMatches.isNotEmpty()) {
@@ -83,9 +76,21 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
                         FootballAdapterType(it, false)
                     })
                     baseList
-                }).first()
-            _adapter.onRefresh(list)
-            swipeRefreshLayout?.isRefreshing = false
+                }).collectLatest {
+                    _adapter.onRefresh(it)
+                }
+        }
+        lifecycleScope.launchWhenStarted {
+            merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest {
+                viewModel._getAllMatches()
+                    .trackActivity(loadingMatches)
+                    .await()
+            }
+        }
+        lifecycleScope.launchWhenStarted {
+            loadingMatches.isLoading.collectLatest {
+                swipeRefreshLayout?.isRefreshing = it
+            }
         }
     }
 }

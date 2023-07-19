@@ -2,9 +2,10 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.football.model.FootballMatch
+import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
@@ -44,10 +45,13 @@ class MobileFootballViewModel(private val provider: ViewModelProvider) {
     fun getAllMatches() {
         footballViewModel.getAllMatches()
     }
-//    suspend fun getAllMatches(): Map<String, List<FootballMatch>> {
-//        footballViewModel.getAllMatches()
-//        return groupedMatches.first()
-//    }
+
+    fun _getAllMatches(): Deferred<Unit> {
+        return CoroutineScope(Dispatchers.Main).async {
+            footballViewModel.getAllMatches()
+            groupedMatches.first()
+        }
+    }
 
     private fun FootballMatch.isLiveMatch(): Boolean {
         val calendar = Calendar.getInstance(Locale.TAIWAN)

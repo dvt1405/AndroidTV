@@ -57,4 +57,5 @@
 <!--        <item name="itemIconTint">@drawable/nav_item_color</item>-->
 <!--        <item name="materialThemeOverlay">@style/NavigationItemView</item>-->
     </style>
+    <style name="Theme.AppCompat" parent="Base.Theme.AppCompat"/>
 </resources>
