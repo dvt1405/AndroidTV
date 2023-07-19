@@ -8,36 +8,25 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityMainBinding
 import com.kt.apps.media.mobile.models.NetworkState
-import com.kt.apps.media.mobile.ui.fragments.models.ChannelsModelAdapter
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
-import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
-import com.kt.apps.media.mobile.utils.groupAndSort
-import com.kt.apps.media.mobile.utils.screenHeight
+import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.filter
-import kotlin.collections.firstOrNull
-import kotlin.collections.forEach
-import kotlin.collections.isNotEmpty
-import kotlin.collections.map
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 
 abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
@@ -52,6 +41,8 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
 
     private val isLandscape: Boolean
         get() = resources.getBoolean(R.bool.is_landscape)
+
+    private val loadingChannel: ActivityIndicator = ActivityIndicator()
 
     //Views
     private val swipeRefreshLayout by lazy {
@@ -86,9 +77,7 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
     }
 
-    private val viewModel: ChannelFragmentViewModel by lazy {
-        ChannelFragmentViewModel(ViewModelProvider(requireActivity(), factory))
-    }
+    abstract val viewModel: ChannelFragmentViewModel
 
     private val playbackViewModel: PlaybackViewModel? by lazy {
         activity?.run {
@@ -96,19 +85,11 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
     }
 
-    abstract val tvChannelViewModel: ChannelsModelAdapter?
-
     private val networkStateViewModel: NetworkStateViewModel? by lazy {
         activity?.run {
             ViewModelProvider(this, factory)[NetworkStateViewModel::class.java]
         }
     }
-
-//    private val extensionsViewModel: ExtensionsViewModel? by lazy {
-//        activity?.run {
-//            ViewModelProvider(this, factory)[ExtensionsViewModel::class.java]
-//        }
-//    }
 
     private var _cacheMenuItem: MutableMap<String, Int> = mutableMapOf<String, Int>()
     override fun initView(savedInstanceState: Bundle?) {
@@ -128,22 +109,36 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
 
 
     override fun initAction(savedInstanceState: Bundle?) {
-        tvChannelViewModel
         playbackViewModel
-//        extensionsViewModel?.loadExtensionData()
 
         with(binding.swipeRefreshLayout) {
             setDistanceToTriggerSync(screenHeight / 3)
-            setOnRefreshListener {
-                skeletonScreen.run()
-                tvChannelViewModel?.getListTVChannel(true)
+        }
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            merge(flowOf(Unit), binding.swipeRefreshLayout.onRefresh())
+                .collectLatest {
+                    launch {
+                        viewModel.getListTVChannelAsync(true)
+                    }.trackActivity(loadingChannel)
+                }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            loadingChannel.isLoading.collectLatest {
+                swipeRefreshLayout.isRefreshing = it
+                if (it) {
+                    skeletonScreen.run {  }
+                } else {
+                    skeletonScreen.hide()
+                }
             }
         }
+
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             launch(CoroutineExceptionHandler { context, throwable ->
                 swipeRefreshLayout.isRefreshing = false
             }) {
-                tvChannelViewModel?.listChannels?.collectLatest { tvChannel ->
+                viewModel.listChannels.collectLatest { tvChannel ->
                     delay(500)
                     if (tvChannel.isNotEmpty())
                         reloadOriginalSource(tvChannel)
@@ -165,18 +160,6 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
                     }
                 }
 
-//            launch {
-//                extensionsViewModel?.perExtensionChannelData?.collect {
-//                    appendExtensionSource(it)
-//                }
-//            }
-
-//            launch {
-//                extensionsViewModel?.extensionsConfigs?.collectLatest {
-//                    reloadNavigationBar(it)
-//                }
-//            }
-
             launch {
                 networkStateViewModel?.networkStatus?.collectLatest {
 //                        Toast.makeText(this@ChannelFragment.context, "$it", Toast.LENGTH_LONG).show()
@@ -188,13 +171,10 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
                         }
                     }
                     if (it == NetworkState.Connected && adapter.itemCount == 0)
-                        tvChannelViewModel?.getListTVChannel(forceRefresh = true)
+                        viewModel.getListTVChannel(forceRefresh = true)
                 }
             }
         }
-
-//        tvChannelViewModel?.getListTVChannel(savedInstanceState != null)
-        tvChannelViewModel?.getListTVChannel(savedInstanceState != null)
     }
 
     override fun onStop() {
@@ -266,6 +246,6 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
     }
 
     private fun onClickItemChannel(channel: TVChannel) {
-//        tvChannelViewModel?.loadLinkStreamForChannel(channel)
+        viewModel.loadLinkStreamForChannel(channel)
     }
 }

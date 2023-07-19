@@ -3,6 +3,7 @@ package com.kt.apps.media.mobile.ui.complex
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.Window
@@ -15,6 +16,7 @@ import com.kt.apps.core.base.DataState
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.logging.logPlaybackShowError
 import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
 import com.kt.apps.media.mobile.models.NetworkState
@@ -149,6 +151,11 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
         }
 
+        lifecycleScope.launchWhenStarted {
+            viewModel.streamData.collectLatest {
+                Log.d(TAG, "viewModel.streamData: $it")
+            }
+        }
         //Deeplink handle
         handleIntent(intent)
     }

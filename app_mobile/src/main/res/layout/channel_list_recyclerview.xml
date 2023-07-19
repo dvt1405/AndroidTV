@@ -9,5 +9,7 @@
         android:layout_height="match_parent"
         android:fadingEdge="vertical"
         android:orientation="vertical"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="32dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 </FrameLayout>

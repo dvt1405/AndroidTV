@@ -17,10 +17,9 @@ import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentTvChannelListBinding
-import com.kt.apps.media.mobile.ui.fragments.models.ChannelsModelAdapter
-import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVChannelListAdapter
 import com.kt.apps.media.mobile.utils.channelItemDecoration
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -34,7 +33,7 @@ abstract class PerChannelListFragment : BaseFragment<FragmentTvChannelListBindin
     override val screenName: String
         get() = "FragmentTVChannelList"
 
-    abstract val tvViewModel: ChannelsModelAdapter
+    abstract val tvViewModel: ChannelFragmentViewModel
 
     private val _adapter by lazy {
         TVChannelListAdapter()

@@ -7,7 +7,9 @@ import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.utils.asFlow
+import com.kt.apps.media.mobile.utils.asSuccessFlow
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 
 class AddIptvViewModels(private val provider: ViewModelProvider) {
@@ -16,10 +18,11 @@ class AddIptvViewModels(private val provider: ViewModelProvider) {
     }
 
     val addExtensionsConfig
-        get() = extensionViewModel.addExtensionConfigLiveData.asFlow()
+        get() = extensionViewModel.addExtensionConfigLiveData.asSuccessFlow(tag = "addExtensionsConfig")
 
     suspend fun addIPTVSourceAsync(config: ExtensionsConfig): ExtensionsConfig {
         extensionViewModel.addIPTVSource(config)
-        return extensionViewModel.addExtensionConfigLiveData.asFlow().first()
+        return extensionViewModel.addExtensionConfigLiveData.asFlow(tag = "addIPTVSourceAsync")
+            .first()
     }
 }

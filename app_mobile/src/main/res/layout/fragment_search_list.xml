@@ -6,16 +6,33 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.fragments.search.SearchListFragment">
-<!--        <androidx.recyclerview.widget.RecyclerView-->
-<!--            android:id="@+id/main_channel_recycler_view"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:fadingEdge="vertical"-->
-<!--            android:orientation="vertical"-->
-<!--            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />-->
-        <com.kt.apps.media.mobile.ui.view.ChannelListRecyclerView
+        tools:context=".ui.fragments.search.SearchListFragment"
+        tools:background="@color/black"
+        >
+        <ViewSwitcher
+            android:id="@+id/view_switcher"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
+            <FrameLayout
+                android:id="@+id/empty_placeholder"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+                <ImageView
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:src="@drawable/ic_search_24p"
+                    android:layout_gravity="center"
+                    app:tint="@color/box_stroke_color"
+                    android:alpha="0.25"
+                    />
+            </FrameLayout>
+            <com.kt.apps.media.mobile.ui.view.ChannelListRecyclerView
+                android:id="@+id/channel_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingHorizontal="40dp"
+                android:layout_marginTop="24dp"
+                />
+        </ViewSwitcher>
     </FrameLayout>
 </layout>

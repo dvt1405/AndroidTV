@@ -36,7 +36,7 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
             .onStart { emit(sharedPreferences.listHistory()) }
     }
 
-    private fun saveHistorySearch(text: String) {
+    fun saveHistorySearch(text: String) {
         sharedPreferences.edit(true) {
             val current = sharedPreferences.getString(HISTORY_LIST_KEY, "")
             val list = current?.topOf(MAX_ITEM_HISTORY) ?: emptyList()
@@ -49,6 +49,10 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
 
     fun performSearch(string: String) {
         searchViewModel.querySearch(string)
+    }
+
+    fun performClearSearch() {
+        searchViewModel.clearSearchList()
     }
 
     private fun String.topOf(value: Int): List<String> {

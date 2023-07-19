@@ -2,10 +2,12 @@ package com.kt.apps.media.mobile.ui.fragments.search
 
 import android.graphics.Rect
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView.OnItemClickListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,6 +17,8 @@ import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
+import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentSearchDashboardBinding
@@ -23,13 +27,10 @@ import com.kt.apps.media.mobile.databinding.TextviewItemBinding
 import com.kt.apps.media.mobile.utils.PaddingItemDecoration
 import com.kt.apps.media.mobile.utils.onSubmit
 import com.kt.apps.media.mobile.utils.submits
+import com.kt.apps.media.mobile.utils.textChanges
 import com.kt.apps.media.mobile.viewmodels.SearchDashboardViewModel
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.subscribe
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class SearchDashboardFragment : BaseFragment<FragmentSearchDashboardBinding>() {
@@ -45,7 +46,13 @@ class SearchDashboardFragment : BaseFragment<FragmentSearchDashboardBinding>() {
     }
 
     private val historyAdapter by lazy {
-        HistoryAdapter()
+        HistoryAdapter().apply {
+            onItemRecyclerViewCLickListener = object: OnItemRecyclerViewCLickListener<String> {
+                override fun invoke(item: String, position: Int) {
+                    binding.searchInputText?.setText(item)
+                }
+            }
+        }
     }
 
 
@@ -56,7 +63,7 @@ class SearchDashboardFragment : BaseFragment<FragmentSearchDashboardBinding>() {
             addItemDecoration(PaddingItemDecoration(PaddingItemDecoration.Edge(0, 12, 0, 0)))
         }
     }
-
+    @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.registerHistorySearchList().collectLatest {
@@ -64,10 +71,28 @@ class SearchDashboardFragment : BaseFragment<FragmentSearchDashboardBinding>() {
             }
         }
 
-        binding.searchInputText?.submits()
-            ?.mapNotNull { it }
-            ?.onEach { viewModel.performSearch(it.toString()) }
+        binding.searchInputText?.textChanges()
+            ?.debounce(2000)
+            ?.map { it.toString() }
+            ?.filter { it.isNotEmpty() }
+            ?.distinctUntilChanged()
+            ?.onEach { viewModel.saveHistorySearch(it) }
             ?.launchIn(viewLifecycleOwner.lifecycleScope)
+
+        binding.searchInputText?.textChanges()
+            ?.debounce(250)
+            ?.map { it.toString() ?: "" }
+            ?.distinctUntilChanged()
+            ?.onEach(performSearchChange)
+            ?.launchIn(viewLifecycleOwner.lifecycleScope)
+    }
+
+    private val performSearchChange: (String) -> Unit = {
+        if (it.isNotEmpty()) {
+            viewModel.performSearch(it)
+        } else {
+            viewModel.performClearSearch()
+        }
     }
 
 }
@@ -75,7 +100,6 @@ class SearchDashboardFragment : BaseFragment<FragmentSearchDashboardBinding>() {
 class HistoryAdapter: BaseAdapter<String, TextviewItemBinding>() {
     override val itemLayoutRes: Int
         get() = R.layout.textview_item
-
     override fun bindItem(
         item: String,
         binding: TextviewItemBinding,
@@ -83,6 +107,9 @@ class HistoryAdapter: BaseAdapter<String, TextviewItemBinding>() {
         holder: BaseViewHolder<String, TextviewItemBinding>
     ) {
         binding.textView.text = item
+        binding.textView.setOnClickListener {
+            onItemRecyclerViewCLickListener(item, position)
+        }
     }
 
 }

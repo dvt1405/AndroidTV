@@ -13,8 +13,10 @@ import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
 import com.kt.apps.media.mobile.R
+import com.kt.apps.media.mobile.databinding.FootballItemRowChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
+import com.kt.apps.media.mobile.ui.fragments.football.list.FootballAdapterType
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 
@@ -85,6 +87,14 @@ class ChannelListAdapter: BaseAdapter<ChannelListData, ItemRowChannelBinding>() 
         }
     }
 
+    override fun onViewRecycled(holder: BaseViewHolder<ChannelListData, ItemRowChannelBinding>) {
+        super.onViewRecycled(holder)
+        with(holder.viewBinding.tvChannelChildRecyclerView) {
+            while (itemDecorationCount > 0) {
+                removeItemDecorationAt(0)
+            }
+        }
+    }
     class ChildChannelAdapter : BaseAdapter<IChannelElement, ItemChannelBinding>() {
         override val itemLayoutRes: Int
             get() = R.layout.item_channel

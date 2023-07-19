@@ -17,6 +17,9 @@ import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.Logger
+import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
+import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
+import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
@@ -50,6 +53,27 @@ sealed class ChannelElement {
             get() = model.logoChannel
     }
 
+    class SearchExtension(val model: ExtensionsChannelDBWithCategoryViews): IChannelElement {
+        override val name: String
+            get() = model.tvChannelName
+        override val logoChannel: String
+            get() = model.logoChannel
+    }
+
+    class SearchHistory(val model: HistoryMediaItemDTO): IChannelElement {
+        override val name: String
+            get() = model.displayName
+        override val logoChannel: String
+            get() = model.thumb
+    }
+
+    class SearchTV(val model: TVChannelDTO): IChannelElement {
+        override val name: String
+            get() = model.tvChannelName
+        override val logoChannel: String
+            get() = model.logoChannel
+
+    }
 }
 
 

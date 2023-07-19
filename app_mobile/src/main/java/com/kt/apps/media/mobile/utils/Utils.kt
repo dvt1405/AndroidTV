@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.graphics.Rect
 import android.net.ConnectivityManager
+import android.util.Log
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.ViewPropertyAnimator
@@ -25,6 +26,7 @@ import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelGroup
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.fadeIn
 import com.kt.apps.core.utils.fadeOut
@@ -34,6 +36,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -215,12 +218,15 @@ inline fun <reified T> groupAndSort(list: List<T>): List<Pair<String, List<T>>> 
 //    }
 //}
 
-fun <T> LiveData<DataState<T>>.asFlow(): Flow<T> {
+fun <T> LiveData<DataState<T>>.asFlow(tag: String = ""): Flow<T> {
     return callbackFlow {
         val observer = Observer<DataState<T>> {value ->
             when (value) {
                 is DataState.Success -> trySend(value.data)
-                is DataState.Error -> close(value.throwable)
+                is DataState.Error -> {
+                    Log.d(TAG, "asFlow close with $tag: ${value.throwable}")
+                    close(value.throwable)
+                }
                 else -> { }
             }
         }
@@ -230,6 +236,13 @@ fun <T> LiveData<DataState<T>>.asFlow(): Flow<T> {
         }
     }
 }
+
+//emit data only success
+fun <T> LiveData<DataState<T>>.asSuccessFlow(tag: String): Flow<T> {
+    return asFlow(tag).catch { Log.d(TAG, "asSuccessFlow $tag: $it") }
+}
+
+
 
 inline val channelItemDecoration
     get() = object: RecyclerView.ItemDecoration() {

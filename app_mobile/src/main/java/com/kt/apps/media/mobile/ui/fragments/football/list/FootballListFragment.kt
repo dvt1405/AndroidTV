@@ -1,12 +1,10 @@
 package com.kt.apps.media.mobile.ui.fragments.football.list
 
 import android.os.Bundle
-import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
 import com.kt.apps.media.mobile.utils.ActivityIndicator
@@ -14,11 +12,7 @@ import com.kt.apps.media.mobile.utils.onRefresh
 import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.MobileFootballViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
@@ -82,7 +76,7 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
         }
         lifecycleScope.launchWhenStarted {
             merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest {
-                viewModel._getAllMatches()
+                viewModel.getAllMatchesAsync()
                     .trackActivity(loadingMatches)
                     .await()
             }

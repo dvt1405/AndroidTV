@@ -156,6 +156,10 @@ class SearchViewModels @Inject constructor(
         add(searchTask!!)
     }
 
+    fun clearSearchList() {
+        _searchQueryLiveData.postValue(DataState.Success(emptyMap()))
+    }
+
     class LogSearchQuery(
         var queryText: String,
         var queryResult: Int = 0,

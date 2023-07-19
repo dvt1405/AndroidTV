@@ -163,12 +163,6 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
                 hideKeyboard()
                 addExtensionsSource()
             }.launchIn(lifecycleScope)
-
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            viewModel.addExtensionsConfig.collectLatest {
-                Log.d(TAG, "addExtensionsConfig: $it")
-            }
-        }
     }
 
 

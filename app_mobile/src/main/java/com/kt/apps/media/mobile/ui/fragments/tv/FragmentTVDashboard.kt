@@ -42,7 +42,7 @@ class FragmentTVDashboard(private val helper: IDashboardHelper) : BaseFragment<F
     }
 
     private val tvViewModel by lazy {
-        helper.wrapViewModel(ViewModelProvider(requireActivity(), factory)[TVChannelViewModel::class.java])
+        helper.wrapViewModel(ViewModelProvider(requireActivity(), factory))
     }
 
     override fun initView(savedInstanceState: Bundle?) {

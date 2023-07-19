@@ -46,6 +46,7 @@
             app:tabPaddingBottom="6dp"
             app:tabMinWidth="20dp"
             app:tabTextAppearance="@style/TabTextAppearance"
+            app:tabGravity="start"
 
             />
         <androidx.viewpager2.widget.ViewPager2

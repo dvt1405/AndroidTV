@@ -2,7 +2,6 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.football.model.FootballMatch
-import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
 import kotlinx.coroutines.*
@@ -46,7 +45,7 @@ class MobileFootballViewModel(private val provider: ViewModelProvider) {
         footballViewModel.getAllMatches()
     }
 
-    fun _getAllMatches(): Deferred<Unit> {
+    fun getAllMatchesAsync(): Deferred<Unit> {
         return CoroutineScope(Dispatchers.Main).async {
             footballViewModel.getAllMatches()
             groupedMatches.first()
