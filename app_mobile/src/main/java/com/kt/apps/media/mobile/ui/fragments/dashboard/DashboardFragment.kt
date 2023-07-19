@@ -31,6 +31,7 @@ class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
     override fun initView(savedInstanceState: Bundle?) {
         with(binding.viewpager) {
             adapter = _adapter
+
             isUserInputEnabled = false
         }
         (binding.bottomNavigation as NavigationBarView).apply {
@@ -43,11 +44,13 @@ class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
         _adapter.onRefresh((binding.bottomNavigation as NavigationBarView).menu.children.map {
             it.itemId
         })
+
         (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener {
             binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
             return@setOnItemSelectedListener true
         }
-
+//        binding.viewpager.setCurrentItem(1, false)
+        (binding.bottomNavigation as NavigationBarView).selectedItemId = R.id.tv
         tvViewModel.getListTVChannel(false)
     }
 }

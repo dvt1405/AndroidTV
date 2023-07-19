@@ -20,9 +20,8 @@ class AddIptvViewModels(private val provider: ViewModelProvider) {
     val addExtensionsConfig
         get() = extensionViewModel.addExtensionConfigLiveData.asSuccessFlow(tag = "addExtensionsConfig")
 
-    suspend fun addIPTVSourceAsync(config: ExtensionsConfig): ExtensionsConfig {
+    fun addIPTVSourceAsync(config: ExtensionsConfig) {
+        extensionViewModel.cacheProcessingSource(config)
         extensionViewModel.addIPTVSource(config)
-        return extensionViewModel.addExtensionConfigLiveData.asFlow(tag = "addIPTVSourceAsync")
-            .first()
     }
 }

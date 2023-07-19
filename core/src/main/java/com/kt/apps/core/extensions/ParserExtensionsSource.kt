@@ -207,9 +207,7 @@ class ParserExtensionsSource @Inject constructor(
                         .build()
 
                 ).execute()
-            if (true) {
-                throw Throwable("")
-            }
+
             if (response.code in 200..299) {
                 val stream = response.body.byteStream()
                 Logger.d(

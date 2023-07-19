@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.view.MotionEvent
+import android.view.View
 import android.view.Window
 import androidx.lifecycle.*
 import com.google.android.exoplayer2.video.VideoSize
@@ -17,6 +18,9 @@ import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.logging.logPlaybackShowError
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.fadeIn
+import com.kt.apps.core.utils.fadeOut
+import com.kt.apps.core.utils.startHideOrShowAnimation
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
 import com.kt.apps.media.mobile.models.NetworkState
@@ -25,11 +29,17 @@ import com.kt.apps.media.mobile.models.PlaybackFailException
 import com.kt.apps.media.mobile.ui.fragments.channels.IPlaybackAction
 import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
+import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.viewmodels.ComplexViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.delayEach
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
@@ -93,6 +103,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun initAction(savedInstanceState: Bundle?) {
         tvChannelViewModel?.apply {
             tvWithLinkStreamLiveData.observe(this@ComplexActivity, linkStreamDataObserver)
@@ -155,6 +166,25 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             viewModel.streamData.collectLatest {
                 Log.d(TAG, "viewModel.streamData: $it")
             }
+        }
+        binding.parseSourceLoadingContainer?.visibility = View.INVISIBLE
+        lifecycleScope.launchWhenStarted {
+            viewModel.addSourceState
+                .collectLatest {
+                    when(it) {
+                        is AddSourceState.StartLoad -> {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                binding.parseSourceLoadingContainer?.fadeIn {  }
+                                binding.loadingDescription?.text = "Đang xử lý nguồn: ${it.source.sourceName}"
+                                Log.d(TAG, "initAction: visible item")
+                            }
+                        }
+                        else -> {
+                            binding.parseSourceLoadingContainer?.fadeOut {  }
+                            binding.loadingDescription?.text = ""
+                        }
+                    }
+                }
         }
         //Deeplink handle
         handleIntent(intent)

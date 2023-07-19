@@ -242,6 +242,17 @@ fun <T> LiveData<DataState<T>>.asSuccessFlow(tag: String): Flow<T> {
     return asFlow(tag).catch { Log.d(TAG, "asSuccessFlow $tag: $it") }
 }
 
+fun <T> LiveData<DataState<T>>.asDataStateFlow(tag: String): Flow<DataState<T>> {
+    return callbackFlow {
+        val observer = Observer<DataState<T>> {value ->
+            trySend(value)
+        }
+        observeForever(observer)
+        awaitClose {
+            removeObserver(observer)
+        }
+    }
+}
 
 
 inline val channelItemDecoration

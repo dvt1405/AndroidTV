@@ -3,10 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <data></data>
-    <FrameLayout
+    <com.google.android.flexbox.FlexboxLayout
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        app:flexDirection="column"
+        >
         <androidx.constraintlayout.motion.widget.MotionLayout
             android:id="@+id/complex_motion_layout"
             android:layout_width="match_parent"
@@ -27,6 +29,38 @@
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 />
+            <androidx.cardview.widget.CardView
+                android:id="@+id/parse_source_loading_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#833C3838"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:contentPadding="8dp"
+                >
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    >
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:indeterminate="true"
+                        app:trackColor="@color/gray_btn_bg_pressed_color"
+                        app:indicatorColor="@color/white"
+                        />
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/loading_description"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="Dang xu ly https://iptv-org.github.io/iptv/categories/xxx.m3u"
+                        android:textColor="@color/white"
+                        android:textSize="12sp"
+                        android:layout_marginStart="8dp"
+                        />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
         </androidx.constraintlayout.motion.widget.MotionLayout>
-    </FrameLayout>
+    </com.google.android.flexbox.FlexboxLayout>
 </layout>
