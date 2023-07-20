@@ -6,7 +6,6 @@ import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Parcelable
-import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.kt.apps.core.R
 import com.kt.apps.core.base.BaseRowSupportFragment
+import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.IKeyCodeHandler
 import com.kt.apps.core.base.leanback.ArrayObjectAdapter
@@ -219,7 +219,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                         return@setOnDispatchKeyListener true
                     } else if (focused == _searchView?.searchEdtAutoComplete) {
                         if (activity is TVSearchActivity) {
-                            activity?.finish()
+                            if (CoreApp.activityCount == 1) {
+                                (activity as TVSearchActivity).doubleBackToFinish()
+                            } else {
+                                activity?.finish()
+                            }
                             return@setOnDispatchKeyListener true
                         }
                     }
@@ -464,11 +468,25 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         Logger.d(this, message = "onBackPressed view focused $viewFocus")
         _searchView?.searchEdtAutoComplete?.let {
             if (_searchView?.isFocused == true) {
-                activity?.finish()
+                finishActivityIfNeeded()
             } else {
                 it.requestFocus(View.FOCUS_UP)
             }
-        } ?: activity?.finish()
+        } ?: let {
+            finishActivityIfNeeded()
+        }
+    }
+
+    private fun finishActivityIfNeeded() {
+        if (activity is TVSearchActivity) {
+            if (CoreApp.activityCount == 1) {
+                (activity as TVSearchActivity).doubleBackToFinish()
+            } else {
+                activity?.finish()
+            }
+        } else {
+            activity?.finish()
+        }
     }
 
     fun onSearchFromDeeplink(query: String?, filter: String?, queryHint: String?) {
