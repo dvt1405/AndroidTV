@@ -51,13 +51,31 @@ abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks {
     abstract fun onRemoteConfigReady()
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+        val componentName = activity.componentName.flattenToString()
+        if (!backStack.contains(componentName)) {
+            activityCount++
+            backStack.addLast(componentName)
+        } else {
+            synchronized(backStack) {
+                backStack.remove(componentName)
+                backStack.addLast(componentName)
+            }
+        }
     }
 
     override fun onActivityStopped(activity: Activity) {
+        val componentName = activity.componentName.flattenToString()
+        if (backStack.lastOrNull() == componentName) {
+            if (activityCount > 0) {
+                activityCount--
+            }
+            synchronized(backStack) {
+                backStack.remove(componentName)
+            }
+        }
     }
 
     override fun onActivityDestroyed(activity: Activity) {
-        activityCount--
     }
 
 
@@ -65,13 +83,15 @@ abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks {
     }
 
     override fun onActivityResumed(activity: Activity) {
-        activityCount++
     }
 
     override fun onActivityPaused(activity: Activity) {
     }
 
     override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+    }
+    private val backStack by lazy {
+        ArrayDeque<String>()
     }
 
 
