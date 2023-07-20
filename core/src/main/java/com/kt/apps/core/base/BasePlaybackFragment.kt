@@ -977,6 +977,10 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     && playPauseBtn!!.alpha > 0f
                 ) {
                     playPauseBtn?.requestFocus()
+                    mHandler.removeCallbacks(autoHideOverlayRunnable)
+                    mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
+                    return
+                    playPauseBtn?.requestFocus()
                     startActivity(
                         Intent(
                             Intent.ACTION_VIEW,
