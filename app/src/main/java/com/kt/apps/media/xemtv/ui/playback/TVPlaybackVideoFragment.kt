@@ -1,5 +1,6 @@
 package com.kt.apps.media.xemtv.ui.playback
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
@@ -14,6 +15,7 @@ import com.google.android.exoplayer2.PlaybackException
 import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.R
 import com.kt.apps.core.base.BasePlaybackFragment
+import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -239,6 +241,10 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                 progressBarManager.hide()
                 if (dataState.throwable is GetChannelLinkStreamById.ChannelNotFoundThrowable) {
                     showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR, dataState.throwable.message) {
+                        startActivity(Intent().apply {
+                            this.data = Uri.parse("xemtv://tv/dashboard")
+                            this.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        })
                         activity?.finish()
                     }
                 } else {
