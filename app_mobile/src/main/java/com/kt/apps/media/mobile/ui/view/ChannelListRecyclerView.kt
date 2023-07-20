@@ -19,16 +19,38 @@ import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
 import com.kt.apps.media.mobile.ui.fragments.football.list.FootballAdapterType
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.channelItemDecoration
+import com.kt.skeleton.KunSkeleton
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 data class ChannelListData(val title: String, val items: List<IChannelElement>)
 
 class ChannelListRecyclerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
-    private val adapter by lazy { ChannelListAdapter() }
+    private val adapter by lazy { ChannelListAdapter().apply {
+        onChildItemClickListener = { item, position ->
+            this@ChannelListRecyclerView.onChildItemClickListener(item, position)
+        }
+    }
+    }
     private val recyclerView by lazy {
         findViewById<RecyclerView>(R.id.main_channel_recycler_view)
     }
+    private val skeletonScreen by lazy {
+        recyclerView.let {
+            KunSkeleton.bind(it)
+                .adapter(adapter)
+                .itemCount(10)
+                .recyclerViewLayoutItem(
+                    R.layout.item_row_channel_skeleton,
+                    R.layout.item_channel_skeleton
+                )
+                .build()
+        }
+    }
+    var onChildItemClickListener: (IChannelElement, Int) -> Unit = { _,_ -> }
     init {
         View.inflate(context, R.layout.channel_list_recyclerview, this)
     }
@@ -49,12 +71,21 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     fun reloadAllData(list: List<ChannelListData>) {
         adapter.onRefresh(list)
     }
+
+    fun showHideSkeleton(isShow: Boolean) {
+        if (isShow) {
+            skeletonScreen.run {  }
+        } else {
+            skeletonScreen.hide()
+        }
+    }
 }
 
 class ChannelListAdapter: BaseAdapter<ChannelListData, ItemRowChannelBinding>() {
     override val itemLayoutRes: Int
         get() = R.layout.item_row_channel
 
+    var onChildItemClickListener: (IChannelElement, Int) -> Unit = { _,_ -> }
     override fun bindItem(
         item: ChannelListData,
         binding: ItemRowChannelBinding,
@@ -82,6 +113,7 @@ class ChannelListAdapter: BaseAdapter<ChannelListData, ItemRowChannelBinding>() 
                 onRefresh(item.items)
                 this.onItemRecyclerViewCLickListener = { item, childPosition ->
 //                    onChildItemClickListener?.invoke(item, position + childPosition)
+                    this@ChannelListAdapter.onChildItemClickListener(item, position + childPosition)
                 }
             }
         }
@@ -95,6 +127,7 @@ class ChannelListAdapter: BaseAdapter<ChannelListData, ItemRowChannelBinding>() 
             }
         }
     }
+
     class ChildChannelAdapter : BaseAdapter<IChannelElement, ItemChannelBinding>() {
         override val itemLayoutRes: Int
             get() = R.layout.item_channel
@@ -116,4 +149,16 @@ class ChannelListAdapter: BaseAdapter<ChannelListData, ItemRowChannelBinding>() 
         }
     }
 
+}
+
+data class ChildItem(val data: IChannelElement, val position: Int)
+fun ChannelListRecyclerView.childItemClicks(): Flow<ChildItem> {
+    return callbackFlow {
+        this@childItemClicks.onChildItemClickListener = { item, position ->
+            trySend(ChildItem(item, position))
+        }
+        awaitClose {
+            this@childItemClicks.onChildItemClickListener = { _,_ -> }
+        }
+    }
 }

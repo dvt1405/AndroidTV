@@ -28,6 +28,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -87,11 +89,9 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
             }
         }
 
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            viewModel.addExtensionsConfig.collectLatest {
-                Log.d(TAG, "initAction: add source success")
-            }
-        }
+        viewModel.addExtensionsConfig
+            .onEach { viewModel.reloadData() }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.extensionConfigs.collectLatest {
@@ -112,16 +112,7 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
         val dialog = AddExtensionFragment()
         dialog.onSuccess = {
             it.dismiss()
-            onAddedExtension()
         }
         dialog.show(childFragmentManager, AddExtensionFragment.TAG)
-    }
-
-    private fun onAddedExtension() {
-        Log.d(TAG, "onAddedExtension: success")
-//        showSuccessDialog()
-        showSuccessDialog(
-            content = "Thêm nguồn kênh thành công!\r\nKhởi động lại ứng dụng để kiểm tra nguồn kênh"
-        )
     }
 }

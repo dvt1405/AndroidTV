@@ -9,29 +9,27 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
+import com.kt.apps.media.mobile.databinding.FragmentChannelListBinding
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
 import com.kt.apps.media.mobile.ui.fragments.tv.PerChannelListFragment
 import com.kt.apps.media.mobile.ui.main.ChannelElement
+import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
+import com.kt.apps.media.mobile.ui.view.ChannelListData
+import com.kt.apps.media.mobile.ui.view.childItemClicks
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.IPTVListViewModel
 import com.kt.skeleton.KunSkeleton
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.merge
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-class IptvChannelListFragment : BaseFragment<FragmentFootballListBinding>(){
+class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
     @Inject
     lateinit var factory: ViewModelProvider.Factory
 
     override val layoutResId: Int
-        get() = R.layout.fragment_football_list
+        get() = R.layout.fragment_channel_list
 
     override val screenName: String
         get() = "IptvChannelListFragment"
@@ -48,23 +46,6 @@ class IptvChannelListFragment : BaseFragment<FragmentFootballListBinding>(){
 
     private val activityIndicator by lazy { ActivityIndicator() }
 
-    private val skeletonScreen by lazy {
-        binding.mainChannelRecyclerView?.let {
-            KunSkeleton.bind(it)
-                .adapter(_adapter)
-                .itemCount(10)
-                .recyclerViewLayoutItem(
-                    R.layout.item_row_channel_skeleton,
-                    R.layout.item_channel_skeleton
-                )
-                .build()
-        }
-    }
-
-    private val _adapter by lazy {
-        TVDashboardAdapter()
-    }
-
     private val swipeRefreshLayout by lazy {
         binding.swipeRefreshLayout
     }
@@ -73,52 +54,62 @@ class IptvChannelListFragment : BaseFragment<FragmentFootballListBinding>(){
         binding.viewSwitcher
     }
 
+    private val recyclerView by lazy {
+        binding.listChannelRecyclerview
+    }
+
     override fun initView(savedInstanceState: Bundle?) {
-        binding.mainChannelRecyclerView?.apply {
-            adapter = _adapter
-            layoutManager = LinearLayoutManager(requireContext()).apply {
-                isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 9
-            }
-            setHasFixedSize(true)
-            setItemViewCacheSize(9)
-        }
         binding.swipeRefreshLayout?.apply {
             setDistanceToTriggerSync(screenHeight / 3)
         }
+//        recyclerView.onChildItemClickListener = {
+//            item, position ->
+//            if (item is ChannelElement.ExtensionChannelElement) {
+//                viewLifecycleOwner.lifecycleScope.launch {
+//                    viewModels?.loadIPTV(item.model)
+//                }
+//            }
+//        }
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest(loadData)
+            merge(flowOf(Unit), swipeRefreshLayout.onRefresh() ?: emptyFlow()).collectLatest(loadData)
         }
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             activityIndicator.isLoading.collectLatest {
-                swipeRefreshLayout?.isRefreshing = it
-                if (it) {
-                    skeletonScreen?.run()
-                } else {
-                    skeletonScreen?.hide()
-                }
+                swipeRefreshLayout.isRefreshing = it
+                recyclerView.showHideSkeleton(it)
             }
+        }
+        var loadIPTVJob: Job? = null
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            recyclerView.childItemClicks()
+                .filter { it.data is ChannelElement.ExtensionChannelElement }
+                .cancellable()
+                .collectLatest {
+                    loadIPTVJob?.cancel()
+                    loadIPTVJob = launch {
+                        viewModels?.loadIPTV((it.data as ChannelElement.ExtensionChannelElement).model)
+                    }
+                }
         }
     }
 
     private val loadData: suspend (Unit) -> Unit = {
         viewModels?.apply {
             try {
-                viewSwitcher?.showContentView()
+                viewSwitcher.showContentView()
                 val list = loadDataAsync().trackActivity(activityIndicator).await()
                 val grouped = groupAndSort(list).map {
-                    Pair(
-                        it.first,
-                        it.second.map { channel -> ChannelElement.ExtensionChannelElement(channel) }
-                    )
+                    ChannelListData(it.first, it.second.map {channel ->
+                        ChannelElement.ExtensionChannelElement(channel)
+                    })
                 }
-                _adapter.onRefresh(grouped)
+                binding.listChannelRecyclerview.reloadAllData(grouped)
             } catch (e: Throwable) {
                 Log.d(TAG, "loadData: $e ")
-                viewSwitcher?.showError()
+                viewSwitcher.showError()
             }
         }
     }

@@ -17,10 +17,7 @@ import com.kt.apps.core.base.DataState
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.logging.logPlaybackShowError
 import com.kt.apps.core.tv.model.TVChannelLinkStream
-import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.fadeIn
-import com.kt.apps.core.utils.fadeOut
-import com.kt.apps.core.utils.startHideOrShowAnimation
+import com.kt.apps.core.utils.*
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
 import com.kt.apps.media.mobile.models.NetworkState
@@ -33,13 +30,9 @@ import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.viewmodels.ComplexViewModel
+import com.kt.apps.media.mobile.viewmodels.StreamLinkData
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.delayEach
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
@@ -59,12 +52,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     private var layoutHandler: ComplexLayoutHandler? = null
 
-    private val tvChannelViewModel: TVChannelViewModel by lazy {
-        ViewModelProvider(this, factory)[TVChannelViewModel::class.java].apply {
-            this.tvWithLinkStreamLiveData.observe(this@ComplexActivity, linkStreamDataObserver)
-        }
-    }
-
     private val playbackViewModel: PlaybackViewModel by lazy {
         ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
     }
@@ -74,18 +61,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
     private val viewModel: ComplexViewModel by lazy {
-        ComplexViewModel(ViewModelProvider(this, factory))
-    }
-
-    private val linkStreamDataObserver: Observer<DataState<TVChannelLinkStream>> by lazy {
-        Observer {dataState ->
-            when(dataState) {
-                is DataState.Loading ->
-                    layoutHandler?.onStartLoading()
-                is DataState.Error -> handleError(dataState.throwable)
-                else -> return@Observer
-            }
-        }
+        ComplexViewModel(ViewModelProvider(this, factory), lifecycleScope)
     }
 
     override fun initView(savedInstanceState: Bundle?) {
@@ -100,20 +76,20 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         layoutHandler?.onPlaybackStateChange = {
             playbackViewModel.changeDisplayState(it)
         }
+        binding.parseSourceLoadingContainer?.visibility = View.INVISIBLE
 
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun initAction(savedInstanceState: Bundle?) {
-        tvChannelViewModel?.apply {
-            tvWithLinkStreamLiveData.observe(this@ComplexActivity, linkStreamDataObserver)
-            tvChannelLiveData.observe(this@ComplexActivity) {dataState ->
-                when(dataState) {
-                    is DataState.Error -> handleError(dataState.throwable)
-                    else -> { }
-                }
-            }
-        }
+//        tvChannelViewModel?.apply {
+//            tvChannelLiveData.observe(this@ComplexActivity) {dataState ->
+//                when(dataState) {
+//                    is DataState.Error -> handleError(dataState.throwable)
+//                    else -> { }
+//                }
+//            }
+//        }
 
         binding.fragmentContainerPlayback.getFragment<PlaybackFragment>().apply {
             this.callback = object: IPlaybackAction {
@@ -135,6 +111,13 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
         }
 
+        lifecycleScope.launchWhenStarted {
+            viewModel.streamData.collectLatest {value: StreamLinkData? ->
+                if (value != null) {
+                    layoutHandler?.onStartLoading()
+                }
+            }
+        }
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -144,21 +127,21 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                     }
                 }
 
-                launch {
-                    playbackViewModel.state.collectLatest { state ->
-                        when (state) {
-                            is PlaybackViewModel.State.FINISHED ->
-                                if (state.error != null && state.error is PlaybackFailException) {
-                                    logger.logPlaybackShowError(
-                                        state.error.error,
-                                        tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: ""
-                                    )
-                                    handleError(state.error)
-                                }
-                            else -> { }
-                        }
-                    }
-                }
+//                launch {
+//                    playbackViewModel.state.collectLatest { state ->
+//                        when (state) {
+//                            is PlaybackViewModel.State.FINISHED ->
+//                                if (state.error != null && state.error is PlaybackFailException) {
+//                                    logger.logPlaybackShowError(
+//                                        state.error.error,
+//                                        tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: ""
+//                                    )
+//                                    handleError(state.error)
+//                                }
+//                            else -> { }
+//                        }
+//                    }
+//                }
             }
         }
 
@@ -167,25 +150,60 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 Log.d(TAG, "viewModel.streamData: $it")
             }
         }
-        binding.parseSourceLoadingContainer?.visibility = View.INVISIBLE
+
+        val addSourceState = MutableStateFlow<AddSourceState>(AddSourceState.IDLE)
+        viewModel.addSourceState.onEach { addSourceState.value = it }.launchIn(lifecycleScope)
+
         lifecycleScope.launchWhenStarted {
-            viewModel.addSourceState
+            addSourceState
                 .collectLatest {
                     when(it) {
                         is AddSourceState.StartLoad -> {
-                            CoroutineScope(Dispatchers.Main).launch {
-                                binding.parseSourceLoadingContainer?.fadeIn {  }
-                                binding.loadingDescription?.text = "Đang xử lý nguồn: ${it.source.sourceName}"
-                                Log.d(TAG, "initAction: visible item")
+                            binding.parseSourceLoadingContainer?.fadeIn {
+                                binding.parseSourceLoadingContainer?.invalidate()
                             }
+                            binding.statusView?.startLoading()
+                            binding.loadingDescription?.text = "Đang thêm nguồn: ${it.source.sourceUrl}..."
+                        }
+                        is AddSourceState.Success -> {
+                            binding.statusView?.showSuccess()
+                            binding.loadingDescription?.text = "Đã thêm nguồn: ${it.source.sourceUrl}"
+                        }
+                        is AddSourceState.Error -> {
+                            binding.statusView?.showError()
+                            binding.loadingDescription?.text = "Xảy ra lỗi"
                         }
                         else -> {
                             binding.parseSourceLoadingContainer?.fadeOut {  }
                             binding.loadingDescription?.text = ""
                         }
                     }
+                    if (it is AddSourceState.Success || it is AddSourceState.Error) {
+                        delay(1500)
+                        binding.parseSourceLoadingContainer?.fadeOut {  }
+                        binding.loadingDescription?.text = ""
+                    }
                 }
         }
+
+        lifecycleScope.launchWhenStarted {
+            addSourceState
+                .filter { it is AddSourceState.Success }
+                .collectLatest {
+                    delay(500)
+                    onAddedExtension()
+                }
+        }
+
+        lifecycleScope.launchWhenStarted {
+            addSourceState
+                .filter { it is AddSourceState.Error }
+                .collectLatest {
+                    delay(500)
+                    showErrorAlert("Đã xảy ra lỗi vui lòng thử lại sau")
+                }
+        }
+
         //Deeplink handle
         handleIntent(intent)
     }
@@ -218,7 +236,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         if (deeplink.host?.equals(Constants.HOST_TV) == true || deeplink.host?.equals(Constants.HOST_RADIO) == true) {
             if(deeplink.path?.contains("channel") == true) {
-                tvChannelViewModel.playMobileTvByDeepLinks(uri = deeplink)
+//                tvChannelViewModel.playMobileTvByDeepLinks(uri = deeplink)
                 intent.data = null
             } else {
                 intent.data = null
@@ -232,14 +250,22 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             is TimeoutException -> showErrorAlert("Đã xảy ra lỗi, hãy kiểm tra kết nối mạng")
             is PlaybackFailException -> {
                 val error = throwable.error
-                val channelName = (tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "")
-                val message = "Kênh $channelName hiện tại đang lỗi hoặc chưa hỗ trợ nội dung miễn phí: ${error.errorCode} ${error.message}"
+//                val channelName = (tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "")
+                val message = "Kênh hiện tại đang lỗi hoặc chưa hỗ trợ nội dung miễn phí: ${error.errorCode} ${error.message}"
                 showErrorAlert(message)
             }
             else -> {
                 showErrorAlert("Lỗi")
             }
         }
+    }
+
+    private fun onAddedExtension() {
+        Log.d(TAG, "onAddedExtension: success")
+//        showSuccessDialog()
+        showSuccessDialog(
+            content = "Thêm nguồn kênh thành công!\r\nKhởi động lại ứng dụng để kiểm tra nguồn kênh"
+        )
     }
     private fun showNoNetworkAlert(autoHide: Boolean = false) {
         val dialog = AlertDialog.Builder(this, R.style.WrapContentDialog).apply {

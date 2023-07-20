@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.*
 import cn.pedant.SweetAlert.ProgressHelper
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.StyledPlayerView.ControllerVisibilityListener
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.base.BaseFragment
@@ -27,6 +28,8 @@ import com.kt.apps.media.mobile.ui.fragments.lightweightchannels.LightweightChan
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.utils.ktFadeIn
 import com.kt.apps.media.mobile.utils.ktFadeOut
+import com.kt.apps.media.mobile.viewmodels.PlaybackControlViewModel
+import com.kt.apps.media.mobile.viewmodels.StreamLinkData
 import com.pnikosis.materialishprogress.ProgressWheel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -82,50 +85,45 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
     }
 
     private val isProcessing by lazy {
-        MutableStateFlow<Boolean>(false)
+        MutableStateFlow(false)
     }
 
     private var shouldShowChannelList: Boolean = false
 
-
-    private val tvChannelViewModel: TVChannelViewModel? by lazy {
-        activity?.run {
-            ViewModelProvider(this, factory)[TVChannelViewModel::class.java].apply {
-                this.tvWithLinkStreamLiveData.observe(this@PlaybackFragment, linkStreamObserver)
-            }
-        }
+    private val playbackViewModel by lazy {
+        PlaybackControlViewModel(ViewModelProvider(requireActivity(), factory))
     }
 
-    private val playbackViewModel: PlaybackViewModel? by lazy {
-        activity?.run {
-            ViewModelProvider(this,factory)[PlaybackViewModel::class.java].apply {
-                this.videoSizeStateLiveData.observe(this@PlaybackFragment) {videoSize ->
-                    videoSize?.run {
-                        callback?.onLoadedSuccess(this)
-                    }
-                }
-            }
-        }
-    }
+//    private val playbackViewModel: PlaybackViewModel? by lazy {
+//        activity?.run {
+//            ViewModelProvider(this,factory)[PlaybackViewModel::class.java].apply {
+//                this.videoSizeStateLiveData.observe(this@PlaybackFragment) {videoSize ->
+//                    videoSize?.run {
+//                        callback?.onLoadedSuccess(this)
+//                    }
+//                }
+//            }
+//        }
+//    }
 
-    private val linkStreamObserver: Observer<DataState<TVChannelLinkStream>> by lazy {
-        Observer {result ->
-            Log.d(TAG, "linkStreamObserver: $result")
-            when(result) {
-                is DataState.Success -> {
-                    toggleProgressing(true)
-                    playVideo(result.data)
-                    shouldShowChannelList = false
-                }
-                is DataState.Loading -> {
-                    stopCurrentVideo()
-                    toggleProgressing(true)
-                    showHideChannelList(false)
-                }
-                else -> {}
-            }
-        }
-    }
+//    private val linkStreamObserver: Observer<DataState<TVChannelLinkStream>> by lazy {
+//        Observer {result ->
+//            Log.d(TAG, "linkStreamObserver: $result")
+//            when(result) {
+//                is DataState.Success -> {
+//                    toggleProgressing(true)
+//                    playVideo(result.data)
+//                    shouldShowChannelList = false
+//                }
+//                is DataState.Loading -> {
+//                    stopCurrentVideo()
+//                    toggleProgressing(true)
+//                    showHideChannelList(false)
+//                }
+//                else -> {}
+//            }
+//        }
+//    }
 
     override fun initView(savedInstanceState: Bundle?) {
         with(binding) {
@@ -159,14 +157,14 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
                     false
                 }
             } ?: kotlin.run {
-                tvChannelViewModel?.tvWithLinkStreamLiveData?.value?.run {
-                    when(this) {
-                        is DataState.Success -> {
-                            playVideo(data)
-                        }
-                        else -> {}
-                    }
-                }
+//                tvChannelViewModel?.tvWithLinkStreamLiveData?.value?.run {
+//                    when(this) {
+//                        is DataState.Success -> {
+//                            playVideo(data)
+//                        }
+//                        else -> {}
+//                    }
+//                }
             }
         }
     }
@@ -184,61 +182,68 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        tvChannelViewModel
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    playbackViewModel?.state?.map {
-                        it == PlaybackViewModel.State.LOADING
-                    }?.collectLatest {
-                        toggleProgressing(it)
-                    }
-                }
-
-                launch {
-                    isProcessing
-                        .collectLatest {
-                            if (it) {
-                                animationQueue.submit(kotlin.coroutines.coroutineContext) {
-                                    binding.exoPlayer.showController()
-                                    progressWheel.visibility = View.VISIBLE
-                                    awaitAll(async {
-                                        progressWheel.ktFadeIn()
-                                        progressHelper.spin()
-                                    })
-                                }
-                            } else {
-                                animationQueue.submit(kotlin.coroutines.coroutineContext) {
-                                    awaitAll(async {
-                                        progressWheel.ktFadeOut()
-                                        progressHelper.stopSpinning()
-                                    })
-                                }
-                            }
-                        }
-                }
-
-                launch {
-                    playbackViewModel?.displayState?.collectLatest {state ->
-                        if (state != PlaybackState.Fullscreen) {
-                            showHideChannelList(false)
-                        }
-                    }
-                }
-
-                launch {
-                    playbackViewModel?.displayState?.mapLatest {
-                        when(it) {
-                            PlaybackState.Fullscreen -> com.google.android.exoplayer2.R.drawable.exo_ic_fullscreen_exit
-                            else -> com.google.android.exoplayer2.R.drawable.exo_controls_fullscreen_enter
-                        }
-                    }?.collectLatest {
-                        fullScreenButton.setImageResource(it)
-                    }
-                }
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            playbackViewModel.streamData.collectLatest {
+                shouldShowChannelList = false
+                playVideo(it)
             }
         }
+
+
+
+//        viewLifecycleOwner.lifecycleScope.launch {
+//            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+//                launch {
+//                    playbackViewModel?.state?.map {
+//                        it == PlaybackViewModel.State.LOADING
+//                    }?.collectLatest {
+//                        toggleProgressing(it)
+//                    }
+//                }
+//
+//                launch {
+//                    isProcessing
+//                        .collectLatest {
+//                            if (it) {
+//                                animationQueue.submit(kotlin.coroutines.coroutineContext) {
+//                                    binding.exoPlayer.showController()
+//                                    progressWheel.visibility = View.VISIBLE
+//                                    awaitAll(async {
+//                                        progressWheel.ktFadeIn()
+//                                        progressHelper.spin()
+//                                    })
+//                                }
+//                            } else {
+//                                animationQueue.submit(kotlin.coroutines.coroutineContext) {
+//                                    awaitAll(async {
+//                                        progressWheel.ktFadeOut()
+//                                        progressHelper.stopSpinning()
+//                                    })
+//                                }
+//                            }
+//                        }
+//                }
+//
+//                launch {
+//                    playbackViewModel?.displayState?.collectLatest {state ->
+//                        if (state != PlaybackState.Fullscreen) {
+//                            showHideChannelList(false)
+//                        }
+//                    }
+//                }
+//
+//                launch {
+//                    playbackViewModel?.displayState?.mapLatest {
+//                        when(it) {
+//                            PlaybackState.Fullscreen -> com.google.android.exoplayer2.R.drawable.exo_ic_fullscreen_exit
+//                            else -> com.google.android.exoplayer2.R.drawable.exo_controls_fullscreen_enter
+//                        }
+//                    }?.collectLatest {
+//                        fullScreenButton.setImageResource(it)
+//                    }
+//                }
+//            }
+//        }
     }
 
 
@@ -271,13 +276,13 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         channelFragmentContainer.visibility = View.INVISIBLE
     }
 
-    private fun playVideo(data: TVChannelLinkStream) {
+    private fun playVideo(data: StreamLinkData) {
         exoPlayerManager.playVideo(data.linkStream.map {
-            LinkStream(it, data.channel.tvChannelWebDetailPage, data.channel.tvChannelWebDetailPage)
-        }, data.channel.isHls, data.channel.getMapData() , playbackViewModel?.playerListener)
+            LinkStream(it, data.webDetailPage, data.webDetailPage)
+        }, data.isHls, data.itemMetaData , object : Player.Listener{ })
         binding.exoPlayer.player = exoPlayerManager.exoPlayer
         activity?.runOnUiThread {
-            titleLabel.text = data.channel.tvChannelName
+            titleLabel.text = data.title
         }
     }
 
@@ -293,16 +298,16 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
     }
 
     private fun showHideChannelList(isShow: Boolean) {
-        val displayState  = playbackViewModel?.displayState?.value ?: PlaybackState.Invisible
-        if (isShow && displayState == PlaybackState.Fullscreen) {
-            channelFragmentContainer.fadeIn {  }
-            return
-        }
-        if (!isShow && displayState == PlaybackState.Fullscreen) {
-            channelFragmentContainer.fadeOut {  }
-            return
-        }
-        channelFragmentContainer.visibility = View.INVISIBLE
+//        val displayState  = playbackViewModel?.displayState?.value ?: PlaybackState.Invisible
+//        if (isShow && displayState == PlaybackState.Fullscreen) {
+//            channelFragmentContainer.fadeIn {  }
+//            return
+//        }
+//        if (!isShow && displayState == PlaybackState.Fullscreen) {
+//            channelFragmentContainer.fadeOut {  }
+//            return
+//        }
+//        channelFragmentContainer.visibility = View.INVISIBLE
     }
 
 }

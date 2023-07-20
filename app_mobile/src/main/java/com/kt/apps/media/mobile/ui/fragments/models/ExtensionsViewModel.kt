@@ -67,6 +67,7 @@ class ExtensionsViewModel @Inject constructor(
     val addSourceState: Flow<AddSourceState>
         get() = addExtensionConfigLiveData.asDataStateFlow(tag = "ExtensionsViewModel")
             .combine(processingExtensionConfig) { dataState, processing ->
+                Log.d(TAG, "CombineStatus: $dataState $processing")
                 if (processing == null) {
                     return@combine AddSourceState.IDLE
                 }
@@ -77,17 +78,13 @@ class ExtensionsViewModel @Inject constructor(
                     else -> AddSourceState.IDLE
                 }
             }
-            .onEach {
-                if (it is AddSourceState.Success) {
-                    processingExtensionConfig.emit(null)
-                }
-            }
 
     fun cacheProcessingSource(ex: ExtensionsConfig) {
         CoroutineScope(Dispatchers.Main + viewModelJob).launch {
             processingExtensionConfig.emit(ex)
         }
     }
+
 
     override fun onCleared() {
         super.onCleared()

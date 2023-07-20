@@ -1,22 +1,21 @@
 package com.kt.apps.media.mobile.ui.fragments.channels
 
 import android.util.Log
-import android.view.KeyEvent
 import androidx.lifecycle.MutableLiveData
-import androidx.work.WorkManager
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.base.BaseViewModel
+import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.IActionLogger
-import com.kt.apps.core.logging.logPlaybackError
-import com.kt.apps.core.logging.logPlaybackShowError
-import com.kt.apps.core.tv.viewmodels.TVChannelInteractors
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PlaybackFailException
-import com.kt.apps.media.mobile.models.VideoDisplayAction
 import com.kt.apps.media.mobile.ui.complex.PlaybackState
-import kotlinx.coroutines.flow.*
+import com.kt.apps.media.mobile.viewmodels.StreamLinkData
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.mapNotNull
 import javax.inject.Inject
 
 class PlaybackViewModel @Inject constructor(): BaseViewModel() {
@@ -37,6 +36,10 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
 
     private val _displayState = MutableStateFlow(PlaybackState.Fullscreen)
     val displayState: StateFlow<PlaybackState> = _displayState
+
+    private val _streamData = MutableStateFlow<StreamLinkData?>(null)
+    val streamLinkData: StateFlow<StreamLinkData?>
+        get() = _streamData
 
 
     val playerListener: Player.Listener = object : Player.Listener {
@@ -61,7 +64,15 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
         }
     }
 
+    suspend fun changeProcessState(state: State) {
+        _state.emit(state)
+    }
+
     fun changeDisplayState(newMode: PlaybackState) {
         _displayState.value = newMode
+    }
+
+    suspend fun startStream(data: StreamLinkData) {
+        _streamData.emit(data)
     }
 }
