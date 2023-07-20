@@ -4,6 +4,7 @@ import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
+import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.KeyEvent
@@ -219,11 +220,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                         return@setOnDispatchKeyListener true
                     } else if (focused == _searchView?.searchEdtAutoComplete) {
                         if (activity is TVSearchActivity) {
-                            if (CoreApp.activityCount == 1) {
-                                (activity as TVSearchActivity).doubleBackToFinish()
-                            } else {
-                                activity?.finish()
-                            }
+                            finishActivityIfNeeded()
                             return@setOnDispatchKeyListener true
                         }
                     }
@@ -477,15 +474,17 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
             } else {
                 it.requestFocus(View.FOCUS_UP)
             }
-        } ?: let {
-            finishActivityIfNeeded()
-        }
+        } ?: finishActivityIfNeeded()
     }
 
     private fun finishActivityIfNeeded() {
         if (activity is TVSearchActivity) {
             if (CoreApp.activityCount == 1) {
-                (activity as TVSearchActivity).doubleBackToFinish()
+                startActivity(Intent().apply {
+                    this.data = Uri.parse("xemtv://tv/dashboard/")
+                    this.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                })
+                activity?.finish()
             } else {
                 activity?.finish()
             }
