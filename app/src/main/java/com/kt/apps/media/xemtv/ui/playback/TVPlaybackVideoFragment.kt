@@ -23,6 +23,7 @@ import com.kt.apps.core.logging.logPlaybackRetryPlayVideo
 import com.kt.apps.core.logging.logPlaybackShowError
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
@@ -236,7 +237,13 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
 
             is DataState.Error -> {
                 progressBarManager.hide()
-                showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR)
+                if (dataState.throwable is GetChannelLinkStreamById.ChannelNotFoundThrowable) {
+                    showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR, dataState.throwable.message) {
+                        activity?.finish()
+                    }
+                } else {
+                    showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR)
+                }
                 tvChannelViewModel.lastWatchedChannel?.let {
                     retryTimes[it.channel.channelId] = 0
                 }

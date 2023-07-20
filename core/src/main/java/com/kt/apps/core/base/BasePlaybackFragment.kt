@@ -1074,9 +1074,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     }
 
-    fun showErrorDialogWithErrorCode(errorCode: Int) {
+    fun showErrorDialogWithErrorCode(errorCode: Int, errorMessage: String? = null, onDismiss: () -> Unit = {}) {
         showErrorDialog(
-            content = getString(
+            content = errorMessage ?: getString(
                 com.kt.apps.resources.R.string.error_playback_popup_content_text,
                 errorCode
             ),
@@ -1091,6 +1091,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 } else {
                     mHandler.removeCallbacks(autoHideOverlayRunnable)
                 }
+                onDismiss()
             },
             onShowListener = {
                 progressManager.hide()

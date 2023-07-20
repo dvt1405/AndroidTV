@@ -115,6 +115,7 @@ open class BaseTVChannelViewModel constructor(
 
         lastTVStreamLinkTask = interactors.getChannelLinkStreamById(lastPath)
             .subscribe({
+                loadProgramForChannel(it.channel)
                 markLastWatchedChannel(it)
                 enqueueInsertWatchNextTVChannel(it.channel)
                 _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
