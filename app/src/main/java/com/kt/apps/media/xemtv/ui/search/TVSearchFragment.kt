@@ -344,6 +344,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         }
 
     private fun handleSelectedItem(): (t: DataState<Any>) -> Unit = {
+        if (it is DataState.Loading) {
+            progressManager.show()
+        } else {
+            progressManager.hide()
+        }
         when (it) {
             is DataState.Success -> {
                 when (val data = it.data) {
