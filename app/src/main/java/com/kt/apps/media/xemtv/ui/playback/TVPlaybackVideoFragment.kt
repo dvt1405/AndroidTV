@@ -144,7 +144,6 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
 
         val tvChannel = arguments?.getParcelable<TVChannelLinkStream?>(PlaybackActivity.EXTRA_TV_CHANNEL)
-        tvChannelViewModel.markLastWatchedChannel(tvChannel)
         tvChannel?.let {
             mCurrentSelectedChannel = it.channel
             setBackgroundByStreamingType(it)
@@ -241,11 +240,14 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                 progressBarManager.hide()
                 if (dataState.throwable is GetChannelLinkStreamById.ChannelNotFoundThrowable) {
                     showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR, dataState.throwable.message) {
-                        startActivity(Intent().apply {
-                            this.data = Uri.parse("xemtv://tv/dashboard")
-                            this.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        })
-                        activity?.finish()
+                        try {
+                            startActivity(Intent().apply {
+                                this.data = Uri.parse("xemtv://tv/dashboard")
+                                this.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            })
+                            activity?.finish()
+                        } catch (_: Exception) {
+                        }
                     }
                 } else {
                     showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR)

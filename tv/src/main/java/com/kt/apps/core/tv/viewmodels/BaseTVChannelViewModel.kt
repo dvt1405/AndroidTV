@@ -101,7 +101,6 @@ open class BaseTVChannelViewModel constructor(
     }
 
     fun playTvByDeepLinks(uri: Uri) {
-        !(uri.host?.contentEquals(Constants.DEEPLINK_HOST) ?: return)
         val lastPath = uri.pathSegments.last() ?: return
         Logger.d(
             this, message = "play by deeplink: {" +
@@ -115,8 +114,8 @@ open class BaseTVChannelViewModel constructor(
 
         lastTVStreamLinkTask = interactors.getChannelLinkStreamById(lastPath)
             .subscribe({
-                loadProgramForChannel(it.channel)
                 markLastWatchedChannel(it)
+                loadProgramForChannel(it.channel)
                 enqueueInsertWatchNextTVChannel(it.channel)
                 _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
                 Logger.d(
