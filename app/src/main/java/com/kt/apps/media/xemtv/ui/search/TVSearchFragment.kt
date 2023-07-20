@@ -146,7 +146,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
             })
             arguments?.getString(EXTRA_QUERY_KEY)?.let {
-                this.setQuery(it, false)
+                _searchView?.showKeyBoardOnDefaultFocus = false
+                if (it.isNotEmpty()) {
+                    _btnClose?.requestFocus()
+                }
+                this.setQuery(it, true)
             }
 
             setQueryHint(this, _queryHint)
@@ -475,7 +479,13 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         _searchFilter = filter
         _queryHint = queryHint
         setQueryHint(_searchView, queryHint)
-        _searchView?.searchEdtAutoComplete?.setText(query)
+        _searchView?.setQuery(query, true)
+        query?.takeIf {
+            it.isNotEmpty() && it.isNotBlank()
+        }?.let {
+            _btnClose?.requestFocus()
+            _searchView?.showKeyBoardOnDefaultFocus = false
+        }
     }
 
     override fun onDestroyView() {

@@ -83,6 +83,7 @@ class SearchView @JvmOverloads constructor(
     private var mSubmitButtonEnabled = false
     private val mExpandedInActionView = false
     var mSuggestionsAdapter: CursorAdapter? = null
+    var showKeyBoardOnDefaultFocus = false
     private val mOnEditorActionListener by lazy {
         TextView.OnEditorActionListener { v, actionId, event ->
             onSubmitQuery()
@@ -566,13 +567,6 @@ class SearchView @JvmOverloads constructor(
                     "direction: $direction" +
                     "}"
         )
-//        if (focused == mVoiceButton && direction == View.FOCUS_RIGHT) {
-//            return if (mSearchSrcTextView?.isEmpty == true) {
-//                mSearchSrcTextView
-//            } else {
-//                mCloseButton
-//            }
-//        } else
         if (focused == mSearchSrcTextView
             && (mSearchSrcTextView?.isEmpty == true
                     || mSearchSrcTextView!!.selectionStart == 0)
@@ -589,6 +583,8 @@ class SearchView @JvmOverloads constructor(
                     || mSearchSrcTextView!!.selectionEnd == mSearchSrcTextView?.text?.length)
         ) {
             return mCloseButton
+        } else if (focused == mCloseButton && (direction == View.FOCUS_UP || direction == View.FOCUS_LEFT)) {
+            return mSearchSrcTextView
         }
         return super.focusSearch(focused, direction)
     }
@@ -892,7 +888,9 @@ class SearchView @JvmOverloads constructor(
         override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
             super.onWindowFocusChanged(hasWindowFocus)
             Logger.d(this@SearchAutoComplete, message = "onWindowFocusChanged")
-            if (hasWindowFocus && mSearchView!!.hasFocus() && (visibility == View.VISIBLE)) {
+            if (hasWindowFocus && mSearchView!!.hasFocus() && (visibility == View.VISIBLE)
+                && mSearchView!!.showKeyBoardOnDefaultFocus
+            ) {
                 // Since InputMethodManager#onPostWindowFocus() will be called after this callback,
                 // it is a bit too early to call InputMethodManager#showSoftInput() here. We still
                 // need to wait until the system calls back onCreateInputConnection() to call
