@@ -69,8 +69,10 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
     }
 
     private val playPauseButton: ImageButton by lazy {
-        binding.exoPlayer.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
+//        binding.exoPlayer.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
+        binding.exoPlayer.findViewById(R.id.play_pause_button)
     }
+
 
     private val progressWheel: ProgressWheel by lazy {
         binding.exoPlayer.findViewById(R.id.progressWheel)
@@ -93,37 +95,6 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
     private val playbackViewModel by lazy {
         PlaybackControlViewModel(ViewModelProvider(requireActivity(), factory))
     }
-
-//    private val playbackViewModel: PlaybackViewModel? by lazy {
-//        activity?.run {
-//            ViewModelProvider(this,factory)[PlaybackViewModel::class.java].apply {
-//                this.videoSizeStateLiveData.observe(this@PlaybackFragment) {videoSize ->
-//                    videoSize?.run {
-//                        callback?.onLoadedSuccess(this)
-//                    }
-//                }
-//            }
-//        }
-//    }
-
-//    private val linkStreamObserver: Observer<DataState<TVChannelLinkStream>> by lazy {
-//        Observer {result ->
-//            Log.d(TAG, "linkStreamObserver: $result")
-//            when(result) {
-//                is DataState.Success -> {
-//                    toggleProgressing(true)
-//                    playVideo(result.data)
-//                    shouldShowChannelList = false
-//                }
-//                is DataState.Loading -> {
-//                    stopCurrentVideo()
-//                    toggleProgressing(true)
-//                    showHideChannelList(false)
-//                }
-//                else -> {}
-//            }
-//        }
-//    }
 
     override fun initView(savedInstanceState: Bundle?) {
         with(binding) {

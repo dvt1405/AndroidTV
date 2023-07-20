@@ -7,6 +7,7 @@ import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.utils.asFlow
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.util.stream.Stream
 
@@ -19,7 +20,6 @@ class IPTVListViewModel(private val provider: ViewModelProvider, private val cat
         provider[PlaybackViewModel::class.java]
     }
 
-    private val scope = SupervisorJob()
     fun loadDataAsync(): Deferred<List<ExtensionsChannel>> {
         return CoroutineScope(Dispatchers.Main).async{
             extensionViewModel.loadChannelForConfig(category).asFlow()
@@ -27,22 +27,27 @@ class IPTVListViewModel(private val provider: ViewModelProvider, private val cat
         }
     }
 
-    suspend  fun loadIPTV(data: ExtensionsChannel) {
-        playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING)
+    private fun loadIPTV(data: ExtensionsChannel) : StreamLinkData {
         val linkToPlay = data.tvStreamLink
         if (linkToPlay.contains(".m3u8")) {
-            playbackViewModel.startStream(StreamLinkData.ExtensionStreamLinkData(data, linkToPlay))
+            return StreamLinkData.ExtensionStreamLinkData(data, linkToPlay)
         } else {
             try {
-                val expandUrl = withContext(scope) {
-                    linkToPlay.expandUrl()
-                }
-                playbackViewModel.startStream(StreamLinkData.ExtensionStreamLinkData(data, expandUrl))
-            } catch (t: Throwable) {
-                playbackViewModel.startStream(StreamLinkData.ExtensionStreamLinkData(data, linkToPlay))
-            }
+                val expandUrl = linkToPlay.expandUrl()
+                return StreamLinkData.ExtensionStreamLinkData(data, expandUrl)
+            } catch (_: Throwable) { }
         }
-        playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING)
+        return StreamLinkData.ExtensionStreamLinkData(data, linkToPlay)
+    }
+
+    fun loadIPTVJob(data: ExtensionsChannel) : Job {
+        return CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
+            playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING)
+            val loadedData = loadIPTV(data)
+            if (!isActive) { return@launch }
+            playbackViewModel.startStream(loadedData)
+            playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING)
+        }
     }
 
 }

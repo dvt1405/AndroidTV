@@ -82,18 +82,23 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
                 recyclerView.showHideSkeleton(it)
             }
         }
-        var loadIPTVJob: Job? = null
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            recyclerView.childItemClicks()
-                .filter { it.data is ChannelElement.ExtensionChannelElement }
-                .cancellable()
-                .collectLatest {
-                    loadIPTVJob?.cancel()
-                    loadIPTVJob = launch {
-                        viewModels?.loadIPTV((it.data as ChannelElement.ExtensionChannelElement).model)
-                    }
-                }
-        }
+
+//        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+//            recyclerView.childItemClicks()
+//                .filter { it.data is ChannelElement.ExtensionChannelElement }
+//                .collectLatest {
+//                    viewModels?.loadIPTV((it.data as ChannelElement.ExtensionChannelElement).model)
+//                }
+//        }
+        var previousJob: Job? = null
+        recyclerView.childItemClicks()
+            .filter { it.data is ChannelElement.ExtensionChannelElement }
+            .onEach {
+                previousJob?.cancelAndJoin()
+                previousJob = viewModels?.loadIPTVJob((it.data as ChannelElement.ExtensionChannelElement).model)
+                previousJob?.start()
+            }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
     private val loadData: suspend (Unit) -> Unit = {

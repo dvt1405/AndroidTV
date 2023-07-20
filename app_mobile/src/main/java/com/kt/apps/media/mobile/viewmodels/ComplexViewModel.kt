@@ -74,6 +74,9 @@ class ComplexViewModel(private val provider: ViewModelProvider, scope: Coroutine
     val streamData: Flow<StreamLinkData?>
         get() = playbackViewModel.streamLinkData
 
+    val playbackProcessState: Flow<PlaybackViewModel.State>
+        get() = playbackViewModel.state
+
     val addSourceState
         get() = extensionViewModel.addSourceState
             .onEach { Log.d(TAG, "addSourceState: $it ") }

@@ -126,22 +126,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                             showNoNetworkAlert(autoHide = true)
                     }
                 }
-
-//                launch {
-//                    playbackViewModel.state.collectLatest { state ->
-//                        when (state) {
-//                            is PlaybackViewModel.State.FINISHED ->
-//                                if (state.error != null && state.error is PlaybackFailException) {
-//                                    logger.logPlaybackShowError(
-//                                        state.error.error,
-//                                        tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: ""
-//                                    )
-//                                    handleError(state.error)
-//                                }
-//                            else -> { }
-//                        }
-//                    }
-//                }
             }
         }
 
@@ -186,6 +170,8 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
         }
 
+
+
         lifecycleScope.launchWhenStarted {
             addSourceState
                 .filter { it is AddSourceState.Success }
@@ -203,6 +189,13 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                     showErrorAlert("Đã xảy ra lỗi vui lòng thử lại sau")
                 }
         }
+
+        val playbackState = viewModel.playbackProcessState.shareIn(lifecycleScope, SharingStarted.WhileSubscribed())
+
+        playbackState.filter { it is PlaybackViewModel.State.LOADING }
+            .onEach { layoutHandler?.onStartLoading() }
+            .launchIn(lifecycleScope)
+
 
         //Deeplink handle
         handleIntent(intent)
