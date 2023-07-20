@@ -87,17 +87,16 @@ class SearchForText @Inject constructor(
         }
 
         val extraQuery = getExtraQuery(searchQuery, "searchKey", "", false)
+        val searchLatinQuery = searchQuery.trim().replaceVNCharsToLatinChars()
         val rawQuery = if (searchQuery.isEmpty()) {
             "SELECT * FROM TVChannelFts4"
         } else {
-            val q = searchQuery.replaceVNCharsToLatinChars()
-                .removeAllSpecialChars()
             if (extraQuery.isNotEmpty()) {
                 "SELECT * FROM TVChannelFts4 WHERE ${extraQuery.trim().removePrefix("OR")}" +
-                        " OR searchKey LIKE '%$q%'" +
+                        " OR searchKey LIKE '%$searchLatinQuery%'" +
                         ""
             } else {
-                "SELECT * FROM TVChannelFts4 WHERE searchKey LIKE '%$q%'"
+                "SELECT * FROM TVChannelFts4 WHERE searchKey LIKE '%$searchLatinQuery%'"
             }
         }
         Logger.d(this@SearchForText, "TVChannel", rawQuery)
@@ -109,8 +108,8 @@ class SearchForText @Inject constructor(
                     SearchResult.TV(
                         it.tvChannel, it.urls,
                         getHighlightTitle(it.tvChannel.tvChannelName, filterHighlight),
-                        calculateScore(it.tvChannel.tvChannelName, queryNormalize, filterHighlight)
-                                + calculateScore(it.tvChannel.tvGroup, queryNormalize, filterHighlight)
+                        calculateScore(it.tvChannel.tvChannelName, queryNormalize, filterHighlight, INIT_SCORE_TV)
+                                + calculateScore(it.tvChannel.tvGroup, queryNormalize, filterHighlight, INIT_SCORE_TV)
                     )
                 }
             }
@@ -126,8 +125,6 @@ class SearchForText @Inject constructor(
                         getHighlightTitle(it.tvChannelName, filterHighlight),
                         calculateScore + calculateScore2
                     )
-                }.sortedBy {
-                    it.score
                 }
                 list
             }
@@ -142,19 +139,19 @@ class SearchForText @Inject constructor(
             }
             .switchIfEmpty(tvChannelSource)
 
-        val totalSearchResult =  when {
-            filter == FILTER_ONLY_TV_CHANNEL -> tvChannelSource.toFlowable()
-            defaultListItem || searchQuery.isEmpty() -> historySource.toFlowable()
-            filter == FILTER_ALL_IPTV -> extensionsSource.toFlowable()
+        val totalSearchResult = when {
+            filter == FILTER_ONLY_TV_CHANNEL -> tvChannelSource
+            defaultListItem || searchQuery.isEmpty() -> historySource
+            filter == FILTER_ALL_IPTV -> extensionsSource
             !filter?.trim().isNullOrBlank() -> {
-                extensionsSource.toFlowable()
+                extensionsSource
             }
             else -> tvChannelSource.mergeWith(extensionsSource)
                 .reduce { t1, t2 ->
                     val l = t1.toMutableList()
                     l.addAll(t2)
                     l
-                }.toFlowable()
+                }.toSingle()
         }.map {
             it.sortedBy {
                 it.score
@@ -173,10 +170,6 @@ class SearchForText @Inject constructor(
                     }
                 }
             }
-        }.reduce { t1, t2 ->
-            val list: MutableMap<String, List<SearchResult>> = t1.toMutableMap()
-            list.putAll(t2)
-            list
         }.doOnSuccess {
             synchronized(cacheResultValue) {
                 val keyCache = query.lowercase().removeAllSpecialChars().trim()
@@ -184,17 +177,17 @@ class SearchForText @Inject constructor(
             }
         }
 
-        return if (!cacheResultValue[cacheKey].isNullOrEmpty()) {
+        return if (cacheKey.isNotEmpty() && cacheKey.isNotBlank() && !cacheResultValue[cacheKey].isNullOrEmpty()) {
             getResultFromCache(cacheKey)
                 .onErrorResumeNext {
                     return@onErrorResumeNext totalSearchResult
                 }
         } else {
             totalSearchResult
-        }
+        }.toMaybe()
     }
 
-    private fun getResultFromCache(cacheKey: String) = Maybe.just(cacheResultValue[cacheKey]!!.groupBy {
+    private fun getResultFromCache(cacheKey: String) = Single.just(cacheResultValue[cacheKey]!!.groupBy {
         when (it) {
             is SearchResult.TV -> {
                 it.data.tvGroup
@@ -393,8 +386,11 @@ class SearchForText @Inject constructor(
             return listSpan
         }
 
-        fun calculateScore(text: String, queryNormalize: String, pattern: List<String>): Int {
-            var score = INIT_SCORE
+        fun calculateScore(
+            text: String, queryNormalize: String, pattern: List<String>,
+            initSource: Int = INIT_SCORE
+        ): Int {
+            var score = initSource
             val textNormalize = text.trim().lowercase()
                 .replaceVNCharsToLatinChars()
             if (textNormalize.equals(queryNormalize, ignoreCase = true)) {
@@ -450,6 +446,7 @@ class SearchForText @Inject constructor(
         }
 
         private const val INIT_SCORE = 100
+        private const val INIT_SCORE_TV = 95
     }
 
 }
