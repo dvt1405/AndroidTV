@@ -45,7 +45,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="bottom"
-
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent">
@@ -53,180 +52,102 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@drawable/header_background"
+                android:paddingBottom="36dp"
                 app:layout_constraintTop_toTopOf="parent"
                 >
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/back_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@color/transparent"
                     app:icon="@drawable/ic_arrow_back"
                     tools:text="VTV3"
+                    android:textSize="22sp"
+                    app:iconSize="48dp"
+                    app:iconPadding="24dp"
                     />
             </LinearLayout>
-            <FrameLayout
+
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/default_background"
-                android:layoutDirection="ltr"
-                android:paddingVertical="20dp"
+                android:background="@drawable/footer_background"
                 app:layout_constraintBottom_toBottomOf="parent"
+                android:paddingTop="64dp"
                 >
-                <LinearLayout
-                    android:id="@+id/controller_dock"
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tv_live_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="18:50 / 30:06"
+                    android:textColor="@color/white"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    android:layout_marginStart="36dp"
+                    app:layout_constraintTop_toTopOf="@id/exo_fullscreen"
+                    app:layout_constraintBottom_toBottomOf="@id/exo_fullscreen"
+                    />
+                <com.google.android.exoplayer2.ui.DefaultTimeBar
+                    android:id="@id/exo_progress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="start"
-                    android:orientation="horizontal"
-                    android:layout_marginEnd="50dp"
-                    >
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:background="@android:color/transparent"
-                        android:clipToPadding="false"
-                        android:gravity="center"
-                        android:padding="12dp">
+                    app:layout_constraintTop_toBottomOf="@id/exo_fullscreen"
+                    android:layout_marginTop="0dp"
+                    android:layout_marginStart="36dp"
+                    android:layout_marginEnd="36dp"
+                    />
 
-                        <ImageButton
-                            android:id="@id/exo_prev"
-                            style="@style/ExoStyledControls.Button.Center.Previous"
-                            android:visibility="gone" />
+                <ImageButton
+                    android:id="@id/exo_fullscreen"
+                    style="@style/ExoStyledControls.Button.Bottom.FullScreen"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:visibility="visible"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_marginEnd="36dp"
+                    />
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-
-                        <ImageButton
-                            android:id="@+id/play_pause_button"
-                            style="@style/ExoStyledControls.Button.Center.PlayPause" />
-
-                        <ImageButton
-                            android:id="@id/exo_next"
-                            style="@style/ExoStyledControls.Button.Center.Next"
-                            android:visibility="gone" />
-
-                    </LinearLayout>
-
-                    <TextView
-                        android:id="@+id/title_player"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:includeFontPadding="false"
-                        android:textColor="@color/white"
-                        android:textSize="30sp"
-                        android:layout_weight="1"
-                        android:ellipsize="marquee"
-                        android:singleLine="true"
-                        tools:text="VTV3" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@id/exo_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical|start"
-                    android:layoutDirection="ltr"
-                    android:paddingStart="@dimen/exo_styled_bottom_bar_time_padding"
-                    android:paddingLeft="@dimen/exo_styled_bottom_bar_time_padding"
-                    android:paddingEnd="@dimen/exo_styled_bottom_bar_time_padding"
-                    android:paddingRight="@dimen/exo_styled_bottom_bar_time_padding"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:id="@id/exo_position"
-                        style="@style/ExoStyledControls.TimeText.Position" />
-
-                    <TextView style="@style/ExoStyledControls.TimeText.Separator" />
-
-                    <TextView
-                        android:id="@id/exo_duration"
-                        style="@style/ExoStyledControls.TimeText.Duration" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@id/exo_basic_controls"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical|end"
-                    android:layoutDirection="ltr">
-
-                    <ImageButton
-                        android:id="@id/exo_vr"
-                        style="@style/ExoStyledControls.Button.Bottom.VR"
-                        android:visibility="gone" />
-
-                    <ImageButton
-                        android:id="@id/exo_shuffle"
-                        style="@style/ExoStyledControls.Button.Bottom.Shuffle"
-                        android:visibility="gone" />
-
-                    <ImageButton
-                        android:id="@id/exo_repeat_toggle"
-                        style="@style/ExoStyledControls.Button.Bottom.RepeatToggle"
-                        android:visibility="gone" />
-
-                    <ImageButton
-                        android:id="@id/exo_subtitle"
-                        style="@style/ExoStyledControls.Button.Bottom.CC"
-                        android:visibility="gone" />
-
-                    <ImageButton
-                        android:id="@id/exo_settings"
-                        style="@style/ExoStyledControls.Button.Bottom.Settings"
-                        android:visibility="gone" />
-
-                    <ImageButton
-                        android:id="@id/exo_fullscreen"
-                        style="@style/ExoStyledControls.Button.Bottom.FullScreen"
-                        android:layout_width="72dp"
-                        android:layout_height="72dp"
-                        android:visibility="visible" />
-
-                    <ImageButton
-                        android:id="@id/exo_overflow_show"
-                        style="@style/ExoStyledControls.Button.Bottom.OverflowShow"
-                        android:visibility="gone" />
-
-                </LinearLayout>
-
-                <HorizontalScrollView
-                    android:id="@id/exo_extra_controls_scroll_view"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical|end"
-                    android:visibility="invisible">
-
-                    <LinearLayout
-                        android:id="@id/exo_extra_controls"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layoutDirection="ltr">
-
-                        <ImageButton
-                            android:id="@id/exo_overflow_hide"
-                            style="@style/ExoStyledControls.Button.Bottom.OverflowHide" />
-
-                    </LinearLayout>
-
-                </HorizontalScrollView>
+            <ImageButton
+                android:id="@+id/exo_play_pause"
+                style="@style/ExoStyledControls.Button.Center.PlayPause"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_height="80dp"
+                android:layout_width="80dp"
+                android:visibility="gone"
+                />
+            <FrameLayout
+                android:id="@+id/progress_bar_container"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:visibility="gone"
+                >
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_background_loading"
+                    />
+                <com.google.android.material.progressindicator.CircularProgressIndicator
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:indeterminate="true"
+                    app:indicatorColor="@color/white"
+                    android:layout_gravity="center"
+                    />
             </FrameLayout>
 
+
+
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <com.pnikosis.materialishprogress.ProgressWheel
-                android:id="@+id/progressWheel"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:layout_gravity="center"
-                android:visibility="gone"
-                app:matProg_barColor="@color/white"
-                wheel:matProg_progressIndeterminate="true" />
-        </FrameLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 

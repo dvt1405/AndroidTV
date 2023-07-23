@@ -11,7 +11,9 @@ import androidx.lifecycle.*
 import cn.pedant.SweetAlert.ProgressHelper
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.StyledPlayerView.ControllerVisibilityListener
+import com.google.android.exoplayer2.ui.StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING
 import com.google.android.exoplayer2.video.VideoSize
+import com.google.android.material.button.MaterialButton
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
@@ -26,6 +28,7 @@ import com.kt.apps.media.mobile.ui.complex.PlaybackState
 import com.kt.apps.media.mobile.ui.fragments.dialog.JobQueue
 import com.kt.apps.media.mobile.ui.fragments.lightweightchannels.LightweightChannelFragment
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.utils.clicks
 import com.kt.apps.media.mobile.utils.ktFadeIn
 import com.kt.apps.media.mobile.utils.ktFadeOut
 import com.kt.apps.media.mobile.viewmodels.PlaybackControlViewModel
@@ -41,6 +44,8 @@ interface IPlaybackAction {
 
     fun onPauseAction(userAction: Boolean)
     fun onPlayAction(userAction: Boolean)
+
+    fun onExitMinimal()
 }
 
 class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
@@ -58,42 +63,54 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
 
     var callback: IPlaybackAction? = null
     private var _cachePlayingState: Boolean = false
-
-    private val progressHelper by lazy {
-        ProgressHelper(this.context)
-    }
-
     //Views
     private val fullScreenButton: ImageButton by lazy {
         binding.exoPlayer.findViewById(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
     }
 
     private val playPauseButton: ImageButton by lazy {
-//        binding.exoPlayer.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
-        binding.exoPlayer.findViewById(R.id.play_pause_button)
+        binding.exoPlayer.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
     }
 
 
-    private val progressWheel: ProgressWheel by lazy {
-        binding.exoPlayer.findViewById(R.id.progressWheel)
+    private val progressWheel: View by lazy {
+        binding.exoPlayer.findViewById(R.id.progress_bar_container)
     }
 
-    private val titleLabel: TextView by lazy {
-        binding.exoPlayer.findViewById(R.id.title_player)
+    private val backButton: MaterialButton by lazy {
+        binding.exoPlayer.findViewById(R.id.back_button)
     }
 
     private val channelFragmentContainer: FragmentContainerView by lazy {
         binding.exoPlayer.findViewById(R.id.player_overlay_container)
     }
 
-    private val isProcessing by lazy {
-        MutableStateFlow(false)
-    }
-
     private var shouldShowChannelList: Boolean = false
 
     private val playbackViewModel by lazy {
         PlaybackControlViewModel(ViewModelProvider(requireActivity(), factory))
+    }
+
+    private val playerListener: Player.Listener = object: Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            super.onIsPlayingChanged(isPlaying)
+            Log.d(TAG, "onStateChange onIsPlayingChanged: $isPlaying")
+            if (isPlaying) {
+                progressWheel.fadeOut {
+                    playPauseButton.fadeIn {  }
+                }
+            }
+        }
+
+        override fun onIsLoadingChanged(isLoading: Boolean) {
+            super.onIsLoadingChanged(isLoading)
+            Log.d(TAG, "onStateChange onIsLoadingChanged: $isLoading")
+            if (isLoading) {
+                playPauseButton.fadeOut {
+                    progressWheel.fadeIn {  }
+                }
+            }
+        }
     }
 
     override fun initView(savedInstanceState: Bundle?) {
@@ -109,7 +126,11 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
                     if (shouldShowChannelList)
                         showHideChannelList(isShow = true)
             })
+
+            playPauseButton.visibility = View.INVISIBLE
+            progressWheel.visibility = View.INVISIBLE
         }
+
 
         fullScreenButton.visibility = View.VISIBLE
         fullScreenButton.setOnClickListener {
@@ -152,6 +173,7 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         return false
     }
 
+    @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             playbackViewModel.streamData.collectLatest {
@@ -160,7 +182,27 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             }
         }
 
+        playbackViewModel.playbackState
+            .onEach {
+                if (it == PlaybackState.Minimal) {
+                    changeMinimalLayout()
+                } else {
+                    changeFullScreenLayout()
+                }
+            }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
 
+        playbackViewModel.progressLinkState
+            .filter { it is PlaybackViewModel.State.LOADING }
+            .onEach { preparePlayView() }
+            .launchIn(lifecycleScope)
+
+        merge(backButton.clicks(), binding.exitButton?.clicks() ?: emptyFlow())
+            .debounce(250)
+            .onEach {
+                callback?.onExitMinimal()
+            }
+            .launchIn(viewLifecycleOwner.lifecycleScope)
 
 //        viewLifecycleOwner.lifecycleScope.launch {
 //            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -247,13 +289,37 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         channelFragmentContainer.visibility = View.INVISIBLE
     }
 
+    private fun changeFullScreenLayout() {
+        binding.minimalLayout?.fadeOut {
+            binding.exoPlayer.useController = true
+            binding.exoPlayer.showController()
+        }
+
+        binding.motionLayout?.transitionToState(R.id.start)
+    }
+
+    private fun changeMinimalLayout() {
+        binding.exoPlayer.apply {
+            useController = false
+            hideController()
+        }
+        binding.motionLayout?.transitionToState(R.id.end)
+    }
+
+    private fun preparePlayView() {
+        exoPlayerManager.exoPlayer?.stop()
+        playPauseButton.visibility = View.INVISIBLE
+        progressWheel.fadeIn {  }
+    }
+
     private fun playVideo(data: StreamLinkData) {
         exoPlayerManager.playVideo(data.linkStream.map {
             LinkStream(it, data.webDetailPage, data.webDetailPage)
-        }, data.isHls, data.itemMetaData , object : Player.Listener{ })
+        }, data.isHls, data.itemMetaData , playerListener)
         binding.exoPlayer.player = exoPlayerManager.exoPlayer
-        activity?.runOnUiThread {
-            titleLabel.text = data.title
+        MainScope().launch {
+            backButton.text = data.title
+            binding.minimalTitleTv?.text = data.title
         }
     }
 
@@ -263,9 +329,6 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
 
     private val animationQueue: JobQueue by lazy {
         JobQueue()
-    }
-    private fun toggleProgressing(isShow: Boolean) {
-        isProcessing.tryEmit(isShow)
     }
 
     private fun showHideChannelList(isShow: Boolean) {

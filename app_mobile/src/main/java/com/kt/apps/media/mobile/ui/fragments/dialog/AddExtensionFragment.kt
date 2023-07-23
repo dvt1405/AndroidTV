@@ -216,7 +216,9 @@ class JobQueue {
 
     init {
         scope.launch(Dispatchers.Default) {
-            for (job in queue) job.join()
+            for (job in queue) {
+                job.join()
+            }
         }
     }
 
@@ -225,6 +227,10 @@ class JobQueue {
         block: suspend CoroutineScope.() -> Unit
     ) {
         val job = scope.launch(context, CoroutineStart.LAZY, block)
+        queue.trySend(job)
+    }
+
+    fun submit(job: Job) {
         queue.trySend(job)
     }
 

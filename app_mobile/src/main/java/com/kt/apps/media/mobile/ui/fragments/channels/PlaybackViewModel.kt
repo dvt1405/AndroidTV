@@ -13,7 +13,9 @@ import com.kt.apps.media.mobile.models.PlaybackFailException
 import com.kt.apps.media.mobile.ui.complex.PlaybackState
 import com.kt.apps.media.mobile.viewmodels.StreamLinkData
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapNotNull
 import javax.inject.Inject
@@ -42,29 +44,30 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
         get() = _streamData
 
 
-    val playerListener: Player.Listener = object : Player.Listener {
-        override fun onVideoSizeChanged(videoSize: VideoSize) {
-            videoSizeStateLiveData.postValue(videoSize)
-        }
-
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            super.onPlaybackStateChanged(playbackState)
-            Log.d(TAG, "onPlaybackStateChanged: $playbackState")
-            _state.value = when(playbackState) {
-                Player.STATE_READY -> State.PLAYING
-                Player.STATE_BUFFERING -> State.LOADING
-                Player.STATE_ENDED -> State.FINISHED(null)
-                Player.STATE_IDLE -> State.IDLE
-                else -> _state.value
-            }
-        }
-        override fun onPlayerError(error: PlaybackException) {
-            super.onPlayerError(error)
-            _state.value  = State.FINISHED(PlaybackFailException(error))
-        }
-    }
+//    val playerListener: Player.Listener = object : Player.Listener {
+//        override fun onVideoSizeChanged(videoSize: VideoSize) {
+//            videoSizeStateLiveData.postValue(videoSize)
+//        }
+//
+//        override fun onPlaybackStateChanged(playbackState: Int) {
+//            super.onPlaybackStateChanged(playbackState)
+//            Log.d(TAG, "onPlaybackStateChanged: $playbackState")
+//            _state. = when(playbackState) {
+//                Player.STATE_READY -> State.PLAYING
+//                Player.STATE_BUFFERING -> State.LOADING
+//                Player.STATE_ENDED -> State.FINISHED(null)
+//                Player.STATE_IDLE -> State.IDLE
+//                else -> _state.value
+//            }
+//        }
+//        override fun onPlayerError(error: PlaybackException) {
+//            super.onPlayerError(error)
+//            _state.value  = State.FINISHED(PlaybackFailException(error))
+//        }
+//    }
 
     suspend fun changeProcessState(state: State) {
+        Log.d(TAG, "Ann changeProcessState: $state ${_state.value}")
         _state.emit(state)
     }
 
@@ -74,5 +77,9 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
 
     suspend fun startStream(data: StreamLinkData) {
         _streamData.emit(data)
+    }
+
+    suspend fun stopStream() {
+        _streamData.emit(null)
     }
 }

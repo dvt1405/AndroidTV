@@ -11,6 +11,7 @@ import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentChannelListBinding
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
+import com.kt.apps.media.mobile.ui.fragments.dialog.JobQueue
 import com.kt.apps.media.mobile.ui.fragments.tv.PerChannelListFragment
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.IChannelElement
@@ -21,8 +22,11 @@ import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.IPTVListViewModel
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 
 class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
     @Inject
@@ -40,7 +44,7 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
 
     private val viewModels by lazy {
         activity?.let {
-            IPTVListViewModel(ViewModelProvider(it, factory), filterCategory)
+            IPTVListViewModel(ViewModelProvider(it, factory), viewLifecycleOwner.lifecycleScope.coroutineContext, filterCategory)
         }
     }
 
@@ -62,14 +66,6 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
         binding.swipeRefreshLayout?.apply {
             setDistanceToTriggerSync(screenHeight / 3)
         }
-//        recyclerView.onChildItemClickListener = {
-//            item, position ->
-//            if (item is ChannelElement.ExtensionChannelElement) {
-//                viewLifecycleOwner.lifecycleScope.launch {
-//                    viewModels?.loadIPTV(item.model)
-//                }
-//            }
-//        }
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -83,22 +79,28 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
             }
         }
 
-//        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-//            recyclerView.childItemClicks()
-//                .filter { it.data is ChannelElement.ExtensionChannelElement }
-//                .collectLatest {
-//                    viewModels?.loadIPTV((it.data as ChannelElement.ExtensionChannelElement).model)
-//                }
-//        }
-        var previousJob: Job? = null
+        val jobQueue = SingleJobQueue(CoroutineScope(Dispatchers.Default))
         recyclerView.childItemClicks()
             .filter { it.data is ChannelElement.ExtensionChannelElement }
             .onEach {
-                previousJob?.cancelAndJoin()
-                previousJob = viewModels?.loadIPTVJob((it.data as ChannelElement.ExtensionChannelElement).model)
-                previousJob?.start()
+//                delay(1000)
+                Log.d(TAG, "childItemClicks: ${(it.data as ChannelElement.ExtensionChannelElement).model}")
+                jobQueue.submit(Dispatchers.Default) {
+                    viewModels?.loadIPTVJob(it.data.model)
+                }
+//                viewModels?.loadIPTVJob((it.data as ChannelElement.ExtensionChannelElement).model)
+//                previousJob = viewModels?.loadIPTVJob((it.data as ChannelElement.ExtensionChannelElement).model)
+//                previousJob?.invokeOnCompletion {
+//                    previousJob = null
+//                }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
+
+        viewModels?.processState
+            ?.onEach {
+                Log.d(TAG, "onStartLoading loadIPTVJob: ${it}")
+            }
+            ?.launchIn(MainScope())
     }
 
     private val loadData: suspend (Unit) -> Unit = {
@@ -127,6 +129,23 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
                     EXTRA_TV_CHANNEL_CATEGORY to filterCategory
                 )
             }
+        }
+    }
+}
+
+class SingleJobQueue(private val scope: CoroutineScope) {
+    private var lastJob: Job? = null
+
+    fun submit(
+        context: CoroutineContext,
+        block: suspend CoroutineScope.() -> Unit
+    ) {
+        val job = scope.launch(context, CoroutineStart.LAZY, block)
+        scope.launch(Dispatchers.Default) {
+            lastJob?.cancel()
+            Log.d(TAG, "onStartLoading submit: job.start()")
+            job.start()
+            lastJob = job
         }
     }
 }

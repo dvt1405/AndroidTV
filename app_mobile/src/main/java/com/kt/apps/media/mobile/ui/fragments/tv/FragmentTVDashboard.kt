@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import javax.inject.Inject
+import kotlin.coroutines.coroutineContext
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -42,7 +43,7 @@ class FragmentTVDashboard(private val helper: IDashboardHelper) : BaseFragment<F
     }
 
     private val tvViewModel by lazy {
-        helper.wrapViewModel(ViewModelProvider(requireActivity(), factory))
+        helper.wrapViewModel(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
     }
 
     override fun initView(savedInstanceState: Bundle?) {

@@ -3,19 +3,27 @@ package com.kt.apps.media.mobile.viewmodels
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.media.mobile.models.NetworkState
+import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.utils.asFlow
+import com.kt.apps.media.mobile.utils.asSuccessFlow
 import com.kt.apps.media.mobile.utils.groupAndSort
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
+
 typealias GroupTVChannel = Map<String, List<TVChannel>>
-abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider) {
+abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext) {
 
     private val networkStateViewModel: NetworkStateViewModel by lazy {
         provider[NetworkStateViewModel::class.java]
@@ -24,6 +32,12 @@ abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider)
     protected val tvChannelViewModel: TVChannelViewModel by lazy {
         provider[TVChannelViewModel::class.java]
     }
+
+    protected val playbackViewModel: PlaybackViewModel by lazy {
+        provider[PlaybackViewModel::class.java]
+    }
+
+    protected val viewModelJob = SupervisorJob()
 
     val networkStatus: StateFlow<NetworkState>
         get() = networkStateViewModel.networkStatus
@@ -42,11 +56,20 @@ abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider)
     }
 
     fun loadLinkStreamForChannel(channel: TVChannel) {
-        tvChannelViewModel.loadLinkStreamForChannel(channel)
+        loadLinkStreamForChannelJob(channel)
+    }
+    private fun loadLinkStreamForChannelJob(channel: TVChannel): Job {
+        return CoroutineScope(Dispatchers.IO + coroutineContext).launch {
+            playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING)
+            val linkStreamFlow = tvChannelViewModel.tvWithLinkStreamLiveData.asSuccessFlow("loadLinkStreamForChannelJob")
+            tvChannelViewModel.loadLinkStreamForChannel(channel)
+            linkStreamFlow.first()
+            playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING)
+        }
     }
 }
 
-class TVChannelFragmentViewModel(private val provider: ViewModelProvider): ChannelFragmentViewModel(provider) {
+class TVChannelFragmentViewModel(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext): ChannelFragmentViewModel(provider, coroutineContext) {
     override val listChannels: Flow<List<TVChannel>>
         get() = tvChannelViewModel.tvChannelLiveData.asFlow()
 
@@ -59,7 +82,7 @@ class TVChannelFragmentViewModel(private val provider: ViewModelProvider): Chann
         }
 }
 
-class RadioChannelFragmentViewModel(private val provider: ViewModelProvider): ChannelFragmentViewModel(provider){
+class RadioChannelFragmentViewModel(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext): ChannelFragmentViewModel(provider, coroutineContext){
     @OptIn(ExperimentalCoroutinesApi::class)
     override val listChannels: Flow<List<TVChannel>>
         get() = tvChannelViewModel.tvChannelLiveData.asFlow().mapLatest {

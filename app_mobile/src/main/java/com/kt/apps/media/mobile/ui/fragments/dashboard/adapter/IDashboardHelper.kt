@@ -11,11 +11,12 @@ import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
 import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentViewModel
 import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentViewModel
+import kotlin.coroutines.CoroutineContext
 
 interface IDashboardHelper {
     fun totalFragment(): ChannelFragment
     fun perChannelFragment(filterCategory: String): PerChannelListFragment
-    fun wrapViewModel(viewModel: ViewModelProvider): ChannelFragmentViewModel
+    fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentViewModel
 }
 
 class TVDashboardHelper: IDashboardHelper {
@@ -27,8 +28,8 @@ class TVDashboardHelper: IDashboardHelper {
         return TVPerChannelListFragment.newInstance(filterCategory)
     }
 
-    override fun wrapViewModel(viewModel: ViewModelProvider): ChannelFragmentViewModel {
-        return  TVChannelFragmentViewModel(viewModel)
+    override fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentViewModel {
+        return  TVChannelFragmentViewModel(viewModel, context)
     }
 
 }
@@ -42,7 +43,7 @@ class RadioDashboardHelper: IDashboardHelper {
         return RadioPerChannelListFragment.newInstance(filterCategory)
     }
 
-    override fun wrapViewModel(viewModel: ViewModelProvider): ChannelFragmentViewModel {
-        return  RadioChannelFragmentViewModel(viewModel)
+    override fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentViewModel {
+        return  RadioChannelFragmentViewModel(viewModel, context)
     }
 }

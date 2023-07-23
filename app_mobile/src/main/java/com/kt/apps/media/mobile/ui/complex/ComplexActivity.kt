@@ -8,6 +8,7 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
+import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.*
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.textview.MaterialTextView
@@ -52,6 +53,10 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     private var layoutHandler: ComplexLayoutHandler? = null
 
+    private val playbackFragment: PlaybackFragment by lazy {
+        binding.fragmentContainerPlayback.getFragment()
+    }
+
     private val playbackViewModel: PlaybackViewModel by lazy {
         ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
     }
@@ -78,20 +83,21 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         }
         binding.parseSourceLoadingContainer?.visibility = View.INVISIBLE
 
-    }
+        onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (layoutHandler?.onBackEvent() == true) {
+                    return
+                }
+                finish()
+            }
+        })
+     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun initAction(savedInstanceState: Bundle?) {
-//        tvChannelViewModel?.apply {
-//            tvChannelLiveData.observe(this@ComplexActivity) {dataState ->
-//                when(dataState) {
-//                    is DataState.Error -> handleError(dataState.throwable)
-//                    else -> { }
-//                }
-//            }
-//        }
 
-        binding.fragmentContainerPlayback.getFragment<PlaybackFragment>().apply {
+
+        playbackFragment.apply {
             this.callback = object: IPlaybackAction {
                 override fun onLoadedSuccess(videoSize: VideoSize) {
                     layoutHandler?.onLoadedVideoSuccess(videoSize)
@@ -108,16 +114,13 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 override fun onPlayAction(userAction: Boolean) {
                     if (userAction) layoutHandler?.onPlayPause(isPause = false)
                 }
-            }
-        }
 
-        lifecycleScope.launchWhenStarted {
-            viewModel.streamData.collectLatest {value: StreamLinkData? ->
-                if (value != null) {
-                    layoutHandler?.onStartLoading()
+                override fun onExitMinimal() {
+                    layoutHandler?.onCloseMinimal()
                 }
             }
         }
+
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -126,12 +129,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                             showNoNetworkAlert(autoHide = true)
                     }
                 }
-            }
-        }
-
-        lifecycleScope.launchWhenStarted {
-            viewModel.streamData.collectLatest {
-                Log.d(TAG, "viewModel.streamData: $it")
             }
         }
 
@@ -190,12 +187,23 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
         }
 
-        val playbackState = viewModel.playbackProcessState.shareIn(lifecycleScope, SharingStarted.WhileSubscribed())
 
-        playbackState.filter { it is PlaybackViewModel.State.LOADING }
-            .onEach { layoutHandler?.onStartLoading() }
+        lifecycleScope.launchWhenStarted {
+            viewModel.playbackProcessState
+                .collectIndexed { index, value ->
+                    Log.d(TAG, "Ann playbackProcessState: $index $value ")
+                }
+        }
+
+        val playbackState = viewModel.playbackProcessState
+
+        playbackState
+            .onEach { Log.d(TAG, "Ann playbackState: $it") }
             .launchIn(lifecycleScope)
 
+        playbackState.filter { it is PlaybackViewModel.State.LOADING || it is PlaybackViewModel.State.PLAYING }
+            .onEach { layoutHandler?.onStartLoading() }
+            .launchIn(lifecycleScope)
 
         //Deeplink handle
         handleIntent(intent)

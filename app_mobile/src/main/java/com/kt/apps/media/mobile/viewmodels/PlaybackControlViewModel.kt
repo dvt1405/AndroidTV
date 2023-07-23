@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.ViewModelProvider
+import com.kt.apps.media.mobile.ui.complex.PlaybackState
 import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.utils.asSuccessFlow
@@ -19,4 +20,10 @@ class PlaybackControlViewModel(private val provider: ViewModelProvider) {
 
     val streamData: Flow<StreamLinkData>
         get() = playbackViewModel.streamLinkData.mapNotNull { it }
+
+    val playbackState:  Flow<PlaybackState>
+        get() = playbackViewModel.displayState
+
+    val progressLinkState: Flow<PlaybackViewModel.State>
+        get() = playbackViewModel.state
 }

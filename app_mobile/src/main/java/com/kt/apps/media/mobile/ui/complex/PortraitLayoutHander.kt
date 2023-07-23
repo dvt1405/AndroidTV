@@ -13,13 +13,14 @@ import com.kt.apps.media.mobile.R
 import java.lang.ref.WeakReference
 import kotlin.math.abs
 
-
 interface ComplexLayoutHandler {
     val motionLayout: MotionLayout?
     var onPlaybackStateChange: (PlaybackState) -> Unit
     fun onStartLoading()
     fun onLoadedVideoSuccess(videoSize: VideoSize)
     fun onOpenFullScreen()
+
+    fun onCloseMinimal()
     fun onTouchEvent(ev: MotionEvent) { }
     fun onBackEvent() : Boolean { return false }
     fun onReset(isPlaying: Boolean) { }
@@ -48,7 +49,6 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
         get() = weakActivity.get()?.binding?.complexMotionLayout
 
     override var onPlaybackStateChange: (PlaybackState) -> Unit = { }
-
     private var state: State = State.IDLE
     private var cachedVideoSize: VideoSize? = null
     private val gestureDetector: GestureDetector by lazy {
@@ -91,16 +91,21 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
                 progress: Float
             ) {
                 Log.d(TAG, "onTransitionChange: $startId $endId")
+//                onPlaybackStateChange(when(endId) {
+//                    R.id.fullscreen -> PlaybackState.Fullscreen
+//                    R.id.end -> PlaybackState.Minimal
+//                    R.id.start -> PlaybackState.Invisible
+//                    else -> PlaybackState.Invisible
+//                })
             }
 
             override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-                Log.d(TAG, "onTransitionCompleted: $currentId ${R.id.fullscreen}")
-                onPlaybackStateChange(when(currentId) {
-                    R.id.fullscreen -> PlaybackState.Fullscreen
-                    R.id.end -> PlaybackState.Minimal
-                    R.id.start -> PlaybackState.Invisible
-                    else -> PlaybackState.Invisible
-                })
+//                onPlaybackStateChange(when(currentId) {
+//                    R.id.fullscreen -> PlaybackState.Fullscreen
+//                    R.id.end -> PlaybackState.Minimal
+//                    R.id.start -> PlaybackState.Invisible
+//                    else -> PlaybackState.Invisible
+//                })
             }
 
             override fun onTransitionTrigger(
@@ -110,6 +115,12 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
                 progress: Float
             ) {
                 Log.d(TAG, "onTransitionChange: $triggerId")
+                onPlaybackStateChange(when(triggerId) {
+                    R.id.fullscreen -> PlaybackState.Fullscreen
+                    R.id.end -> PlaybackState.Minimal
+                    R.id.start -> PlaybackState.Invisible
+                    else -> PlaybackState.Invisible
+                })
             }
 
         })
@@ -133,6 +144,10 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
                 state = State.IDLE
             }
         }
+
+    }
+
+    override fun onCloseMinimal() {
 
     }
 
