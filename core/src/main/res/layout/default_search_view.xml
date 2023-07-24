@@ -80,6 +80,8 @@
             android:contentDescription="@string/abc_searchview_description_clear"
             android:focusable="true"
             android:padding="12dp"
+            android:nextFocusLeft="@id/search_src_text"
+            android:nextFocusUp="@id/search_src_text"
             android:elevation="1dp"
             android:src="@drawable/ic_round_close_24"
             tools:visibility="visible"
