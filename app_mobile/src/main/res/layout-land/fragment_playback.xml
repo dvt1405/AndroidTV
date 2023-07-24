@@ -2,7 +2,7 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".ui.fragments.channels.PlaybackFragment">
+    tools:context=".ui.fragments.channels.BasePlaybackFragment">
 
     <data></data>
     <androidx.constraintlayout.motion.widget.MotionLayout
@@ -35,7 +35,17 @@
                 android:paddingEnd="8dp"
                 android:textSize="16sp"
                 />
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/minimal_loading"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:indeterminate="true"
+                app:indicatorColor="@color/white"
+                android:layout_gravity="center"
+                />
+
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/minimal_play_button"
                 style="@style/Widget.Material3.Button.IconButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"

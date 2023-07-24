@@ -3,7 +3,7 @@ package com.kt.apps.media.mobile.di.main
 import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.di.viewmodels.ViewModelModule
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
-import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.channels.BasePlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.dashboard.DashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
 import com.kt.apps.media.mobile.ui.fragments.football.dashboard.FootballDashboardFragment
@@ -11,6 +11,7 @@ import com.kt.apps.media.mobile.ui.fragments.football.list.FootballListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.lightweightchannels.LightweightChannelFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.search.SearchListFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
 import com.kt.apps.media.mobile.ui.fragments.tv.RadioPerChannelListFragment
@@ -36,7 +37,7 @@ abstract class MainTVModule {
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun channelRadioChannelFragment(): RadioChannelsFragment
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
-    internal abstract fun playbackFragment(): PlaybackFragment
+    internal abstract fun tvPlaybackFragment(): TVPlaybackFragment
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun addExtensionSourceFragment(): AddExtensionFragment

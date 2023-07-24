@@ -55,7 +55,7 @@
     </ConstraintSet>
 
     <Transition
-        android:id="@+id/transition_show_video"
-        app:constraintSetStart="@+id/start" />
-
+        app:constraintSetStart="@+id/start"
+        app:constraintSetEnd="@+id/end"
+        />
 </MotionScene>

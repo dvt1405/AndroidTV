@@ -15,6 +15,7 @@ import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityMainBinding
 import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
 import com.kt.apps.media.mobile.utils.*
@@ -145,20 +146,20 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
                 }
             }
             if (isLandscape)
-                launch {
-                    playbackViewModel?.state?.collectLatest { state ->
-                        with(mainRecyclerView) {
-                            when (state) {
-                                PlaybackViewModel.State.IDLE -> setPadding(0, 0, 0, 0)
-                                PlaybackViewModel.State.LOADING, PlaybackViewModel.State.LOADING -> {
-                                    setPadding(0, 0, 0, (screenHeight * 0.4).toInt())
-                                    clipToPadding = false
-                                }
-                                else -> {}
-                            }
-                        }
-                    }
-                }
+//                launch {
+//                    playbackViewModel?.state?.collectLatest { state ->
+//                        with(mainRecyclerView) {
+//                            when (state) {
+//                                PlaybackViewModel.State.IDLE -> setPadding(0, 0, 0, 0)
+//                                is PlaybackViewModel.State.LOADING -> {
+//                                    setPadding(0, 0, 0, (screenHeight * 0.4).toInt())
+//                                    clipToPadding = false
+//                                }
+//                                else -> {}
+//                            }
+//                        }
+//                    }
+//                }
 
             launch {
                 networkStateViewModel?.networkStatus?.collectLatest {

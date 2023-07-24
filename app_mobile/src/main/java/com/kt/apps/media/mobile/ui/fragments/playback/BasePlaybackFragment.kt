@@ -5,38 +5,33 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageButton
-import android.widget.TextView
-import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.*
-import cn.pedant.SweetAlert.ProgressHelper
+import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.ui.StyledPlayerView.ControllerVisibilityListener
-import com.google.android.exoplayer2.ui.StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.base.player.LinkStream
-import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.fadeIn
 import com.kt.apps.core.utils.fadeOut
+import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentPlaybackBinding
+import com.kt.apps.media.mobile.models.PlaybackThrowable
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
+import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.complex.PlaybackState
-import com.kt.apps.media.mobile.ui.fragments.dialog.JobQueue
-import com.kt.apps.media.mobile.ui.fragments.lightweightchannels.LightweightChannelFragment
-import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
+import com.kt.apps.media.mobile.ui.view.ChannelListView
 import com.kt.apps.media.mobile.utils.clicks
-import com.kt.apps.media.mobile.utils.ktFadeIn
-import com.kt.apps.media.mobile.utils.ktFadeOut
-import com.kt.apps.media.mobile.viewmodels.PlaybackControlViewModel
-import com.kt.apps.media.mobile.viewmodels.StreamLinkData
-import com.pnikosis.materialishprogress.ProgressWheel
+import com.kt.apps.media.mobile.viewmodels.BasePlaybackControlViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import kotlin.coroutines.coroutineContext
 
 interface IPlaybackAction {
     fun onLoadedSuccess(videoSize: VideoSize)
@@ -48,7 +43,7 @@ interface IPlaybackAction {
     fun onExitMinimal()
 }
 
-class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
+abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
 
     override val layoutResId: Int
         get() = R.layout.fragment_playback
@@ -77,27 +72,49 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         binding.exoPlayer.findViewById(R.id.progress_bar_container)
     }
 
+    private val minimalProgress by lazy {
+        binding.minimalLoading
+    }
+
+    private val minimalPlayPause by lazy {
+        binding.minimalPlayButton
+    }
+
     private val backButton: MaterialButton by lazy {
         binding.exoPlayer.findViewById(R.id.back_button)
     }
 
-    private val channelFragmentContainer: FragmentContainerView by lazy {
-        binding.exoPlayer.findViewById(R.id.player_overlay_container)
+    private val titleLabel: MaterialTextView by lazy {
+        binding.exoPlayer.findViewById(R.id.title)
     }
+
+    private val title = MutableStateFlow("")
+    private val isProgressing = MutableStateFlow(false)
 
     private var shouldShowChannelList: Boolean = false
 
-    private val playbackViewModel by lazy {
-        PlaybackControlViewModel(ViewModelProvider(requireActivity(), factory))
-    }
+    protected abstract val playbackViewModel: BasePlaybackControlViewModel
 
     private val playerListener: Player.Listener = object: Player.Listener {
+        override fun onPlayerError(error: PlaybackException) {
+            super.onPlayerError(error)
+            Log.d(TAG, "onPlayerError: $error")
+            MainScope().launch {
+                playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
+            }
+        }
+
+        override fun onVideoSizeChanged(videoSize: VideoSize) {
+            super.onVideoSizeChanged(videoSize)
+            Log.d(TAG, "onVideoSizeChanged: $videoSize")
+        }
+
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
             Log.d(TAG, "onStateChange onIsPlayingChanged: $isPlaying")
             if (isPlaying) {
-                progressWheel.fadeOut {
-                    playPauseButton.fadeIn {  }
+                MainScope().launch {
+                    isProgressing.emit(false)
                 }
             }
         }
@@ -106,8 +123,8 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             super.onIsLoadingChanged(isLoading)
             Log.d(TAG, "onStateChange onIsLoadingChanged: $isLoading")
             if (isLoading) {
-                playPauseButton.fadeOut {
-                    progressWheel.fadeIn {  }
+                MainScope().launch {
+                    isProgressing.emit(true)
                 }
             }
         }
@@ -119,13 +136,6 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             exoPlayer.showController()
             exoPlayer.setShowNextButton(false)
             exoPlayer.setShowPreviousButton(false)
-            exoPlayer.setControllerVisibilityListener(ControllerVisibilityListener { visibility ->
-                if (visibility != View.VISIBLE)
-                    channelFragmentContainer.visibility = visibility
-                else
-                    if (shouldShowChannelList)
-                        showHideChannelList(isShow = true)
-            })
 
             playPauseButton.visibility = View.INVISIBLE
             progressWheel.visibility = View.INVISIBLE
@@ -136,30 +146,9 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         fullScreenButton.setOnClickListener {
             callback?.onOpenFullScreen()
         }
-
-        playPauseButton.setOnClickListener {
-            exoPlayerManager.exoPlayer?.run {
-                shouldShowChannelList = if (isPlaying) {
-                    pause()
-                    showHideChannelList(isShow = true)
-                    true
-                } else {
-                    play()
-                    showHideChannelList(isShow = false)
-                    false
-                }
-            } ?: kotlin.run {
-//                tvChannelViewModel?.tvWithLinkStreamLiveData?.value?.run {
-//                    when(this) {
-//                        is DataState.Success -> {
-//                            playVideo(data)
-//                        }
-//                        else -> {}
-//                    }
-//                }
-            }
-        }
     }
+
+
 
     fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
@@ -175,12 +164,6 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
 
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            playbackViewModel.streamData.collectLatest {
-                shouldShowChannelList = false
-                playVideo(it)
-            }
-        }
 
         playbackViewModel.playbackState
             .onEach {
@@ -192,73 +175,48 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
-        playbackViewModel.progressLinkState
-            .filter { it is PlaybackViewModel.State.LOADING }
-            .onEach { preparePlayView() }
+        playbackViewModel.loadEvents
+            .onEach { preparePlayView(it.data) }
+            .launchIn(lifecycleScope)
+
+        playbackViewModel.streamLinkEvents
+            .onEach { playVideo(it.data) }
+            .launchIn(lifecycleScope)
+
+        playbackViewModel.errorEvents
+            .mapNotNull { it }
+            .onEach { onError(it.error) }
             .launchIn(lifecycleScope)
 
         merge(backButton.clicks(), binding.exitButton?.clicks() ?: emptyFlow())
             .debounce(250)
             .onEach {
+                exoPlayerManager.exoPlayer?.stop()
                 callback?.onExitMinimal()
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
-//        viewLifecycleOwner.lifecycleScope.launch {
-//            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-//                launch {
-//                    playbackViewModel?.state?.map {
-//                        it == PlaybackViewModel.State.LOADING
-//                    }?.collectLatest {
-//                        toggleProgressing(it)
-//                    }
-//                }
-//
-//                launch {
-//                    isProcessing
-//                        .collectLatest {
-//                            if (it) {
-//                                animationQueue.submit(kotlin.coroutines.coroutineContext) {
-//                                    binding.exoPlayer.showController()
-//                                    progressWheel.visibility = View.VISIBLE
-//                                    awaitAll(async {
-//                                        progressWheel.ktFadeIn()
-//                                        progressHelper.spin()
-//                                    })
-//                                }
-//                            } else {
-//                                animationQueue.submit(kotlin.coroutines.coroutineContext) {
-//                                    awaitAll(async {
-//                                        progressWheel.ktFadeOut()
-//                                        progressHelper.stopSpinning()
-//                                    })
-//                                }
-//                            }
-//                        }
-//                }
-//
-//                launch {
-//                    playbackViewModel?.displayState?.collectLatest {state ->
-//                        if (state != PlaybackState.Fullscreen) {
-//                            showHideChannelList(false)
-//                        }
-//                    }
-//                }
-//
-//                launch {
-//                    playbackViewModel?.displayState?.mapLatest {
-//                        when(it) {
-//                            PlaybackState.Fullscreen -> com.google.android.exoplayer2.R.drawable.exo_ic_fullscreen_exit
-//                            else -> com.google.android.exoplayer2.R.drawable.exo_controls_fullscreen_enter
-//                        }
-//                    }?.collectLatest {
-//                        fullScreenButton.setImageResource(it)
-//                    }
-//                }
-//            }
-//        }
-    }
+        title.onEach {
+            titleLabel.text = it
+            binding.minimalTitleTv?.text = it
+        }
+            .launchIn(viewLifecycleOwner.lifecycleScope + Dispatchers.Main)
 
+        isProgressing.onEach {isProgressing ->
+            if (isProgressing) {
+                playPauseButton.fadeOut {  }
+                progressWheel.fadeIn {  }
+                minimalProgress?.visibility = View.VISIBLE
+                minimalPlayPause?.visibility = View.GONE
+            } else {
+                playPauseButton.fadeIn {  }
+                progressWheel.fadeOut {  }
+                minimalProgress?.visibility = View.GONE
+                minimalPlayPause?.visibility = View.VISIBLE
+            }
+        }.launchIn(viewLifecycleOwner.lifecycleScope + Dispatchers.Main)
+
+    }
 
     override fun onStop() {
         super.onStop()
@@ -281,12 +239,23 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+//
+//        childFragmentManager.beginTransaction()
+//            .replace(R.id.player_overlay_container, LightweightChannelFragment.newInstance())
+//            .commit()
+//
+//        channelFragmentContainer.visibility = View.INVISIBLE
+    }
 
-        childFragmentManager.beginTransaction()
-            .replace(R.id.player_overlay_container, LightweightChannelFragment.newInstance())
-            .commit()
-
-        channelFragmentContainer.visibility = View.INVISIBLE
+    private fun onError(throwable: Throwable?) {
+        val errorCode = (throwable as? PlaybackThrowable)?.code ?: -1
+        showErrorDialog(
+            titleText = "Lỗi phát video",
+            content = "Xin lỗi, mở nội dung không thành công. Vui lòng thử lại sau.\nMã lỗi: $errorCode",
+            cancellable = false,
+            onDismissListener = {
+                backButton.performClick()
+            })
     }
 
     private fun changeFullScreenLayout() {
@@ -306,10 +275,12 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         binding.motionLayout?.transitionToState(R.id.end)
     }
 
-    private fun preparePlayView() {
+    private fun preparePlayView(data: PrepareStreamLinkData) {
         exoPlayerManager.exoPlayer?.stop()
+        exoPlayerManager.exoPlayer?.removeListener(playerListener)
         playPauseButton.visibility = View.INVISIBLE
         progressWheel.fadeIn {  }
+        title.value = data.title
     }
 
     private fun playVideo(data: StreamLinkData) {
@@ -317,18 +288,7 @@ class PlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             LinkStream(it, data.webDetailPage, data.webDetailPage)
         }, data.isHls, data.itemMetaData , playerListener)
         binding.exoPlayer.player = exoPlayerManager.exoPlayer
-        MainScope().launch {
-            backButton.text = data.title
-            binding.minimalTitleTv?.text = data.title
-        }
-    }
-
-    private fun stopCurrentVideo() {
-        exoPlayerManager.exoPlayer?.stop()
-    }
-
-    private val animationQueue: JobQueue by lazy {
-        JobQueue()
+        title.value = data.title
     }
 
     private fun showHideChannelList(isShow: Boolean) {

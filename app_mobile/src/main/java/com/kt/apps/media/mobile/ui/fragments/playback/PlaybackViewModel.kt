@@ -1,47 +1,41 @@
-package com.kt.apps.media.mobile.ui.fragments.channels
+package com.kt.apps.media.mobile.ui.fragments.playback
 
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
-import com.google.android.exoplayer2.PlaybackException
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.base.BaseViewModel
-import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.media.mobile.models.PlaybackFailException
+import com.kt.apps.media.mobile.models.PlaybackThrowable
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
+import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.complex.PlaybackState
-import com.kt.apps.media.mobile.viewmodels.StreamLinkData
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
 class PlaybackViewModel @Inject constructor(): BaseViewModel() {
     sealed class State {
         object IDLE: State()
-        object LOADING: State()
-        object  PLAYING: State()
-        data class FINISHED(val error: Throwable?): State()
+        data class LOADING(val data: PrepareStreamLinkData): State()
+        data class  PLAYING(val data: StreamLinkData): State()
+        data class ERROR(val error: Throwable?): State()
     }
 
     @Inject
     lateinit var actionLogger: IActionLogger
 
-    val videoSizeStateLiveData: MutableLiveData<VideoSize?> = MutableLiveData(null)
+    private var _loadEvent = MutableStateFlow<State.LOADING?>(null)
+    val loadEvents: Flow<State.LOADING>
+        get() = _loadEvent.mapNotNull { it }
 
-    private val _state = MutableStateFlow<State>(State.IDLE)
-    val state: StateFlow<State> = _state
+    private var _streamLinkData = MutableStateFlow<State.PLAYING?>(null)
+    val streamLinkEvents: Flow<State.PLAYING>
+        get() = _streamLinkData.mapNotNull { it }
+
+    private var _errorData = MutableSharedFlow<State.ERROR>(replay = 0)
+    val errorEvents: Flow<State.ERROR>
+        get() = _errorData
 
     private val _displayState = MutableStateFlow(PlaybackState.Fullscreen)
     val displayState: StateFlow<PlaybackState> = _displayState
-
-    private val _streamData = MutableStateFlow<StreamLinkData?>(null)
-    val streamLinkData: StateFlow<StreamLinkData?>
-        get() = _streamData
 
 
 //    val playerListener: Player.Listener = object : Player.Listener {
@@ -67,19 +61,19 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
 //    }
 
     suspend fun changeProcessState(state: State) {
-        Log.d(TAG, "Ann changeProcessState: $state ${_state.value}")
-        _state.emit(state)
+        when(state) {
+            is State.LOADING -> _loadEvent.emit(state)
+            is State.PLAYING -> _streamLinkData.emit(state)
+            else -> { }
+        }
+    }
+
+    suspend fun playbackError(error: PlaybackThrowable) {
+//        _state.emit(State.ERROR(error))
+        _errorData.emit(State.ERROR(error))
     }
 
     fun changeDisplayState(newMode: PlaybackState) {
         _displayState.value = newMode
-    }
-
-    suspend fun startStream(data: StreamLinkData) {
-        _streamData.emit(data)
-    }
-
-    suspend fun stopStream() {
-        _streamData.emit(null)
     }
 }

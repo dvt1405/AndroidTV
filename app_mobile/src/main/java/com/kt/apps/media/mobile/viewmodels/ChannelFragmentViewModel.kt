@@ -3,7 +3,9 @@ package com.kt.apps.media.mobile.viewmodels
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.media.mobile.models.NetworkState
-import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
+import com.kt.apps.media.mobile.models.StreamLinkData
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.utils.asFlow
@@ -14,7 +16,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -60,11 +61,11 @@ abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider,
     }
     private fun loadLinkStreamForChannelJob(channel: TVChannel): Job {
         return CoroutineScope(Dispatchers.IO + coroutineContext).launch {
-            playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING)
+            playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING(PrepareStreamLinkData.factory(channel)))
             val linkStreamFlow = tvChannelViewModel.tvWithLinkStreamLiveData.asSuccessFlow("loadLinkStreamForChannelJob")
             tvChannelViewModel.loadLinkStreamForChannel(channel)
-            linkStreamFlow.first()
-            playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING)
+            val data = StreamLinkData.TVStreamLinkData(linkStreamFlow.first())
+            playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
         }
     }
 }

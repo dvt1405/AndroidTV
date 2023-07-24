@@ -95,12 +95,6 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
 //                }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
-
-        viewModels?.processState
-            ?.onEach {
-                Log.d(TAG, "onStartLoading loadIPTVJob: ${it}")
-            }
-            ?.launchIn(MainScope())
     }
 
     private val loadData: suspend (Unit) -> Unit = {

@@ -5,7 +5,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.expandUrl
-import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
+import com.kt.apps.media.mobile.models.StreamLinkData
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.utils.asFlow
 import kotlinx.coroutines.*
@@ -22,8 +24,6 @@ class IPTVListViewModel(private val provider: ViewModelProvider, private val cor
     private val playbackViewModel: PlaybackViewModel by lazy {
         provider[PlaybackViewModel::class.java]
     }
-    val processState: Flow<PlaybackViewModel.State>
-            get() = playbackViewModel.state
 
     fun loadDataAsync(): Deferred<List<ExtensionsChannel>> {
         return CoroutineScope(Dispatchers.Main).async{
@@ -62,16 +62,15 @@ class IPTVListViewModel(private val provider: ViewModelProvider, private val cor
 
     suspend fun loadIPTVJob(data: ExtensionsChannel) {
         Log.d(TAG, "onStartLoading loadIPTVJob: ${data.tvChannelName}")
-        playbackViewModel.stopStream()
-        playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING)
+        playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING(PrepareStreamLinkData.factory(data)))
+        delay(100)
         val loadedData = suspendCancellableCoroutine { cont ->
             val result = loadIPTV(data)
             if (cont.isActive) {
                 cont.resume(result)
             }
         }
-        playbackViewModel.startStream(loadedData)
-        playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING)
+        playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(loadedData))
     }
 
 }

@@ -14,24 +14,18 @@ import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
-import com.kt.apps.core.base.DataState
 import com.kt.apps.core.logging.IActionLogger
-import com.kt.apps.core.logging.logPlaybackShowError
-import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.utils.*
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
-import com.kt.apps.media.mobile.models.NetworkState
-import com.kt.apps.media.mobile.models.NoNetworkException
-import com.kt.apps.media.mobile.models.PlaybackFailException
+import com.kt.apps.media.mobile.models.*
 import com.kt.apps.media.mobile.ui.fragments.channels.IPlaybackAction
-import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackFragment
-import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
+import com.kt.apps.media.mobile.ui.fragments.channels.BasePlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
-import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
 import com.kt.apps.media.mobile.viewmodels.ComplexViewModel
-import com.kt.apps.media.mobile.viewmodels.StreamLinkData
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.lang.ref.WeakReference
@@ -52,10 +46,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         get() = R.layout.activity_complex
 
     private var layoutHandler: ComplexLayoutHandler? = null
-
-    private val playbackFragment: PlaybackFragment by lazy {
-        binding.fragmentContainerPlayback.getFragment()
-    }
 
     private val playbackViewModel: PlaybackViewModel by lazy {
         ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
@@ -97,29 +87,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun initAction(savedInstanceState: Bundle?) {
 
 
-        playbackFragment.apply {
-            this.callback = object: IPlaybackAction {
-                override fun onLoadedSuccess(videoSize: VideoSize) {
-                    layoutHandler?.onLoadedVideoSuccess(videoSize)
-                }
 
-                override fun onOpenFullScreen() {
-                    layoutHandler?.onOpenFullScreen()
-                }
-
-                override fun onPauseAction(userAction: Boolean) {
-                    if (userAction) layoutHandler?.onPlayPause(isPause = true)
-                }
-
-                override fun onPlayAction(userAction: Boolean) {
-                    if (userAction) layoutHandler?.onPlayPause(isPause = false)
-                }
-
-                override fun onExitMinimal() {
-                    layoutHandler?.onCloseMinimal()
-                }
-            }
-        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -187,30 +155,49 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
         }
 
-
-        lifecycleScope.launchWhenStarted {
-            viewModel.playbackProcessState
-                .collectIndexed { index, value ->
-                    Log.d(TAG, "Ann playbackProcessState: $index $value ")
-                }
-        }
-
-        val playbackState = viewModel.playbackProcessState
-
-        playbackState
-            .onEach { Log.d(TAG, "Ann playbackState: $it") }
+        viewModel.playbackLoadEvent
+            .onEach {
+                loadPlayback(it.data)
+            }
             .launchIn(lifecycleScope)
-
-        playbackState.filter { it is PlaybackViewModel.State.LOADING || it is PlaybackViewModel.State.PLAYING }
-            .onEach { layoutHandler?.onStartLoading() }
-            .launchIn(lifecycleScope)
-
         //Deeplink handle
         handleIntent(intent)
     }
 
+    private fun loadPlayback(data: ILinkData) {
+        Log.d(TAG, "loadPlayback: $data")
+        val tvPlaybackFragment = TVPlaybackFragment()
+        tvPlaybackFragment.apply {
+            this.callback = object: IPlaybackAction {
+                override fun onLoadedSuccess(videoSize: VideoSize) {
+                    layoutHandler?.onLoadedVideoSuccess(videoSize)
+                }
+
+                override fun onOpenFullScreen() {
+                    layoutHandler?.onOpenFullScreen()
+                }
+
+                override fun onPauseAction(userAction: Boolean) {
+                    if (userAction) layoutHandler?.onPlayPause(isPause = true)
+                }
+
+                override fun onPlayAction(userAction: Boolean) {
+                    if (userAction) layoutHandler?.onPlayPause(isPause = false)
+                }
+
+                override fun onExitMinimal() {
+                    layoutHandler?.onCloseMinimal()
+                }
+            }
+        }
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container_playback, tvPlaybackFragment)
+            .commit()
+        layoutHandler?.onStartLoading()
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (binding.fragmentContainerPlayback.getFragment<PlaybackFragment>().onKeyDown(keyCode, event)) {
+        if (binding.fragmentContainerPlayback.getFragment<BasePlaybackFragment>().onKeyDown(keyCode, event)) {
             return true
         }
         return super.onKeyDown(keyCode, event)

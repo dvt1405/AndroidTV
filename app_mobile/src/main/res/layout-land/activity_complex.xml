@@ -25,7 +25,6 @@
 
             <androidx.fragment.app.FragmentContainerView
                 android:id="@+id/fragment_container_playback"
-                android:name="com.kt.apps.media.mobile.ui.fragments.channels.PlaybackFragment"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 tools:layout="@layout/fragment_playback"
