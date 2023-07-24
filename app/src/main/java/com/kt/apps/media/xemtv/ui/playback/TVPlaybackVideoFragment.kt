@@ -10,7 +10,6 @@ import com.kt.apps.core.base.leanback.ArrayObjectAdapter
 import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import com.kt.apps.core.base.leanback.PresenterSelector
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.observe
 import com.google.android.exoplayer2.PlaybackException
 import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.R
@@ -167,19 +166,23 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
 
         tvChannelViewModel.tvChannelLiveData.observe(viewLifecycleOwner) {
-            loadChannelListByDataState(it)
+            val isRadio = tvChannel?.channel?.isRadio ?: false
+            loadChannelListByDataState(it, isRadio)
         }
         tvChannelViewModel.programmeForChannelLiveData.observe(viewLifecycleOwner) {
             if (it is DataState.Success) {
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel
                 if (
-                    tvChannelViewModel.lastWatchedChannel
-                        ?.channel
+                    lastWatchedChannel
                         ?.channelId
                         ?.removeAllSpecialChars()
                         ?.removePrefix("viechannel")
                     == it.data.channel
                 ) {
-                    showInfo(it.data)
+                    showInfo(
+                        it.data,
+                        lastWatchedChannel
+                    )
                 }
             }
         }
@@ -193,10 +196,18 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
     }
 
-    private fun loadChannelListByDataState(dataState: DataState<List<TVChannel>>) {
+    private fun loadChannelListByDataState(dataState: DataState<List<TVChannel>>, isRadio: Boolean) {
         when (dataState) {
             is DataState.Success -> {
-                setupRowAdapter(dataState.data)
+                if (isRadio) {
+                    setupRowAdapter(dataState.data.filter {
+                        it.isRadio
+                    })
+                } else {
+                    setupRowAdapter(dataState.data.filter {
+                        !it.isRadio
+                    })
+                }
                 if (mPlayingPosition <= 0 && mCurrentSelectedChannel != null) {
                     mPlayingPosition = dataState.data.indexOfLast {
                         it.channelId == mCurrentSelectedChannel!!.channelId
@@ -263,13 +274,13 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
     }
 
-    private fun showInfo(tvChannel: TVScheduler.Programme) {
+    private fun showInfo(tvChannel: TVScheduler.Programme, channel: TVChannel) {
         Logger.d(this@TVPlaybackVideoFragment, "ChannelInfo", message = "$tvChannel")
         val channelTitle = tvChannel.title.takeIf {
             it.trim().isNotBlank()
         }?.trim() ?: ""
         prepare(
-            tvChannel.channel.uppercase() + if (channelTitle.isNotBlank()) {
+            channel.tvChannelName + if (channelTitle.isNotBlank()) {
                 " - $channelTitle"
             } else {
                 ""
