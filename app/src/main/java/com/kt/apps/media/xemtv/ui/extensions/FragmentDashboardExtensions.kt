@@ -47,10 +47,10 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
     }
 
     override val currentPage: Int
-        get() = requireView().findViewById<LeanbackViewPager>(R.id.view_pager).currentItem
+        get() = view?.findViewById<LeanbackViewPager>(R.id.view_pager)?.currentItem ?: 0
 
-    override val tabLayout: LeanbackTabLayout
-        get() = requireView().findViewById(R.id.tab_layout)
+    override val tabLayout: LeanbackTabLayout?
+        get() = view?.findViewById(R.id.tab_layout)
 
     override fun getLayoutResourceId(): Int {
         return R.layout.fragment_extensions_dashboard
@@ -93,7 +93,7 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
                 }
 
                 if (tabIndex > -1) {
-                    tabLayout.getTabAt(tabIndex)?.text = updatedConfig.sourceName
+                    tabLayout?.getTabAt(tabIndex)?.text = updatedConfig.sourceName
                     pagerAdapter.onPageUpdate(tabIndex, updatedConfig)
                 }
             }
@@ -126,7 +126,7 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
                     if (!pagerAdapter.areContentTheSame(listConfig)) {
                         pagerAdapter.onRefresh(listConfig)
                         viewPager.adapter = pagerAdapter
-                        tabLayout.setupWithViewPager(viewPager, true)
+                        tabLayout?.setupWithViewPager(viewPager, true)
                     }
                 }
 
@@ -145,9 +145,9 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
 
         val disposable = CompositeDisposable()
 
-        tabLayout.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-            for (i in 0 until tabLayout.tabCount) {
-                tabLayout.getTabAt(i)?.view?.setOnLongClickListener {
+        tabLayout!!.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            for (i in 0 until tabLayout!!.tabCount) {
+                tabLayout!!.getTabAt(i)?.view?.setOnLongClickListener {
                     val data = (extensionsViewModel.totalExtensionsConfig.value as? DataState.Success)?.data
                         ?: return@setOnLongClickListener false
                     val deleteSourceFragment = DeleteSourceFragment(
@@ -204,8 +204,8 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
                 return _btnAddSource
             }
             if (direction == View.FOCUS_RIGHT) {
-                if (tabLayout.tabCount > 0) {
-                    return tabLayout.getTabAt(0)?.view
+                if (tabLayout!!.tabCount > 0) {
+                    return tabLayout?.getTabAt(0)?.view
                 }
             } else if (direction == View.FOCUS_DOWN) {
                 return if (extensionsViewModel.currentLiveDataConfig?.value is DataState.Loading
@@ -226,9 +226,9 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
             }
         }
 
-        if (focused == tabLayout.findCurrentFocusedView()) {
-            val currentFocus = tabLayout.findCurrentFocusedPosition()
-            val tabCount = tabLayout.tabCount
+        if (focused == tabLayout?.findCurrentFocusedView()) {
+            val currentFocus = tabLayout!!.findCurrentFocusedPosition()
+            val tabCount = tabLayout!!.tabCount
             if (direction == View.FOCUS_LEFT) {
                 if (currentFocus == 0) {
                     return _btnAddSource
@@ -237,7 +237,7 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
                 return if (currentFocus == tabCount - 1) {
                     focused
                 } else {
-                    tabLayout.getTabAt((currentFocus + 1) % tabLayout.tabCount)?.view
+                    tabLayout!!.getTabAt((currentFocus + 1) % tabLayout!!.tabCount)?.view
                 }
             }
         }

@@ -13,6 +13,7 @@ import androidx.leanback.tab.LeanbackViewPager
 import com.kt.apps.core.base.leanback.ArrayObjectAdapter
 import com.kt.apps.core.base.leanback.ListRowPresenter
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.tabs.TabLayout
 import com.kt.apps.core.base.BaseRowSupportFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.adapter.leanback.applyLoading
@@ -29,7 +30,7 @@ import javax.inject.Inject
 
 abstract class BaseTabLayoutFragment : BaseRowSupportFragment() {
     abstract val currentPage: Int
-    abstract val tabLayout: LeanbackTabLayout
+    abstract val tabLayout: LeanbackTabLayout?
     abstract fun requestFocusChildContent(): View?
 
     class LoadingFragment : BaseRowSupportFragment() {
@@ -112,10 +113,10 @@ class FragmentTVDashboardNew : BaseTabLayoutFragment() {
     private var type = PlaybackActivity.Type.TV
 
     override val currentPage: Int
-        get() = requireView().findViewById<LeanbackViewPager>(R.id.view_pager).currentItem
+        get() = view?.findViewById<LeanbackViewPager>(R.id.view_pager)?.currentItem ?: 0
 
-    override val tabLayout: LeanbackTabLayout
-        get() = requireView().findViewById(R.id.tab_layout)
+    override val tabLayout: LeanbackTabLayout?
+        get() = view?.findViewById(R.id.tab_layout)
 
     inner class TVViewPager(fragmentManager: FragmentManager) : BasePagerAdapter<String>(fragmentManager) {
         fun refreshPage(listTvChannel: List<TVChannel>) {
@@ -192,6 +193,7 @@ class FragmentTVDashboardNew : BaseTabLayoutFragment() {
     override fun initAction(rootView: View) {
         tvChannelViewModel.getListTVChannel(false)
         mainFragmentAdapter.fragmentHost!!.notifyViewCreated(mainFragmentAdapter)
+        val tabLayout = rootView.findViewById<TabLayout>(R.id.tab_layout)
         viewPager.adapter = pagerAdapter
         tvChannelViewModel.tvChannelLiveData.observe(viewLifecycleOwner) {
             when (it) {
@@ -202,10 +204,10 @@ class FragmentTVDashboardNew : BaseTabLayoutFragment() {
                         }.keys.toList())
                     ) {
                         pagerAdapter.refreshPage(totalList)
-                        tabLayout.setupWithViewPager(viewPager, true)
+                        tabLayout?.setupWithViewPager(viewPager, true)
                     }
                     if (DashboardFragment.firstInit) {
-                        tabLayout.getTabAt(0)?.view?.requestFocus()
+                        tabLayout?.getTabAt(0)?.view?.requestFocus()
                         DashboardFragment.firstInit = false
                     }
                 }
@@ -213,7 +215,10 @@ class FragmentTVDashboardNew : BaseTabLayoutFragment() {
                 is DataState.Loading -> {
                     pagerAdapter.onLoading()
                     if (DashboardFragment.firstInit) {
-                        tabLayout.getTabAt(0)?.view?.requestFocus()
+                        tabLayout?.getTabAt(0)?.view?.requestFocus()
+                            ?: let {
+                                tabLayout?.requestFocus()
+                            }
                     }
                 }
 

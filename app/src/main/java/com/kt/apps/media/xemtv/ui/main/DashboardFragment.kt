@@ -103,25 +103,25 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                     && mMainFragment is BaseTabLayoutFragment
                 ) {
                     (mMainFragment as BaseTabLayoutFragment).apply {
-                        return this.tabLayout.getTabAt(this.currentPage)?.view
+                        return this.tabLayout?.getTabAt(this.currentPage)?.view
                     }
                 } else if (mMainFragment is BaseTabLayoutFragment
                     && focused is TabLayout.TabView
                     && direction == View.FOCUS_LEFT
                 ) {
-                    val tabCount = (mMainFragment as BaseTabLayoutFragment).tabLayout.tabCount
-                    val tabFocused = (mMainFragment as BaseTabLayoutFragment).tabLayout
+                    val tabCount = (mMainFragment as BaseTabLayoutFragment).tabLayout?.tabCount ?: 0
+                    val tabFocused = (mMainFragment as BaseTabLayoutFragment).tabLayout!!
                         .findCurrentFocusedPosition()
                     if (tabFocused > 0) {
-                        return (mMainFragment as BaseTabLayoutFragment).tabLayout
+                        return (mMainFragment as BaseTabLayoutFragment).tabLayout!!
                             .getTabAt((tabFocused - 1) % tabCount)!!.view
                     }
                 } else if (mMainFragment is BaseTabLayoutFragment
                     && focused is TabLayout.TabView
                     && direction == View.FOCUS_RIGHT
                 ) {
-                    val tabCount = (mMainFragment as BaseTabLayoutFragment).tabLayout.tabCount
-                    val tabFocused = (mMainFragment as BaseTabLayoutFragment).tabLayout
+                    val tabCount = (mMainFragment as BaseTabLayoutFragment).tabLayout!!.tabCount
+                    val tabFocused = (mMainFragment as BaseTabLayoutFragment).tabLayout!!
                         .findCurrentFocusedPosition()
                     if (tabFocused == tabCount - 1) {
                         return focused
@@ -371,11 +371,11 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 if (isShowingHeaders) {
                     finishActivityIfNeeded()
                 } else {
-                    val currentTabFocused = this.tabLayout.findCurrentFocusedView()
+                    val currentTabFocused = this.tabLayout?.findCurrentFocusedView()
                     if (currentTabFocused == null) {
-                        val currentTabSelected = this.tabLayout.findCurrentSelectedPosition()
+                        val currentTabSelected = this.tabLayout?.findCurrentSelectedPosition() ?: -1
                         if (currentTabSelected >= 0) {
-                            this.tabLayout.getTabAt(currentTabSelected)?.view?.requestFocus()
+                            this.tabLayout!!.getTabAt(currentTabSelected)?.view?.requestFocus()
                         } else {
                             navDrawerView.openNav()
                         }
