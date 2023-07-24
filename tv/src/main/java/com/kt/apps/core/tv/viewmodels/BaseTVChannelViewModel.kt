@@ -13,6 +13,7 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logPlayByDeeplinkTV
 import com.kt.apps.core.logging.logStreamingTV
 import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.utils.removeAllSpecialChars
@@ -194,7 +195,11 @@ open class BaseTVChannelViewModel constructor(
                                         .removeAllSpecialChars()
                                         .removePrefix("viechannel"),
                                     title = "",
-                                    description = channel.tvGroup,
+                                    description = try {
+                                        TVChannelGroup.valueOf(channel.tvGroup).value
+                                    } catch (e: Exception) {
+                                        channel.tvGroup
+                                    },
                                 )
                             )
                         )
@@ -207,7 +212,11 @@ open class BaseTVChannelViewModel constructor(
                                     .removeAllSpecialChars()
                                     .removePrefix("viechannel"),
                                 title = "",
-                                description = channel.tvGroup,
+                                description = try {
+                                    TVChannelGroup.valueOf(channel.tvGroup).value
+                                } catch (e: Exception) {
+                                    channel.tvGroup
+                                },
                             )
                         )
                     )
