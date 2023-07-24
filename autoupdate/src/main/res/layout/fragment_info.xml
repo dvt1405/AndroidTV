@@ -63,7 +63,7 @@
                 android:nextFocusUp="@id/btn_check_update"
                 android:nextFocusDown="@id/zalo_group_link"
                 android:paddingHorizontal="10dp"
-                android:text="http://fb.com/imediaapp"
+                android:text="https://fb.com/groups/imediaapp/"
                 android:textColor="@color/white"
                 android:textSize="16sp" />
 
@@ -77,7 +77,7 @@
                 android:minWidth="200dp"
                 android:nextFocusUp="@id/fb_group_link"
                 android:paddingHorizontal="10dp"
-                android:text="http://zalo.me/imediaapp"
+                android:text="https://zalo.me/g/bcdftf650"
                 android:textColor="@color/white"
                 android:textSize="16sp" />
 
