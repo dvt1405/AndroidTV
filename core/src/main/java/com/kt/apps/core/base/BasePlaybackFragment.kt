@@ -879,7 +879,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     fun canBackToMain(): Boolean {
-        return playbackOverlaysContainerView?.visibility != View.VISIBLE
+        return overlaysUIState == OverlayUIState.STATE_HIDDEN
     }
 
     fun hideOverlay() {
@@ -1079,6 +1079,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     fun showErrorDialogWithErrorCode(errorCode: Int, errorMessage: String? = null, onDismiss: () -> Unit = {}) {
+        if (this.isDetached || this.isHidden) {
+            return
+        }
         showErrorDialog(
             content = errorMessage ?: getString(
                 com.kt.apps.resources.R.string.error_playback_popup_content_text,

@@ -353,7 +353,7 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
                 })
                 finish()
             } else {
-                super.onBackPressed()
+                finish()
             }
         } else {
             fragment.hideOverlay()
