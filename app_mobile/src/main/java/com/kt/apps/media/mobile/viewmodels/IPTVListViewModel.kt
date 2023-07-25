@@ -45,25 +45,9 @@ class IPTVListViewModel(private val provider: ViewModelProvider, private val cor
         return StreamLinkData.ExtensionStreamLinkData(data, linkToPlay)
     }
 
-//    suspend fun loadIPTVJob(data: ExtensionsChannel): Job {
-//        return CoroutineScope(coroutineContext).launch(context = coroutineContext, CoroutineStart.LAZY) {
-//            playbackViewModel.stopStream()
-//            playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING)
-//            val loadedData = withContext(Dispatchers.Default) {
-//                loadIPTV(data)
-//            }
-//            if (!isActive) {
-//                return@launch
-//            }
-//            playbackViewModel.startStream(loadedData)
-//            playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING)
-//        }
-//    }
-
     suspend fun loadIPTVJob(data: ExtensionsChannel) {
         Log.d(TAG, "onStartLoading loadIPTVJob: ${data.tvChannelName}")
         playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING(PrepareStreamLinkData.factory(data)))
-        delay(100)
         val loadedData = suspendCancellableCoroutine { cont ->
             val result = loadIPTV(data)
             if (cont.isActive) {

@@ -3,7 +3,6 @@ package com.kt.apps.media.mobile.di.main
 import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.di.viewmodels.ViewModelModule
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
-import com.kt.apps.media.mobile.ui.fragments.channels.BasePlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.dashboard.DashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
 import com.kt.apps.media.mobile.ui.fragments.football.dashboard.FootballDashboardFragment

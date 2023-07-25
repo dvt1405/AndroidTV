@@ -19,11 +19,12 @@ import com.kt.apps.core.utils.*
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
 import com.kt.apps.media.mobile.models.*
-import com.kt.apps.media.mobile.ui.fragments.channels.IPlaybackAction
-import com.kt.apps.media.mobile.ui.fragments.channels.BasePlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
+import com.kt.apps.media.mobile.ui.fragments.playback.BasePlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
+import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
 import com.kt.apps.media.mobile.viewmodels.ComplexViewModel
 import kotlinx.coroutines.*
@@ -46,6 +47,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         get() = R.layout.activity_complex
 
     private var layoutHandler: ComplexLayoutHandler? = null
+
+//    private val tvPlaybackFragment = TVPlaybackFragment()
+//    private val ipTVPlaybackFragment = IPTVPlaybackFragment()
 
     private val playbackViewModel: PlaybackViewModel by lazy {
         ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
@@ -83,12 +87,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         })
      }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     override fun initAction(savedInstanceState: Bundle?) {
-
-
-
-
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
