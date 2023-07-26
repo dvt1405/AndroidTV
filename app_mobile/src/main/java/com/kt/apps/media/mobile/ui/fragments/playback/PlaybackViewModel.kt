@@ -22,7 +22,7 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
     @Inject
     lateinit var actionLogger: IActionLogger
 
-    private var _stateEvents = MutableSharedFlow<State>(replay = 1)
+    private var _stateEvents = MutableStateFlow<State>(State.IDLE)
     val stateEvents
         get() = _stateEvents.asSharedFlow()
 

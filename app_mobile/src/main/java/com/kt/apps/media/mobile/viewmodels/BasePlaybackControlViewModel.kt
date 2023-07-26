@@ -35,21 +35,8 @@ open class BasePlaybackControlViewModel(private val provider: ViewModelProvider,
     val playbackState:  Flow<PlaybackState>
         get() = playbackViewModel.displayState
 
-    private val _state = MutableSharedFlow<PlaybackViewModel.State>()
     val state
-        get() = _state.asSharedFlow()
-
-    init {
-        playbackViewModel.stateEvents
-            .onEach { _state.emit(it) }
-            .launchIn(coroutineScope)
-        val last = playbackViewModel.stateEvents.replayCache.last()
-        if (last is PlaybackViewModel.State.LOADING) {
-            MainScope().launch {
-                _state.emit(last)
-            }
-        }
-    }
+        get() = playbackViewModel.stateEvents
 
     suspend fun playbackError(error: PlaybackThrowable) {
         playbackViewModel.playbackError(error)

@@ -75,6 +75,7 @@ abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider,
     }
     private fun loadLinkStreamForChannelJob(channel: TVChannel): Job {
         return CoroutineScope(Dispatchers.IO + coroutineContext).launch {
+            playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
             playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING(PrepareStreamLinkData.factory(channel)))
             tvChannelViewModel.loadLinkStreamForChannel(channel)
             val data = StreamLinkData.TVStreamLinkData(tvWithLinkStream.receive())
