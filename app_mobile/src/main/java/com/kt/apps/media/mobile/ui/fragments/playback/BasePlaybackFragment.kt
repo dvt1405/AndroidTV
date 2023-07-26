@@ -5,7 +5,9 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.widget.ImageButton
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.lifecycle.*
+import com.google.ads.interactivemedia.v3.internal.it
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.video.VideoSize
@@ -143,6 +145,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         fullScreenButton.setOnClickListener {
             callback?.onOpenFullScreen()
         }
+
     }
 
 
@@ -288,6 +291,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             LinkStream(it, data.webDetailPage, data.webDetailPage)
         }, data.isHls, data.itemMetaData , playerListener)
         binding.exoPlayer.player = exoPlayerManager.exoPlayer
+        binding.exoPlayer.controllerShowTimeoutMs = -1
         title.emit(data.title)
     }
 

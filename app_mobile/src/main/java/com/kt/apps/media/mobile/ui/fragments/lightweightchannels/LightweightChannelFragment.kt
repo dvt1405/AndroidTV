@@ -27,25 +27,29 @@ class LightweightChannelFragment : BaseFragment<FragmentLightweightChannelBindin
     override val screenName: String
         get() = "Lightweight channel"
 
+    override fun initView(savedInstanceState: Bundle?) {
+
+    }
+
     @Inject
     lateinit var factory: ViewModelProvider.Factory
 
     private val recyclerView by lazy {
-        binding.listChannelRecyclerview
+        binding.channelList
     }
 
-    private val adapter by lazy {
-        LightweightChannelAdapter().apply {
-            onChildItemClickListener = { item, _ ->
-                when (item) {
-                    is ChannelElement.TVChannelElement -> tvChannelViewModel?.loadLinkStreamForChannel(
-                        item.model
-                    )
-                    else -> {}
-                }
-            }
-        }
-    }
+//    private val adapter by lazy {
+//        LightweightChannelAdapter().apply {
+//            onChildItemClickListener = { item, _ ->
+//                when (item) {
+//                    is ChannelElement.TVChannelElement -> tvChannelViewModel?.loadLinkStreamForChannel(
+//                        item.model
+//                    )
+//                    else -> {}
+//                }
+//            }
+//        }
+//    }
 
     private val tvChannelViewModel: TVChannelViewModel? by lazy {
         activity?.run {
@@ -57,17 +61,6 @@ class LightweightChannelFragment : BaseFragment<FragmentLightweightChannelBindin
         MutableStateFlow<List<TVChannel>>(emptyList())
     }
 
-    override fun initView(savedInstanceState: Bundle?) {
-        recyclerView.apply {
-            adapter = this@LightweightChannelFragment.adapter
-            layoutManager = LinearLayoutManager(context).apply {
-                isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 9
-            }
-            setHasFixedSize(true)
-            setItemViewCacheSize(9)
-        }
-    }
 
     override fun initAction(savedInstanceState: Bundle?) {
         tvChannelViewModel?.apply {
@@ -90,12 +83,13 @@ class LightweightChannelFragment : BaseFragment<FragmentLightweightChannelBindin
     }
 
     private fun reloadOriginalSource(data: List<TVChannel>) {
-        val grouped = groupAndSort(data).map {
-            Pair(
-                it.first,
-                it.second.map { tvChannel -> ChannelElement.TVChannelElement(tvChannel) })
-        }
-        adapter.onRefresh(grouped)
+//        val grouped = groupAndSort(data).map {
+//            Pair(
+//                it.first,
+//                it.second.map { tvChannel -> ChannelElement.TVChannelElement(tvChannel) })
+//        }
+//        adapter.onRefresh(grouped)
+        recyclerView.reloadAllData(data.map { ChannelElement.TVChannelElement(it) })
     }
 
     companion object {

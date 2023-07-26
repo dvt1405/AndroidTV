@@ -3,6 +3,7 @@ package com.kt.apps.media.mobile.ui.view
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,7 +19,12 @@ import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.channelItemDecoration
+import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.skeleton.KunSkeleton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class ChannelListView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -41,23 +47,23 @@ class ChannelListView @JvmOverloads constructor(
         View.inflate(context, R.layout.channel_list_recyclerview, this)
     }
 
+    override fun setOnTouchListener(l: OnTouchListener?) {
+        recyclerView?.setOnTouchListener(l)
+    }
+
     override fun onFinishInflate() {
         super.onFinishInflate()
         recyclerView.apply {
             adapter = this@ChannelListView._adapter
             layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
-
+                isItemPrefetchEnabled = true
+                initialPrefetchItemCount = 12
             }
-//            layoutManager = FlexboxLayoutManager(context).apply {
-//                isItemPrefetchEnabled = true
-//                flexDirection = FlexDirection.ROW
-//                justifyContent = JustifyContent.FLEX_START
-//            }
-//            setHasFixedSize(true)
-//            addItemDecoration(channelItemDecoration)
+            setItemViewCacheSize(12)
+            isNestedScrollingEnabled = true
+            addItemDecoration(channelItemDecoration)
         }
     }
-
     fun changeDisplayStyle(style: DisplayStyle) {
         recyclerView.layoutManager = when(style) {
             DisplayStyle.FLEX -> FlexboxLayoutManager(context).apply {
@@ -73,7 +79,6 @@ class ChannelListView @JvmOverloads constructor(
 
     fun reloadAllData(list: List<IChannelElement>) {
         _adapter.onRefresh(list)
-        recyclerView.smoothScrollToPosition(0)
     }
 
 
@@ -95,6 +100,7 @@ class ChannelListView @JvmOverloads constructor(
         override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {
             super.onViewRecycled(holder)
             Log.d(TAG, "onViewRecycled: ${holder.viewBinding.title.text}")
+            holder.viewBinding.logo.setImageBitmap(null)
         }
     }
 }
