@@ -18,6 +18,7 @@ import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentTvChannelListBinding
 import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVChannelListAdapter
+import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -43,26 +44,15 @@ abstract class PerChannelListFragment : BaseFragment<FragmentTvChannelListBindin
         requireArguments().getString(EXTRA_TV_CHANNEL_CATEGORY)!!
     }
 
-    override fun initView(savedInstanceState: Bundle?) {
-        with(binding.verticalRecyclerView) {
-            adapter = _adapter
-            layoutManager = FlexboxLayoutManager(requireContext()).apply {
-                isItemPrefetchEnabled = true
-                flexDirection = FlexDirection.ROW
-                justifyContent = JustifyContent.FLEX_START
-            }
-            setHasFixedSize(true)
-            addItemDecoration(channelItemDecoration)
-        }
-    }
+    override fun initView(savedInstanceState: Bundle?) { }
 
     override fun initAction(savedInstanceState: Bundle?) {
         lifecycleScope.launchWhenStarted {
             tvViewModel.groupTVChannel.map {
                 it[filterCategory]
-            }.collectLatest {
-                _adapter.onRefresh(it ?: emptyList())
             }
+                .map { it?.map { tvChannel -> ChannelElement.TVChannelElement(tvChannel) } }
+                .collectLatest { binding.verticalRecyclerView.reloadAllData(it ?: emptyList() )}
         }
     }
 

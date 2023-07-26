@@ -118,17 +118,5 @@
 
 
 
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/red_btn_bg_color"
-        app:behavior_peekHeight="92dp"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
-        <com.kt.apps.media.mobile.ui.view.ChannelListView
-            android:id="@+id/channel_list"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
-    </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

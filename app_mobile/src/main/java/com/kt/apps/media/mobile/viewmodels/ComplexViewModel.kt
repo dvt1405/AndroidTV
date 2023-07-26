@@ -43,6 +43,9 @@ class ComplexViewModel(private val provider: ViewModelProvider, scope: Coroutine
         get() = extensionViewModel.addSourceState
             .onEach { Log.d(TAG, "addSourceState: $it ") }
 
+    val playbackState
+        get() = playbackViewModel.stateEvents
+
     val playbackLoadEvent
         get() = playbackViewModel.stateEvents
             .mapNotNull { it as? PlaybackViewModel.State.LOADING }

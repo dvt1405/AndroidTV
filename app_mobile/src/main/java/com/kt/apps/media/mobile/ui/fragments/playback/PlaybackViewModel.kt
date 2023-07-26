@@ -22,9 +22,9 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
     @Inject
     lateinit var actionLogger: IActionLogger
 
-    private var _stateEvents = MutableStateFlow<State>(State.IDLE)
+    private var _stateEvents = MutableSharedFlow<State>(replay = 1)
     val stateEvents
-        get() = _stateEvents.asSharedFlow()
+        get() = _stateEvents
 
 
     private val _displayState = MutableStateFlow(PlaybackState.Fullscreen)

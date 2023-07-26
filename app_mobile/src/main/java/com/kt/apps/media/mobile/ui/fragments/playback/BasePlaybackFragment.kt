@@ -15,7 +15,6 @@ import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.fadeIn
 import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
@@ -25,7 +24,7 @@ import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.complex.PlaybackState
 import com.kt.apps.media.mobile.utils.clicks
-import com.kt.apps.media.mobile.viewmodels.BasePlaybackControlViewModel
+import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -85,18 +84,18 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         binding.exoPlayer.findViewById(R.id.title)
     }
 
-    private val title = MutableSharedFlow<String>()
+    private val title = MutableStateFlow<String>("")
     private val isProgressing = MutableSharedFlow<Boolean>()
 
     private var shouldShowChannelList: Boolean = false
 
-    protected abstract val playbackViewModel: BasePlaybackControlViewModel
+    protected abstract val playbackViewModel: BasePlaybackInteractor
 
-    private val playerListener: Player.Listener = object: Player.Listener {
+    private var playerListener: Player.Listener = object: Player.Listener {
         override fun onPlayerError(error: PlaybackException) {
             super.onPlayerError(error)
             Log.d(TAG, "onPlayerError: $error")
-            MainScope().launch {
+            lifecycleScope.launchWhenStarted {
                 playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
             }
         }
@@ -110,7 +109,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             super.onIsPlayingChanged(isPlaying)
             Log.d(TAG, "onStateChange onIsPlayingChanged: $isPlaying")
             if (isPlaying) {
-                MainScope().launch {
+                lifecycleScope.launchWhenStarted {
                     isProgressing.emit(false)
                 }
             }
@@ -120,7 +119,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             super.onIsLoadingChanged(isLoading)
             Log.d(TAG, "onStateChange onIsLoadingChanged: $isLoading")
             if (isLoading) {
-                MainScope().launch {
+                lifecycleScope.launchWhenStarted {
                     isProgressing.emit(true)
                 }
             }
@@ -159,7 +158,6 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         }
         return false
     }
-
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
         Log.d(TAG, "initAction:")
@@ -173,7 +171,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+        lifecycleScope.launchWhenCreated {
             playbackViewModel.state
                 .collectLatest { state ->
                     Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
@@ -194,8 +192,9 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
-        lifecycleScope.launchWhenStarted {
-            title.collectLatest {
+        lifecycleScope.launchWhenCreated {
+            title.collect {
+                Log.d(TAG, "initAction: state title $it ${this@BasePlaybackFragment}")
                 titleLabel.text = it
                 binding.minimalTitleTv?.text = it
             }
@@ -225,6 +224,12 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         _cachePlayingState = exoPlayerManager.exoPlayer?.isPlaying ?: false
         exoPlayerManager.pause()
         shouldShowChannelList = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d(TAG, "onDestroy: ")
+        exoPlayerManager.detach(playerListener)
     }
 
     override fun onResume() {
@@ -273,6 +278,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
         Log.d(TAG, "preparePlayView: $data")
         exoPlayerManager.exoPlayer?.stop()
         isProgressing.emit(true)
+        Log.d(TAG, "initAction: state preparePlayView ${data.title} ${this@BasePlaybackFragment}")
         title.emit("${data.title} Loading")
     }
 

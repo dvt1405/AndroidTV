@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.ui.view
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -11,6 +12,7 @@ import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
@@ -27,20 +29,6 @@ class ChannelListView @JvmOverloads constructor(
     private val recyclerView by lazy {
         findViewById<RecyclerView>(R.id.main_channel_recycler_view)
     }
-
-    private val skeletonScreen by lazy {
-        recyclerView.let {
-            KunSkeleton.bind(it)
-                .adapter(_adapter)
-                .itemCount(10)
-                .recyclerViewLayoutItem(
-                    R.layout.item_row_channel_skeleton,
-                    R.layout.item_channel_skeleton
-                )
-                .build()
-        }
-    }
-
     var onChildItemClickListener: (IChannelElement, Int) -> Unit = { _, _ -> }
 
     private val _adapter by lazy { Adapter().apply {
@@ -56,13 +44,17 @@ class ChannelListView @JvmOverloads constructor(
     override fun onFinishInflate() {
         super.onFinishInflate()
         recyclerView.apply {
-            layoutManager = FlexboxLayoutManager(context).apply {
-                isItemPrefetchEnabled = true
-                flexDirection = FlexDirection.ROW
-                justifyContent = JustifyContent.FLEX_START
+            adapter = this@ChannelListView._adapter
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
+
             }
-            setHasFixedSize(true)
-            addItemDecoration(channelItemDecoration)
+//            layoutManager = FlexboxLayoutManager(context).apply {
+//                isItemPrefetchEnabled = true
+//                flexDirection = FlexDirection.ROW
+//                justifyContent = JustifyContent.FLEX_START
+//            }
+//            setHasFixedSize(true)
+//            addItemDecoration(channelItemDecoration)
         }
     }
 
@@ -75,22 +67,15 @@ class ChannelListView @JvmOverloads constructor(
             }
             DisplayStyle.HORIZONTAL_LINEAR -> LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
                 isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 9
             }
         }
     }
 
     fun reloadAllData(list: List<IChannelElement>) {
         _adapter.onRefresh(list)
+        recyclerView.smoothScrollToPosition(0)
     }
 
-    fun showHideSkeleton(isShow: Boolean) {
-        if (isShow) {
-            skeletonScreen.run {  }
-        } else {
-            skeletonScreen.hide()
-        }
-    }
 
     class Adapter: BaseAdapter<IChannelElement, ItemChannelBinding>() {
         override val itemLayoutRes: Int
@@ -109,7 +94,7 @@ class ChannelListView @JvmOverloads constructor(
 
         override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {
             super.onViewRecycled(holder)
-            holder.viewBinding.logo.setImageBitmap(null)
+            Log.d(TAG, "onViewRecycled: ${holder.viewBinding.title.text}")
         }
     }
 }

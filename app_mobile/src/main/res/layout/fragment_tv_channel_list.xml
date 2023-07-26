@@ -6,20 +6,8 @@
     <data>
 
     </data>
-
-    <androidx.recyclerview.widget.RecyclerView
+    <com.kt.apps.media.mobile.ui.view.ChannelListView
         android:id="@+id/vertical_recycler_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/black"
-        android:orientation="vertical"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        app:spanCount="3"
-        tools:itemCount="20"
-        tools:spanCount="3"
-        android:requiresFadingEdge="vertical"
-        android:fadingEdgeLength="60dp"
-        >
-
-    </androidx.recyclerview.widget.RecyclerView>
+        android:layout_height="match_parent" />
 </layout>

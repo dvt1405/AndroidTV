@@ -1,9 +1,7 @@
 package com.kt.apps.media.mobile.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.extensions.ExtensionsChannel
-import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.expandUrl
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
@@ -11,12 +9,11 @@ import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.utils.asFlow
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
-class IPTVListViewModel(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext, private val category: String) {
+class IPTVListInteractor(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext, private val category: String) {
     private val extensionViewModel: ExtensionsViewModel by lazy {
         provider[ExtensionsViewModel::class.java]
     }
@@ -46,7 +43,7 @@ class IPTVListViewModel(private val provider: ViewModelProvider, private val cor
     }
 
     suspend fun loadIPTVJob(data: ExtensionsChannel) {
-        Log.d(TAG, "onStartLoading loadIPTVJob: ${data.tvChannelName}")
+        playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
         playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING(PrepareStreamLinkData.factory(data)))
         val loadedData = suspendCancellableCoroutine { cont ->
             val result = loadIPTV(data)

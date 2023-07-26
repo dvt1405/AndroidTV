@@ -154,6 +154,13 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
         }
 
+        lifecycleScope.launchWhenStarted {
+            viewModel.playbackState
+                .collect {
+                    Log.d(TAG, "initAction - playbackState: $it")
+                }
+        }
+
         viewModel.playbackLoadEvent
             .onEach {
                 loadPlayback(it.data)

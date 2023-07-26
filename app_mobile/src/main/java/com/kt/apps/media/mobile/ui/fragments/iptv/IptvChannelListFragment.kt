@@ -5,28 +5,20 @@ import android.util.Log
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentChannelListBinding
-import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
-import com.kt.apps.media.mobile.ui.fragments.dialog.JobQueue
 import com.kt.apps.media.mobile.ui.fragments.tv.PerChannelListFragment
 import com.kt.apps.media.mobile.ui.main.ChannelElement
-import com.kt.apps.media.mobile.ui.main.IChannelElement
-import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
 import com.kt.apps.media.mobile.ui.view.ChannelListData
 import com.kt.apps.media.mobile.ui.view.childItemClicks
 import com.kt.apps.media.mobile.utils.*
-import com.kt.apps.media.mobile.viewmodels.IPTVListViewModel
-import com.kt.skeleton.KunSkeleton
+import com.kt.apps.media.mobile.viewmodels.IPTVListInteractor
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 
 class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
     @Inject
@@ -44,7 +36,7 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
 
     private val viewModels by lazy {
         activity?.let {
-            IPTVListViewModel(ViewModelProvider(it, factory), viewLifecycleOwner.lifecycleScope.coroutineContext, filterCategory)
+            IPTVListInteractor(ViewModelProvider(it, factory), viewLifecycleOwner.lifecycleScope.coroutineContext, filterCategory)
         }
     }
 
@@ -83,16 +75,11 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
         recyclerView.childItemClicks()
             .filter { it.data is ChannelElement.ExtensionChannelElement }
             .onEach {
-//                delay(1000)
                 Log.d(TAG, "childItemClicks: ${(it.data as ChannelElement.ExtensionChannelElement).model}")
-                jobQueue.submit(Dispatchers.Default) {
-                    viewModels?.loadIPTVJob(it.data.model)
-                }
-//                viewModels?.loadIPTVJob((it.data as ChannelElement.ExtensionChannelElement).model)
-//                previousJob = viewModels?.loadIPTVJob((it.data as ChannelElement.ExtensionChannelElement).model)
-//                previousJob?.invokeOnCompletion {
-//                    previousJob = null
+//                jobQueue.submit(Dispatchers.Default) {
+//
 //                }
+                viewModels?.loadIPTVJob(it.data.model)
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }

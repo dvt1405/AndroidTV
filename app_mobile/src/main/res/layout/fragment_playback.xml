@@ -18,6 +18,8 @@
             app:controller_layout_id="@layout/exo_player_simple_controller"
             app:player_layout_id="@layout/exo_player_custom_ui"
             app:use_controller="true" />
+
+
     </FrameLayout>
 
 </layout>
