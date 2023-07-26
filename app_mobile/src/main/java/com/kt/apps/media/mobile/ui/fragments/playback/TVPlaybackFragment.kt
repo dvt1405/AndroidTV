@@ -1,5 +1,7 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
+import android.annotation.SuppressLint
+import android.graphics.PointF
 import android.os.Bundle
 import android.util.Log
 import android.view.GestureDetector
@@ -28,23 +30,23 @@ class TVPlaybackFragment : BasePlaybackFragment() {
     private val channelListRecyclerView: ChannelListView? by lazy {
 //        binding.exoPlayer.findViewById(R.id.channel_list)
         binding.channelList
+//        null
     }
 
 
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun initView(savedInstanceState: Bundle?) {
         super.initView(savedInstanceState)
-//        channelListRecyclerView.changeDisplayStyle(ChannelListView.DisplayStyle.HORIZONTAL_LINEAR)
-        var lastX = 0
-        var lastY = 0
-        channelListRecyclerView?.setOnTouchListener { v, event ->
-            Log.d(TAG, "initView: setOnTouchListener $event")
-            if (event.action == MotionEvent.ACTION_MOVE) {
-                channelListRecyclerView?.apply {
-                    animate().x(x).y(event.rawY).setDuration(0).start()
+
+        channelListRecyclerView?.apply {
+            setOnTouchListener { _, motionEvent ->
+                if (binding.motionLayout?.onTouchEvent(motionEvent)?.not() == true) {
+                    this.onTouchEvent(motionEvent)
+                } else {
+                    this.onTouchEvent(motionEvent)
                 }
             }
-            false
         }
     }
 
@@ -54,6 +56,7 @@ class TVPlaybackFragment : BasePlaybackFragment() {
         lifecycleScope.launchWhenStarted {
             _playbackViewModel.channelElementList.collectLatest {
                 channelListRecyclerView?.reloadAllData(it)
+//                binding.channelListTemp?.reloadAllData(it)
             }
         }
 

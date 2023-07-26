@@ -76,7 +76,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 startId: Int,
                 endId: Int
             ) {
-                Log.d(TAG, "onTransitionStarted: $startId $endId")
+                Log.d(TAG, "onTransitionStarted: ${motionLayout?.startState} ${motionLayout?.endState} ${motionLayout?.currentState}")
             }
 
             override fun onTransitionChange(
@@ -90,12 +90,6 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
             override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
                 Log.d(TAG, "onTransitionCompleted: $currentId ${R.id.fullscreen}")
-                onPlaybackStateChange(when(currentId) {
-                    R.id.fullscreen -> PlaybackState.Fullscreen
-                    R.id.end -> PlaybackState.Minimal
-                    R.id.start -> PlaybackState.Invisible
-                    else -> PlaybackState.Invisible
-                })
             }
 
             override fun onTransitionTrigger(
@@ -104,7 +98,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 positive: Boolean,
                 progress: Float
             ) {
-                Log.d(TAG, "onTransitionChange: $triggerId")
+                Log.d(TAG, "onTransitionTrigger: $triggerId")
             }
 
         })
@@ -123,28 +117,28 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         val isFullScreenState = motionLayout?.currentState == R.id.fullscreen
         if (state != State.FULLSCREEN || !isFullScreenState) {
             motionLayout?.setTransitionDuration(250)
-            motionLayout?.transitionToState(R.id.fullscreen)
+            transitionToState(R.id.fullscreen)
         }
         videoIsLoading = false
     }
 
     override fun onOpenFullScreen() {
         if (state != State.FULLSCREEN) {
-            motionLayout?.transitionToState(R.id.fullscreen)
+            transitionToState(R.id.fullscreen)
             State.FULLSCREEN
         } else {
-            motionLayout?.transitionToState(R.id.end)
+            transitionToState(R.id.end)
             State.MINIMAL
         }
     }
 
     override fun onCloseMinimal() {
-        motionLayout?.transitionToState(R.id.start)
+        transitionToState(R.id.start)
     }
 
     override fun onBackEvent(): Boolean {
         if (state == State.FULLSCREEN) {
-            motionLayout?.transitionToState(R.id.end)
+            transitionToState(R.id.end)
             return true
         }
         return false
@@ -152,10 +146,10 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
     override fun onReset(isPlaying: Boolean) {
         if (isPlaying) {
-            motionLayout?.transitionToState(R.id.fullscreen)
+            transitionToState(R.id.fullscreen)
             State.FULLSCREEN
         } else {
-            motionLayout?.transitionToState(R.id.start)
+            transitionToState(R.id.start)
             State.IDLE
         }
     }
@@ -165,11 +159,11 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         if (videoIsLoading) return
         if (isPause) {
             if (state == State.FULLSCREEN) {
-                motionLayout?.transitionToState(R.id.end)
+                transitionToState(R.id.end)
             }
         } else {
             if (state != State.FULLSCREEN) {
-                motionLayout?.transitionToState(R.id.fullscreen)
+                transitionToState(R.id.fullscreen)
             }
         }
 
@@ -184,8 +178,18 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         if (fragmentContainerPlayback?.visibility == View.VISIBLE) else return
         fragmentContainerPlayback?.getHitRect(hitRect)
         if (hitRect.contains(ev.x.toInt(), ev.y.toInt())) {
-            motionLayout?.transitionToState(R.id.fullscreen)
+            transitionToState(R.id.fullscreen)
         }
+    }
+
+    private fun transitionToState(id: Int) {
+        onPlaybackStateChange(when(id) {
+            R.id.fullscreen -> PlaybackState.Fullscreen
+            R.id.end -> PlaybackState.Minimal
+            R.id.start -> PlaybackState.Invisible
+            else -> PlaybackState.Invisible
+        })
+        motionLayout?.transitionToState(id)
     }
 
 }

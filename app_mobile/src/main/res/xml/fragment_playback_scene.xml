@@ -4,8 +4,10 @@
 
     <ConstraintSet android:id="@+id/start">
         <Constraint android:id="@+id/exo_player"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             />
 
         <Constraint android:id="@+id/minimal_layout"
@@ -13,6 +15,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
+            />
+
+        <Constraint android:id="@+id/channel_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="parent"
+            android:layout_marginTop="-88dp"
+            android:alpha="1"
             />
     </ConstraintSet>
 
@@ -30,9 +40,60 @@
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
             />
+        <Constraint android:id="@+id/channel_list"
+            android:alpha="0"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/show_list">
+        <Constraint android:id="@+id/exo_player"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="-88dp"
+            app:layout_constraintBottom_toTopOf="@id/channel_list"
+            />
+
+        <Constraint android:id="@+id/minimal_layout"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            />
+
+        <Constraint android:id="@+id/channel_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="20dp"
+            android:alpha="1"
+            />
     </ConstraintSet>
 
     <Transition
         app:constraintSetEnd="@id/end"
         app:constraintSetStart="@+id/start" />
+
+    <Transition
+        app:constraintSetEnd="@id/show_list"
+        app:constraintSetStart="@+id/start"
+        app:duration="100"
+        >
+        <OnSwipe
+            app:touchAnchorId="@id/channel_list"
+            app:dragDirection="dragUp"
+            app:touchAnchorSide="top"
+            app:onTouchUp="autoComplete"
+            app:dragThreshold="20"
+            />
+    </Transition>
 </MotionScene>

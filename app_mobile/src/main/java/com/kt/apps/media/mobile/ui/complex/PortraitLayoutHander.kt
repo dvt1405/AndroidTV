@@ -114,7 +114,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
                 positive: Boolean,
                 progress: Float
             ) {
-                Log.d(TAG, "onTransitionChange: $triggerId")
+                Log.d(TAG, "onTransitionTrigger: $triggerId")
                 onPlaybackStateChange(when(triggerId) {
                     R.id.fullscreen -> PlaybackState.Fullscreen
                     R.id.end -> PlaybackState.Minimal

@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.flexbox.FlexDirection
@@ -28,7 +29,7 @@ import kotlinx.coroutines.launch
 
 class ChannelListView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : FrameLayout(context, attrs) {
+) : LinearLayout(context, attrs) {
     enum class DisplayStyle {
         FLEX, HORIZONTAL_LINEAR
     }
@@ -57,11 +58,12 @@ class ChannelListView @JvmOverloads constructor(
             adapter = this@ChannelListView._adapter
             layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
                 isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 12
+                initialPrefetchItemCount = 9
             }
-            setItemViewCacheSize(12)
-            isNestedScrollingEnabled = true
+            setItemViewCacheSize(9)
+            isNestedScrollingEnabled = false
             addItemDecoration(channelItemDecoration)
+            setHasFixedSize(false)
         }
     }
     fun changeDisplayStyle(style: DisplayStyle) {
@@ -100,7 +102,6 @@ class ChannelListView @JvmOverloads constructor(
         override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {
             super.onViewRecycled(holder)
             Log.d(TAG, "onViewRecycled: ${holder.viewBinding.title.text}")
-            holder.viewBinding.logo.setImageBitmap(null)
         }
     }
 }
