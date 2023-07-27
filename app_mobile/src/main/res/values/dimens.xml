@@ -3,4 +3,5 @@
 
     <dimen name="common_padding">16dp</dimen>
     <dimen name="search_box_corner_radius">40dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
 </resources>

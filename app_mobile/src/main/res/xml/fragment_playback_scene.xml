@@ -93,7 +93,8 @@
             app:dragDirection="dragUp"
             app:touchAnchorSide="top"
             app:onTouchUp="autoComplete"
-            app:dragThreshold="20"
+            app:dragThreshold="40"
+            app:moveWhenScrollAtTop="true"
             />
     </Transition>
 </MotionScene>

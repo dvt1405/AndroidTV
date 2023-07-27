@@ -22,10 +22,7 @@ import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.skeleton.KunSkeleton
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class ChannelListView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -51,6 +48,11 @@ class ChannelListView @JvmOverloads constructor(
     override fun setOnTouchListener(l: OnTouchListener?) {
         recyclerView?.setOnTouchListener(l)
     }
+
+    fun addOnScrollListener(l: RecyclerView.OnScrollListener) {
+        recyclerView?.addOnScrollListener(l)
+    }
+
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -81,6 +83,10 @@ class ChannelListView @JvmOverloads constructor(
 
     fun reloadAllData(list: List<IChannelElement>) {
         _adapter.onRefresh(list)
+        MainScope().launch {
+            delay(200)
+            recyclerView.stopScroll()
+        }
     }
 
 

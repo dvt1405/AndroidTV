@@ -4,9 +4,15 @@ import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
+import android.view.animation.AccelerateInterpolator
 import android.widget.ImageButton
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.lifecycle.*
+import androidx.transition.AutoTransition
+import androidx.transition.Transition
+import androidx.transition.TransitionManager
 import com.google.ads.interactivemedia.v3.internal.it
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
@@ -17,6 +23,7 @@ import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
@@ -24,8 +31,10 @@ import com.kt.apps.media.mobile.databinding.FragmentPlaybackBinding
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
+import com.kt.apps.media.mobile.ui.complex.LandscapeLayoutHandler
 import com.kt.apps.media.mobile.ui.complex.PlaybackState
-import com.kt.apps.media.mobile.utils.clicks
+import com.kt.apps.media.mobile.ui.complex.TransitionCallback
+import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -39,6 +48,10 @@ interface IPlaybackAction {
     fun onPlayAction(userAction: Boolean)
 
     fun onExitMinimal()
+}
+
+enum class DisplayState {
+    Fullscreen, Minimal
 }
 
 abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
@@ -88,6 +101,8 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
 
     private val title = MutableStateFlow<String>("")
     private val isProgressing = MutableSharedFlow<Boolean>()
+    private val isShowChannelList = MutableStateFlow(false)
+    private val displayState = MutableStateFlow(DisplayState.Fullscreen)
 
     private var shouldShowChannelList: Boolean = false
 
@@ -164,16 +179,6 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
         Log.d(TAG, "initAction:")
-        playbackViewModel.playbackState
-            .onEach {
-                if (it == PlaybackState.Minimal) {
-                    changeMinimalLayout()
-                } else {
-                    changeFullScreenLayout()
-                }
-            }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-
         lifecycleScope.launchWhenCreated {
             playbackViewModel.state
                 .collectLatest { state ->
@@ -219,6 +224,32 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
                 }
             }.launchIn(viewLifecycleOwner.lifecycleScope + Dispatchers.Main)
 
+
+        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf(
+            {
+                displayState.collectLatest {
+                    when (it) {
+                        DisplayState.Fullscreen -> changeFullScreenLayout()
+                        DisplayState.Minimal -> changeMinimalLayout()
+                    }
+                }
+            },
+            {
+                playbackViewModel.playbackState.map {
+                    when (it) {
+                        PlaybackState.Fullscreen -> DisplayState.Fullscreen
+                        PlaybackState.Minimal -> DisplayState.Minimal
+                        else -> DisplayState.Fullscreen
+                    }
+                }.collectLatest { displayState.emit(it) }
+            },
+            {
+                isShowChannelList.collectLatest {
+                    if (displayState.value != DisplayState.Fullscreen) return@collectLatest
+                    if (it) showChannelList() else changeFullScreenLayout()
+                }
+            }
+        ))
     }
 
     override fun onStop() {
@@ -260,21 +291,72 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             })
     }
 
-    private fun changeFullScreenLayout() {
+    protected fun changeFullScreenLayout() {
         binding.minimalLayout?.fadeOut {
             binding.exoPlayer.useController = true
             binding.exoPlayer.showController()
         }
 
-        binding.motionLayout?.transitionToState(R.id.start)
-    }
+        safeLet(binding.motionLayout, binding.exoPlayer, binding.minimalLayout, binding.channelList) {
+            mainLayout, exoplayer,  minimal, list ->
+            performTransition(mainLayout, ConstraintSet().apply {
+                clone(this)
+                arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
+                    clear(it)
+                }
 
+                fillParent(exoplayer.id)
+                setVisibility(minimal.id, View.GONE)
+                matchParentWidth(list.id)
+                connect(list.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+                constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
+                setMargin(list.id, ConstraintSet.TOP, (-88).dpToPx())
+            })
+        }
+    }
     private fun changeMinimalLayout() {
         binding.exoPlayer.apply {
             useController = false
             hideController()
         }
-        binding.motionLayout?.transitionToState(R.id.end)
+        safeLet(binding.motionLayout, binding.exoPlayer, binding.minimalLayout, binding.channelList) {
+                mainLayout, exoplayer,  minimal, list ->
+            performTransition(mainLayout, ConstraintSet().apply {
+                clone(this)
+                arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
+                    clear(it)
+                }
+
+                setVisibility(list.id, View.GONE)
+                matchParentWidth(list.id)
+                matchParentWidth(minimal.id)
+                matchParentWidth(exoplayer.id)
+                constrainHeight(minimal.id, ConstraintSet.WRAP_CONTENT)
+                connect(exoplayer.id, ConstraintSet.BOTTOM, minimal.id, ConstraintSet.TOP)
+                alignParent(minimal.id, ConstraintSet.BOTTOM)
+                alignParent(exoplayer.id, ConstraintSet.TOP)
+            })
+        }
+    }
+
+
+    protected fun showChannelList() {
+        safeLet(binding.motionLayout, binding.exoPlayer, binding.channelList) {
+            mainLayout, exoplayer, list ->
+            performTransition(mainLayout, ConstraintSet().apply {
+                clone(this)
+                clear(exoplayer.id)
+                listOf(ConstraintSet.START, ConstraintSet.TOP, ConstraintSet.END).forEach {
+                    alignParent(exoplayer.id, it, 20.dpToPx())
+                }
+//                alignParent(exoplayer.id, ConstraintSet.BOTTOM, (88).dpToPx())
+                connect(exoplayer.id, ConstraintSet.BOTTOM, list.id, ConstraintSet.TOP, (-88).dpToPx())
+                clear(list.id)
+                constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
+                matchParentWidth(list.id)
+                alignParent(list.id, ConstraintSet.BOTTOM, (-20).dpToPx())
+            })
+        }
     }
 
     private suspend fun preparePlayView(data: PrepareStreamLinkData) {
@@ -291,8 +373,20 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>() {
             LinkStream(it, data.webDetailPage, data.webDetailPage)
         }, data.isHls, data.itemMetaData , playerListener)
         binding.exoPlayer.player = exoPlayerManager.exoPlayer
-        binding.exoPlayer.controllerShowTimeoutMs = -1
         title.emit(data.title)
     }
 
+    private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, onStart: (() -> Unit)? = null) {
+        TransitionManager.beginDelayedTransition(layout, AutoTransition().apply {
+            interpolator = AccelerateInterpolator()
+            duration = 500
+            addListener(object: TransitionCallback() {
+                override fun onTransitionStart(transition: Transition) {
+                    super.onTransitionStart(transition)
+                    onStart?.invoke()
+                }
+            })
+        })
+        set.applyTo(layout)
+    }
 }

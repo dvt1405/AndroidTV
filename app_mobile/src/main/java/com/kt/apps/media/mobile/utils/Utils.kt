@@ -14,11 +14,10 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.annotation.CheckResult
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.android.material.textfield.TextInputEditText
@@ -267,3 +266,45 @@ inline val channelItemDecoration
             outRect.bottom = 40.dpToPx()
         }
     }
+
+inline fun <T1: Any, T2: Any, R: Any> safeLet(p1: T1?, p2: T2?, block: (T1, T2)->R?): R? {
+    return if (p1 != null && p2 != null) block(p1, p2) else null
+}
+inline fun <T1: Any, T2: Any, T3: Any, R: Any> safeLet(p1: T1?, p2: T2?, p3: T3?, block: (T1, T2, T3)->R?): R? {
+    return if (p1 != null && p2 != null && p3 != null) block(p1, p2, p3) else null
+}
+inline fun <T1: Any, T2: Any, T3: Any, T4: Any, R: Any> safeLet(p1: T1?, p2: T2?, p3: T3?, p4: T4?, block: (T1, T2, T3, T4)->R?): R? {
+    return if (p1 != null && p2 != null && p3 != null && p4 != null) block(p1, p2, p3, p4) else null
+}
+inline fun <T1: Any, T2: Any, T3: Any, T4: Any, T5: Any, R: Any> safeLet(p1: T1?, p2: T2?, p3: T3?, p4: T4?, p5: T5?, block: (T1, T2, T3, T4, T5)->R?): R? {
+    return if (p1 != null && p2 != null && p3 != null && p4 != null && p5 != null) block(p1, p2, p3, p4, p5) else null
+}
+
+fun ConstraintSet.fillParent(viewId: Int) {
+    arrayListOf(ConstraintSet.START, ConstraintSet.TOP, ConstraintSet.END, ConstraintSet.BOTTOM).forEach {
+        connect(viewId, it, ConstraintSet.PARENT_ID, it)
+    }
+}
+
+fun ConstraintSet.matchParentWidth(viewId: Int) {
+    connect(viewId, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+    connect(viewId, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+    constrainedWidth(viewId, true)
+}
+
+fun ConstraintSet.alignParent(viewId: Int, side: Int, margin: Int = 0) {
+    connect(viewId, side, ConstraintSet.PARENT_ID, side)
+    setMargin(viewId, side, margin)
+}
+
+
+fun LifecycleOwner.repeatLaunchsOnLifeCycle(
+    state: Lifecycle.State,
+    blocks: List<suspend CoroutineScope.() -> Unit>
+) {
+    blocks.forEach {
+        lifecycleScope.launch {
+            repeatOnLifecycle(state, it)
+        }
+    }
+}

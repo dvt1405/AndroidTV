@@ -19,13 +19,9 @@ import com.kt.apps.core.utils.*
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
 import com.kt.apps.media.mobile.models.*
-import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
-import com.kt.apps.media.mobile.ui.fragments.playback.BasePlaybackFragment
-import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
-import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
-import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.*
 import com.kt.apps.media.mobile.viewmodels.ComplexViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -48,8 +44,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     private var layoutHandler: ComplexLayoutHandler? = null
 
-//    private val tvPlaybackFragment = TVPlaybackFragment()
-//    private val ipTVPlaybackFragment = IPTVPlaybackFragment()
+    private var touchListenerList: MutableList<IDispatchTouchListener> = mutableListOf()
 
     private val playbackViewModel: PlaybackViewModel by lazy {
         ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
@@ -196,6 +191,8 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
             }
         }
+        touchListenerList.clear()
+        touchListenerList.add(tvPlaybackFragment as IDispatchTouchListener)
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragment_container_playback, tvPlaybackFragment)
             .commit()
@@ -217,6 +214,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         layoutHandler?.onTouchEvent(ev)
+        touchListenerList.forEach {
+            it.onDispatchTouchEvent(null, ev)
+        }
         return super.dispatchTouchEvent(ev)
     }
 
