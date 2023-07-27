@@ -22,6 +22,7 @@ import com.kt.apps.media.mobile.models.*
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.*
+import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.ComplexViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -93,6 +94,10 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
             }
         }
+
+//        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf {
+//            layoutHandler?.onCloseMinimal()
+//        })
 
         val addSourceState = MutableStateFlow<AddSourceState>(AddSourceState.IDLE)
         viewModel.addSourceState.onEach { addSourceState.value = it }.launchIn(lifecycleScope)

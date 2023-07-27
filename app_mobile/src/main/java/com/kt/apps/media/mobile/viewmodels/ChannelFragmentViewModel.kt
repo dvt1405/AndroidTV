@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
@@ -44,8 +45,6 @@ abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider,
         provider[PlaybackViewModel::class.java]
     }
 
-    private val tvWithLinkStream = Channel<TVChannelLinkStream>()
-
     val networkStatus: StateFlow<NetworkState>
         get() = networkStateViewModel.networkStatus
 
@@ -53,13 +52,6 @@ abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider,
     abstract val groupTVChannel: Flow<GroupTVChannel>
 
 
-    init {
-        tvChannelViewModel.tvWithLinkStreamLiveData.asSuccessFlow("initModel")
-            .onEach {
-                tvWithLinkStream.send(it)
-            }
-            .launchIn(CoroutineScope(coroutineContext))
-    }
     fun getListTVChannel(forceRefresh: Boolean) {
         tvChannelViewModel.getListTVChannel(forceRefresh)
     }
@@ -78,7 +70,9 @@ abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider,
             playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
             playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING(PrepareStreamLinkData.factory(channel)))
             tvChannelViewModel.loadLinkStreamForChannel(channel)
-            val data = StreamLinkData.TVStreamLinkData(tvWithLinkStream.receive())
+            val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.asFlow("loadLinkStreamForChannelJob")
+                .last()
+            val data = StreamLinkData.TVStreamLinkData(linkStream)
             playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
         }
     }

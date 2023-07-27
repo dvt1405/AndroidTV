@@ -37,6 +37,7 @@ open class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
             return true
         }
 
+
         override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
             Log.d(TAG, "onFling: $e1 $e2")
             var result = false
@@ -51,6 +52,8 @@ open class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
                             onSwipeLeft()
                         }
                         result = true
+                    } else {
+                        onFling()
                     }
                 } else if (abs(diffY) > SWIPE_THRESHOLD && abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                     if (diffY > 0) {
@@ -59,6 +62,8 @@ open class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
                         onSwipeTop()
                     }
                     result = true
+                } else {
+                    onFling()
                 }
             } catch (exception: Exception) {
                 exception.printStackTrace()
@@ -77,4 +82,6 @@ open class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
     open fun onSwipeTop() {}
 
     open fun onSwipeBottom() {}
+
+    open fun onFling() { }
 }

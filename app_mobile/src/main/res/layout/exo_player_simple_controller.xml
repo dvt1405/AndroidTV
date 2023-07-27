@@ -41,6 +41,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:paddingTop="64dp"
         android:paddingBottom="92dp"
+        android:clipToPadding="false"
         >
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tv_live_time"
@@ -75,6 +76,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginEnd="36dp"
             />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageButton

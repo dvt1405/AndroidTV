@@ -83,10 +83,6 @@ class ChannelListView @JvmOverloads constructor(
 
     fun reloadAllData(list: List<IChannelElement>) {
         _adapter.onRefresh(list)
-        MainScope().launch {
-            delay(200)
-            recyclerView.stopScroll()
-        }
     }
 
 

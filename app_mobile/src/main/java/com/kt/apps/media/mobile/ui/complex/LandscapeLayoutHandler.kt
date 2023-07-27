@@ -8,19 +8,20 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import androidx.constraintlayout.motion.widget.MotionLayout
-import androidx.constraintlayout.motion.widget.MotionLayout.TransitionListener
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.transition.AutoTransition
+import androidx.transition.ChangeBounds
+import androidx.transition.ChangeTransform
+import androidx.transition.Explode
+import androidx.transition.Fade
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
+import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.visible
-import com.kt.apps.media.mobile.R
-import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
+import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.fillParent
-import com.kt.apps.media.mobile.utils.hitRectOnScreen
 import com.kt.apps.media.mobile.utils.safeLet
 import java.lang.ref.WeakReference
 import kotlin.properties.Delegates
@@ -166,16 +167,24 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 fillParent(playback.id)
             }
 
-            TransitionManager.beginDelayedTransition(surfaceView, AutoTransition().apply {
-                interpolator = AccelerateInterpolator()
-                duration = 500
-                addListener(object: TransitionCallback() {
-                    override fun onTransitionStart(transition: Transition) {
-                        super.onTransitionStart(transition)
-                        this@LandscapeLayoutHandler.state = State.FULLSCREEN
-                    }
-                })
-            })
+            TransitionManager.beginDelayedTransition(
+                surfaceView,
+                TransitionSet().apply {
+                    ordering = TransitionSet.ORDERING_SEQUENTIAL
+                    addTransition(Fade(Fade.OUT))
+                        .addTransition(Explode  ())
+                        .addTransition(Fade(Fade.IN))
+
+                    interpolator = AccelerateInterpolator()
+                    duration = 500
+                    addListener(object: TransitionCallback() {
+                        override fun onTransitionStart(transition: Transition) {
+                            super.onTransitionStart(transition)
+                            this@LandscapeLayoutHandler.state = State.FULLSCREEN
+                        }
+                    })
+                }
+            )
             set.applyTo(surfaceView)
         }
     }
@@ -186,8 +195,8 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
             val set = ConstraintSet().apply {
                 clone(surfaceView)
                 clear(playback.id)
-                connect(playback.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-                connect(playback.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+                alignParent(playback.id, ConstraintSet.BOTTOM)
+                alignParent(playback.id, ConstraintSet.END)
                 constrainPercentWidth(playback.id, 0.4f)
                 constrainPercentHeight(playback.id, 0.5f)
             }
@@ -213,10 +222,9 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
             val set = ConstraintSet().apply {
                 clone(surfaceView)
                 clear(playback.id)
-                connect(playback.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-                connect(playback.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+                alignParent(playback.id, ConstraintSet.BOTTOM)
+                alignParent(playback.id, ConstraintSet.END)
             }
-
             TransitionManager.beginDelayedTransition(surfaceView, AutoTransition().apply {
                 interpolator = AccelerateInterpolator()
                 duration = 500
