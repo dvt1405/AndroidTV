@@ -3,12 +3,15 @@ package com.kt.apps.media.mobile.viewmodels
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.media.mobile.models.NetworkState
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.features.IFetchRadioChannel
 import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
+import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlin.coroutines.CoroutineContext
@@ -26,6 +29,10 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
 
     val playbackViewModel: PlaybackViewModel by lazy {
         provider[PlaybackViewModel::class.java]
+    }
+
+    val uiControlModel: UIControlViewModel by lazy {
+        provider[UIControlViewModel::class.java]
     }
 
     val networkStatus: StateFlow<NetworkState>
@@ -47,7 +54,7 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
 }
 
 class TVChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
-    : ChannelFragmentInteractors(provider, coroutineContext), IFetchTVChannelControl {
+    : ChannelFragmentInteractors(provider, coroutineContext) {
     override val listChannels: Flow<List<TVChannel>>
         get() = tvChannelViewModel.tvChannelLiveData.asFlow()
 
@@ -58,6 +65,11 @@ class TVChannelFragmentInteractors(private val provider: ViewModelProvider, priv
                 value.first to value.second
             }
         }
+
+    suspend fun openTVChannel(element: ChannelElement.TVChannelElement) {
+        uiControlModel.openPlayback(PrepareStreamLinkData.TV(element.model))
+    }
+
 }
 
 class RadioChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)

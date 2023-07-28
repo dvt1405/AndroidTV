@@ -7,8 +7,10 @@ import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.utils.await
 
-interface IFetchTVChannelControl {
+interface IFetchDataControl {
     val playbackViewModel: PlaybackViewModel
+}
+interface IFetchTVChannelControl: IFetchDataControl {
     val tvChannelViewModel: TVChannelViewModel
 }
 

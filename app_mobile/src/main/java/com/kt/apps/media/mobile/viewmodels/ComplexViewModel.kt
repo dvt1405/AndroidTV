@@ -11,6 +11,7 @@ import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -36,6 +37,10 @@ class ComplexViewModel(private val provider: ViewModelProvider, scope: Coroutine
         provider[PlaybackViewModel::class.java]
     }
 
+    private val uiControlViewModel by lazy {
+        provider[UIControlViewModel::class.java]
+    }
+
     val networkStatus: StateFlow<NetworkState>
         get() = networkStateViewModel.networkStatus
 
@@ -46,7 +51,6 @@ class ComplexViewModel(private val provider: ViewModelProvider, scope: Coroutine
     val playbackState
         get() = playbackViewModel.stateEvents
 
-    val playbackLoadEvent
-        get() = playbackViewModel.stateEvents
-            .mapNotNull { it as? PlaybackViewModel.State.LOADING }
+    val openPlaybackEvent
+        get() = uiControlViewModel.openPlayback
 }

@@ -19,7 +19,10 @@ class TVChannelsFragment: ChannelFragment() {
 
     override fun onClickItemChannel(channel: TVChannel) {
         lifecycleScope.launch {
-            _viewModel.loadLinkStreamChannel(ChannelElement.TVChannelElement(channel))
+            _viewModel.openTVChannel(ChannelElement.TVChannelElement(channel))
         }
+//        lifecycleScope.launch {
+//            _viewModel.loadLinkStreamChannel(ChannelElement.TVChannelElement(channel))
+//        }
     }
 }

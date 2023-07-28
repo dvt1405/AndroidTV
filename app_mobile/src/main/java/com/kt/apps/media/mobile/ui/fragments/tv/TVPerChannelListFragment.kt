@@ -29,7 +29,7 @@ class TVPerChannelListFragment : PerChannelListFragment() {
                 binding.verticalRecyclerView.childClicks()
                     .mapNotNull { it as? ChannelElement.TVChannelElement }
                     .collectLatest {
-                        _interactors.loadLinkStreamChannel(it)
+                        _interactors.openTVChannel(it)
                     }
             })
     }

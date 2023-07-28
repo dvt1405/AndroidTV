@@ -15,6 +15,7 @@ import com.kt.apps.media.mobile.ui.view.ChannelListData
 import com.kt.apps.media.mobile.ui.view.childItemClicks
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.IPTVListInteractor
+import com.kt.apps.media.mobile.viewmodels.features.loadIPTVJob
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -76,10 +77,9 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
             .filter { it.data is ChannelElement.ExtensionChannelElement }
             .onEach {
                 Log.d(TAG, "childItemClicks: ${(it.data as ChannelElement.ExtensionChannelElement).model}")
-//                jobQueue.submit(Dispatchers.Default) {
-//
-//                }
-                viewModels?.loadIPTVJob(it.data.model)
+                jobQueue.submit(Dispatchers.Default) {
+                    viewModels?.loadIPTVJob(it.data.model, filterCategory)
+                }
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }

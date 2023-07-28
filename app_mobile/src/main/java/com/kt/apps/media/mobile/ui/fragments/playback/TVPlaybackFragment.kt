@@ -139,39 +139,11 @@ class RadioPlaybackFragment: BasePlaybackFragment() {
         }
     }
     companion object {
-        val screenName: String = "TVPlaybackFragment"
+        const val screenName: String = "TVPlaybackFragment"
     }
 }
 
-class IPTVPlaybackFragment: BasePlaybackFragment() {
 
-    private val _playbackViewModel by lazy {
-        BasePlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
-    }
-    override val playbackViewModel: BasePlaybackInteractor
-        get() = _playbackViewModel
-
-    override fun provideMinimalLayout(): ConstraintSet? {
-        return safeLet(binding.motionLayout, binding.exoPlayer, binding.minimalLayout, binding.channelList) {
-                mainLayout, exoplayer,  minimal, list ->
-            ConstraintSet().apply {
-                clone(mainLayout)
-                arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
-                    clear(it)
-                }
-
-                setVisibility(list.id, View.GONE)
-                matchParentWidth(list.id)
-                matchParentWidth(minimal.id)
-                matchParentWidth(exoplayer.id)
-                constrainHeight(minimal.id, ConstraintSet.WRAP_CONTENT)
-                connect(exoplayer.id, ConstraintSet.BOTTOM, minimal.id, ConstraintSet.TOP)
-                alignParent(minimal.id, ConstraintSet.BOTTOM)
-                alignParent(exoplayer.id, ConstraintSet.TOP)
-            }
-        }
-    }
-}
 
 open class SimpleTransitionListener: MotionLayout.TransitionListener {
     override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {

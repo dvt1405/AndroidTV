@@ -62,7 +62,7 @@ class ChannelListView @JvmOverloads constructor(
         recyclerView.apply {
             adapter = this@ChannelListView._adapter
             layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
-                isItemPrefetchEnabled = true
+                isItemPrefetchEnabled = false
                 initialPrefetchItemCount = 9
             }
             setItemViewCacheSize(9)

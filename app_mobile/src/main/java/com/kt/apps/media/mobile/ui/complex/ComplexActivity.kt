@@ -157,11 +157,12 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
         }
 
-        viewModel.playbackLoadEvent
-            .onEach {
-                loadPlayback(it.data)
+
+        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf {
+            viewModel.openPlaybackEvent.collectLatest {
+                loadPlayback(it)
             }
-            .launchIn(lifecycleScope)
+        })
         //Deeplink handle
         handleIntent(intent)
     }
@@ -170,8 +171,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         Log.d(TAG, "loadPlayback: $data")
         val playbackFragment: BasePlaybackFragment
         if (data.type == LinkType.TV) {
-            playbackFragment = (supportFragmentManager.findFragmentByTag(TVPlaybackFragment.screenName) as? TVPlaybackFragment)
-                ?.takeIf { it.isVisible } ?: TVPlaybackFragment()
+            playbackFragment =  TVPlaybackFragment()
 
             playbackFragment.apply {
                 this.callback = object: IPlaybackAction {
@@ -235,6 +235,40 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             if (!playbackFragment.isVisible) {
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container_playback, playbackFragment, RadioPlaybackFragment.screenName)
+                    .commit()
+            }
+        } else if (data.type == LinkType.IPTV) {
+            playbackFragment = (supportFragmentManager.findFragmentByTag(IPTVPlaybackFragment.screenName) as? IPTVPlaybackFragment)
+                ?.takeIf { it.isVisible } ?: IPTVPlaybackFragment()
+
+            playbackFragment.apply {
+                this.callback = object: IPlaybackAction {
+                    override fun onLoadedSuccess(videoSize: VideoSize) {
+                        layoutHandler?.onLoadedVideoSuccess(videoSize)
+                    }
+
+                    override fun onOpenFullScreen() {
+                        layoutHandler?.onOpenFullScreen()
+                    }
+
+                    override fun onPauseAction(userAction: Boolean) {
+                        if (userAction) layoutHandler?.onPlayPause(isPause = true)
+                    }
+
+                    override fun onPlayAction(userAction: Boolean) {
+                        if (userAction) layoutHandler?.onPlayPause(isPause = false)
+                    }
+
+                    override fun onExitMinimal() {
+                        layoutHandler?.onCloseMinimal()
+                    }
+                }
+            }
+            touchListenerList.clear()
+            touchListenerList.add(playbackFragment as IDispatchTouchListener)
+            if (!playbackFragment.isVisible) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_playback, playbackFragment, IPTVPlaybackFragment.screenName)
                     .commit()
             }
         }

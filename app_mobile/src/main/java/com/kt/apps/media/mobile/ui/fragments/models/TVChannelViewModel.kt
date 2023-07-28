@@ -1,7 +1,6 @@
 package com.kt.apps.media.mobile.ui.fragments.models
 
 import android.net.Uri
-import androidx.lifecycle.LiveData
 import androidx.work.WorkManager
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.DataState
@@ -17,16 +16,9 @@ import com.kt.apps.core.utils.isShortLink
 import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.isNetworkAvailable
 import com.kt.apps.media.mobile.models.NoNetworkException
-import com.kt.apps.media.mobile.utils.asFlow
-import com.kt.apps.media.mobile.utils.groupAndSort
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 

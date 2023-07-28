@@ -22,7 +22,7 @@ sealed class StreamLinkData(
         type = LinkType.TV
     )
 
-    data class ExtensionStreamLinkData(val data: ExtensionsChannel, val streamLink: String): StreamLinkData(
+    data class ExtensionStreamLinkData(val data: ExtensionsChannel, val streamLink: String, val category: String): StreamLinkData(
         data.tvChannelName,
         listOf(streamLink),
         data.referer,
