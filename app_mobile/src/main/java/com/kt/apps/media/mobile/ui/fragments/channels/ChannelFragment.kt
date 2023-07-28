@@ -246,7 +246,5 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
     }
 
-    private fun onClickItemChannel(channel: TVChannel) {
-        viewModel.loadLinkStreamForChannel(channel)
-    }
+    abstract fun onClickItemChannel(channel: TVChannel)
 }

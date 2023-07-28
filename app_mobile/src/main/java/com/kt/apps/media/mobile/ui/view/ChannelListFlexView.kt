@@ -23,6 +23,9 @@ import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 
 class ChannelListView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
@@ -108,3 +111,14 @@ class ChannelListView @JvmOverloads constructor(
     }
 }
 
+fun ChannelListView.childClicks() : Flow<IChannelElement> {
+    return callbackFlow {
+        onChildItemClickListener = { item, position ->
+            trySend(item)
+        }
+
+        awaitClose {
+            onChildItemClickListener = { _, _ ->}
+        }
+    }
+}

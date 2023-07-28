@@ -95,10 +95,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
         }
 
-//        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf {
-//            layoutHandler?.onCloseMinimal()
-//        })
-
         val addSourceState = MutableStateFlow<AddSourceState>(AddSourceState.IDLE)
         viewModel.addSourceState.onEach { addSourceState.value = it }.launchIn(lifecycleScope)
 
@@ -172,35 +168,79 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     private fun loadPlayback(data: ILinkData) {
         Log.d(TAG, "loadPlayback: $data")
-        val tvPlaybackFragment = TVPlaybackFragment()
-        tvPlaybackFragment.apply {
-            this.callback = object: IPlaybackAction {
-                override fun onLoadedSuccess(videoSize: VideoSize) {
-                    layoutHandler?.onLoadedVideoSuccess(videoSize)
-                }
+        val playbackFragment: BasePlaybackFragment
+        if (data.type == LinkType.TV) {
+            playbackFragment = (supportFragmentManager.findFragmentByTag(TVPlaybackFragment.screenName) as? TVPlaybackFragment)
+                ?.takeIf { it.isVisible } ?: TVPlaybackFragment()
 
-                override fun onOpenFullScreen() {
-                    layoutHandler?.onOpenFullScreen()
-                }
+            playbackFragment.apply {
+                this.callback = object: IPlaybackAction {
+                    override fun onLoadedSuccess(videoSize: VideoSize) {
+                        layoutHandler?.onLoadedVideoSuccess(videoSize)
+                    }
 
-                override fun onPauseAction(userAction: Boolean) {
-                    if (userAction) layoutHandler?.onPlayPause(isPause = true)
-                }
+                    override fun onOpenFullScreen() {
+                        layoutHandler?.onOpenFullScreen()
+                    }
 
-                override fun onPlayAction(userAction: Boolean) {
-                    if (userAction) layoutHandler?.onPlayPause(isPause = false)
-                }
+                    override fun onPauseAction(userAction: Boolean) {
+                        if (userAction) layoutHandler?.onPlayPause(isPause = true)
+                    }
 
-                override fun onExitMinimal() {
-                    layoutHandler?.onCloseMinimal()
+                    override fun onPlayAction(userAction: Boolean) {
+                        if (userAction) layoutHandler?.onPlayPause(isPause = false)
+                    }
+
+                    override fun onExitMinimal() {
+                        layoutHandler?.onCloseMinimal()
+                    }
                 }
             }
+            touchListenerList.clear()
+            touchListenerList.add(playbackFragment as IDispatchTouchListener)
+            if (!playbackFragment.isVisible) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_playback, playbackFragment, TVPlaybackFragment.screenName)
+                    .commit()
+            }
+        } else if (data.type == LinkType.Radio) {
+            playbackFragment = (supportFragmentManager.findFragmentByTag(RadioPlaybackFragment.screenName) as? RadioPlaybackFragment)
+                ?.takeIf { it.isVisible } ?: RadioPlaybackFragment()
+
+            playbackFragment.apply {
+                this.callback = object: IPlaybackAction {
+                    override fun onLoadedSuccess(videoSize: VideoSize) {
+                        layoutHandler?.onLoadedVideoSuccess(videoSize)
+                    }
+
+                    override fun onOpenFullScreen() {
+                        layoutHandler?.onOpenFullScreen()
+                    }
+
+                    override fun onPauseAction(userAction: Boolean) {
+                        if (userAction) layoutHandler?.onPlayPause(isPause = true)
+                    }
+
+                    override fun onPlayAction(userAction: Boolean) {
+                        if (userAction) layoutHandler?.onPlayPause(isPause = false)
+                    }
+
+                    override fun onExitMinimal() {
+                        layoutHandler?.onCloseMinimal()
+                    }
+                }
+            }
+            touchListenerList.clear()
+            touchListenerList.add(playbackFragment as IDispatchTouchListener)
+            if (!playbackFragment.isVisible) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_playback, playbackFragment, RadioPlaybackFragment.screenName)
+                    .commit()
+            }
         }
-        touchListenerList.clear()
-        touchListenerList.add(tvPlaybackFragment as IDispatchTouchListener)
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container_playback, tvPlaybackFragment)
-            .commit()
+
+
+
         layoutHandler?.onStartLoading()
     }
 

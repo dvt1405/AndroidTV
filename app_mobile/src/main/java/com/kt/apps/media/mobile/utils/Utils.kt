@@ -4,39 +4,35 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.graphics.Rect
-import android.net.ConnectivityManager
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
 import android.view.View.OnFocusChangeListener
-import android.view.ViewPropertyAnimator
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.annotation.CheckResult
+import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.google.android.material.textfield.TextInputEditText
+import com.kt.apps.core.GlideApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelGroup
-import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
-import com.kt.apps.core.utils.fadeIn
-import com.kt.apps.core.utils.fadeOut
+import com.kt.apps.core.utils.*
 import com.kt.apps.football.model.FootballMatch
-import com.kt.apps.media.mobile.App
+import com.kt.apps.resources.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -205,17 +201,38 @@ inline fun <reified T> groupAndSort(list: List<T>): List<Pair<String, List<T>>> 
     }
 }
 
-//fun <T> LiveData<T>.asFlow(): Flow<T> {
-//    return callbackFlow {
-//        val observer = Observer<T> {value ->
-//            trySend(value)
-//        }
-//        observeForever(observer)
-//        awaitClose {
-//            removeObserver(observer)
-//        }
-//    }
-//}
+suspend fun <T> LiveData<DataState<T>>.await() : T {
+    return withContext(Dispatchers.Main.immediate) {
+        suspendCancellableCoroutine { continuation ->
+            val oldData = value
+            val observer = object : Observer<DataState<T>> {
+                override fun onChanged(value: DataState<T>) {
+                    if (value == oldData) {
+                        return
+                    }
+                    when (value) {
+                        is DataState.Success -> {
+                            removeObserver(this)
+                            continuation.resume(value.data)
+                        }
+                        is DataState.Error -> {
+                            removeObserver(this)
+                            continuation.cancel(value.throwable)
+                        }
+                        else -> { }
+                    }
+
+                }
+            }
+
+            observeForever(observer)
+
+            continuation.invokeOnCancellation {
+                removeObserver(observer)
+            }
+        }
+    }
+}
 
 fun <T> LiveData<DataState<T>>.asFlow(tag: String = ""): Flow<T> {
     return callbackFlow {
@@ -306,5 +323,23 @@ fun LifecycleOwner.repeatLaunchsOnLifeCycle(
         lifecycleScope.launch {
             repeatOnLifecycle(state, it)
         }
+    }
+}
+
+fun TVChannel.loadImgDrawable(context: Context): Drawable? {
+    val context = context.applicationContext
+    val id = context.resources.getIdentifier(
+        this.logoChannel.trim().removeSuffix(".png")
+            .removeSuffix(".jpg")
+            .removeSuffix(".webp")
+            .removeSuffix(".jpeg"),
+        "drawable",
+        context.packageName
+    )
+    try {
+        val drawable = ContextCompat.getDrawable(context, id)
+        return drawable
+    } catch (e: Exception) {
+        return null
     }
 }

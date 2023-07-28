@@ -10,6 +10,7 @@ import com.kt.apps.media.mobile.ui.fragments.football.list.FootballListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.lightweightchannels.LightweightChannelFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.search.SearchListFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
@@ -38,6 +39,8 @@ abstract class MainTVModule {
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun tvPlaybackFragment(): TVPlaybackFragment
 
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun radioPlaybackFragment(): RadioPlaybackFragment
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun addExtensionSourceFragment(): AddExtensionFragment
 

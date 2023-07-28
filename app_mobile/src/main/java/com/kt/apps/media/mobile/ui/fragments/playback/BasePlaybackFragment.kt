@@ -107,9 +107,9 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
         binding.channelList
     }
 
-    private val title = MutableStateFlow<String>("")
-    private val isProgressing = MutableSharedFlow<Boolean>()
-    protected val isShowChannelList = MutableStateFlow<Boolean>(false)
+    private val title = MutableStateFlow("")
+    private val isProgressing = MutableStateFlow<Boolean>(false)
+    protected val isShowChannelList = MutableStateFlow(false)
     private val displayState = MutableStateFlow(DisplayState.Fullscreen)
 
     protected abstract val playbackViewModel: BasePlaybackInteractor
@@ -138,7 +138,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
         override fun onPlayerError(error: PlaybackException) {
             super.onPlayerError(error)
             Log.d(TAG, "onPlayerError: $error")
-            lifecycleScope.launchWhenStarted {
+            lifecycleScope.launch {
                 playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
             }
         }
@@ -152,7 +152,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
             super.onIsPlayingChanged(isPlaying)
             Log.d(TAG, "onStateChange onIsPlayingChanged: $isPlaying")
             if (isPlaying) {
-                lifecycleScope.launchWhenStarted {
+                lifecycleScope.launch {
                     isProgressing.emit(false)
                 }
             }
@@ -162,7 +162,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
             super.onIsLoadingChanged(isLoading)
             Log.d(TAG, "onStateChange onIsLoadingChanged: $isLoading")
             if (isLoading) {
-                lifecycleScope.launchWhenStarted {
+                lifecycleScope.launch {
                     isProgressing.emit(true)
                 }
             }
@@ -241,23 +241,6 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
             }
         }
 
-        isProgressing
-            .onEach { value ->
-                Log.d(TAG, "initAction: isProgressing $value")
-                if (value) {
-                    playPauseButton.visibility = View.GONE
-                    progressWheel.visibility = View.VISIBLE
-                    minimalProgress?.visibility = View.VISIBLE
-                    minimalPlayPause?.visibility = View.GONE
-                } else {
-                    playPauseButton.visibility = View.VISIBLE
-                    progressWheel.visibility = View.GONE
-                    minimalProgress?.visibility = View.GONE
-                    minimalPlayPause?.visibility = View.VISIBLE
-                }
-            }.launchIn(viewLifecycleOwner.lifecycleScope + Dispatchers.Main)
-
-
         repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf(
             {
                 displayState.collectLatest {
@@ -281,12 +264,19 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
                     if (displayState.value != DisplayState.Fullscreen) return@collectLatest
                     if (it) showChannelList() else changeFullScreenLayout()
                 }
+            },{
+                isProgressing.collectLatest {
+                    Log.d(TAG, "initAction: isProgressing $it")
+                    toggleProgressingUI(it)
+                }
             }
         ))
     }
 
     override fun onDispatchTouchEvent(view: View?, mv: MotionEvent) {
-        gestureDetector.onTouch(this.requireView(), mv)
+        leakView?.run {
+            gestureDetector.onTouch(this, mv)
+        }
     }
     override fun onStop() {
         super.onStop()
@@ -321,6 +311,19 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
             })
     }
 
+    private fun toggleProgressingUI(isProgressing: Boolean) {
+        if (isProgressing) {
+            playPauseButton.visibility = View.GONE
+            progressWheel.visibility = View.VISIBLE
+            minimalProgress?.visibility = View.VISIBLE
+            minimalPlayPause?.visibility = View.GONE
+        } else {
+            playPauseButton.visibility = View.VISIBLE
+            progressWheel.visibility = View.GONE
+            minimalProgress?.visibility = View.GONE
+            minimalPlayPause?.visibility = View.VISIBLE
+        }
+    }
     protected fun changeFullScreenLayout() {
         binding.exoPlayer.useController = true
         binding.exoPlayer.showController()
@@ -347,28 +350,16 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
             isShowChannelList.value = false
         }
     }
+
+    abstract fun provideMinimalLayout(): ConstraintSet?
     private fun changeMinimalLayout() {
         binding.exoPlayer.apply {
             useController = false
             hideController()
         }
-        safeLet(binding.motionLayout, binding.exoPlayer, binding.minimalLayout, binding.channelList) {
-                mainLayout, exoplayer,  minimal, list ->
-            performTransition(mainLayout, ConstraintSet().apply {
-                clone(this)
-                arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
-                    clear(it)
-                }
-
-                setVisibility(list.id, View.GONE)
-                matchParentWidth(list.id)
-                matchParentWidth(minimal.id)
-                matchParentWidth(exoplayer.id)
-                constrainHeight(minimal.id, ConstraintSet.WRAP_CONTENT)
-                connect(exoplayer.id, ConstraintSet.BOTTOM, minimal.id, ConstraintSet.TOP)
-                alignParent(minimal.id, ConstraintSet.BOTTOM)
-                alignParent(exoplayer.id, ConstraintSet.TOP)
-            })
+        safeLet(binding.motionLayout, provideMinimalLayout()) {
+                mainLayout, constraintSet ->
+            performTransition(mainLayout, constraintSet)
             isShowChannelList.value = false
         }
     }
@@ -393,16 +384,13 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
             })
         }
     }
-    private suspend fun preparePlayView(data: PrepareStreamLinkData) {
-        Log.d(TAG, "preparePlayView: $data")
+    protected open suspend fun preparePlayView(data: PrepareStreamLinkData) {
         exoPlayerManager.exoPlayer?.stop()
         isProgressing.emit(true)
-        Log.d(TAG, "initAction: state preparePlayView ${data.title} ${this@BasePlaybackFragment}")
-        title.emit("${data.title} Loading")
+        title.emit(data.title)
     }
 
-    private suspend fun playVideo(data: StreamLinkData) {
-        Log.d("Annn", "playVideo: $data")
+    protected open suspend fun playVideo(data: StreamLinkData) {
         exoPlayerManager.playVideo(data.linkStream.map {
             LinkStream(it, data.webDetailPage, data.webDetailPage)
         }, data.isHls, data.itemMetaData , playerListener)

@@ -14,6 +14,12 @@ sealed class PrepareStreamLinkData(
         LinkType.TV
     )
 
+    data class Radio(val data: TVChannel): PrepareStreamLinkData(
+        data.tvChannelName,
+        data.channelId,
+        LinkType.Radio
+    )
+
     data class IPTV(val data: ExtensionsChannel): PrepareStreamLinkData(
         data.tvChannelName,
         data.channelId,

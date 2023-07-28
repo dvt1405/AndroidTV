@@ -172,7 +172,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 TransitionSet().apply {
                     ordering = TransitionSet.ORDERING_SEQUENTIAL
                     addTransition(Fade(Fade.OUT))
-                        .addTransition(Explode  ())
+                        .addTransition(Explode())
                         .addTransition(Fade(Fade.IN))
 
                     interpolator = AccelerateInterpolator()
