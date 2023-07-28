@@ -19,7 +19,7 @@ import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
 import com.kt.apps.media.mobile.utils.*
-import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
@@ -78,7 +78,7 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
         }
     }
 
-    abstract val viewModel: ChannelFragmentViewModel
+    abstract val viewModel: ChannelFragmentInteractors
 
     private val playbackViewModel: PlaybackViewModel? by lazy {
         activity?.run {

@@ -1,19 +1,38 @@
 package com.kt.apps.media.mobile.ui.fragments.tv
 
+import android.os.Bundle
 import androidx.core.os.bundleOf
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
-import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentViewModel
-import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentViewModel
+import com.kt.apps.media.mobile.ui.main.ChannelElement
+import com.kt.apps.media.mobile.ui.view.childClicks
+import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
+import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentInteractors
+import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentInteractors
+import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.mapNotNull
 
 class TVPerChannelListFragment : PerChannelListFragment() {
-    private val _modelAdapter by lazy {
-        TVChannelFragmentViewModel(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
+    private val _interactors by lazy {
+        TVChannelFragmentInteractors(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
     }
-    override val tvViewModel: ChannelFragmentViewModel
-        get() = _modelAdapter
+    override val interactors: ChannelFragmentInteractors
+        get() = _interactors
 
+    override fun initAction(savedInstanceState: Bundle?) {
+        super.initAction(savedInstanceState)
+        repeatLaunchsOnLifeCycle(
+            Lifecycle.State.STARTED, listOf {
+                binding.verticalRecyclerView.childClicks()
+                    .mapNotNull { it as? ChannelElement.TVChannelElement }
+                    .collectLatest {
+                        _interactors.loadLinkStreamChannel(it)
+                    }
+            })
+    }
     companion object {
         fun newInstance(filterCategory: String): PerChannelListFragment {
             return TVPerChannelListFragment().apply {
@@ -26,12 +45,23 @@ class TVPerChannelListFragment : PerChannelListFragment() {
 }
 
 class RadioPerChannelListFragment : PerChannelListFragment() {
-    private val _modelAdapter by lazy {
-        RadioChannelFragmentViewModel(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
+    private val _interactors by lazy {
+        RadioChannelFragmentInteractors(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
     }
-    override val tvViewModel: ChannelFragmentViewModel
-        get() = _modelAdapter
+    override val interactors: ChannelFragmentInteractors
+        get() = _interactors
 
+    override fun initAction(savedInstanceState: Bundle?) {
+        super.initAction(savedInstanceState)
+        repeatLaunchsOnLifeCycle(
+            Lifecycle.State.STARTED, listOf {
+                binding.verticalRecyclerView.childClicks()
+                    .mapNotNull { it as? ChannelElement.TVChannelElement }
+                    .collectLatest {
+                        _interactors.loadLinkStreamChannel(it)
+                    }
+            })
+    }
     companion object {
         fun newInstance(filterCategory: String): PerChannelListFragment {
             return RadioPerChannelListFragment().apply {

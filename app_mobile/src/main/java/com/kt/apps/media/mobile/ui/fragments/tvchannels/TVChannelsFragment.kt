@@ -5,16 +5,16 @@ import androidx.lifecycle.lifecycleScope
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.media.mobile.ui.fragments.channels.ChannelFragment
 import com.kt.apps.media.mobile.ui.main.ChannelElement
-import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
-import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentViewModel
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
+import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
 import kotlinx.coroutines.launch
 
 class TVChannelsFragment: ChannelFragment() {
     private val _viewModel by lazy {
-        TVChannelFragmentViewModel(ViewModelProvider(requireActivity(),factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
+        TVChannelFragmentInteractors(ViewModelProvider(requireActivity(),factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
     }
-    override val viewModel: ChannelFragmentViewModel
+    override val viewModel: ChannelFragmentInteractors
         get() = _viewModel
 
     override fun onClickItemChannel(channel: TVChannel) {
