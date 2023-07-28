@@ -89,6 +89,7 @@ abstract class BaseFragment<T : ViewDataBinding> : DaggerFragment() {
     }
 
     override fun onDestroyView() {
+        leakView = null
         super.onDestroyView()
     }
 
