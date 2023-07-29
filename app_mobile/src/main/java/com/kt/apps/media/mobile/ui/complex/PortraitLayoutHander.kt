@@ -10,6 +10,7 @@ import androidx.constraintlayout.motion.widget.MotionLayout
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
+import com.kt.apps.media.mobile.models.PlaybackState
 import java.lang.ref.WeakReference
 import kotlin.math.abs
 

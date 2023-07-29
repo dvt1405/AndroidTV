@@ -63,9 +63,7 @@ class ChannelListView @JvmOverloads constructor(
             adapter = this@ChannelListView._adapter
             layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
                 isItemPrefetchEnabled = false
-                initialPrefetchItemCount = 9
             }
-            setItemViewCacheSize(9)
             isNestedScrollingEnabled = false
             addItemDecoration(channelItemDecoration)
             setHasFixedSize(false)
@@ -74,18 +72,23 @@ class ChannelListView @JvmOverloads constructor(
     fun changeDisplayStyle(style: DisplayStyle) {
         recyclerView.layoutManager = when(style) {
             DisplayStyle.FLEX -> FlexboxLayoutManager(context).apply {
-                isItemPrefetchEnabled = true
+                isItemPrefetchEnabled = false
                 flexDirection = FlexDirection.ROW
                 justifyContent = JustifyContent.FLEX_START
             }
             DisplayStyle.HORIZONTAL_LINEAR -> LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
-                isItemPrefetchEnabled = true
+                isItemPrefetchEnabled = false
             }
         }
     }
 
     fun reloadAllData(list: List<IChannelElement>) {
         _adapter.onRefresh(list)
+    }
+
+    fun forceRedraw() {
+        recyclerView.adapter = null
+        recyclerView.adapter = _adapter
     }
 
 
@@ -107,6 +110,7 @@ class ChannelListView @JvmOverloads constructor(
         override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {
             super.onViewRecycled(holder)
             Log.d(TAG, "onViewRecycled: ${holder.viewBinding.title.text}")
+            holder.viewBinding.logo.setImageBitmap(null)
         }
     }
 }

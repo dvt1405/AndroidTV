@@ -7,19 +7,24 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateInterpolator
+import android.view.animation.LinearInterpolator
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.transition.AutoTransition
 import androidx.transition.ChangeBounds
+import androidx.transition.ChangeScroll
 import androidx.transition.ChangeTransform
 import androidx.transition.Explode
 import androidx.transition.Fade
+import androidx.transition.Slide
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.media.mobile.models.PlaybackState
+import com.kt.apps.media.mobile.utils.CustomTransition
 import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.safeLet
@@ -169,14 +174,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
             TransitionManager.beginDelayedTransition(
                 surfaceView,
-                TransitionSet().apply {
-                    ordering = TransitionSet.ORDERING_SEQUENTIAL
-                    addTransition(Fade(Fade.OUT))
-                        .addTransition(Explode())
-                        .addTransition(Fade(Fade.IN))
-
-                    interpolator = AccelerateInterpolator()
-                    duration = 500
+                CustomTransition().apply {
                     addListener(object: TransitionCallback() {
                         override fun onTransitionStart(transition: Transition) {
                             super.onTransitionStart(transition)
@@ -201,9 +199,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 constrainPercentHeight(playback.id, 0.5f)
             }
 
-            TransitionManager.beginDelayedTransition(surfaceView, AutoTransition().apply {
-                interpolator = AccelerateInterpolator()
-                duration = 500
+            TransitionManager.beginDelayedTransition(surfaceView, CustomTransition().apply {
                 addListener(object: TransitionCallback() {
                     override fun onTransitionStart(transition: Transition) {
                         super.onTransitionStart(transition)
@@ -225,9 +221,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 alignParent(playback.id, ConstraintSet.BOTTOM)
                 alignParent(playback.id, ConstraintSet.END)
             }
-            TransitionManager.beginDelayedTransition(surfaceView, AutoTransition().apply {
-                interpolator = AccelerateInterpolator()
-                duration = 500
+            TransitionManager.beginDelayedTransition(surfaceView, CustomTransition().apply {
                 addListener(object: TransitionCallback() {
                     override fun onTransitionStart(transition: Transition) {
                         super.onTransitionStart(transition)
@@ -240,7 +234,6 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     }
 
 }
-
 open class TransitionCallback: Transition.TransitionListener {
     override fun onTransitionStart(transition: Transition) {
         Log.d(TAG, "onTransitionStart: $transition")

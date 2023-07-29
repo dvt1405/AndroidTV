@@ -4,8 +4,10 @@ import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.extensions.ExtensionsConfig
@@ -134,6 +136,22 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
                 }
             }
         }
+        if (isLandscape) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.onMinimalPlayer.collectLatest {
+                        with(mainRecyclerView) {
+                            if (it) {
+                                setPadding(0, 0, 0, (screenHeight * 0.5).toInt())
+                                clipToPadding = false
+                            } else {
+                                setPadding(0, 0, 0, 0)
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             launch(CoroutineExceptionHandler { context, throwable ->
@@ -145,21 +163,6 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
                         reloadOriginalSource(tvChannel)
                 }
             }
-            if (isLandscape)
-//                launch {
-//                    playbackViewModel?.state?.collectLatest { state ->
-//                        with(mainRecyclerView) {
-//                            when (state) {
-//                                PlaybackViewModel.State.IDLE -> setPadding(0, 0, 0, 0)
-//                                is PlaybackViewModel.State.LOADING -> {
-//                                    setPadding(0, 0, 0, (screenHeight * 0.4).toInt())
-//                                    clipToPadding = false
-//                                }
-//                                else -> {}
-//                            }
-//                        }
-//                    }
-//                }
 
             launch {
                 networkStateViewModel?.networkStatus?.collectLatest {

@@ -5,36 +5,22 @@ import com.kt.apps.core.tv.model.TVChannel
 
 sealed class PrepareStreamLinkData(
     val title: String,
-    val streamId: String,
-    override val type: LinkType
-): ILinkData {
+    val streamId: String
+) {
     data class TV(val data: TVChannel): PrepareStreamLinkData(
         data.tvChannelName,
-        data.channelId,
-        LinkType.TV
+        data.channelId
     )
 
     data class Radio(val data: TVChannel): PrepareStreamLinkData(
         data.tvChannelName,
-        data.channelId,
-        LinkType.Radio
+        data.channelId
     )
 
-    data class IPTV(val data: ExtensionsChannel): PrepareStreamLinkData(
+    data class IPTV(val data: ExtensionsChannel, val configId: String): PrepareStreamLinkData(
         data.tvChannelName,
-        data.channelId,
-        LinkType.IPTV
+        data.channelId
     )
 
-    object Empty: PrepareStreamLinkData("", "", LinkType.TV)
-
-    companion object {
-        inline  fun <reified T> factory(data: T): PrepareStreamLinkData {
-            return when(T::class) {
-                TVChannel::class -> TV(data as TVChannel)
-                ExtensionsChannel::class -> IPTV(data as ExtensionsChannel)
-                else -> Empty
-            }
-        }
-    }
+    object Empty: PrepareStreamLinkData("", "")
 }

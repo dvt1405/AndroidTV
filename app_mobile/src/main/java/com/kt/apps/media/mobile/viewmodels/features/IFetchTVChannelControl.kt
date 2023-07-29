@@ -18,7 +18,7 @@ interface IFetchRadioChannel: IFetchTVChannelControl
 suspend fun IFetchTVChannelControl.loadLinkStreamChannel(element: ChannelElement.TVChannelElement) {
     playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
     playbackViewModel.changeProcessState(
-        PlaybackViewModel.State.LOADING(PrepareStreamLinkData.factory(element.model))
+        PlaybackViewModel.State.LOADING(PrepareStreamLinkData.TV(element.model))
     )
     tvChannelViewModel.loadLinkStreamForChannel(element.model)
     val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await()

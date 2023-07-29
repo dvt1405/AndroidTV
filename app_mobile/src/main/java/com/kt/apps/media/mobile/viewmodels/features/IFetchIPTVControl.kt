@@ -6,7 +6,11 @@ import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 interface IFetchIPTVControl: IFetchDataControl {
@@ -26,18 +30,20 @@ private fun IFetchIPTVControl.parseIPTV(data: ExtensionsChannel): String {
     return linkToPlay
 }
 
-suspend fun IFetchIPTVControl.loadIPTVJob(data: ExtensionsChannel, category: String) {
+suspend fun IFetchIPTVControl.loadIPTVJob(data: ExtensionsChannel) {
     playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
-    playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING(PrepareStreamLinkData.factory(data)))
+    playbackViewModel.changeProcessState(PlaybackViewModel.State.LOADING(PrepareStreamLinkData.IPTV(data, "")))
     val loadedLink = suspendCancellableCoroutine { cont ->
-        val result = parseIPTV(data)
+        val result = CoroutineScope(Dispatchers.Default).async {
+            parseIPTV(data)
+        }
         if (cont.isActive) {
             cont.resume(result)
         }
-    }
+    }.await()
+
     playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(StreamLinkData.ExtensionStreamLinkData(
         data,
-        loadedLink,
-        category
+        loadedLink
     )))
 }

@@ -5,6 +5,7 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.childClicks
 import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
@@ -12,6 +13,7 @@ import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
+import com.kt.apps.media.mobile.viewmodels.features.openPlayback
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.mapNotNull
 
@@ -29,7 +31,7 @@ class TVPerChannelListFragment : PerChannelListFragment() {
                 binding.verticalRecyclerView.childClicks()
                     .mapNotNull { it as? ChannelElement.TVChannelElement }
                     .collectLatest {
-                        _interactors.openTVChannel(it)
+                        _interactors.openPlayback(PrepareStreamLinkData.TV(it.model))
                     }
             })
     }
@@ -58,7 +60,7 @@ class RadioPerChannelListFragment : PerChannelListFragment() {
                 binding.verticalRecyclerView.childClicks()
                     .mapNotNull { it as? ChannelElement.TVChannelElement }
                     .collectLatest {
-                        _interactors.loadLinkStreamChannel(it)
+                        _interactors.openPlayback(PrepareStreamLinkData.Radio(it.model))
                     }
             })
     }

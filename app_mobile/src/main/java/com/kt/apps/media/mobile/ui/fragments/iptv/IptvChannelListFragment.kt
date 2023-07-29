@@ -9,6 +9,7 @@ import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentChannelListBinding
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.tv.PerChannelListFragment
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListData
@@ -16,6 +17,7 @@ import com.kt.apps.media.mobile.ui.view.childItemClicks
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.IPTVListInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadIPTVJob
+import com.kt.apps.media.mobile.viewmodels.features.openPlayback
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -72,14 +74,10 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
             }
         }
 
-        val jobQueue = SingleJobQueue(CoroutineScope(Dispatchers.Default))
         recyclerView.childItemClicks()
-            .filter { it.data is ChannelElement.ExtensionChannelElement }
+            .mapNotNull { it.data as? ChannelElement.ExtensionChannelElement }
             .onEach {
-                Log.d(TAG, "childItemClicks: ${(it.data as ChannelElement.ExtensionChannelElement).model}")
-                jobQueue.submit(Dispatchers.Default) {
-                    viewModels?.loadIPTVJob(it.data.model, filterCategory)
-                }
+                viewModels?.openPlayback(PrepareStreamLinkData.IPTV(it.model, filterCategory))
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
