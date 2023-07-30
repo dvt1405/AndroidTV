@@ -16,6 +16,7 @@ import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityMainBinding
 import com.kt.apps.media.mobile.models.NetworkState
+import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
@@ -32,7 +33,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.collections.set
 
-abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
+abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
 
     override val layoutResId: Int
         get() = R.layout.activity_main
@@ -41,9 +42,6 @@ abstract  class ChannelFragment: BaseFragment<ActivityMainBinding>() {
 
     @Inject
     lateinit var factory: ViewModelProvider.Factory
-
-    private val isLandscape: Boolean
-        get() = resources.getBoolean(R.bool.is_landscape)
 
     private val loadingChannel: ActivityIndicator = ActivityIndicator()
 

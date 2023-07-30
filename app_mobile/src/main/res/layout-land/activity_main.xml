@@ -12,16 +12,21 @@
         android:layout_width="match_parent"
         android:id="@+id/swipe_refresh_layout"
         android:layout_height="match_parent">
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/main_channel_recycler_view"
+        <com.kt.apps.media.mobile.ui.view.FadingEdgeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fadingEdge="vertical"
-            android:clipToPadding="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            android:requiresFadingEdge="vertical"
-            android:fadingEdgeLength="60dp"
-            />
+            app:fel_size_bottom="60dp"
+            app:fel_size_top="60dp"
+            app:fel_edge="bottom|top"
+            >
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/main_channel_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="true"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                />
+        </com.kt.apps.media.mobile.ui.view.FadingEdgeLayout>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </layout>

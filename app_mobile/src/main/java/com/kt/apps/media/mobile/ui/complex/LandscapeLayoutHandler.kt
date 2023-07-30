@@ -89,11 +89,17 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         }
     }
     override fun onStartLoading() {
-        if (state == State.FULLSCREEN) {
+//        if (state == State.FULLSCREEN) {
+//            return
+//        }
+//        Log.d(TAG, "onStartLoading: $state")
+//        transitionFullscreen()
+//        videoIsLoading = true
+        if (state == State.MINIMAL) {
             return
         }
         Log.d(TAG, "onStartLoading: $state")
-        transitionFullscreen()
+        transitionMinimal()
         videoIsLoading = true
     }
 

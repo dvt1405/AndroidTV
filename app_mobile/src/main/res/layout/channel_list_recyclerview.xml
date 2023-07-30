@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.kt.apps.media.mobile.ui.view.FadingEdgeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipToPadding="false"
-    android:clipChildren="false"
+    app:fel_edge="top|bottom"
+    app:fel_size_top="60dp"
+    app:fel_size_bottom="60dp"
     >
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/main_channel_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fadingEdge="horizontal"
-        android:requiresFadingEdge="vertical"
-        android:fadingEdgeLength="32dp"
         android:overScrollMode="always"
         android:clipToPadding="false"
         android:nestedScrollingEnabled="false"
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         />
-</LinearLayout>
+</com.kt.apps.media.mobile.ui.view.FadingEdgeLayout>

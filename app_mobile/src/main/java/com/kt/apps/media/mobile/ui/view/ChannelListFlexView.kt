@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.callbackFlow
 
 class ChannelListView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : LinearLayout(context, attrs) {
+) : FadingEdgeLayout(context, attrs) {
     enum class DisplayStyle {
         FLEX, HORIZONTAL_LINEAR
     }
@@ -91,6 +91,8 @@ class ChannelListView @JvmOverloads constructor(
         recyclerView.adapter = _adapter
     }
 
+    override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) =
+        recyclerView.setPadding(left, top, right, bottom)
 
     class Adapter: BaseAdapter<IChannelElement, ItemChannelBinding>() {
         override val itemLayoutRes: Int
