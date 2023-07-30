@@ -48,8 +48,6 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
             })
         }
     }
-    private var cachedVideoSize: VideoSize? = null
-    private var videoIsLoading: Boolean = false
 
     private val context: Context?
         get() = weakActivity.get()
@@ -89,29 +87,14 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         }
     }
     override fun onStartLoading() {
-//        if (state == State.FULLSCREEN) {
-//            return
-//        }
-//        Log.d(TAG, "onStartLoading: $state")
-//        transitionFullscreen()
-//        videoIsLoading = true
-        if (state == State.MINIMAL) {
+        if (state == State.FULLSCREEN) {
             return
         }
         Log.d(TAG, "onStartLoading: $state")
-        transitionMinimal()
-        videoIsLoading = true
+        transitionFullscreen()
     }
 
-    override fun onLoadedVideoSuccess(videoSize: VideoSize) {
-        cachedVideoSize = videoSize
-//        val isFullScreenState = motionLayout?.currentState == R.id.fullscreen
-//        if (state != State.FULLSCREEN || !isFullScreenState) {
-//            motionLayout?.setTransitionDuration(250)
-//            transitionToState(R.id.fullscreen)
-//        }
-        videoIsLoading = false
-    }
+    override fun onLoadedVideoSuccess(videoSize: VideoSize) { }
 
     override fun onOpenFullScreen() {
         if (state != State.FULLSCREEN) {
@@ -139,21 +122,6 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         } else {
             transitionIDLE()
         }
-    }
-
-    override fun onPlayPause(isPause: Boolean) {
-        super.onPlayPause(isPause)
-        if (videoIsLoading) return
-        if (isPause) {
-            if (state == State.FULLSCREEN) {
-                transitionMinimal()
-            }
-        } else {
-            if (state != State.FULLSCREEN) {
-                transitionFullscreen()
-            }
-        }
-
     }
 
     override fun onTouchEvent(ev: MotionEvent) {

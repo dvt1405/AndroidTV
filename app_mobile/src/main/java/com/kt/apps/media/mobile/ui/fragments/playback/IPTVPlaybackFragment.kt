@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 
-class IPTVPlaybackFragment : BasePlaybackFragment() {
+class IPTVPlaybackFragment : ChannelPlaybackFragment() {
 
     private val _playbackViewModel by lazy {
         IPTVPlaybackInteractor(

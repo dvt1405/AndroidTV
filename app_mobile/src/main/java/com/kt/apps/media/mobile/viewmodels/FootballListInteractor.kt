@@ -2,8 +2,12 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.football.model.FootballMatch
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.utils.asFlow
+import com.kt.apps.media.mobile.utils.isLiveMatch
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
+import com.kt.apps.media.mobile.viewmodels.features.IUIControl
+import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -13,11 +17,14 @@ import java.util.Locale
 
 inline val sortRegex
     get() = Regex(".*?(c1|euro|epl|laliga|((?=.*?\\bpremier\\b)(?=.*?\\bleague\\b).*)|nba|uefa|european|((?=.*\\bngoại\\b)(?=.*\\bhạng\\b)(?=.*\\banh\\b).*)).*?")
-class MobileFootballViewModel(private val provider: ViewModelProvider) {
+class FootballListInteractor(private val provider: ViewModelProvider): IUIControl {
     private val footballViewModel: FootballViewModel by lazy {
         provider[FootballViewModel::class.java]
     }
 
+    override val uiControlViewModel: UIControlViewModel by lazy {
+        provider[UIControlViewModel::class.java]
+    }
     private val listMatches: Flow<List<FootballMatch>>
         get() = footballViewModel.listFootMatchDataState.asFlow()
 
@@ -45,6 +52,10 @@ class MobileFootballViewModel(private val provider: ViewModelProvider) {
         footballViewModel.getAllMatches()
     }
 
+    suspend fun openPlayback(match: FootballMatch) {
+        uiControlViewModel.openPlayback(PrepareStreamLinkData.Football(match))
+    }
+
     fun getAllMatchesAsync(): Deferred<Unit> {
         return CoroutineScope(Dispatchers.Main).async {
             footballViewModel.getAllMatches()
@@ -52,10 +63,7 @@ class MobileFootballViewModel(private val provider: ViewModelProvider) {
         }
     }
 
-    private fun FootballMatch.isLiveMatch(): Boolean {
-        val calendar = Calendar.getInstance(Locale.TAIWAN)
-        val currentTime = calendar.timeInMillis / 1000
-        return  (currentTime - kickOffTimeInSecond) > -20 * 60
-                && (currentTime - kickOffTimeInSecond) < 150 * 60
-    }
+
+
+
 }

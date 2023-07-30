@@ -8,6 +8,7 @@ import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FootballItemRowChannelBinding
+import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.utils.groupAndSort
 
@@ -19,7 +20,7 @@ data class FootballAdapterType(
 class FootballListAdapter: BaseAdapter<FootballAdapterType, FootballItemRowChannelBinding>() {
     override val itemLayoutRes: Int
         get() = R.layout.football_item_row_channel
-
+    var onChildItemClickListener: (FootballMatch, Int) -> Unit = { _, _ -> }
     override fun bindItem(
         item: FootballAdapterType,
         binding: FootballItemRowChannelBinding,
@@ -43,6 +44,9 @@ class FootballListAdapter: BaseAdapter<FootballAdapterType, FootballItemRowChann
                 SubFootballListAdapter()
             }.apply {
                 onRefresh(itemData.second)
+                onItemRecyclerViewCLickListener = { item, position ->
+                    this@FootballListAdapter.onChildItemClickListener(item, position)
+                }
             }
         }
         if (item.isLive) {

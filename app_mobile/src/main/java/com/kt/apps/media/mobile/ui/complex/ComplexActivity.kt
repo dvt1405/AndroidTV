@@ -155,6 +155,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             is PrepareStreamLinkData.TV -> TVPlaybackFragment.newInstance(data.data)
             is PrepareStreamLinkData.IPTV -> IPTVPlaybackFragment.newInstance(data.data, data.configId)
             is PrepareStreamLinkData.Radio -> RadioPlaybackFragment.newInstance(data.data)
+            is PrepareStreamLinkData.Football -> FootballPlaybackFragment.newInstance(data.data)
             else -> null
         }?.apply {
             this.callback = object: IPlaybackAction {
@@ -192,12 +193,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (binding.fragmentContainerPlayback.getFragment<BasePlaybackFragment>().onKeyDown(keyCode, event)) {
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
     override fun onBackPressed() {
         if (layoutHandler?.onBackEvent() == true) {
             return

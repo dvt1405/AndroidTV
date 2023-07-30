@@ -11,8 +11,9 @@ import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.onRefresh
 import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.apps.media.mobile.utils.trackActivity
-import com.kt.apps.media.mobile.viewmodels.MobileFootballViewModel
+import com.kt.apps.media.mobile.viewmodels.FootballListInteractor
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
@@ -31,11 +32,17 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
         binding.swipeRefreshLayout
     }
 
-    private val viewModel: MobileFootballViewModel by lazy {
-        MobileFootballViewModel(ViewModelProvider(requireActivity(), factory))
+    private val interactor: FootballListInteractor by lazy {
+        FootballListInteractor(ViewModelProvider(requireActivity(), factory))
     }
 
-    private val _adapter = FootballListAdapter()
+    private val _adapter = FootballListAdapter().apply {
+        onChildItemClickListener = { item, position ->
+            this@FootballListFragment.lifecycleScope.launch {
+                interactor.openPlayback(item)
+            }
+        }
+    }
 
     override fun initView(savedInstanceState: Bundle?) {
         binding.swipeRefreshLayout?.apply {
@@ -55,8 +62,8 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
 
     override fun initAction(savedInstanceState: Bundle?) {
         lifecycleScope.launchWhenStarted {
-            viewModel.groupedMatches
-                .combine(viewModel.liveMatches, transform = { groupsMatches, liveMatches ->
+            interactor.groupedMatches
+                .combine(interactor.liveMatches, transform = { groupsMatches, liveMatches ->
                     val baseList = mutableListOf<FootballAdapterType>()
                     if (liveMatches.isNotEmpty()) {
                         baseList.add(
@@ -76,7 +83,7 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
         }
         lifecycleScope.launchWhenStarted {
             merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest {
-                viewModel.getAllMatchesAsync()
+                interactor.getAllMatchesAsync()
                     .trackActivity(loadingMatches)
                     .await()
             }

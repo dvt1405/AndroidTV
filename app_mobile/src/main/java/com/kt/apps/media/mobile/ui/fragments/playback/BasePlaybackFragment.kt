@@ -7,13 +7,14 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
 import androidx.transition.AutoTransition
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
-import com.google.ads.interactivemedia.v3.internal.it
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
@@ -28,13 +29,11 @@ import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
-import com.kt.apps.media.mobile.databinding.FragmentPlaybackBinding
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.complex.TransitionCallback
-import com.kt.apps.media.mobile.ui.view.ChannelListView
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import kotlinx.coroutines.*
@@ -55,10 +54,12 @@ enum class DisplayState {
     Fullscreen, Minimal
 }
 
-abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), IDispatchTouchListener {
+interface IPlaybackControl {
+    var callback: IPlaybackAction?
+}
 
-    override val layoutResId: Int
-        get() = R.layout.fragment_playback
+abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), IDispatchTouchListener, IPlaybackControl {
+
     override val screenName: String
         get() = "Fragment Playback"
 
@@ -68,41 +69,46 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
     @Inject
     lateinit var exoPlayerManager: ExoPlayerManagerMobile
 
-    var callback: IPlaybackAction? = null
+
     private var _cachePlayingState: Boolean = false
+
+    override var callback: IPlaybackAction? = null
     //Views
-    private val fullScreenButton: ImageButton by lazy {
-        binding.exoPlayer.findViewById(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
+    private val fullScreenButton: ImageButton? by lazy {
+        exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
     }
 
-    private val playPauseButton: ImageButton by lazy {
-        binding.exoPlayer.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
+    private val playPauseButton: ImageButton? by lazy {
+        exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
     }
 
-
-    private val progressWheel: View by lazy {
-        binding.exoPlayer.findViewById(R.id.progress_bar_container)
+    private val progressWheel: View? by lazy {
+        exoPlayer?.findViewById(R.id.progress_bar_container)
     }
 
-    private val minimalProgress by lazy {
-        binding.minimalLoading
+    private val backButton: MaterialButton? by lazy {
+        exoPlayer?.findViewById(R.id.back_button)
     }
 
-    private val minimalPlayPause by lazy {
-        binding.minimalPlayButton
+    private val titleLabel: MaterialTextView? by lazy {
+        exoPlayer?.findViewById(R.id.title)
     }
 
-    private val backButton: MaterialButton by lazy {
-        binding.exoPlayer.findViewById(R.id.back_button)
-    }
+    protected abstract val exoPlayer: StyledPlayerView?
 
-    private val titleLabel: MaterialTextView by lazy {
-        binding.exoPlayer.findViewById(R.id.title)
-    }
+    protected abstract val motionLayout: ConstraintLayout?
 
-    protected val channelListRecyclerView: ChannelListView? by lazy {
-        binding.channelList
-    }
+    protected abstract val minimalLayout: View?
+
+    protected abstract val minimalProgress: View?
+
+    protected abstract val minimalPlayPause: View?
+
+    protected abstract val minimalTitleTv: TextView?
+
+    protected abstract val channelListRecyclerView: View?
+
+    protected abstract val exitButton: View?
 
     private val title = MutableStateFlow("")
     private val isProgressing = MutableStateFlow<Boolean>(false)
@@ -122,7 +128,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
             }
 
             override fun onFling() {
-                binding.exoPlayer.controllerShowTimeoutMs = 0
+                exoPlayer?.controllerShowTimeoutMs = 0
             }
         }
     }
@@ -151,27 +157,23 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
 
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
-        with(binding) {
-            exoPlayer.player = exoPlayerManager.exoPlayer
-            exoPlayer.showController()
-            exoPlayer.setShowNextButton(false)
-            exoPlayer.setShowPreviousButton(false)
-            exoPlayer.player?.stop()
+        exoPlayer?.apply {
+            player = exoPlayerManager.exoPlayer
+            showController()
+            player?.stop()
 
-            playPauseButton.visibility = View.INVISIBLE
-            progressWheel.visibility = View.INVISIBLE
+            setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener {
+                when(it) {
+                    View.VISIBLE -> channelListRecyclerView?.visibility = it
+                    View.GONE, View.INVISIBLE -> channelListRecyclerView?.visibility = View.INVISIBLE
+                }
+            })
         }
+        playPauseButton?.visibility = View.INVISIBLE
+        progressWheel?.visibility = View.INVISIBLE
 
-        binding.exoPlayer.setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener {
-            when(it) {
-                View.VISIBLE -> binding.channelList?.visibility = it
-                View.GONE, View.INVISIBLE -> binding.channelList?.visibility = View.INVISIBLE
-            }
-        })
-
-
-        fullScreenButton.visibility = View.VISIBLE
-        fullScreenButton.setOnClickListener {
+        fullScreenButton?.visibility = View.VISIBLE
+        fullScreenButton?.setOnClickListener {
             callback?.onOpenFullScreen()
         }
 
@@ -215,7 +217,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
                 }
         }
 
-        merge(backButton.clicks(), binding.exitButton?.clicks() ?: emptyFlow())
+        merge(backButton?.clicks() ?: emptyFlow(), exitButton?.clicks() ?: emptyFlow())
             .debounce(250)
             .onEach {
                 exoPlayerManager.exoPlayer?.stop()
@@ -226,8 +228,8 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
         lifecycleScope.launchWhenCreated {
             title.collect {
                 Log.d(TAG, "initAction: state title $it ${this@BasePlaybackFragment}")
-                titleLabel.text = it
-                binding.minimalTitleTv?.text = it
+                titleLabel?.text = it
+                minimalTitleTv?.text = it
             }
         }
 
@@ -297,29 +299,33 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
             content = "Xin lỗi, mở nội dung không thành công. Vui lòng thử lại sau.\nMã lỗi: $errorCode",
             cancellable = false,
             onDismissListener = {
-                backButton.performClick()
+                backButton?.performClick()
             })
     }
 
+    protected open fun onRedraw() { }
+
     private fun toggleProgressingUI(isProgressing: Boolean) {
         if (isProgressing) {
-            playPauseButton.visibility = View.GONE
-            progressWheel.visibility = View.VISIBLE
+            playPauseButton?.visibility = View.GONE
+            progressWheel?.visibility = View.VISIBLE
             minimalProgress?.visibility = View.VISIBLE
             minimalPlayPause?.visibility = View.GONE
         } else {
-            playPauseButton.visibility = View.VISIBLE
-            progressWheel.visibility = View.GONE
+            playPauseButton?.visibility = View.VISIBLE
+            progressWheel?.visibility = View.GONE
             minimalProgress?.visibility = View.GONE
             minimalPlayPause?.visibility = View.VISIBLE
         }
     }
     protected fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
-        binding.exoPlayer.useController = true
-        binding.exoPlayer.controllerShowTimeoutMs = 1000
-        binding.exoPlayer.controllerHideOnTouch = true
+        exoPlayer?.apply {
+            useController = true
+            controllerShowTimeoutMs = 1000
+            controllerHideOnTouch = true
+        }
 
-        safeLet(binding.motionLayout, binding.exoPlayer, binding.minimalLayout, binding.channelList) {
+        safeLet(motionLayout, exoPlayer, minimalLayout, channelListRecyclerView ) {
             mainLayout, exoplayer,  minimal, list ->
             performTransition(mainLayout, ConstraintSet().apply {
                 clone(this)
@@ -337,10 +343,10 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
                 constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
                 setMargin(list.id, ConstraintSet.TOP, (-88).dpToPx())
             }, onEnd = {
-                binding.exoPlayer.showController()
+                exoPlayer?.showController()
             }, onStart = {
                 if (shouldRedraw) {
-                    binding.channelList?.forceRedraw()
+                    onRedraw()
                 }
             })
             isShowChannelList.value = false
@@ -349,11 +355,11 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
 
     abstract fun provideMinimalLayout(): ConstraintSet?
     private fun changeMinimalLayout() {
-        binding.exoPlayer.apply {
+        exoPlayer?.apply {
             useController = false
             hideController()
         }
-        safeLet(binding.motionLayout, provideMinimalLayout()) {
+        safeLet(motionLayout, provideMinimalLayout()) {
                 mainLayout, constraintSet ->
             performTransition(mainLayout, constraintSet)
             isShowChannelList.value = false
@@ -361,7 +367,7 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
     }
 
     open fun showChannelListLayout(): ConstraintSet? {
-        return safeLet(binding.exoPlayer, binding.channelList) {
+        return safeLet(exoPlayer, channelListRecyclerView) {
                 exoplayer, list -> ConstraintSet().apply {
                clone(this)
                clear(exoplayer.id)
@@ -378,10 +384,12 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
     }
 
     protected fun showChannelList() {
-        binding.exoPlayer.showController()
-        binding.exoPlayer.controllerShowTimeoutMs = -1
-        binding.exoPlayer.controllerHideOnTouch = false
-        safeLet(binding.motionLayout, showChannelListLayout()) {
+        exoPlayer?.apply {
+            showController()
+            controllerShowTimeoutMs = -1
+            controllerHideOnTouch = false
+        }
+        safeLet(motionLayout, showChannelListLayout()) {
                 mainLayout, constraintSet ->
             performTransition(mainLayout, constraintSet)
         }
@@ -393,10 +401,8 @@ abstract class BasePlaybackFragment : BaseFragment<FragmentPlaybackBinding>(), I
     }
 
     protected open suspend fun playVideo(data: StreamLinkData) {
-        exoPlayerManager.playVideo(data.linkStream.map {
-            LinkStream(it, data.webDetailPage, data.webDetailPage)
-        }, data.isHls, data.itemMetaData , playerListener)
-        binding.exoPlayer.player = exoPlayerManager.exoPlayer
+        exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , playerListener)
+        exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)
     }
 

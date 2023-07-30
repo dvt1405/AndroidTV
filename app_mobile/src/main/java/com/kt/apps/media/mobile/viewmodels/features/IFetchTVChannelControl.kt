@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.viewmodels.features
 
+import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
@@ -12,6 +13,10 @@ interface IFetchDataControl {
 }
 interface IFetchTVChannelControl: IFetchDataControl {
     val tvChannelViewModel: TVChannelViewModel
+}
+
+interface IFetchFootballMatchControl: IFetchDataControl {
+    val footballViewModel: FootballViewModel
 }
 
 interface IFetchRadioChannel: IFetchTVChannelControl
@@ -34,5 +39,16 @@ suspend fun IFetchRadioChannel.loadLinkStreamChannel(element: ChannelElement.TVC
     tvChannelViewModel.loadLinkStreamForChannel(element.model)
     val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await()
     val data = StreamLinkData.TVStreamLinkData(linkStream)
+    playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
+}
+
+suspend fun IFetchFootballMatchControl.loadFootballMatchLinkStream(match: FootballMatch) {
+    playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
+    playbackViewModel.changeProcessState(
+        PlaybackViewModel.State.LOADING(PrepareStreamLinkData.Football(match))
+    )
+    footballViewModel.getLinkStreamFor(match)
+    val linkStream = footballViewModel.footMatchDataState.await()
+    val data = StreamLinkData.FootballStreamLinkData(match, linkStream)
     playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
 }

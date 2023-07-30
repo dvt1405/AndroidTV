@@ -33,6 +33,8 @@ import com.kt.apps.resources.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import java.util.Calendar
+import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -90,6 +92,15 @@ fun SwipeRefreshLayout.onRefresh(): Flow<Unit> {
         awaitClose {
             setOnRefreshListener(null)
         }
+    }
+}
+
+fun View.clicks(): Flow<Unit> {
+    return callbackFlow {
+        setOnClickListener {
+            trySend(Unit)
+        }
+        awaitClose { setOnClickListener(null) }
     }
 }
 
@@ -342,4 +353,11 @@ fun TVChannel.loadImgDrawable(context: Context): Drawable? {
     } catch (e: Exception) {
         return null
     }
+}
+
+fun FootballMatch.isLiveMatch(): Boolean {
+    val calendar = Calendar.getInstance(Locale.TAIWAN)
+    val currentTime = calendar.timeInMillis / 1000
+    return  (currentTime - kickOffTimeInSecond) > -20 * 60
+            && (currentTime - kickOffTimeInSecond) < 150 * 60
 }
