@@ -13,8 +13,8 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
         android:foreground="@drawable/ripple_selected_item"
         android:foregroundTint="@color/white"
         android:gravity="center"
@@ -29,15 +29,15 @@
             android:background="#33FFFFFF"
             >
             <ImageView
-                android:layout_width="100dp"
-                android:layout_height="60dp"
+                android:layout_width="200dp"
+                android:layout_height="120dp"
                 android:id="@+id/logo"/>
         </androidx.cardview.widget.CardView>
 
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="match_parent"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
