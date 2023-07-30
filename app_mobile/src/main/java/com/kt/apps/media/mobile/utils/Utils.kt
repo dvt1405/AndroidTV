@@ -25,6 +25,8 @@ import com.kt.apps.core.GlideApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.Logger
+import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
+import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.utils.*
@@ -360,4 +362,17 @@ fun FootballMatch.isLiveMatch(): Boolean {
     val currentTime = calendar.timeInMillis / 1000
     return  (currentTime - kickOffTimeInSecond) > -20 * 60
             && (currentTime - kickOffTimeInSecond) < 150 * 60
+}
+
+fun ExtensionsChannelDBWithCategoryViews.toExtensionChannel() : ExtensionsChannel {
+    return ExtensionsChannel(
+        tvGroup = categoryName,
+        logoChannel = logoChannel,
+        tvChannelName = tvChannelName,
+        tvStreamLink = tvStreamLink,
+        sourceFrom = sourceFrom,
+        channelId = "",
+        isHls = tvStreamLink.contains("m3u8"),
+        extensionSourceId = ""
+    )
 }

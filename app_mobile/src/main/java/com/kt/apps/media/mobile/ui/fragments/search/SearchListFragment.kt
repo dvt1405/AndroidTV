@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
@@ -17,11 +18,14 @@ import com.kt.apps.media.mobile.databinding.FragmentSearchListBinding
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListData
+import com.kt.apps.media.mobile.ui.view.childItemClicks
+import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.SearchListViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -46,15 +50,32 @@ class SearchListFragment : BaseFragment<FragmentSearchListBinding>() {
         viewModel.searchResult
             .onEach(display)
             .launchIn(viewLifecycleOwner.lifecycleScope)
+
+        lifecycleScope.launch {
+            repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf(
+                {
+                    binding.channelList.childItemClicks()
+                        .collectLatest {
+                            viewModel.openPlayback(it.data)
+                        }
+                },
+                {
+                    viewModel.isProgressing
+                        .map { if (it) View.VISIBLE else View.GONE }
+                        .collectLatest { binding.progressBarContainer.visibility = it }
+                }
+            ))
+        }
     }
+
 
     private fun mapToView(map: Map<String, List<SearchForText.SearchResult>>) : List<ChannelListData> {
         return map.toList().map {
             val value = it.second.map {value ->
                 when(value) {
-                    is SearchForText.SearchResult.ExtensionsChannelWithCategory -> ChannelElement.SearchExtension(value.data)
-                    is SearchForText.SearchResult.History -> ChannelElement.SearchHistory(value.data)
-                    is SearchForText.SearchResult.TV -> ChannelElement.SearchTV(value.data)
+                    is SearchForText.SearchResult.ExtensionsChannelWithCategory -> ChannelElement.SearchExtension(value)
+                    is SearchForText.SearchResult.History -> ChannelElement.SearchHistory(value)
+                    is SearchForText.SearchResult.TV -> ChannelElement.SearchTV(value)
                 }
             }
             ChannelListData(it.first, value)

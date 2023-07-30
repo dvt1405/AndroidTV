@@ -21,6 +21,7 @@ import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCateg
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
@@ -53,25 +54,25 @@ sealed class ChannelElement {
             get() = model.logoChannel
     }
 
-    class SearchExtension(val model: ExtensionsChannelDBWithCategoryViews): IChannelElement {
+    class SearchExtension(val model: SearchForText.SearchResult.ExtensionsChannelWithCategory): IChannelElement {
         override val name: String
-            get() = model.tvChannelName
+            get() = model.data.tvChannelName
         override val logoChannel: String
-            get() = model.logoChannel
+            get() = model.data.logoChannel
     }
 
-    class SearchHistory(val model: HistoryMediaItemDTO): IChannelElement {
+    class SearchHistory(val model: SearchForText.SearchResult.History): IChannelElement {
         override val name: String
-            get() = model.displayName
+            get() = model.data.displayName
         override val logoChannel: String
-            get() = model.thumb
+            get() = model.data.thumb
     }
 
-    class SearchTV(val model: TVChannelDTO): IChannelElement {
+    class SearchTV(val model: SearchForText.SearchResult.TV): IChannelElement {
         override val name: String
-            get() = model.tvChannelName
+            get() = model.data.tvChannelName
         override val logoChannel: String
-            get() = model.logoChannel
+            get() = model.data.logoChannel
 
     }
 }

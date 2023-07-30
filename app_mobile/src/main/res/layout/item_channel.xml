@@ -19,14 +19,20 @@
         android:foregroundTint="@color/white"
         android:gravity="center"
         android:orientation="vertical"
-        tools:background="@color/black"
         tools:targetApi="m">
 
-        <com.google.android.material.imageview.ShapeableImageView
-            app:shapeAppearance="@style/RoundedCornersImageView"
-            android:layout_width="200dp"
-            android:layout_height="120dp"
-            android:id="@+id/logo"/>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            android:background="#33FFFFFF"
+            >
+            <ImageView
+                android:layout_width="200dp"
+                android:layout_height="120dp"
+                android:id="@+id/logo"/>
+        </androidx.cardview.widget.CardView>
 
 
         <TextView
