@@ -204,17 +204,20 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
         Log.d(TAG, "initAction:")
-        lifecycleScope.launchWhenCreated {
-            playbackViewModel.state
-                .collectLatest { state ->
-                    Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
-                    when(state) {
-                        is PlaybackViewModel.State.LOADING -> preparePlayView(state.data)
-                        is PlaybackViewModel.State.PLAYING -> playVideo(state.data)
-                        is PlaybackViewModel.State.ERROR -> onError(state.error)
-                        else -> {}
+
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                playbackViewModel.state
+                    .collectLatest { state ->
+                        Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
+                        when(state) {
+                            is PlaybackViewModel.State.LOADING -> preparePlayView(state.data)
+                            is PlaybackViewModel.State.PLAYING -> playVideo(state.data)
+                            is PlaybackViewModel.State.ERROR -> onError(state.error)
+                            else -> {}
+                        }
                     }
-                }
+            }
         }
 
         merge(backButton?.clicks() ?: emptyFlow(), exitButton?.clicks() ?: emptyFlow())
@@ -439,6 +442,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
     }
 
     protected open suspend fun playVideo(data: StreamLinkData) {
+        if (exoPlayerManager.exoPlayer?.isPlaying == true) {
+            return
+        }
         exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , playerListener)
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)

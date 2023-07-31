@@ -3,13 +3,17 @@ package com.kt.apps.media.mobile.viewmodels
 
 import android.util.Log
 import androidx.lifecycle.ViewModelProvider
+import com.kt.apps.core.base.DataState
+import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.models.PlaybackState
+import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.utils.asDataStateFlow
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -44,9 +48,26 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
     val networkStatus: StateFlow<NetworkState>
         get() = networkStateViewModel.networkStatus
 
-    val addSourceState
-        get() = extensionViewModel.addSourceState
-            .onEach { Log.d(TAG, "addSourceState: $it ") }
+    val progressingExtensionsConfig: StateFlow<ExtensionsConfig?> by lazy {
+        extensionViewModel.processingExtensionConfig
+    }
+    val addSourceState: SharedFlow<AddSourceState> by lazy {
+        extensionViewModel.addExtensionConfigLiveData
+            .asDataStateFlow(tag = "addSourceState")
+            .combine(progressingExtensionsConfig) {
+                dataState, progressingSource ->
+                if (progressingSource == null) {
+                    return@combine AddSourceState.IDLE
+                }
+                when(dataState) {
+                    is DataState.Loading -> AddSourceState.StartLoad(progressingSource)
+                    is DataState.Success -> AddSourceState.Success(dataState.data)
+                    is DataState.Error -> AddSourceState.Error(dataState.throwable)
+                    else -> AddSourceState.IDLE
+                }
+            }
+            .shareIn(scope, SharingStarted.WhileSubscribed())
+    }
 
     val openPlaybackEvent
         get() = uiControlViewModel.openPlayback
@@ -63,6 +84,14 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
             .stateIn(scope, SharingStarted.Eagerly, false)
     }
 
+    init {
+
+        addSourceState.filter { it is AddSourceState.Success || it is AddSourceState.Error }
+            .onEach {
+                extensionViewModel.cacheProcessingSource(null)
+            }
+            .launchIn(scope)
+    }
 
     fun onChangePlayerState(state: PlaybackState) {
         uiControlViewModel.changePlayerState(state)

@@ -13,8 +13,10 @@ import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.extensions.ParserExtensionsSource
 import com.kt.apps.core.logging.IActionLogger
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.IKeyValueStorage
 import com.kt.apps.core.storage.local.RoomDataBase
+import com.kt.apps.core.storage.removeLastRefreshExtensions
 import com.kt.apps.core.usecase.GetCurrentProgrammeForChannel
 import com.kt.apps.core.usecase.GetListProgrammeForChannel
 import com.kt.apps.core.utils.TAG
@@ -25,15 +27,7 @@ import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import java.security.cert.Extension
 import javax.inject.Inject
 
@@ -42,6 +36,7 @@ sealed class AddSourceState {
     data class StartLoad(val source: ExtensionsConfig): AddSourceState()
     data class Success(val source: ExtensionsConfig): AddSourceState()
     data class Error(val throwable: Throwable): AddSourceState()
+
     object IDLE: AddSourceState()
 }
 @AppScope
@@ -62,32 +57,30 @@ class ExtensionsViewModel @Inject constructor(
     storage,
     historyIteractors
 ) {
-    private val viewModelJob = SupervisorJob()
-    private var processingExtensionConfig: MutableSharedFlow<ExtensionsConfig?> = MutableSharedFlow()
-    val addSourceState: Flow<AddSourceState>
-        get() = addExtensionConfigLiveData.asDataStateFlow(tag = "ExtensionsViewModel")
-            .combine(processingExtensionConfig) { dataState, processing ->
-                Log.d(TAG, "CombineStatus: $dataState $processing")
-                if (processing == null) {
-                    return@combine AddSourceState.IDLE
-                }
-                when (dataState) {
-                    is DataState.Loading -> AddSourceState.StartLoad(processing)
-                    is DataState.Success -> AddSourceState.Success(dataState.data)
-                    is DataState.Error -> AddSourceState.Error(dataState.throwable)
-                    else -> AddSourceState.IDLE
-                }
-            }
+    private var _processingExtensionConfig: MutableStateFlow<ExtensionsConfig?> = MutableStateFlow(null)
+    val processingExtensionConfig
+        get() = _processingExtensionConfig.asStateFlow()
 
-    fun cacheProcessingSource(ex: ExtensionsConfig) {
-        CoroutineScope(Dispatchers.Main + viewModelJob).launch {
-            processingExtensionConfig.emit(ex)
-        }
+    fun cacheProcessingSource(ex: ExtensionsConfig?) {
+        _processingExtensionConfig.value = ex
     }
 
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelJob.cancel()
+    fun removeExtensionConfig(extensionsConfig: ExtensionsConfig) {
+//        storage.removeLastRefreshExtensions(extensionsConfig)
+        add(
+            roomDataBase.extensionsConfig()
+                .delete(extensionsConfig)
+                .doOnComplete {
+                    this.loadAllListExtensionsChannelConfig(true)
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    Logger.d(this, message = "remove complete")
+                }, {
+                    Logger.e(this, exception = it)
+                })
+        )
     }
+
 }

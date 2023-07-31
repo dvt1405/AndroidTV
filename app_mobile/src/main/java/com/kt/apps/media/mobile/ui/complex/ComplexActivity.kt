@@ -98,12 +98,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
         }
 
-        val addSourceState = MutableStateFlow<AddSourceState>(AddSourceState.IDLE)
-        viewModel.addSourceState.onEach { addSourceState.value = it }.launchIn(lifecycleScope)
-
-        lifecycleScope.launchWhenStarted {
-            addSourceState
-                .collectLatest {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.addSourceState.collectLatest {
                     when(it) {
                         is AddSourceState.StartLoad -> {
                             binding.parseSourceLoadingContainer?.fadeIn {
@@ -131,6 +128,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                         binding.loadingDescription?.text = ""
                     }
                 }
+            }
         }
 
         repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf ({
@@ -138,13 +136,13 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 loadPlayback(it)
             }
         }, {
-            addSourceState.filter { it is AddSourceState.Success }
+            viewModel.addSourceState.filter { it is AddSourceState.Success }
                 .collectLatest {
                     delay(500)
                     onAddedExtension()
                 }
         },{
-            addSourceState.filter { it is AddSourceState.Error }
+            viewModel.addSourceState.filter { it is AddSourceState.Error }
                 .collectLatest {
                     delay(500)
                     showErrorAlert("Đã xảy ra lỗi vui lòng thử lại sau")

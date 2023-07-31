@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.ui.fragments.iptv
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
@@ -72,11 +73,20 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
             binding.viewpager?.let {viewPager2 ->
                 viewPager2.adapter = _adapter
                 viewPager2.isUserInputEnabled = false
-                TabLayoutMediator(
+                val tab = TabLayoutMediator(
                     tabLayout, viewPager2, true, false
                 ) { tab, position ->
                     tab.text = list.getOrNull(position)?.sourceName ?: ""
-                }.attach()
+                }
+                tab.attach()
+            }
+        }
+
+        binding.removeExtension?.setOnClickListener {
+            binding.tabLayout?.selectedTabPosition?.apply {
+                list.getOrNull(this)?.apply {
+                    showAlertRemoveExtension(this)
+                }
             }
         }
 
@@ -108,11 +118,34 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
         }
     }
 
+
+
     private fun showAddIPTVDialog() {
         val dialog = AddExtensionFragment()
         dialog.onSuccess = {
             it.dismiss()
         }
         dialog.show(childFragmentManager, AddExtensionFragment.TAG)
+    }
+
+    private fun showAlertRemoveExtension(config: ExtensionsConfig) {
+        AlertDialog.Builder(context, R.style.AlertDialogTheme).apply {
+            setMessage("Bạn có muốn xóa nguồn ${config.sourceName}?")
+            setCancelable(false)
+            setPositiveButton("Có") { dialog, which ->
+//                deleteExtension(sourceName = sourceName)
+                lifecycleScope.launch {
+                    viewModel.remove(config)
+                }
+                dialog.dismiss()
+
+            }
+            setNegativeButton("Không") { dialog, _ ->
+                dialog.dismiss()
+            }
+        }
+            .create()
+            .show()
+
     }
 }

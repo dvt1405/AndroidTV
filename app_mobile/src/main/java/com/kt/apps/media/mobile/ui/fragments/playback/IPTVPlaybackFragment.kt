@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListView
 import com.kt.apps.media.mobile.ui.view.childClicks
@@ -125,6 +126,18 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                     _playbackViewModel.loadChannelConfig(this@run)
                 }
             }
+        }
+    }
+    var currentPosition: Long? = null
+    override fun onPause() {
+        super.onPause()
+        currentPosition = exoPlayerManager.exoPlayer?.currentPosition
+    }
+
+    override suspend fun playVideo(data: StreamLinkData) {
+        super.playVideo(data)
+        currentPosition?.run {
+            exoPlayerManager.exoPlayer?.seekTo(this)
         }
     }
 

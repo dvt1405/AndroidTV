@@ -7,7 +7,9 @@
         android:id="@+id/motion_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutDescription="@xml/fragment_iptv_dashboard_scene">
+        app:layoutDescription="@xml/fragment_iptv_dashboard_scene"
+        tools:background="@color/black"
+        >
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/add_extension_description"
             android:layout_width="wrap_content"
@@ -47,8 +49,18 @@
             app:tabMinWidth="20dp"
             app:tabTextAppearance="@style/TabTextAppearance"
             app:tabGravity="start"
-
             />
+
+        <ImageButton
+            android:id="@+id/remove_extension"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:iconTint="@color/white"
+            android:src="@drawable/ic_remove"
+            android:background="@color/transparent"
+            android:padding="8dp"
+            android:tint="@color/white" />
+
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewpager"
             android:layout_width="0dp"

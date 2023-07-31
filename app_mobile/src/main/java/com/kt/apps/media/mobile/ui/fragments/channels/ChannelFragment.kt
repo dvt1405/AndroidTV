@@ -211,22 +211,6 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         mainRecyclerView.fastSmoothScrollToPosition(index)
     }
 
-    private fun showAlertRemoveExtension(sourceName: String) {
-        AlertDialog.Builder(context, R.style.AlertDialogTheme).apply {
-            setMessage("Bạn có muốn xóa nguồn $sourceName?")
-            setCancelable(true)
-            setPositiveButton("Có") { dialog, which ->
-                deleteExtension(sourceName = sourceName)
-                dialog.dismiss()
-            }
-            setNegativeButton("Không") { dialog, _ ->
-                dialog.dismiss()
-            }
-        }
-            .create()
-            .show()
-
-    }
 
     private fun deleteExtension(sourceName: String) {
 //        extensionsViewModel?.deleteExtension(sourceName = sourceName)

@@ -65,6 +65,7 @@ class ChannelListRecyclerView @JvmOverloads constructor(
             }
             setHasFixedSize(true)
             setItemViewCacheSize(9)
+            isNestedScrollingEnabled = true
         }
     }
 
