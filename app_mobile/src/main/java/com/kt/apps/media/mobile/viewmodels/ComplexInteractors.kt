@@ -14,6 +14,7 @@ import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import kotlin.coroutines.coroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ComplexInteractors(private val provider: ViewModelProvider, scope: CoroutineScope) {
@@ -47,14 +48,27 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
         get() = extensionViewModel.addSourceState
             .onEach { Log.d(TAG, "addSourceState: $it ") }
 
-    val playbackState
-        get() = playbackViewModel.stateEvents
-
     val openPlaybackEvent
         get() = uiControlViewModel.openPlayback
+
+    val isShowingPlayback by lazy {
+        uiControlViewModel.playerState
+            .map {
+                when(it) {
+                    PlaybackState.Fullscreen -> true
+                    PlaybackState.Invisible -> false
+                    PlaybackState.Minimal -> true
+                }
+            }
+            .stateIn(scope, SharingStarted.Eagerly, false)
+    }
 
 
     fun onChangePlayerState(state: PlaybackState) {
         uiControlViewModel.changePlayerState(state)
+    }
+
+    fun changePiPMode(isEnable: Boolean) {
+        uiControlViewModel.changePIPMode(isEnable)
     }
 }

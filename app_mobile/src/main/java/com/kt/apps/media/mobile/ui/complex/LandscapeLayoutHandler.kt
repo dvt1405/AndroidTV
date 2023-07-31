@@ -104,6 +104,10 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         }
     }
 
+    override fun forceFullScreen() {
+        transitionFullscreen()
+    }
+
     override fun onCloseMinimal() {
         transitionIDLE()
     }

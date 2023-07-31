@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 interface IDispatchTouchListener {
     fun onDispatchTouchEvent(view: View?, mv: MotionEvent)
 }
-class TVPlaybackFragment private constructor(): ChannelPlaybackFragment() {
+class TVPlaybackFragment: ChannelPlaybackFragment() {
     private val _playbackInteractor by lazy {
         TVPlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }
@@ -105,7 +105,7 @@ class TVPlaybackFragment private constructor(): ChannelPlaybackFragment() {
     }
 }
 
-class RadioPlaybackFragment private constructor(): ChannelPlaybackFragment() {
+class RadioPlaybackFragment: ChannelPlaybackFragment() {
     private val _playbackInteractor by lazy {
         RadioPlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }

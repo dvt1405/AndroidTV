@@ -18,12 +18,20 @@ class UIControlViewModel @Inject constructor(): BaseViewModel() {
     val openPlayback
         get() = _openPlayback.asSharedFlow()
 
+    private var _isInPIPMode = MutableStateFlow(false)
+    val isInPIPMode
+        get() = _isInPIPMode.asStateFlow()
+
     suspend fun openPlayback(data: PrepareStreamLinkData) {
         _openPlayback.emit(data)
     }
 
     fun changePlayerState(state: PlaybackState) {
         _playerState.value = state
+    }
+
+    fun changePIPMode(isEnable: Boolean) {
+       _isInPIPMode.value = isEnable
     }
 
 }

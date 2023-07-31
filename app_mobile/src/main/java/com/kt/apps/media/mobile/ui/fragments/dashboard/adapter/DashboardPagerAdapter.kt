@@ -24,8 +24,8 @@ class DashboardPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateA
 
     override fun createFragment(position: Int): Fragment {
         return when (_listItem[position]) {
-            R.id.tv -> FragmentTVDashboard(TVDashboardHelper())
-            R.id.radio -> FragmentTVDashboard(RadioDashboardHelper())
+            R.id.tv -> FragmentTVDashboard.newInstance(false)
+            R.id.radio -> FragmentTVDashboard.newInstance(true)
             R.id.extension -> IptvDashboardFragment() //FragmentIptvDashboard()
             R.id.search -> SearchDashboardFragment() //FragmentSearch()
             R.id.football -> FootballDashboardFragment()

@@ -21,6 +21,8 @@ interface ComplexLayoutHandler {
     fun onLoadedVideoSuccess(videoSize: VideoSize)
     fun onOpenFullScreen()
 
+    fun forceFullScreen() { }
+
     fun onCloseMinimal()
     fun onTouchEvent(ev: MotionEvent) { }
     fun onBackEvent() : Boolean { return false }
@@ -166,6 +168,8 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
             state = State.LOADING
         }
     }
+
+
 
     override fun onLoadedVideoSuccess(videoSize: VideoSize) {   
         if (this.state != State.FULLSCREEN) {

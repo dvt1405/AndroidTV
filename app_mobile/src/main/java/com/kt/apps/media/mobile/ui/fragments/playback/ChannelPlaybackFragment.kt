@@ -41,4 +41,9 @@ abstract class ChannelPlaybackFragment : BasePlaybackFragment<FragmentPlaybackBi
     override val exitButton: View? by lazy {
         binding.exitButton
     }
+
+    override fun onRedraw() {
+        super.onRedraw()
+        channelListRecyclerView?.forceRedraw()
+    }
 }

@@ -13,6 +13,7 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
 import androidx.transition.AutoTransition
+import androidx.transition.Fade
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import com.google.android.exoplayer2.ExoPlayer
@@ -48,10 +49,6 @@ interface IPlaybackAction {
     fun onPlayAction(userAction: Boolean)
 
     fun onExitMinimal()
-}
-
-enum class DisplayState {
-    Fullscreen, Minimal
 }
 
 interface IPlaybackControl {
@@ -113,7 +110,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
     private val title = MutableStateFlow("")
     private val isProgressing = MutableStateFlow<Boolean>(false)
     protected val isShowChannelList = MutableStateFlow(false)
-    private val displayState = MutableStateFlow(DisplayState.Fullscreen)
 
     protected abstract val playbackViewModel: BasePlaybackInteractor
 
@@ -137,6 +133,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == ExoPlayer.STATE_READY) {
                 isProgressing.value = false
+                exoPlayer?.keepScreenOn = true
+            }
+            if (playbackState == ExoPlayer.STATE_ENDED) {
+                exoPlayer?.keepScreenOn = false
             }
         }
 
@@ -222,6 +222,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
             .onEach {
                 exoPlayerManager.exoPlayer?.stop()
                 callback?.onExitMinimal()
+
             }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
@@ -235,25 +236,19 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
 
         repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf(
             {
-                displayState.collectLatest {
+                playbackViewModel.playbackState.collectLatest {
                     when (it) {
-                        DisplayState.Fullscreen -> changeFullScreenLayout()
-                        DisplayState.Minimal -> changeMinimalLayout()
+                        PlaybackState.Fullscreen -> changeFullScreenLayout()
+                        PlaybackState.Minimal -> changeMinimalLayout()
+                        else -> {
+                            exoPlayer?.keepScreenOn = false
+                        }
                     }
                 }
             },
             {
-                playbackViewModel.playbackState.mapNotNull {
-                    when (it) {
-                        PlaybackState.Fullscreen -> DisplayState.Fullscreen
-                        PlaybackState.Minimal -> DisplayState.Minimal
-                        else -> null
-                    }
-                }.collectLatest { displayState.emit(it) }
-            },
-            {
                 isShowChannelList.collectLatest {
-                    if (displayState.value != DisplayState.Fullscreen) return@collectLatest
+                    if (playbackViewModel.playbackState.value != PlaybackState.Fullscreen) return@collectLatest
                     if (it) showChannelList() else changeFullScreenLayout(shouldRedraw = false)
                 }
             },{
@@ -263,6 +258,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
                 }
             }
         ))
+
+        lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                playbackViewModel.isInPipMode.collectLatest {
+                    togglePIPLayout(it)
+                }
+            }
+        }
     }
 
     override fun onDispatchTouchEvent(view: View?, mv: MotionEvent) {
@@ -275,6 +278,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
         Log.d(TAG, "onStop: ")
         _cachePlayingState = exoPlayerManager.exoPlayer?.isPlaying ?: false
         exoPlayerManager.pause()
+        exoPlayer?.keepScreenOn = false
     }
 
     override fun onDestroy() {
@@ -290,6 +294,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
             exoPlayerManager.exoPlayer?.play()
             false
         } else false
+        exoPlayer?.keepScreenOn = true
     }
 
     private fun onError(throwable: Throwable?) {
@@ -304,6 +309,17 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
     }
 
     protected open fun onRedraw() { }
+
+    private fun togglePIPLayout(isInPIPMode: Boolean) {
+        if (isInPIPMode) {
+            exoPlayer?.useController = false
+            safeLet(motionLayout, inPIPModeLayout()) { constraintLayout, constraintSet ->
+                performTransition(constraintLayout, constraintSet)
+            }
+        } else {
+            changeFullScreenLayout(true)
+        }
+    }
 
     private fun toggleProgressingUI(isProgressing: Boolean) {
         if (isProgressing) {
@@ -343,13 +359,18 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
                 constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
                 setMargin(list.id, ConstraintSet.TOP, (-88).dpToPx())
             }, onEnd = {
-                exoPlayer?.showController()
+                if (!playbackViewModel.isInPipMode.value) {
+                    exoPlayer?.showController()
+                    isShowChannelList.value = false
+                } else {
+                    togglePIPLayout(true)
+                }
             }, onStart = {
                 if (shouldRedraw) {
                     onRedraw()
                 }
             })
-            isShowChannelList.value = false
+
         }
     }
 
@@ -363,6 +384,23 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
                 mainLayout, constraintSet ->
             performTransition(mainLayout, constraintSet)
             isShowChannelList.value = false
+        }
+    }
+
+    open fun inPIPModeLayout(): ConstraintSet? {
+        return safeLet(exoPlayer, minimalLayout, channelListRecyclerView ) {
+                exoplayer,  minimal, list ->
+            ConstraintSet().apply {
+                clone(this)
+                arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
+                    clear(it)
+                }
+
+                fillParent(exoplayer.id)
+
+                setVisibility(minimal.id, View.GONE)
+                setVisibility(list.id, View.GONE)
+            }
         }
     }
 
@@ -407,7 +445,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
     }
 
     private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {
-        TransitionManager.beginDelayedTransition(layout, AutoTransition().apply {
+        TransitionManager.beginDelayedTransition(layout, Fade().apply {
             interpolator = AccelerateInterpolator()
             duration = 500
             addListener(object: TransitionCallback() {

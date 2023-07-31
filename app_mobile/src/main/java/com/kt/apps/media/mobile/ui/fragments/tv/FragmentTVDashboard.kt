@@ -4,6 +4,7 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2.PageTransformer
@@ -17,6 +18,8 @@ import com.kt.apps.core.utils.fadeIn
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentTvDashboardBinding
 import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.IDashboardHelper
+import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.RadioDashboardHelper
+import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.TVDashboardHelper
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVDashboardAdapter
 import com.kt.skeleton.KunSkeleton
@@ -30,7 +33,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class FragmentTVDashboard(private val helper: IDashboardHelper) : BaseFragment<FragmentTvDashboardBinding>() {
+class FragmentTVDashboard : BaseFragment<FragmentTvDashboardBinding>() {
     @Inject
     lateinit var factory: ViewModelProvider.Factory
     override val layoutResId: Int
@@ -40,6 +43,13 @@ class FragmentTVDashboard(private val helper: IDashboardHelper) : BaseFragment<F
 
     private val _adapter by lazy {
         TVDashboardAdapter(this, helper)
+    }
+
+    private val helper: IDashboardHelper by lazy {
+        if (arguments?.get(isRadioExtra) as? Boolean == true)
+            RadioDashboardHelper()
+        else
+            TVDashboardHelper()
     }
 
     private val tvViewModel by lazy {
@@ -82,5 +92,18 @@ class FragmentTVDashboard(private val helper: IDashboardHelper) : BaseFragment<F
             }
         }
 
+    }
+
+    companion object {
+        const val isRadioExtra = "extra:isRadio"
+        fun newInstance(isRadio: Boolean): FragmentTVDashboard {
+
+            val fragment = FragmentTVDashboard().apply {
+                arguments = bundleOf(
+                    isRadioExtra to isRadio
+                )
+            }
+            return fragment
+        }
     }
 }

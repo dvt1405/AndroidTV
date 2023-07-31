@@ -27,8 +27,12 @@ open class BasePlaybackInteractor(
         provider[PlaybackViewModel::class.java]
     }
 
-    val playbackState: Flow<PlaybackState>
-        get() = uiControlViewModel.playerState
+    val playbackState: StateFlow<PlaybackState> by lazy {
+        uiControlViewModel.playerState
+    }
+
+    val isInPipMode: StateFlow<Boolean>
+        get() = uiControlViewModel.isInPIPMode
 
     val state
         get() = playbackViewModel.stateEvents

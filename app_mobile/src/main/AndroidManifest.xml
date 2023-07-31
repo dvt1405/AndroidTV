@@ -22,7 +22,9 @@
             android:name=".ui.complex.ComplexActivity"
             android:exported="true"
             android:screenOrientation="landscape"
-            android:configChanges="orientation|keyboardHidden"
+            android:supportsPictureInPicture="true"
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
+            android:resizeableActivity="true"
             android:launchMode="singleTask" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

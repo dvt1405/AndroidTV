@@ -1,7 +1,10 @@
 package com.kt.apps.media.mobile.ui.complex
 
 import android.app.AlertDialog
+import android.app.PictureInPictureParams
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -9,6 +12,8 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import androidx.activity.OnBackPressedCallback
+import androidx.annotation.RequiresApi
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.textview.MaterialTextView
@@ -148,7 +153,28 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         //Deeplink handle
         handleIntent(intent)
     }
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (!viewModel.isShowingPlayback.value) {
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+            && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
 
+            MainScope().launch {
+                viewModel.changePiPMode(true)
+                layoutHandler?.forceFullScreen()
+                delay(200)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val params = PictureInPictureParams.Builder()
+                    this@ComplexActivity.enterPictureInPictureMode(params.build())
+                } else {
+                    this@ComplexActivity.enterPictureInPictureMode()
+                }
+            }
+
+        }
+    }
     private fun loadPlayback(data: PrepareStreamLinkData) {
         Log.d(TAG, "loadPlayback: $data")
         when(data) {
@@ -192,6 +218,11 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         }
 
     }
+    override fun onResume() {
+        super.onResume()
+        viewModel.changePiPMode(false)
+    }
+
 
     override fun onBackPressed() {
         if (layoutHandler?.onBackEvent() == true) {
