@@ -63,4 +63,5 @@ dependencies {
     implementation otherLibs.values()
     implementation media.values()
     implementation project(":core")
+    implementation project(':resources')
 }
