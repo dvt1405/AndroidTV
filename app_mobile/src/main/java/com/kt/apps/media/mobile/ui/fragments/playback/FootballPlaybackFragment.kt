@@ -20,7 +20,7 @@ import com.kt.apps.media.mobile.ui.fragments.football.list.SubFootballListAdapte
 import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.utils.matchParentWidth
-import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.safeLet
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.FootballPlaybackInteractor
@@ -28,6 +28,7 @@ import com.kt.apps.media.mobile.viewmodels.features.loadFootballMatchLinkStream
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 
 class FootballPlaybackFragment: BasePlaybackFragment<FragmentFootballPlaybackBinding>() {
     override val layoutResId: Int
@@ -86,20 +87,24 @@ class FootballPlaybackFragment: BasePlaybackFragment<FragmentFootballPlaybackBin
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
 
-        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED,
-        listOf ({
-            ((arguments?.get(EXTRA_FOOTBALL_MATCH) as? FootballMatch)?.let { flowOf(it) }
-                ?: emptyFlow())
-                .collectLatest {
-                    playbackViewModel.loadFootballMatchLinkStream(it)
-                }
-        }, {
-            playbackViewModel.liveMatches
-                .collectLatest {
-                    _adapter.onRefresh(it)
-                }
-        })
-        )
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                ((arguments?.get(EXTRA_FOOTBALL_MATCH) as? FootballMatch)?.let { flowOf(it) }
+                    ?: emptyFlow())
+                    .collectLatest {
+                        playbackViewModel.loadFootballMatchLinkStream(it)
+                    }
+            }
+        }
+
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                playbackViewModel.liveMatches
+                    .collectLatest {
+                        _adapter.onRefresh(it)
+                    }
+            }
+        }
     }
 
     override fun onRedraw() {

@@ -24,10 +24,6 @@ typealias GroupTVChannel = Map<String, List<TVChannel>>
 abstract class ChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
     : IUIControl {
 
-    private val networkStateViewModel: NetworkStateViewModel by lazy {
-        provider[NetworkStateViewModel::class.java]
-    }
-
     val tvChannelViewModel: TVChannelViewModel by lazy {
         provider[TVChannelViewModel::class.java]
     }
@@ -39,9 +35,6 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
     override val uiControlViewModel: UIControlViewModel by lazy {
         provider[UIControlViewModel::class.java]
     }
-
-    val networkStatus: StateFlow<NetworkState>
-        get() = networkStateViewModel.networkStatus
 
     abstract val listChannels: Flow<List<TVChannel>>
     abstract val groupTVChannel: Flow<GroupTVChannel>

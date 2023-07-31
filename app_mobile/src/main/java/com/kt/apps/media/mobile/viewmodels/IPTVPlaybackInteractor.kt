@@ -11,19 +11,20 @@ import com.kt.apps.media.mobile.viewmodels.features.IFetchIPTVControl
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 
-class IPTVPlaybackInteractor(provider: ViewModelProvider, val coroutineScope: LifecycleCoroutineScope) :
+class IPTVPlaybackInteractor(provider: ViewModelProvider, private val coroutineScope: LifecycleCoroutineScope) :
     BasePlaybackInteractor(provider, coroutineScope), IFetchIPTVControl {
     override val extensionViewModel: ExtensionsViewModel by lazy {
         provider[ExtensionsViewModel::class.java]
     }
     private val _relatedItems = MutableStateFlow<List<ExtensionsChannel>>(emptyList())
-    val relatedItems
-    get() = _relatedItems
-        .map {
-            it.map {channel ->
-                ChannelElement.ExtensionChannelElement(channel)
-            }
-        }.stateIn(coroutineScope, SharingStarted.WhileSubscribed(), emptyList())
+    val relatedItems by lazy {
+        _relatedItems
+            .map {
+                it.map {channel ->
+                    ChannelElement.ExtensionChannelElement(channel)
+                }
+            }.stateIn(coroutineScope, SharingStarted.WhileSubscribed(), emptyList())
+    }
 
     suspend fun loadChannelConfig(configId: String) {
         extensionViewModel.loadChannelForConfig(configId).asSuccessFlow("loadChannelConfig $configId")

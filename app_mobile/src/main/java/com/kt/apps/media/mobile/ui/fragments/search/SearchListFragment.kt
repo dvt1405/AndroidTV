@@ -1,25 +1,18 @@
 package com.kt.apps.media.mobile.ui.fragments.search
 
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import com.google.gson.Gson
+import androidx.lifecycle.repeatOnLifecycle
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.usecase.search.SearchForText
-import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentSearchListBinding
 import com.kt.apps.media.mobile.ui.main.ChannelElement
-import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListData
 import com.kt.apps.media.mobile.ui.view.childItemClicks
-import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.SearchListViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
@@ -52,19 +45,20 @@ class SearchListFragment : BaseFragment<FragmentSearchListBinding>() {
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
         lifecycleScope.launch {
-            repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf(
-                {
-                    binding.channelList.childItemClicks()
-                        .collectLatest {
-                            viewModel.openPlayback(it.data)
-                        }
-                },
-                {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
                     viewModel.isProgressing
                         .map { if (it) View.VISIBLE else View.GONE }
                         .collectLatest { binding.progressBarContainer.visibility = it }
                 }
-            ))
+
+                launch {
+                    binding.channelList.childItemClicks()
+                        .collectLatest {
+                            viewModel.openPlayback(it.data)
+                        }
+                }
+            }
         }
     }
 

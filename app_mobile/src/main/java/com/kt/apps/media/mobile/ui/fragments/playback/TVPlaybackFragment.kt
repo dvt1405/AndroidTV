@@ -49,22 +49,27 @@ class TVPlaybackFragment: ChannelPlaybackFragment() {
 
         val itemToPlay = arguments?.get(EXTRA_TV_CHANNEL) as? TVChannel
 
-        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf ({
-            channelListRecyclerView?.childClicks()
-                ?.mapNotNull { it as? ChannelElement.TVChannelElement }
-                ?.collectLatest {
-                    _playbackInteractor.loadLinkStreamChannel(it)
-                }
-        }, {
-            _playbackInteractor.channelElementList.collectLatest {
-                channelListRecyclerView?.reloadAllData(it)
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                channelListRecyclerView?.childClicks()
+                    ?.mapNotNull { it as? ChannelElement.TVChannelElement }
+                    ?.collectLatest {
+                        _playbackInteractor.loadLinkStreamChannel(it)
+                    }
             }
-        }))
 
-        itemToPlay?.run {
-            lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
+            itemToPlay?.let {
+                launch {
                     _playbackInteractor.loadLinkStreamChannel(ChannelElement.TVChannelElement(itemToPlay))
+                }
+            }
+
+        }
+
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                _playbackInteractor.channelElementList.collectLatest {
+                    channelListRecyclerView?.reloadAllData(it)
                 }
             }
         }
@@ -116,21 +121,24 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
         super.initAction(savedInstanceState)
         val itemToPlay = arguments?.get(TVPlaybackFragment.EXTRA_TV_CHANNEL) as? TVChannel
 
-        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf ({
-            merge(
-                itemToPlay?.let { flowOf(ChannelElement.TVChannelElement(it)) } ?: emptyFlow(),
-                channelListRecyclerView?.childClicks()
-                    ?.mapNotNull { it as? ChannelElement.TVChannelElement }
-                    ?: emptyFlow()
-            )
-                .collectLatest {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                merge(
+                    itemToPlay?.let { flowOf(ChannelElement.TVChannelElement(it)) } ?: emptyFlow(),
+                    channelListRecyclerView?.childClicks()
+                        ?.mapNotNull { it as? ChannelElement.TVChannelElement }
+                        ?: emptyFlow()
+                ).collectLatest {
                     _playbackInteractor.loadLinkStreamChannel(it)
                 }
-        }, {
-            _playbackInteractor.radioChannelList.collectLatest {
-                channelListRecyclerView?.reloadAllData(it)
             }
-        }))
+
+            launch {
+                _playbackInteractor.radioChannelList.collectLatest {
+                    channelListRecyclerView?.reloadAllData(it)
+                }
+            }
+        }
     }
 
     override suspend fun preparePlayView(data: PrepareStreamLinkData) {

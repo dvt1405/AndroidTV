@@ -330,14 +330,12 @@ fun ConstraintSet.alignParent(viewId: Int, side: Int, margin: Int = 0) {
 }
 
 
-fun LifecycleOwner.repeatLaunchsOnLifeCycle(
+fun LifecycleOwner.repeatLaunchesOnLifeCycle(
     state: Lifecycle.State,
-    blocks: List<suspend CoroutineScope.() -> Unit>
+    block: suspend CoroutineScope.() -> Unit
 ) {
-    blocks.forEach {
-        lifecycleScope.launch {
-            repeatOnLifecycle(state, it)
-        }
+    lifecycleScope.launch {
+        repeatOnLifecycle(state, block)
     }
 }
 

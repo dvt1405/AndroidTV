@@ -11,8 +11,7 @@ import com.kt.apps.media.mobile.databinding.FragmentTvChannelListBinding
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListView
-import com.kt.apps.media.mobile.ui.view.childClicks
-import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import kotlinx.coroutines.flow.collectLatest
@@ -40,17 +39,9 @@ abstract class PerChannelListFragment : BaseMobileFragment<FragmentTvChannelList
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        lifecycleScope.launchWhenStarted {
-            interactors.groupTVChannel.map {
-                it[filterCategory]
-            }
-                .map { it?.map { tvChannel -> ChannelElement.TVChannelElement(tvChannel) } }
-                .collectLatest { binding.verticalRecyclerView.reloadAllData(it ?: emptyList() )}
-        }
-
-        if (isLandscape) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            if (isLandscape) {
+                launch {
                     interactors.onMinimalPlayer.collectLatest {
                         with(binding.verticalRecyclerView) {
                             if (it) {
@@ -63,17 +54,18 @@ abstract class PerChannelListFragment : BaseMobileFragment<FragmentTvChannelList
                     }
                 }
             }
+
+            launch {
+                interactors.groupTVChannel.map {
+                    it[filterCategory]
+                }
+                    .map { it?.map { tvChannel -> ChannelElement.TVChannelElement(tvChannel) } }
+                    .collectLatest { binding.verticalRecyclerView.reloadAllData(it ?: emptyList() )}
+            }
         }
     }
 
     companion object {
         internal const val EXTRA_TV_CHANNEL_CATEGORY = "extra:tv_channel_category"
-//        fun newInstance(filterCategory: String): PerChannelListFragment {
-//            return PerChannelListFragment().apply {
-//                arguments = bundleOf(
-//                    EXTRA_TV_CHANNEL_CATEGORY to filterCategory
-//                )
-//            }
-//        }
     }
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.utils.asFlow
+import com.kt.apps.media.mobile.utils.asSuccessFlow
 import com.kt.apps.media.mobile.utils.isLiveMatch
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
@@ -25,8 +26,9 @@ class FootballListInteractor(private val provider: ViewModelProvider): IUIContro
     override val uiControlViewModel: UIControlViewModel by lazy {
         provider[UIControlViewModel::class.java]
     }
-    private val listMatches: Flow<List<FootballMatch>>
-        get() = footballViewModel.listFootMatchDataState.asFlow()
+    private val listMatches: Flow<List<FootballMatch>> by lazy {
+        footballViewModel.listFootMatchDataState.asSuccessFlow(tag = "football_live_matches")
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val groupedMatches: Flow<Map<String, List<FootballMatch>>>

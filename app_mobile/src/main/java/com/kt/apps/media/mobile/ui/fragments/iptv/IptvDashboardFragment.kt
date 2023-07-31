@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.adapter.FragmentStateAdapter
@@ -23,6 +24,7 @@ import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVDashboardAdapter
 import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
 import com.kt.apps.media.mobile.utils.clicks
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.IPTVViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -93,17 +95,19 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            binding.addExtension?.clicks()?.collectLatest {
-                showAddIPTVDialog()
-            }
-        }
-
         viewModel.addExtensionsConfig
             .onEach { viewModel.reloadData() }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                binding.addExtension?.clicks()?.collectLatest {
+                    showAddIPTVDialog()
+                }
+            }
+        }
+
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             viewModel.extensionConfigs.collectLatest {
                 if (it.isNotEmpty()) {
                     delay(250)

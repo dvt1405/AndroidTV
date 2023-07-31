@@ -8,7 +8,7 @@ import androidx.lifecycle.lifecycleScope
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.childClicks
-import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentInteractors
@@ -16,6 +16,7 @@ import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
 import com.kt.apps.media.mobile.viewmodels.features.openPlayback
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.launch
 
 class TVPerChannelListFragment : PerChannelListFragment() {
     private val _interactors by lazy {
@@ -26,14 +27,15 @@ class TVPerChannelListFragment : PerChannelListFragment() {
 
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
-        repeatLaunchsOnLifeCycle(
-            Lifecycle.State.STARTED, listOf {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
                 binding.verticalRecyclerView.childClicks()
                     .mapNotNull { it as? ChannelElement.TVChannelElement }
                     .collectLatest {
                         _interactors.openPlayback(PrepareStreamLinkData.TV(it.model))
                     }
-            })
+            }
+        }
     }
     companion object {
         fun newInstance(filterCategory: String): PerChannelListFragment {
@@ -55,14 +57,15 @@ class RadioPerChannelListFragment : PerChannelListFragment() {
 
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
-        repeatLaunchsOnLifeCycle(
-            Lifecycle.State.STARTED, listOf {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
                 binding.verticalRecyclerView.childClicks()
                     .mapNotNull { it as? ChannelElement.TVChannelElement }
                     .collectLatest {
                         _interactors.openPlayback(PrepareStreamLinkData.Radio(it.model))
                     }
-            })
+            }
+        }
     }
     companion object {
         fun newInstance(filterCategory: String): PerChannelListFragment {

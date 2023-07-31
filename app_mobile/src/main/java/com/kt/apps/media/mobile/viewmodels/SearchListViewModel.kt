@@ -37,10 +37,12 @@ class SearchListViewModel(private val provider: ViewModelProvider): IUIControl {
     private var _isProgressing = MutableStateFlow(false)
     val isProgressing
         get() = _isProgressing.asStateFlow()
-   val searchResult: Flow<Map<String, List<SearchForText.SearchResult>>>
-        get() = searchViewModel.searchQueryLiveData
-            .asFlow()
-            .catch { emit(emptyMap()) }
+
+   val searchResult: Flow<Map<String, List<SearchForText.SearchResult>>> by lazy {
+       searchViewModel.searchQueryLiveData
+           .asFlow(tag = "SearchList")
+           .catch { emit(emptyMap()) }
+   }
 
     suspend fun openPlayback(data: IChannelElement) {
         val searchData = when(data) {

@@ -7,30 +7,44 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.RequiresApi
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.logging.IActionLogger
-import com.kt.apps.core.utils.*
+import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.fadeIn
+import com.kt.apps.core.utils.fadeOut
+import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
-import com.kt.apps.media.mobile.models.*
+import com.kt.apps.media.mobile.models.NetworkState
+import com.kt.apps.media.mobile.models.NoNetworkException
+import com.kt.apps.media.mobile.models.PlaybackFailException
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
-import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
-import com.kt.apps.media.mobile.ui.fragments.playback.*
-import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
+import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.IDispatchTouchListener
+import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
+import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
@@ -49,14 +63,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     private var layoutHandler: ComplexLayoutHandler? = null
 
     private var touchListenerList: MutableList<IDispatchTouchListener> = mutableListOf()
-
-    private val playbackViewModel: PlaybackViewModel by lazy {
-        ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
-    }
-
-    private val networkStateViewModel: NetworkStateViewModel? by lazy {
-        ViewModelProvider(this, factory)[NetworkStateViewModel::class.java]
-    }
 
     private val viewModel: ComplexInteractors by lazy {
         ComplexInteractors(ViewModelProvider(this, factory), lifecycleScope)
@@ -87,67 +93,45 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
      }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.networkStatus.collectLatest {state ->
-                        if (state == NetworkState.Unavailable)
-                            showNoNetworkAlert(autoHide = true)
-                    }
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                viewModel.networkStatus.collectLatest {state ->
+                    if (state == NetworkState.Unavailable)
+                        showNoNetworkAlert(autoHide = true)
                 }
             }
         }
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                viewModel.openPlaybackEvent.collectLatest {
+                    loadPlayback(it)
+                }
+            }
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
+            launch {
+                viewModel.addSourceState.filter { it is AddSourceState.Success }
+                    .collectLatest {
+                        delay(500)
+                        onAddedExtension()
+                    }
+            }
+
+            launch {
+                viewModel.addSourceState.filter { it is AddSourceState.Error }
+                    .collectLatest {
+                        delay(500)
+                        showErrorAlert("Đã xảy ra lỗi vui lòng thử lại sau")
+                    }
+            }
+
+            launch {
                 viewModel.addSourceState.collectLatest {
-                    when(it) {
-                        is AddSourceState.StartLoad -> {
-                            binding.parseSourceLoadingContainer?.fadeIn {
-                                binding.parseSourceLoadingContainer?.invalidate()
-                            }
-                            binding.statusView?.startLoading()
-                            binding.loadingDescription?.text = "Đang thêm nguồn: ${it.source.sourceUrl}..."
-                        }
-                        is AddSourceState.Success -> {
-                            binding.statusView?.showSuccess()
-                            binding.loadingDescription?.text = "Đã thêm nguồn: ${it.source.sourceUrl}"
-                        }
-                        is AddSourceState.Error -> {
-                            binding.statusView?.showError()
-                            binding.loadingDescription?.text = "Xảy ra lỗi"
-                        }
-                        else -> {
-                            binding.parseSourceLoadingContainer?.fadeOut {  }
-                            binding.loadingDescription?.text = ""
-                        }
-                    }
-                    if (it is AddSourceState.Success || it is AddSourceState.Error) {
-                        delay(1500)
-                        binding.parseSourceLoadingContainer?.fadeOut {  }
-                        binding.loadingDescription?.text = ""
-                    }
+                    handleAddSourceState(it)
                 }
             }
+
         }
 
-        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf ({
-            viewModel.openPlaybackEvent.collectLatest {
-                loadPlayback(it)
-            }
-        }, {
-            viewModel.addSourceState.filter { it is AddSourceState.Success }
-                .collectLatest {
-                    delay(500)
-                    onAddedExtension()
-                }
-        },{
-            viewModel.addSourceState.filter { it is AddSourceState.Error }
-                .collectLatest {
-                    delay(500)
-                    showErrorAlert("Đã xảy ra lỗi vui lòng thử lại sau")
-                }
-        }))
         //Deeplink handle
         handleIntent(intent)
     }
@@ -171,6 +155,35 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
             }
 
+        }
+    }
+
+    private suspend fun handleAddSourceState(state: AddSourceState) {
+        when(state) {
+            is AddSourceState.StartLoad -> {
+                binding.parseSourceLoadingContainer?.fadeIn {
+                    binding.parseSourceLoadingContainer?.invalidate()
+                }
+                binding.statusView?.startLoading()
+                binding.loadingDescription?.text = "Đang thêm nguồn: ${state.source.sourceUrl}..."
+            }
+            is AddSourceState.Success -> {
+                binding.statusView?.showSuccess()
+                binding.loadingDescription?.text = "Đã thêm nguồn: ${state.source.sourceUrl}"
+            }
+            is AddSourceState.Error -> {
+                binding.statusView?.showError()
+                binding.loadingDescription?.text = "Xảy ra lỗi"
+            }
+            else -> {
+                binding.parseSourceLoadingContainer?.fadeOut {  }
+                binding.loadingDescription?.text = ""
+            }
+        }
+        if (state is AddSourceState.Success || state is AddSourceState.Error) {
+            delay(1500)
+            binding.parseSourceLoadingContainer?.fadeOut {  }
+            binding.loadingDescription?.text = ""
         }
     }
     private fun loadPlayback(data: PrepareStreamLinkData) {
@@ -273,7 +286,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     private fun onAddedExtension() {
         Log.d(TAG, "onAddedExtension: success")
-//        showSuccessDialog()
         showSuccessDialog(
             content = "Thêm nguồn kênh thành công!\r\nKhởi động lại ứng dụng để kiểm tra nguồn kênh"
         )

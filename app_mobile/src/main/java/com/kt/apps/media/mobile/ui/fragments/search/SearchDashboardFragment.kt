@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView.OnItemClickListener
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -26,6 +27,7 @@ import com.kt.apps.media.mobile.databinding.LightItemChannelBinding
 import com.kt.apps.media.mobile.databinding.TextviewItemBinding
 import com.kt.apps.media.mobile.utils.PaddingItemDecoration
 import com.kt.apps.media.mobile.utils.onSubmit
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.submits
 import com.kt.apps.media.mobile.utils.textChanges
 import com.kt.apps.media.mobile.viewmodels.SearchDashboardViewModel
@@ -65,9 +67,11 @@ class SearchDashboardFragment : BaseFragment<FragmentSearchDashboardBinding>() {
     }
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            viewModel.registerHistorySearchList().collectLatest {
-                historyAdapter.onRefresh(it)
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                viewModel.registerHistorySearchList().collectLatest {
+                    historyAdapter.onRefresh(it)
+                }
             }
         }
 

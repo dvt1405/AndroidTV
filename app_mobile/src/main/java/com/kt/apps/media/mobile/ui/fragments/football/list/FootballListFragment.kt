@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.ui.fragments.football.list
 
 import android.os.Bundle
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -9,6 +10,7 @@ import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
 import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.onRefresh
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.FootballListInteractor
@@ -61,36 +63,41 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        lifecycleScope.launchWhenStarted {
-            interactor.groupedMatches
-                .combine(interactor.liveMatches, transform = { groupsMatches, liveMatches ->
-                    val baseList = mutableListOf<FootballAdapterType>()
-                    if (liveMatches.isNotEmpty()) {
-                        baseList.add(
-                            FootballAdapterType(
-                                Pair(getString(R.string.live_matches), liveMatches),
-                                true
-                            )
-                        )
-                    }
-                    baseList.addAll(groupsMatches.toList().map {
-                        FootballAdapterType(it, false)
-                    })
-                    baseList
-                }).collectLatest {
-                    _adapter.onRefresh(it)
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest {
+                    interactor.getAllMatchesAsync()
+                        .trackActivity(loadingMatches)
+                        .await()
                 }
-        }
-        lifecycleScope.launchWhenStarted {
-            merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest {
-                interactor.getAllMatchesAsync()
-                    .trackActivity(loadingMatches)
-                    .await()
             }
         }
-        lifecycleScope.launchWhenStarted {
-            loadingMatches.isLoading.collectLatest {
-                swipeRefreshLayout?.isRefreshing = it
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                interactor.groupedMatches
+                    .combine(interactor.liveMatches, transform = { groupsMatches, liveMatches ->
+                        val baseList = mutableListOf<FootballAdapterType>()
+                        if (liveMatches.isNotEmpty()) {
+                            baseList.add(
+                                FootballAdapterType(
+                                    Pair(getString(R.string.live_matches), liveMatches),
+                                    true
+                                )
+                            )
+                        }
+                        baseList.addAll(groupsMatches.toList().map {
+                            FootballAdapterType(it, false)
+                        })
+                        baseList
+                    }).collectLatest {
+                        _adapter.onRefresh(it)
+                    }
+            }
+
+            launch {
+                loadingMatches.isLoading.collectLatest {
+                    swipeRefreshLayout?.isRefreshing = it
+                }
             }
         }
     }

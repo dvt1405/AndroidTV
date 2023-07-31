@@ -21,8 +21,9 @@ class IPTVViewModel(private val provider: ViewModelProvider) {
         extensionViewModel.totalExtensionsConfig.asSuccessFlow("IPTVViewModel")
     }
 
-    val addExtensionsConfig: Flow<ExtensionsConfig>
-        get() = extensionViewModel.addExtensionConfigLiveData.asSuccessFlow(tag = "IPTVViewModel_addExtensionsConfig")
+    val addExtensionsConfig: Flow<ExtensionsConfig> by lazy {
+        extensionViewModel.addExtensionConfigLiveData.asSuccessFlow(tag = "IPTVViewModel_addExtensionsConfig")
+    }
 
     fun reloadData() {
         extensionViewModel.loadAllListExtensionsChannelConfig(true)

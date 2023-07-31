@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.core.os.bundleOf
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2.PageTransformer
@@ -22,11 +23,13 @@ import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.RadioDashboardHel
 import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.TVDashboardHelper
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVDashboardAdapter
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
 import kotlin.math.abs
@@ -79,19 +82,15 @@ class FragmentTVDashboard : BaseFragment<FragmentTvDashboardBinding>() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun initAction(savedInstanceState: Bundle?) {
-        lifecycleScope.launchWhenStarted {
-            tvViewModel.listChannels.collectLatest {
-                Log.d(TAG, "initAction: $it")
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                tvViewModel.groupTVChannel.mapLatest {
+                    it.keys
+                }.collectLatest {
+                    _adapter.onRefresh(it)
+                }
             }
         }
-        lifecycleScope.launchWhenCreated {
-            tvViewModel.groupTVChannel.mapLatest {
-                it.keys
-            }.collectLatest {
-                _adapter.onRefresh(it)
-            }
-        }
-
     }
 
     companion object {

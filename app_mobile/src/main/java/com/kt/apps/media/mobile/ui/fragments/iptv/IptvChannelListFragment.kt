@@ -3,6 +3,7 @@ package com.kt.apps.media.mobile.ui.fragments.iptv
 import android.os.Bundle
 import android.util.Log
 import androidx.core.os.bundleOf
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.kt.apps.core.base.BaseFragment
@@ -64,13 +65,16 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            merge(flowOf(Unit), swipeRefreshLayout.onRefresh() ?: emptyFlow()).collectLatest(loadData)
-        }
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            activityIndicator.isLoading.collectLatest {
-                swipeRefreshLayout.isRefreshing = it
-                recyclerView.showHideSkeleton(it)
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                merge(flowOf(Unit), swipeRefreshLayout.onRefresh()).collectLatest(loadData)
+            }
+
+            launch {
+                activityIndicator.isLoading.collectLatest {
+                    swipeRefreshLayout.isRefreshing = it
+                    recyclerView.showHideSkeleton(it)
+                }
             }
         }
 

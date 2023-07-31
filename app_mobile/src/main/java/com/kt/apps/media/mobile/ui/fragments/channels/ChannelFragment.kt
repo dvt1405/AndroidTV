@@ -106,6 +106,10 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
             setItemViewCacheSize(9)
         }
 
+        with(binding.swipeRefreshLayout) {
+            setDistanceToTriggerSync(screenHeight / 3)
+        }
+
         skeletonScreen.run()
     }
 
@@ -113,14 +117,25 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
     override fun initAction(savedInstanceState: Bundle?) {
         playbackViewModel
 
-        with(binding.swipeRefreshLayout) {
-            setDistanceToTriggerSync(screenHeight / 3)
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                networkStateViewModel?.networkStatus?.collectLatest {
+                    if (it == NetworkState.Connected) {
+                        if (adapter.itemCount == 0) {
+                        } else if (skeletonScreen.isRunning) {
+                            skeletonScreen.hide()
+                        }
+                    }
+                    if (it == NetworkState.Connected && adapter.itemCount == 0)
+                        viewModel.getListTVChannel(forceRefresh = true)
+                }
+            }
         }
 
-        lifecycleScope.launch(CoroutineExceptionHandler { _, throwable ->
-            showErrorDialog(content = getString(R.string.error_happen))
-        }) {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch(CoroutineExceptionHandler { _, _ ->
+                showErrorDialog(content = getString(R.string.error_happen))
+            }) {
                 merge(flowOf(Unit), binding.swipeRefreshLayout.onRefresh())
                     .collectLatest {
                         launch {
@@ -128,36 +143,18 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
                         }.trackActivity(loadingChannel)
                     }
             }
-        }
 
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            loadingChannel.isLoading.collectLatest {
-                swipeRefreshLayout.isRefreshing = it
-                if (it) {
-                    skeletonScreen.run {  }
-                } else {
-                    skeletonScreen.hide()
-                }
-            }
-        }
-        if (isLandscape) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    viewModel.onMinimalPlayer.collectLatest {
-                        with(mainRecyclerView) {
-                            if (it) {
-                                setPadding(0, 0, 0, (screenHeight * 0.5).toInt())
-                                clipToPadding = false
-                            } else {
-                                setPadding(0, 0, 0, 0)
-                            }
-                        }
+            launch {
+                loadingChannel.isLoading.collectLatest {
+                    swipeRefreshLayout.isRefreshing = it
+                    if (it) {
+                        skeletonScreen.run {  }
+                    } else {
+                        skeletonScreen.hide()
                     }
                 }
             }
-        }
 
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             launch(CoroutineExceptionHandler { context, throwable ->
                 swipeRefreshLayout.isRefreshing = false
             }) {
@@ -168,18 +165,18 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
                 }
             }
 
-            launch {
-                networkStateViewModel?.networkStatus?.collectLatest {
-//                        Toast.makeText(this@ChannelFragment.context, "$it", Toast.LENGTH_LONG).show()
-                    if (it == NetworkState.Connected) {
-                        if (adapter.itemCount == 0) {
-//                                tvChannelViewModel?.getListTVChannel(forceRefresh = true)
-                        } else if (skeletonScreen.isRunning) {
-                            skeletonScreen.hide()
+            if (isLandscape) {
+                launch {
+                    viewModel.onMinimalPlayer.collectLatest {
+                        with(mainRecyclerView) {
+                            if (it) {
+                                setPadding(0, 0, 0, (screenHeight * 0.5).toInt())
+                                clipToPadding = false
+                            } else {
+                                setPadding(0, 0, 0, 0)
+                            }
                         }
                     }
-                    if (it == NetworkState.Connected && adapter.itemCount == 0)
-                        viewModel.getListTVChannel(forceRefresh = true)
                 }
             }
         }

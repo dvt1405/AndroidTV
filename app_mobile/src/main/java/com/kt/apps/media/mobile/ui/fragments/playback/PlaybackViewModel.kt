@@ -14,6 +14,8 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
         object IDLE: State()
         data class LOADING(val data: PrepareStreamLinkData): State()
         data class  PLAYING(val data: StreamLinkData): State()
+
+//        data class PAUSE(val data: StreamLinkData, val currentPosition: Long): State()
         data class ERROR(val error: Throwable?): State()
     }
 
@@ -32,4 +34,5 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
     suspend fun playbackError(error: PlaybackThrowable) {
         _stateEvents.emit(State.ERROR(error))
     }
+
 }

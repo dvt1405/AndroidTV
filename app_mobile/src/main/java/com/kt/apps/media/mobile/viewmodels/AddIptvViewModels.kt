@@ -17,9 +17,6 @@ class AddIptvViewModels(private val provider: ViewModelProvider) {
         provider[ExtensionsViewModel::class.java]
     }
 
-    val addExtensionsConfig
-        get() = extensionViewModel.addExtensionConfigLiveData.asSuccessFlow(tag = "addExtensionsConfig")
-
     fun addIPTVSourceAsync(config: ExtensionsConfig) {
         extensionViewModel.cacheProcessingSource(config)
         extensionViewModel.addIPTVSource(config)

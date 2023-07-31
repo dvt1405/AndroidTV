@@ -205,8 +205,27 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
     override fun initAction(savedInstanceState: Bundle?) {
         Log.d(TAG, "initAction:")
 
-        lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                merge(backButton?.clicks() ?: emptyFlow(), exitButton?.clicks() ?: emptyFlow())
+                    .collectLatest {
+                        delay(250)
+                        exoPlayerManager.exoPlayer?.stop()
+                        callback?.onExitMinimal()
+                    }
+            }
+
+            launch {
+                title.collect {
+                    Log.d(TAG, "initAction: state title $it ${this@BasePlaybackFragment}")
+                    titleLabel?.text = it
+                    minimalTitleTv?.text = it
+                }
+            }
+        }
+
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
                 playbackViewModel.state
                     .collectLatest { state ->
                         Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
@@ -218,27 +237,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
                         }
                     }
             }
-        }
 
-        merge(backButton?.clicks() ?: emptyFlow(), exitButton?.clicks() ?: emptyFlow())
-            .debounce(250)
-            .onEach {
-                exoPlayerManager.exoPlayer?.stop()
-                callback?.onExitMinimal()
-
-            }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-
-        lifecycleScope.launchWhenCreated {
-            title.collect {
-                Log.d(TAG, "initAction: state title $it ${this@BasePlaybackFragment}")
-                titleLabel?.text = it
-                minimalTitleTv?.text = it
-            }
-        }
-
-        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf(
-            {
+            launch {
                 playbackViewModel.playbackState.collectLatest {
                     when (it) {
                         PlaybackState.Fullscreen -> changeFullScreenLayout()
@@ -248,22 +248,23 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
                         }
                     }
                 }
-            },
-            {
+            }
+
+            launch {
                 isShowChannelList.collectLatest {
                     if (playbackViewModel.playbackState.value != PlaybackState.Fullscreen) return@collectLatest
                     if (it) showChannelList() else changeFullScreenLayout(shouldRedraw = false)
                 }
-            },{
+            }
+
+            launch {
                 isProgressing.collectLatest {
                     Log.d(TAG, "initAction: isProgressing $it")
                     toggleProgressingUI(it)
                 }
             }
-        ))
 
-        lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            launch {
                 playbackViewModel.isInPipMode.collectLatest {
                     togglePIPLayout(it)
                 }

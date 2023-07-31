@@ -25,7 +25,7 @@ import com.kt.apps.media.mobile.ui.view.childClicks
 import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.matchParentWidth
-import com.kt.apps.media.mobile.utils.repeatLaunchsOnLifeCycle
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.safeLet
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.IPTVPlaybackInteractor
@@ -103,41 +103,34 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
         val extensionsChannel = arguments?.get(EXTRA_TV_CHANNEL) as? ExtensionsChannel
-        repeatLaunchsOnLifeCycle(Lifecycle.State.STARTED, listOf({
-            _playbackViewModel.relatedItems
-                .collectLatest {
-                    binding.channelList?.reloadAllData(it)
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                merge(
+                    extensionsChannel?.let { flowOf(it) } ?: emptyFlow(),
+                    channelListRecyclerView?.childClicks()?.mapNotNull {
+                        (it as? ChannelElement.ExtensionChannelElement)?.model
+                    } ?: emptyFlow()
+                ).collectLatest {
+                    isShowChannelList.emit(false)
+                    _playbackViewModel.loadIPTVJob(it)
                 }
-        }, {
-            merge(
-                extensionsChannel?.let { flowOf(it) } ?: emptyFlow(),
-                channelListRecyclerView?.childClicks()?.mapNotNull {
-                    (it as? ChannelElement.ExtensionChannelElement)?.model
-                } ?: emptyFlow()
-            ).collectLatest {
-                isShowChannelList.emit(false)
-                _playbackViewModel.loadIPTVJob(it)
             }
-        }))
 
-        (arguments?.get(EXTRA_EXTENSION_ID) as? String)?.run {
-            lifecycleScope.launch {
-                repeatOnLifecycle(Lifecycle.State.STARTED) {
-                    _playbackViewModel.loadChannelConfig(this@run)
-                }
+            launch {
+                (((arguments?.get(EXTRA_EXTENSION_ID) as? String)?.let { flowOf(it) }) ?: emptyFlow())
+                    .collectLatest {
+                        _playbackViewModel.loadChannelConfig(it)
+                    }
             }
         }
-    }
-    var currentPosition: Long? = null
-    override fun onPause() {
-        super.onPause()
-        currentPosition = exoPlayerManager.exoPlayer?.currentPosition
-    }
 
-    override suspend fun playVideo(data: StreamLinkData) {
-        super.playVideo(data)
-        currentPosition?.run {
-            exoPlayerManager.exoPlayer?.seekTo(this)
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                _playbackViewModel.relatedItems
+                    .collectLatest {
+                        binding.channelList?.reloadAllData(it)
+                    }
+            }
         }
     }
 

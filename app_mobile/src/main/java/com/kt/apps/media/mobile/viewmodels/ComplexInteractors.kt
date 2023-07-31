@@ -29,26 +29,17 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
         provider[NetworkStateViewModel::class.java]
     }
 
-    private val tvChannelViewModel by lazy {
-        provider[TVChannelViewModel::class.java]
-    }
-
     private val extensionViewModel by lazy {
         provider[ExtensionsViewModel::class.java]
-    }
-
-    private val playbackViewModel by lazy {
-        provider[PlaybackViewModel::class.java]
     }
 
     private val uiControlViewModel by lazy {
         provider[UIControlViewModel::class.java]
     }
 
-    val networkStatus: StateFlow<NetworkState>
-        get() = networkStateViewModel.networkStatus
+    val networkStatus: StateFlow<NetworkState> = networkStateViewModel.networkStatus
 
-    val progressingExtensionsConfig: StateFlow<ExtensionsConfig?> by lazy {
+    private val progressingExtensionsConfig: StateFlow<ExtensionsConfig?> by lazy {
         extensionViewModel.processingExtensionConfig
     }
     val addSourceState: SharedFlow<AddSourceState> by lazy {
@@ -69,8 +60,7 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
             .shareIn(scope, SharingStarted.WhileSubscribed())
     }
 
-    val openPlaybackEvent
-        get() = uiControlViewModel.openPlayback
+    val openPlaybackEvent = uiControlViewModel.openPlayback
 
     val isShowingPlayback by lazy {
         uiControlViewModel.playerState
