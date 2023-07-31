@@ -18,10 +18,6 @@ class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
     override val layoutResId: Int
         get() = R.layout.fragment_dashboard
 
-    private val tvViewModel by lazy {
-        ViewModelProvider(requireActivity(), factory)[TVChannelViewModel::class.java]
-    }
-
     override val screenName: String
         get() = "DashboardFragment"
     private val _adapter by lazy {
@@ -51,6 +47,5 @@ class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
         }
 //        binding.viewpager.setCurrentItem(1, false)
         (binding.bottomNavigation as NavigationBarView).selectedItemId = R.id.tv
-        tvViewModel.getListTVChannel(false)
     }
 }

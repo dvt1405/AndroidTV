@@ -8,6 +8,7 @@ import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.football.dashboard.FootballDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
+import com.kt.apps.media.mobile.ui.info.InfoFragment
 
 class DashboardPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
     private val _listItem by lazy {
@@ -28,7 +29,7 @@ class DashboardPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateA
             R.id.extension -> IptvDashboardFragment() //FragmentIptvDashboard()
             R.id.search -> SearchDashboardFragment() //FragmentSearch()
             R.id.football -> FootballDashboardFragment()
-//            R.id.info -> FragmentTVDashboard() //FragmentInfo()
+            R.id.info -> InfoFragment()
             else -> throw IllegalStateException("Not support for item: ${_listItem[position]}")
         }
     }

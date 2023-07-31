@@ -68,7 +68,7 @@ class TVChannelFragmentInteractors(private val provider: ViewModelProvider, priv
     override val listChannels: Flow<List<TVChannel>> by lazy {
         tvChannelViewModel.tvChannelLiveData.asSuccessFlow(tag = "tvchannel - listchannels")
             .mapLatest {
-                it.filter { channel -> channel.isRadio }
+                it.filter { channel -> !channel.isRadio }
             }
     }
 

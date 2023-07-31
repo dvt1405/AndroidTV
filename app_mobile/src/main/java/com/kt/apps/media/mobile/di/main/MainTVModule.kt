@@ -20,6 +20,7 @@ import com.kt.apps.media.mobile.ui.fragments.tv.RadioPerChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.TVPerChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.tvchannels.RadioChannelsFragment
 import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
+import com.kt.apps.media.mobile.ui.info.InfoFragment
 import com.kt.apps.media.mobile.ui.playback.PlaybackActivity
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
@@ -84,4 +85,7 @@ abstract class MainTVModule {
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentSearchList(): SearchListFragment
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentInfo(): InfoFragment
 }
