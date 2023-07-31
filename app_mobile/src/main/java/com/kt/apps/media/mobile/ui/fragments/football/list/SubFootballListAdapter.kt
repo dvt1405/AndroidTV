@@ -48,8 +48,8 @@ class LiveSubFootballListAdapter: SubFootballListAdapter() {
         super.bindItem(item, binding, position, holder)
         with(binding) {
             cardView.updateLayoutParams<ViewGroup.LayoutParams> {
-                width = 400.dpToPx()
-                height = 228.dpToPx()
+                width = cardView.context.resources.getDimensionPixelSize(R.dimen.football_item_width_live)
+                height = cardView.context.resources.getDimensionPixelSize(R.dimen.football_item_height_live)
             }
         }
     }

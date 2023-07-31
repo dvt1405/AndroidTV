@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
@@ -63,31 +64,41 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
 
 class TVChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
     : ChannelFragmentInteractors(provider, coroutineContext) {
-    override val listChannels: Flow<List<TVChannel>>
-        get() = tvChannelViewModel.tvChannelLiveData.asFlow()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override val listChannels: Flow<List<TVChannel>> by lazy {
+        tvChannelViewModel.tvChannelLiveData.asSuccessFlow(tag = "tvchannel - listchannels")
+            .mapLatest {
+                it.filter { channel -> channel.isRadio }
+            }
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val groupTVChannel: Flow<GroupTVChannel>
-        get() = listChannels.mapLatest {
+    override val groupTVChannel: StateFlow<GroupTVChannel> by lazy {
+        listChannels.mapLatest {
             groupAndSort(it).associate { value ->
                 value.first to value.second
             }
-        }
+        }.stateIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed(), emptyMap())
+    }
 }
 
 class RadioChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
     : ChannelFragmentInteractors(provider, coroutineContext) {
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val listChannels: Flow<List<TVChannel>>
-        get() = tvChannelViewModel.tvChannelLiveData.asFlow().mapLatest {
+    override val listChannels: Flow<List<TVChannel>> by lazy {
+        tvChannelViewModel.tvChannelLiveData.asSuccessFlow(tag = "radioChannel - listchannels").mapLatest {
             it.filter { channel -> channel.isRadio }
         }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val groupTVChannel: Flow<GroupTVChannel>
-        get() = listChannels.mapLatest {
+    override val groupTVChannel: StateFlow<GroupTVChannel> by lazy {
+        listChannels.mapLatest {
             groupAndSort(it).associate { value ->
                 value.first to value.second
             }
         }
+            .stateIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed(), emptyMap())
+    }
 
 }

@@ -38,7 +38,7 @@
     </style>
     
     <style name="TabTextAppearance" parent="TextAppearance.AppCompat.Medium">
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">@dimen/item_row_title</item>
     </style>
 
     <style name="RoundedCornersImageView" parent="">

@@ -13,6 +13,7 @@ import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityMainBinding
 import com.kt.apps.media.mobile.models.NetworkState
@@ -115,13 +116,18 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         with(binding.swipeRefreshLayout) {
             setDistanceToTriggerSync(screenHeight / 3)
         }
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            merge(flowOf(Unit), binding.swipeRefreshLayout.onRefresh())
-                .collectLatest {
-                    launch {
-                        viewModel.getListTVChannelAsync(true)
-                    }.trackActivity(loadingChannel)
-                }
+
+        lifecycleScope.launch(CoroutineExceptionHandler { _, throwable ->
+            showErrorDialog(content = getString(R.string.error_happen))
+        }) {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                merge(flowOf(Unit), binding.swipeRefreshLayout.onRefresh())
+                    .collectLatest {
+                        launch {
+                            viewModel.getListTVChannelAsync(true)
+                        }.trackActivity(loadingChannel)
+                    }
+            }
         }
 
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {

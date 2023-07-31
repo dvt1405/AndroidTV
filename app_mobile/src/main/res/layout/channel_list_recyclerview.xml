@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:fel_edge="top|bottom"
-    app:fel_size_top="60dp"
-    app:fel_size_bottom="60dp"
+    app:fel_size_top="@dimen/fading_edge_size"
+    app:fel_size_bottom="@dimen/fading_edge_size"
     >
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/main_channel_recycler_view"

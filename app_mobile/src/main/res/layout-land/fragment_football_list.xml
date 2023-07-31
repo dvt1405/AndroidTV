@@ -21,43 +21,9 @@
                 android:clipToPadding="false"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 android:requiresFadingEdge="vertical"
-                android:fadingEdgeLength="60dp"
+                android:fadingEdgeLength="@dimen/fading_edge_size"
                 />
         </com.kt.apps.media.mobile.utils.ErrorPlaceholderView>
-<!--        <ViewSwitcher-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="match_parent"-->
-<!--            android:id="@+id/view_switcher"-->
-<!--            >-->
-<!--            <androidx.recyclerview.widget.RecyclerView-->
-<!--                android:id="@+id/main_channel_recycler_view"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:fadingEdge="vertical"-->
-<!--                android:clipToPadding="false"-->
-<!--                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"-->
-<!--                android:requiresFadingEdge="vertical"-->
-<!--                android:fadingEdgeLength="60dp"-->
-<!--                />-->
-<!--            <androidx.constraintlayout.widget.ConstraintLayout-->
-<!--                android:id="@+id/error_layout"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="match_parent">-->
-<!--                <com.google.android.material.textview.MaterialTextView-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    app:layout_constraintStart_toStartOf="parent"-->
-<!--                    app:layout_constraintTop_toTopOf="parent"-->
-<!--                    app:layout_constraintEnd_toEndOf="parent"-->
-<!--                    app:layout_constraintBottom_toBottomOf="parent"-->
-<!--                    android:textColor="@color/white"-->
-<!--                    android:textSize="14sp"-->
-<!--                    android:text="@string/error_happen"-->
-<!--                    />-->
-<!--            </androidx.constraintlayout.widget.ConstraintLayout>-->
-
-
-<!--        </ViewSwitcher>-->
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </layout>

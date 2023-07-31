@@ -31,6 +31,7 @@ import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.utils.*
 import com.kt.apps.football.model.FootballMatch
+import com.kt.apps.media.mobile.App
 import com.kt.apps.resources.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
@@ -292,8 +293,9 @@ inline val channelItemDecoration
             parent: RecyclerView,
             state: RecyclerView.State
         ) {
-            outRect.right = 40.dpToPx()
-            outRect.bottom = 40.dpToPx()
+            val value = App.get().resources.getDimensionPixelSize(com.kt.apps.media.mobile.R.dimen.item_channel_decoration)
+            outRect.right = value
+            outRect.bottom = value
         }
     }
 
