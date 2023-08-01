@@ -8,6 +8,7 @@
         android:layout_height="match_parent"
         tools:context=".ui.fragments.search.SearchDashboardFragment"
         tools:background="@color/black"
+        android:background="@color/black"
         >
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout1"

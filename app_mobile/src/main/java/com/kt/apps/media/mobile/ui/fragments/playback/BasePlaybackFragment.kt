@@ -125,7 +125,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     private val displayMode = MutableStateFlow<DisplayMode>(DisplayMode.IDLE)
     private val title = MutableStateFlow("")
-    private val isProgressing = MutableStateFlow(false)
+    private val isProgressing = MutableStateFlow(true)
     protected val isShowChannelList = MutableStateFlow(false)
 
 
@@ -244,6 +244,13 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     minimalTitleTv?.text = it
                 }
             }
+
+            launch {
+                isProgressing.collectLatest {
+                    Log.d(TAG, "initAction: isProgressing $it")
+                    toggleProgressingUI(it)
+                }
+            }
         }
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -269,12 +276,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                             exoPlayer?.keepScreenOn = false
                         }
                     }
-                }
-            }
-            launch {
-                isProgressing.collectLatest {
-                    Log.d(TAG, "initAction: isProgressing $it")
-                    toggleProgressingUI(it)
                 }
             }
 

@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
 import com.kt.apps.media.mobile.viewmodels.features.SearchViewModels
+import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -21,6 +22,12 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
     private val sharedPreferences by lazy {
         PreferenceManager.getDefaultSharedPreferences(context)
     }
+
+    private val uiControlViewModel by lazy {
+        provider[UIControlViewModel::class.java]
+    }
+
+    val onOpenPlayback = uiControlViewModel.openPlayback
 
     suspend fun registerHistorySearchList(): Flow<List<String>> {
         return callbackFlow {

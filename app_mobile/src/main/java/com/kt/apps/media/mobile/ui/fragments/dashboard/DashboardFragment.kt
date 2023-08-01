@@ -7,24 +7,37 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.BaseAdapter
 import android.widget.ListAdapter
+import android.widget.PopupWindow
 import androidx.appcompat.view.menu.MenuBuilder
 import androidx.appcompat.view.menu.MenuPopupHelper
 import androidx.appcompat.widget.ListPopupWindow
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.children
+import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationBarView
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.fadeIn
+import com.kt.apps.core.utils.fadeOut
+import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentDashboardBinding
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.DashboardPagerAdapter
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenWidth
+import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
@@ -38,6 +51,10 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         get() = "DashboardFragment"
     private val _adapter by lazy {
         DashboardPagerAdapter(requireActivity())
+    }
+
+    private val uiControlViewModel by lazy {
+        ViewModelProvider(this.requireActivity(), factory)[UIControlViewModel::class.java]
     }
 
     private val navigationBar by lazy {
@@ -77,8 +94,14 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
             (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener {
                 if (it.itemId == R.id.more) {
                     this@DashboardFragment.popupMenu.show()
-                    return@setOnItemSelectedListener  false
+                    return@setOnItemSelectedListener  true
                 }
+                if (it.itemId == R.id.search) {
+//                    this.binding.searchFragmentContainer?.fadeIn {  }
+                    showSearchPopup()
+                    return@setOnItemSelectedListener true
+                }
+//                binding.searchFragmentContainer?.fadeOut {  }
                 binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
                 return@setOnItemSelectedListener true
             }
@@ -96,5 +119,15 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
 
 
         (binding.bottomNavigation as NavigationBarView).selectedItemId = R.id.tv
+    }
+
+    private fun showSearchPopup() {
+        val searchFragment = SearchDashboardFragment()
+
+        this.activity?.supportFragmentManager?.beginTransaction()
+            ?.add(android.R.id.content, searchFragment)
+            ?.addToBackStack(searchFragment.screenName)
+            ?.commit()
+
     }
 }

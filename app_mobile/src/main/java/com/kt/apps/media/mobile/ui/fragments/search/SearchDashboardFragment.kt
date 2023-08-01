@@ -25,6 +25,7 @@ import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentSearchDashboardBinding
 import com.kt.apps.media.mobile.databinding.LightItemChannelBinding
 import com.kt.apps.media.mobile.databinding.TextviewItemBinding
+import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.PaddingItemDecoration
 import com.kt.apps.media.mobile.utils.onSubmit
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
@@ -35,7 +36,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-class SearchDashboardFragment : BaseFragment<FragmentSearchDashboardBinding>() {
+class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBinding>() {
     @Inject
     lateinit var factory: ViewModelProvider.Factory
     override val layoutResId: Int
@@ -71,6 +72,15 @@ class SearchDashboardFragment : BaseFragment<FragmentSearchDashboardBinding>() {
             launch {
                 viewModel.registerHistorySearchList().collectLatest {
                     historyAdapter.onRefresh(it)
+                }
+            }
+
+            if (!isLandscape) {
+                launch {
+                    viewModel.onOpenPlayback
+                        .collectLatest {
+                            activity?.onBackPressed()
+                        }
                 }
             }
         }

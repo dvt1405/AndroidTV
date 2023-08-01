@@ -241,10 +241,16 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
 
     override fun onBackPressed() {
-        if (layoutHandler?.onBackEvent() == true) {
-            return
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack()
+        } else {
+            if (layoutHandler?.onBackEvent() == true) {
+                return
+            }
+            super.onBackPressed()
         }
-        super.onBackPressed()
+
+
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
