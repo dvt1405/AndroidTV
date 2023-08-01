@@ -29,11 +29,31 @@ data class ChannelListData(val title: String, val items: List<IChannelElement>)
 class ChannelListRecyclerView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
+    enum class Mode {
+        FLEX, LINEAR
+    }
+    private var mode: Mode = Mode.LINEAR
     private val adapter by lazy { ChannelListAdapter().apply {
-        onChildItemClickListener = { item, position ->
-            this@ChannelListRecyclerView.onChildItemClickListener(item, position)
+            onChildItemClickListener = { item, position ->
+                this@ChannelListRecyclerView.onChildItemClickListener(item, position)
+            }
         }
     }
+    private val linearLayoutManager by lazy {
+        LinearLayoutManager(context)
+
+    }
+    private val singleAdapter by lazy { ChannelListAdapter.ChildChannelAdapter().apply {
+        onItemRecyclerViewCLickListener = { item, position ->
+            this@ChannelListRecyclerView.onChildItemClickListener(item, position)
+        }
+    } }
+
+    private val singleLayoutManager by lazy {
+        FlexboxLayoutManager(this.context).apply {
+            flexDirection = FlexDirection.ROW
+            justifyContent = JustifyContent.FLEX_START
+        }
     }
     private val recyclerView by lazy {
         findViewById<RecyclerView>(R.id.main_channel_recycler_view)
@@ -41,7 +61,6 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     private val skeletonScreen by lazy {
         recyclerView.let {
             KunSkeleton.bind(it)
-                .adapter(adapter)
                 .itemCount(10)
                 .recyclerViewLayoutItem(
                     R.layout.item_row_channel_skeleton,
@@ -70,14 +89,46 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     }
 
     fun reloadAllData(list: List<ChannelListData>) {
-        adapter.onRefresh(list)
+//        adapter.onRefresh(list)
+        if (list.size == 1) {
+            if (
+                recyclerView.layoutManager !is FlexboxLayoutManager
+                || recyclerView.adapter != singleAdapter
+                    ) {
+                recyclerView.adapter = singleAdapter
+                recyclerView.layoutManager = singleLayoutManager
+                recyclerView.addItemDecoration(channelItemDecoration)
+            }
+            singleAdapter.onRefresh(list[0].items)
+            mode = Mode.FLEX
+        } else {
+            if (
+                recyclerView.layoutManager !is LinearLayoutManager
+                || recyclerView.adapter != adapter
+            ) {
+                recyclerView.adapter = adapter
+                recyclerView.layoutManager = linearLayoutManager
+                recyclerView.removeItemDecoration(channelItemDecoration)
+            }
+            adapter.onRefresh(list)
+            mode = Mode.LINEAR
+        }
     }
 
     fun showHideSkeleton(isShow: Boolean) {
         if (isShow) {
             skeletonScreen.run {  }
         } else {
-            skeletonScreen.hide()
+            skeletonScreen.hide {
+                recyclerView.adapter = when(mode) {
+                    Mode.FLEX -> singleAdapter
+                    Mode.LINEAR -> adapter
+                }
+                recyclerView.layoutManager = when(mode) {
+                    Mode.FLEX -> singleLayoutManager
+                    Mode.LINEAR -> linearLayoutManager
+                }
+            }
         }
     }
 }
@@ -94,18 +145,10 @@ class ChannelListAdapter: BaseAdapter<ChannelListData, ItemRowChannelBinding>() 
         holder: BaseViewHolder<ChannelListData, ItemRowChannelBinding>
     ) {
         binding.title.text = item.title
-        with(binding.tvChannelChildRecyclerView) {
-            layoutManager = if (itemCount > 1) {
-                LinearLayoutManager(binding.root.context, RecyclerView.HORIZONTAL, false).apply {
-                    initialPrefetchItemCount = item.items.size
-                    isItemPrefetchEnabled = true
-                }
-            } else {
-                FlexboxLayoutManager(binding.root.context).apply {
-                    isItemPrefetchEnabled = true
-                    flexDirection = FlexDirection.ROW
-                    justifyContent = JustifyContent.FLEX_START
-                }
+        binding.tvChannelChildRecyclerView.apply {
+            layoutManager = LinearLayoutManager(binding.root.context, RecyclerView.HORIZONTAL, false).apply {
+                initialPrefetchItemCount = item.items.size
+                isItemPrefetchEnabled = true
             }
             addItemDecoration(channelItemDecoration)
             setHasFixedSize(true)

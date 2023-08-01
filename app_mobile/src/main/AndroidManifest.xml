@@ -21,7 +21,6 @@
         <activity
             android:name=".ui.complex.ComplexActivity"
             android:exported="true"
-            android:screenOrientation="landscape"
             android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
             android:resizeableActivity="true"

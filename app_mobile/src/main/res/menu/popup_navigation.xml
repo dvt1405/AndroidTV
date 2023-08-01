@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/football"
+        android:enabled="true"
+        android:icon="@drawable/ic_soccer_ball"
+        android:title="Bóng đá"
+        android:visible="true" />
+
+    <item
+        android:id="@+id/extension"
+        android:enabled="true"
+        android:icon="@drawable/iptv"
+        android:title="IPTV"
+        android:visible="true" />
+    <item
+        android:id="@+id/info"
+        android:enabled="true"
+        android:icon="@drawable/ic_outline_info_24"
+        android:title="Thông tin"
+        android:visible="true" />
+</menu>

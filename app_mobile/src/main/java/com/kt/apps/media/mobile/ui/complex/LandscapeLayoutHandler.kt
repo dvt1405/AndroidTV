@@ -55,9 +55,6 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     private val fragmentContainerPlayback: View?
         get() = weakActivity.get()?.binding?.fragmentContainerPlayback
 
-    override val motionLayout: MotionLayout?
-        get() = weakActivity.get()?.binding?.complexMotionLayout
-
     private val surfaceView: ConstraintLayout? by lazy {
         weakActivity.get()?.binding?.surfaceView as? ConstraintLayout
     }

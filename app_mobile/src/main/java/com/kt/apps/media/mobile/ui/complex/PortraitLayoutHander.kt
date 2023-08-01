@@ -7,15 +7,23 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.transition.Transition
+import androidx.transition.TransitionManager
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
+import com.kt.apps.media.mobile.utils.CustomTransition
+import com.kt.apps.media.mobile.utils.alignParent
+import com.kt.apps.media.mobile.utils.fillParent
+import com.kt.apps.media.mobile.utils.safeLet
 import java.lang.ref.WeakReference
 import kotlin.math.abs
+import kotlin.properties.Delegates
 
 interface ComplexLayoutHandler {
-    val motionLayout: MotionLayout?
     var onPlaybackStateChange: (PlaybackState) -> Unit
     fun onStartLoading()
     fun onLoadedVideoSuccess(videoSize: VideoSize)
@@ -33,8 +41,7 @@ interface ComplexLayoutHandler {
 class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActivity>) : ComplexLayoutHandler {
     sealed class State {
         object IDLE: State()
-        object LOADING: State()
-        data class SUCCESS(val videoSize: VideoSize): State()
+        object MINIMAL: State()
         object FULLSCREEN: State()
     }
 
@@ -48,12 +55,24 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     private val fragmentContainerPlayback: View?
         get() = weakActivity.get()?.binding?.fragmentContainerPlayback
 
-    override val motionLayout: MotionLayout?
-        get() = weakActivity.get()?.binding?.complexMotionLayout
+    private val surfaceView: ConstraintLayout? by lazy {
+        weakActivity.get()?.binding?.surfaceView as? ConstraintLayout
+    }
+
+    private val guideline by lazy {
+        weakActivity.get()?.binding?.guidelineComplex
+    }
 
     override var onPlaybackStateChange: (PlaybackState) -> Unit = { }
-    private var state: State = State.IDLE
-    private var cachedVideoSize: VideoSize? = null
+    private var state: State by Delegates.observable(State.IDLE) { property, oldValue, newValue ->
+        if (oldValue !== newValue) {
+            onPlaybackStateChange(when(newValue) {
+                State.IDLE -> PlaybackState.Invisible
+                State.MINIMAL -> PlaybackState.Minimal
+                State.FULLSCREEN -> PlaybackState.Fullscreen
+            })
+        }
+    }
     private val gestureDetector: GestureDetector by lazy {
         GestureDetector(context, object: GestureDetector.SimpleOnGestureListener() {
             override fun onDown(e: MotionEvent): Boolean {
@@ -70,6 +89,8 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
                 if (abs(diffY) > swipeThreshold && abs(velocityY) > velocitySwipeThreshold) {
                     if (diffY > 0) {
                         onSwipeBottom(e1, e2)
+                    } else {
+                        onSwipeUp(e1, e2)
                     }
                 }
                 return false
@@ -78,55 +99,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     }
 
     init {
-        motionLayout?.setTransitionListener(object : MotionLayout.TransitionListener {
-            override fun onTransitionStarted(
-                motionLayout: MotionLayout?,
-                startId: Int,
-                endId: Int
-            ) {
-                Log.d(TAG, "onTransitionStarted: $startId $endId")
-            }
 
-            override fun onTransitionChange(
-                motionLayout: MotionLayout?,
-                startId: Int,
-                endId: Int,
-                progress: Float
-            ) {
-                Log.d(TAG, "onTransitionChange: $startId $endId")
-//                onPlaybackStateChange(when(endId) {
-//                    R.id.fullscreen -> PlaybackState.Fullscreen
-//                    R.id.end -> PlaybackState.Minimal
-//                    R.id.start -> PlaybackState.Invisible
-//                    else -> PlaybackState.Invisible
-//                })
-            }
-
-            override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-//                onPlaybackStateChange(when(currentId) {
-//                    R.id.fullscreen -> PlaybackState.Fullscreen
-//                    R.id.end -> PlaybackState.Minimal
-//                    R.id.start -> PlaybackState.Invisible
-//                    else -> PlaybackState.Invisible
-//                })
-            }
-
-            override fun onTransitionTrigger(
-                motionLayout: MotionLayout?,
-                triggerId: Int,
-                positive: Boolean,
-                progress: Float
-            ) {
-                Log.d(TAG, "onTransitionTrigger: $triggerId")
-                onPlaybackStateChange(when(triggerId) {
-                    R.id.fullscreen -> PlaybackState.Fullscreen
-                    R.id.end -> PlaybackState.Minimal
-                    R.id.start -> PlaybackState.Invisible
-                    else -> PlaybackState.Invisible
-                })
-            }
-
-        })
     }
     override fun onTouchEvent(ev: MotionEvent) {
         gestureDetector.onTouchEvent(ev)
@@ -134,24 +107,22 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
 
     override fun onOpenFullScreen() {
         if (state != State.FULLSCREEN) {
-            motionLayout?.transitionToState(R.id.fullscreen)
-            state = State.FULLSCREEN
-            return
-        }
-        if (state == State.FULLSCREEN) {
-            cachedVideoSize?.let {
-                motionLayout?.transitionToState(R.id.end)
-                state = State.SUCCESS(it)
-            } ?: run {
-                motionLayout?.transitionToState(R.id.end)
-                state = State.IDLE
-            }
+            transitionFullscreen()
+        } else {
+            transitionMinimal()
         }
 
     }
 
-    override fun onCloseMinimal() {
+    override fun forceFullScreen() {
+        guideline?.run {
+            setGuidelinePercent(1f)
+            this@PortraitLayoutHandler.state = State.FULLSCREEN
+        }
+    }
 
+    override fun onCloseMinimal() {
+        transitionIDLE()
     }
 
     override fun onBackEvent() : Boolean {
@@ -164,62 +135,65 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
 
     override fun onStartLoading() {
         if (state == State.IDLE) {
-            motionLayout?.transitionToState(R.id.end)
-            state = State.LOADING
+            transitionMinimal()
         }
     }
 
-
-
-    override fun onLoadedVideoSuccess(videoSize: VideoSize) {   
-        if (this.state != State.FULLSCREEN) {
-            this.state = State.SUCCESS(videoSize)
-            calculateCurrentSize(videoSize)
-        }
-    }
+    override fun onLoadedVideoSuccess(videoSize: VideoSize) { }
 
 
     override fun onReset(isPlaying: Boolean) {
-        state = if (isPlaying) {
-            motionLayout?.getConstraintSet(R.id.end)?.let {
-                it.setGuidelinePercent(R.id.guideline_complex, 0.3F)
-                motionLayout?.transitionToState(R.id.end)
-            }
-            State.LOADING
+        if (isPlaying) {
+            transitionMinimal()
         } else {
-            motionLayout?.transitionToState(R.id.start)
-            State.IDLE
+            transitionIDLE()
         }
     }
 
-    private fun calculateCurrentSize(size: VideoSize) {
-        val motionLayout = motionLayout?: return
-        val wpx = motionLayout.resources.displayMetrics.widthPixels
-        val hpx = motionLayout.resources.displayMetrics.heightPixels
-        if (size.width == 0 || size.height == 0) {
-            return
-        }
-        val newHeight = wpx  / (size.width * 1.0 / size.height)
-        val percentage: Float = (newHeight * 1.0 / hpx).toFloat()
-
-        motionLayout.getConstraintSet(R.id.end)?.let {
-            it.setGuidelinePercent(R.id.guideline_complex, percentage)
-            motionLayout.transitionToState(R.id.end)
+    fun onSwipeUp(e1: MotionEvent, e2: MotionEvent) {
+        val hitRect = Rect()
+        val location = intArrayOf(0, 0)
+        weakActivity.get()?.binding?.fragmentContainerChannels?.run {
+            getHitRect(hitRect)
+            getLocationOnScreen(location)
+            if (hitRect.contains(e1.x.toInt(), e1.y.toInt())) {
+                Log.d(TAG, "onSwipeUp: ")
+                if (state == State.FULLSCREEN) {
+                    transitionMinimal()
+                }
+            }
         }
     }
-
     fun onSwipeBottom(e1: MotionEvent, e2: MotionEvent) {
         val hitRect = Rect()
         val location = intArrayOf(0, 0)
         fragmentContainerPlayback?.getHitRect(hitRect)
         fragmentContainerPlayback?.getLocationOnScreen(location)
 
-//        hitRect.offset(location[0], location[1])
         if (hitRect.contains(e1.x.toInt(), e1.y.toInt())) {
             Log.d(TAG, "onSwipeBottom: ")
-            motionLayout?.transitionToState(R.id.fullscreen)
+            transitionFullscreen()
         }
     }
 
+    private fun transitionFullscreen() {
+        guideline?.run {
+            setGuidelinePercent(0.6f)
+            this@PortraitLayoutHandler.state = State.FULLSCREEN
+        }
+    }
 
+    private fun transitionMinimal() {
+        guideline?.run {
+            setGuidelinePercent(0.3f)
+            this@PortraitLayoutHandler.state = State.MINIMAL
+        }
+    }
+
+    private fun transitionIDLE() {
+        guideline?.run {
+            setGuidelinePercent(0f)
+            this@PortraitLayoutHandler.state = State.IDLE
+        }
+    }
 }

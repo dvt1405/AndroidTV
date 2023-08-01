@@ -1,17 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <data></data>
-    <FrameLayout
+    <androidx.constraintlayout.motion.widget.MotionLayout
+        android:id="@+id/motion_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".ui.fragments.iptv.IptvDashboardFragment">
+        app:layoutDescription="@xml/fragment_iptv_dashboard_scene"
+        tools:background="@color/black"
+        >
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/add_extension_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/add_source_description"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/add_extension"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            app:strokeColor="@color/white"
+            android:text="@string/add_extension"
+            android:textColor="@color/white"
+            app:cornerRadius="20dp"
+            app:icon="@drawable/round_add_circle_outline_24"
+            app:iconTint="@color/white"
+            android:textSize="14sp"
+            />
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            app:tabBackground="@drawable/tabs_selector"
+            app:tabTextColor="@color/white"
+            app:tabSelectedTextColor="@color/black"
+            android:background="@color/transparent"
+            app:tabIndicatorColor="@color/transparent"
+            app:tabMode="scrollable"
+            app:tabPaddingStart="40dp"
+            app:tabPaddingEnd="40dp"
+            app:tabPaddingTop="6dp"
+            app:tabPaddingBottom="6dp"
+            app:tabMinWidth="20dp"
+            app:tabTextAppearance="@style/TabTextAppearance"
+            app:tabGravity="start"
+            />
 
-        <!-- TODO: Update blank fragment layout -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="@string/hello_blank_fragment" />
+        <ImageButton
+            android:id="@+id/remove_extension"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:iconTint="@color/white"
+            android:src="@drawable/ic_remove"
+            android:background="@color/transparent"
+            android:padding="8dp"
+            android:tint="@color/white" />
 
-    </FrameLayout>
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewpager"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="32dp"
+            />
+    </androidx.constraintlayout.motion.widget.MotionLayout>
 </layout>

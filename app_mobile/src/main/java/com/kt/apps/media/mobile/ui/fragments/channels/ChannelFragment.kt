@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -108,6 +109,15 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
 
         with(binding.swipeRefreshLayout) {
             setDistanceToTriggerSync(screenHeight / 3)
+        }
+
+        binding.mainChannelRecyclerView.doOnPreDraw {
+            val viewWidth = it.measuredWidth
+            val spacing = it.context.resources.getDimensionPixelSize(R.dimen.item_channel_decoration)
+            val preferWidth = viewWidth / 3 - spacing * 2
+            adapter.preferWidth = preferWidth
+            binding.mainChannelRecyclerView.adapter = null
+            binding.mainChannelRecyclerView.adapter = adapter
         }
 
         skeletonScreen.run()

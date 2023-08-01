@@ -1,17 +1,33 @@
 package com.kt.apps.media.mobile.ui.fragments.dashboard
 
 import android.os.Bundle
+import android.util.Log
+import android.view.Gravity
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.ListAdapter
+import androidx.appcompat.view.menu.MenuBuilder
+import androidx.appcompat.view.menu.MenuPopupHelper
+import androidx.appcompat.widget.ListPopupWindow
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.children
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationBarView
 import com.kt.apps.core.base.BaseFragment
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentDashboardBinding
+import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.DashboardPagerAdapter
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.utils.screenWidth
 import javax.inject.Inject
 
-class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
+class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
     @Inject
     lateinit var factory: ViewModelProvider.Factory
 
@@ -22,6 +38,21 @@ class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
         get() = "DashboardFragment"
     private val _adapter by lazy {
         DashboardPagerAdapter(requireActivity())
+    }
+
+    private val navigationBar by lazy {
+        binding.bottomNavigation as NavigationBarView
+    }
+
+    private val popupMenu by lazy {
+        val view = navigationBar.findViewById<View>(R.id.more)
+        PopupMenu(requireContext(), view).apply {
+            menuInflater.inflate(R.menu.popup_navigation, menu)
+            setOnMenuItemClickListener {popupItem ->
+                binding.viewpager.setCurrentItem(_adapter.getPositionForItem(popupItem.itemId), false)
+                true
+            }
+        }
     }
 
     override fun initView(savedInstanceState: Bundle?) {
@@ -36,16 +67,34 @@ class DashboardFragment : BaseFragment<FragmentDashboardBinding>() {
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
+        if (!isLandscape) {
+            val popupMenu = popupMenu.menu
+            val navigationMenu = (binding.bottomNavigation as NavigationBarView).menu
+            _adapter.onRefresh((popupMenu.children.toList() + navigationMenu.children.toList()).map {
+                it.itemId
+            }.asSequence())
 
-        _adapter.onRefresh((binding.bottomNavigation as NavigationBarView).menu.children.map {
-            it.itemId
-        })
+            (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener {
+                if (it.itemId == R.id.more) {
+                    this@DashboardFragment.popupMenu.show()
+                    return@setOnItemSelectedListener  false
+                }
+                binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
+                return@setOnItemSelectedListener true
+            }
+        } else {
+            _adapter.onRefresh((binding.bottomNavigation as NavigationBarView).menu.children.map {
+                it.itemId
+            })
 
-        (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener {
-            binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
-            return@setOnItemSelectedListener true
+            (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener {
+                binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
+                return@setOnItemSelectedListener true
+            }
         }
-//        binding.viewpager.setCurrentItem(1, false)
+
+
+
         (binding.bottomNavigation as NavigationBarView).selectedItemId = R.id.tv
     }
 }

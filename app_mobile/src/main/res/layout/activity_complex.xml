@@ -3,32 +3,71 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <data></data>
-    <FrameLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <androidx.constraintlayout.motion.widget.MotionLayout
-            android:id="@+id/complex_motion_layout"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        >
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline_complex"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0"
+            />
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragment_container_channels"
+            android:name="com.kt.apps.media.mobile.ui.fragments.dashboard.DashboardFragment"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            tools:layout="@layout/fragment_dashboard"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/guideline_complex"
+            app:layout_constraintLeft_toLeftOf="parent"
+            />
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragment_container_playback"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layoutDescription="@xml/activity_complex2_scene">
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/fragment_container_playback"
-                android:name="com.kt.apps.media.mobile.ui.fragments.playback.BasePlaybackFragment"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
+            android:layout_height="0dp"
+            tools:layout="@layout/fragment_playback"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/guideline_complex"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <LinearLayout
+            android:id="@+id/parse_source_loading_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:background="#A4B3B2B2"
+            android:padding="8dp"
+            android:layout_gravity="start|bottom"
+            >
+            <com.kt.apps.media.mobile.ui.view.StateLoadingView
+                android:id="@+id/status_view"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
                 />
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline_complex"
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/loading_description"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                tools:text="Dang xu ly https://iptv-org.github.io/iptv/categories/xxx.m3u"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:layout_marginStart="8dp"
                 />
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/fragment_container_channels"
-                android:name="com.kt.apps.media.mobile.ui.fragments.dashboard.DashboardFragment"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                app:layout_constraintVertical_bias="0.0" />
-        </androidx.constraintlayout.motion.widget.MotionLayout>
-    </FrameLayout>
+        </LinearLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

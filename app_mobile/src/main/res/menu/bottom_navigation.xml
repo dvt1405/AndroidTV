@@ -20,22 +20,29 @@
         android:title="Truyền Thanh" />
 
     <item
-        android:id="@+id/football"
+        android:id="@+id/more"
         android:enabled="true"
-        android:icon="@drawable/ic_soccer_ball"
-        android:title="Bóng đá"
-        android:visible="true" />
+        android:icon="@drawable/lb_ic_more"
+        android:title="Thêm"
+        />
 
-    <item
-        android:id="@+id/extension"
-        android:enabled="true"
-        android:icon="@drawable/iptv"
-        android:title="IPTV"
-        android:visible="true" />
-    <item
-        android:id="@+id/info"
-        android:enabled="true"
-        android:icon="@drawable/ic_outline_info_24"
-        android:title="Thông tin"
-        android:visible="true" />
+<!--    <item-->
+<!--        android:id="@+id/football"-->
+<!--        android:enabled="true"-->
+<!--        android:icon="@drawable/ic_soccer_ball"-->
+<!--        android:title="Bóng đá"-->
+<!--        android:visible="true" />-->
+
+<!--    <item-->
+<!--        android:id="@+id/extension"-->
+<!--        android:enabled="true"-->
+<!--        android:icon="@drawable/iptv"-->
+<!--        android:title="IPTV"-->
+<!--        android:visible="true" />-->
+<!--    <item-->
+<!--        android:id="@+id/info"-->
+<!--        android:enabled="true"-->
+<!--        android:icon="@drawable/ic_outline_info_24"-->
+<!--        android:title="Thông tin"-->
+<!--        android:visible="true" />-->
 </menu>

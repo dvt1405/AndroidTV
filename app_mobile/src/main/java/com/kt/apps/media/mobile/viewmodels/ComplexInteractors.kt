@@ -74,6 +74,11 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
             .stateIn(scope, SharingStarted.Eagerly, false)
     }
 
+    val isInPIPMode by lazy {
+        uiControlViewModel.isInPIPMode
+            .stateIn(scope, SharingStarted.Eagerly, false)
+    }
+
     init {
 
         addSourceState.filter { it is AddSourceState.Success || it is AddSourceState.Error }

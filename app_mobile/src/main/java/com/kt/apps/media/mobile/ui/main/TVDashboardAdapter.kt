@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -80,6 +81,7 @@ sealed class ChannelElement {
 
 class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, ItemRowChannelBinding>() {
     var onChildItemClickListener: OnItemRecyclerViewCLickListener<IChannelElement>? = null
+    var preferWidth = Int.MAX_VALUE
     override val itemLayoutRes: Int
         get() = R.layout.item_row_channel
 
@@ -117,7 +119,7 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
             addItemDecoration(channelItemDecoration)
             setHasFixedSize(true)
             clearOnScrollListeners()
-            adapter = ChildChannelAdapter().apply {
+            adapter = ChildChannelAdapter(preferWidth).apply {
                 onRefresh(item.second)
                 this.onItemRecyclerViewCLickListener = { item, childPosition ->
                     onChildItemClickListener?.invoke(item, position + childPosition)
@@ -134,7 +136,7 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
     }
 
 
-    class ChildChannelAdapter : BaseAdapter<IChannelElement, ItemChannelBinding>() {
+    class ChildChannelAdapter(val preferWidth: Int) : BaseAdapter<IChannelElement, ItemChannelBinding>() {
         override val itemLayoutRes: Int
             get() = R.layout.item_channel
 
@@ -144,6 +146,21 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
             position: Int,
             holder: BaseViewHolder<IChannelElement, ItemChannelBinding>
         ) {
+            with(binding) {
+                val currentWidth = binding.logo.context.resources
+                    .getDimensionPixelSize(R.dimen.item_channel_width)
+                val currentHeight = binding.logo.context.resources
+                    .getDimensionPixelSize(R.dimen.item_channel_height)
+
+                if (currentWidth > preferWidth) {
+                    val newWidth = preferWidth
+                    val newHeight = preferWidth * currentHeight / currentWidth
+                    logo.updateLayoutParams<ViewGroup.LayoutParams> {
+                        width = newWidth
+                        height = newHeight
+                    }
+                }
+            }
             binding.item = item
             binding.title.isSelected = true
             binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)

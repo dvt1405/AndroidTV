@@ -8,23 +8,27 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@color/transparent"
+        >
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/viewpager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
+            android:background="@color/transparent"
             app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_navigation"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:minHeight="56dp"
+            android:layout_height="86dp"
+            android:minHeight="86dp"
+            app:menu="@menu/bottom_navigation"
+            android:background="@color/black"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:menu="@menu/bottom_navigation" />
+            style="@style/NavigationView"
+            />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

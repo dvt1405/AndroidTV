@@ -25,10 +25,7 @@ import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
-import com.kt.apps.media.mobile.models.NetworkState
-import com.kt.apps.media.mobile.models.NoNetworkException
-import com.kt.apps.media.mobile.models.PlaybackFailException
-import com.kt.apps.media.mobile.models.PrepareStreamLinkData
+import com.kt.apps.media.mobile.models.*
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IDispatchTouchListener
@@ -231,7 +228,15 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
     override fun onResume() {
         super.onResume()
-        viewModel.changePiPMode(false)
+
+        MainScope().launch {
+            val last = viewModel.isInPIPMode.value
+            if (last) {
+                viewModel.changePiPMode(false)
+                layoutHandler?.onStartLoading()
+            }
+
+        }
     }
 
 
@@ -260,7 +265,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         if (deeplink.host?.equals(Constants.HOST_TV) == true || deeplink.host?.equals(Constants.HOST_RADIO) == true) {
             if(deeplink.path?.contains("channel") == true) {
-//                tvChannelViewModel.playMobileTvByDeepLinks(uri = deeplink)
                 intent.data = null
             } else {
                 intent.data = null

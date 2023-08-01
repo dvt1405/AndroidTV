@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.ui.fragments.playback
 
 import android.os.Bundle
 import android.util.Log
+import android.view.Display
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
@@ -12,7 +13,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
-import androidx.transition.AutoTransition
 import androidx.transition.Fade
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
@@ -23,9 +23,7 @@ import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
-import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
-import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.showErrorDialog
@@ -35,11 +33,13 @@ import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.complex.TransitionCallback
+import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
+import kotlin.math.log
 
 interface IPlaybackAction {
     fun onLoadedSuccess(videoSize: VideoSize)
@@ -55,7 +55,24 @@ interface IPlaybackControl {
     var callback: IPlaybackAction?
 }
 
-abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), IDispatchTouchListener, IPlaybackControl {
+sealed class DisplayMode {
+    object IDLE: DisplayMode()
+    data class FULLSCREEN(val shouldRedraw: Boolean): DisplayMode()
+    object MINIMAL: DisplayMode()
+    object PIP: DisplayMode()
+
+    companion object {
+        fun fromPlaybackState(state: PlaybackState) : DisplayMode {
+            return when(state) {
+                PlaybackState.Fullscreen -> FULLSCREEN(true)
+                PlaybackState.Minimal -> MINIMAL
+                PlaybackState.Invisible -> IDLE
+            }
+        }
+    }
+}
+
+abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>(), IDispatchTouchListener, IPlaybackControl {
 
     override val screenName: String
         get() = "Fragment Playback"
@@ -65,7 +82,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
 
     @Inject
     lateinit var exoPlayerManager: ExoPlayerManagerMobile
-
 
     private var _cachePlayingState: Boolean = false
 
@@ -107,9 +123,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
 
     protected abstract val exitButton: View?
 
+    private val displayMode = MutableStateFlow<DisplayMode>(DisplayMode.IDLE)
     private val title = MutableStateFlow("")
-    private val isProgressing = MutableStateFlow<Boolean>(false)
+    private val isProgressing = MutableStateFlow(false)
     protected val isShowChannelList = MutableStateFlow(false)
+
 
     protected abstract val playbackViewModel: BasePlaybackInteractor
 
@@ -162,12 +180,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
             showController()
             player?.stop()
 
-            setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener {
-                when(it) {
-                    View.VISIBLE -> channelListRecyclerView?.visibility = it
-                    View.GONE, View.INVISIBLE -> channelListRecyclerView?.visibility = View.INVISIBLE
-                }
-            })
+            if (isLandscape) {
+                setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener {
+                    when(it) {
+                        View.VISIBLE -> channelListRecyclerView?.visibility = it
+                        View.GONE, View.INVISIBLE -> channelListRecyclerView?.visibility = View.INVISIBLE
+                    }
+                })
+            }
         }
         playPauseButton?.visibility = View.INVISIBLE
         progressWheel?.visibility = View.INVISIBLE
@@ -176,6 +196,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
         fullScreenButton?.setOnClickListener {
             callback?.onOpenFullScreen()
         }
+
+        channelListRecyclerView?.visibility = View.VISIBLE
 
     }
 
@@ -241,22 +263,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
             launch {
                 playbackViewModel.playbackState.collectLatest {
                     when (it) {
-                        PlaybackState.Fullscreen -> changeFullScreenLayout()
-                        PlaybackState.Minimal -> changeMinimalLayout()
+                        PlaybackState.Fullscreen -> displayMode.emit(DisplayMode.FULLSCREEN(true))
+                        PlaybackState.Minimal -> displayMode.emit(DisplayMode.MINIMAL)
                         else -> {
                             exoPlayer?.keepScreenOn = false
                         }
                     }
                 }
             }
-
-            launch {
-                isShowChannelList.collectLatest {
-                    if (playbackViewModel.playbackState.value != PlaybackState.Fullscreen) return@collectLatest
-                    if (it) showChannelList() else changeFullScreenLayout(shouldRedraw = false)
-                }
-            }
-
             launch {
                 isProgressing.collectLatest {
                     Log.d(TAG, "initAction: isProgressing $it")
@@ -266,7 +280,26 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
 
             launch {
                 playbackViewModel.isInPipMode.collectLatest {
-                    togglePIPLayout(it)
+                    if (it) {
+                        displayMode.emit(DisplayMode.PIP)
+                    } else {
+                        displayMode.emit(DisplayMode.fromPlaybackState(playbackViewModel.playbackState.value))
+                    }
+                }
+            }
+
+            launch {
+                combine(displayMode, isShowChannelList) {
+                    displayMode, isShowChannelList -> Pair(displayMode, isShowChannelList)
+                }.collectLatest {
+                    when(it.first) {
+                        is DisplayMode.FULLSCREEN -> changeFullScreenLayout((it.first as DisplayMode.FULLSCREEN).shouldRedraw)
+                        is DisplayMode.MINIMAL -> changeMinimalLayout()
+                        is DisplayMode.PIP -> togglePIPLayout(true)
+                        else -> { }
+                    }
+                    if (it.first !is DisplayMode.FULLSCREEN) return@collectLatest
+                    if (it.second) showChannelList()
                 }
             }
         }
@@ -315,9 +348,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
     protected open fun onRedraw() { }
 
     private fun togglePIPLayout(isInPIPMode: Boolean) {
+
         if (isInPIPMode) {
             exoPlayer?.useController = false
-            safeLet(motionLayout, inPIPModeLayout()) { constraintLayout, constraintSet ->
+            safeLet(motionLayout, provideInPIPModeLayout()) { constraintLayout, constraintSet ->
                 performTransition(constraintLayout, constraintSet)
             }
         } else {
@@ -338,60 +372,166 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
             minimalPlayPause?.visibility = View.VISIBLE
         }
     }
-    protected fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
+    private fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
         exoPlayer?.apply {
             useController = true
             controllerShowTimeoutMs = 1000
             controllerHideOnTouch = true
+            channelListRecyclerView?.visibility = View.VISIBLE
         }
-
-        safeLet(motionLayout, exoPlayer, minimalLayout, channelListRecyclerView ) {
-            mainLayout, exoplayer,  minimal, list ->
-            performTransition(mainLayout, ConstraintSet().apply {
-                clone(this)
-                arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
-                    clear(it)
-                }
-
-                arrayListOf(ConstraintSet.END, ConstraintSet.BOTTOM, ConstraintSet.START, ConstraintSet.TOP).forEach {
-                    connect(exoplayer.id, it, ConstraintSet.PARENT_ID, it)
-                }
-                setVisibility(minimal.id, View.GONE)
-                setVisibility(list.id, View.VISIBLE)
-                matchParentWidth(list.id)
-                connect(list.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-                constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
-                setMargin(list.id, ConstraintSet.TOP, (-88).dpToPx())
-            }, onEnd = {
-                if (!playbackViewModel.isInPipMode.value) {
-                    exoPlayer?.showController()
-                    isShowChannelList.value = false
-                } else {
-                    togglePIPLayout(true)
-                }
-            }, onStart = {
+        safeLet(motionLayout, provideFullScreenLayout()) {
+            layout, constrainSet ->
+            performTransition(layout, constrainSet, onEnd = {
                 if (shouldRedraw) {
                     onRedraw()
                 }
             })
-
         }
     }
 
-    abstract fun provideMinimalLayout(): ConstraintSet?
+
     private fun changeMinimalLayout() {
-        exoPlayer?.apply {
-            useController = false
-            hideController()
+        if (isLandscape) {
+            exoPlayer?.apply {
+                useController = false
+                hideController()
+            }
+        } else {
+            exoPlayer?.apply {
+                useController = true
+                showController()
+                controllerHideOnTouch = true
+                controllerShowTimeoutMs = 1000
+            }
         }
+
         safeLet(motionLayout, provideMinimalLayout()) {
                 mainLayout, constraintSet ->
             performTransition(mainLayout, constraintSet)
             isShowChannelList.value = false
         }
     }
+    protected fun showChannelList() {
+        if (isLandscape) {
+            exoPlayer?.apply {
+                showController()
+                controllerShowTimeoutMs = -1
+                controllerHideOnTouch = false
+            }
+            safeLet(motionLayout, showChannelListLayout()) {
+                    mainLayout, constraintSet ->
+                performTransition(mainLayout, constraintSet)
+            }
+        }
+    }
+    protected open suspend fun preparePlayView(data: PrepareStreamLinkData) {
+        exoPlayerManager.exoPlayer?.stop()
+        isProgressing.emit(true)
+        title.emit(data.title)
+    }
 
-    open fun inPIPModeLayout(): ConstraintSet? {
+    protected open suspend fun playVideo(data: StreamLinkData) {
+        if (exoPlayerManager.exoPlayer?.isPlaying == true) {
+            return
+        }
+        exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , playerListener)
+        exoPlayer?.player = exoPlayerManager.exoPlayer
+        title.emit(data.title)
+    }
+
+    private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {
+        Log.d(TAG, "performTransition:")
+        TransitionManager.beginDelayedTransition(layout, Fade().apply {
+            interpolator = AccelerateInterpolator()
+            duration = 500
+            addListener(object: TransitionCallback() {
+                override fun onTransitionStart(transition: Transition) {
+                    super.onTransitionStart(transition)
+                    onStart?.invoke()
+                }
+
+                override fun onTransitionEnd(transition: Transition) {
+                    super.onTransitionEnd(transition)
+                    onEnd?.invoke()
+                }
+            })
+        })
+        set.applyTo(layout)
+    }
+
+    open fun provideMinimalLayout(): ConstraintSet? {
+        if (isLandscape) {
+            return safeLet(
+                motionLayout,
+                exoPlayer,
+                minimalLayout,
+                channelListRecyclerView
+            ) { mainLayout, exoplayer, minimal, list ->
+                ConstraintSet().apply {
+                    clone(mainLayout)
+                    arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
+                        clear(it)
+                    }
+
+                    setVisibility(list.id, View.GONE)
+                    matchParentWidth(list.id)
+                    matchParentWidth(minimal.id)
+                    matchParentWidth(exoplayer.id)
+                    constrainHeight(minimal.id, ConstraintSet.WRAP_CONTENT)
+                    connect(exoplayer.id, ConstraintSet.BOTTOM, minimal.id, ConstraintSet.TOP)
+                    alignParent(minimal.id, ConstraintSet.BOTTOM)
+                    alignParent(exoplayer.id, ConstraintSet.TOP)
+                }
+            }
+        }
+        return safeLet(
+            motionLayout, exoPlayer, channelListRecyclerView
+        ) { motionLayout, exoPlayer, list ->
+            ConstraintSet().apply {
+                clone(motionLayout)
+                arrayListOf(exoPlayer.id, list.id).forEach {
+                    clear(it)
+                }
+                fillParent(exoPlayer.id)
+                setVisibility(list.id, View.GONE)
+            }
+        }
+    }
+
+    open fun provideFullScreenLayout(): ConstraintSet? {
+        if (isLandscape) {
+            return safeLet(exoPlayer, minimalLayout, channelListRecyclerView ) {
+                    exoplayer,  minimal, list ->
+                ConstraintSet().apply {
+                    arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
+                        clear(it)
+                    }
+
+                    arrayListOf(ConstraintSet.END, ConstraintSet.BOTTOM, ConstraintSet.START, ConstraintSet.TOP).forEach {
+                        connect(exoplayer.id, it, ConstraintSet.PARENT_ID, it)
+                    }
+                    setVisibility(minimal.id, View.GONE)
+                    setVisibility(list.id, View.VISIBLE)
+                    matchParentWidth(list.id)
+                    connect(list.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+                    constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
+                    setMargin(list.id, ConstraintSet.TOP, (-88).dpToPx())
+                }
+            }
+        }
+        return safeLet(exoPlayer, channelListRecyclerView ) {
+                exoplayer,  list ->
+            ConstraintSet().apply {
+                arrayListOf(exoplayer.id).forEach {
+                    clear(it)
+                }
+
+                fillParent(exoplayer.id)
+            }
+        }
+    }
+
+    open fun provideInPIPModeLayout(): ConstraintSet? {
         return safeLet(exoPlayer, minimalLayout, channelListRecyclerView ) {
                 exoplayer,  minimal, list ->
             ConstraintSet().apply {
@@ -411,62 +551,18 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseFragment<T>(), ID
     open fun showChannelListLayout(): ConstraintSet? {
         return safeLet(exoPlayer, channelListRecyclerView) {
                 exoplayer, list -> ConstraintSet().apply {
-               clone(this)
-               clear(exoplayer.id)
-               listOf(ConstraintSet.START, ConstraintSet.TOP, ConstraintSet.END).forEach {
-                   alignParent(exoplayer.id, it, 20.dpToPx())
-               }
-               connect(exoplayer.id, ConstraintSet.BOTTOM, list.id, ConstraintSet.TOP, (-88).dpToPx())
-               clear(list.id)
-               constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
-               matchParentWidth(list.id)
-               alignParent(list.id, ConstraintSet.BOTTOM, (-20).dpToPx())
-           }
-        }
-    }
-
-    protected fun showChannelList() {
-        exoPlayer?.apply {
-            showController()
-            controllerShowTimeoutMs = -1
-            controllerHideOnTouch = false
-        }
-        safeLet(motionLayout, showChannelListLayout()) {
-                mainLayout, constraintSet ->
-            performTransition(mainLayout, constraintSet)
-        }
-    }
-    protected open suspend fun preparePlayView(data: PrepareStreamLinkData) {
-        exoPlayerManager.exoPlayer?.stop()
-        isProgressing.emit(true)
-        title.emit(data.title)
-    }
-
-    protected open suspend fun playVideo(data: StreamLinkData) {
-        if (exoPlayerManager.exoPlayer?.isPlaying == true) {
-            return
-        }
-        exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , playerListener)
-        exoPlayer?.player = exoPlayerManager.exoPlayer
-        title.emit(data.title)
-    }
-
-    private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {
-        TransitionManager.beginDelayedTransition(layout, Fade().apply {
-            interpolator = AccelerateInterpolator()
-            duration = 500
-            addListener(object: TransitionCallback() {
-                override fun onTransitionStart(transition: Transition) {
-                    super.onTransitionStart(transition)
-                    onStart?.invoke()
+                clone(this)
+                clear(exoplayer.id)
+                listOf(ConstraintSet.START, ConstraintSet.TOP, ConstraintSet.END).forEach {
+                    alignParent(exoplayer.id, it, 20.dpToPx())
                 }
-
-                override fun onTransitionEnd(transition: Transition) {
-                    super.onTransitionEnd(transition)
-                    onEnd?.invoke()
-                }
-            })
-        })
-        set.applyTo(layout)
+                connect(exoplayer.id, ConstraintSet.BOTTOM, list.id, ConstraintSet.TOP, (-88).dpToPx())
+                clear(list.id)
+                constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
+                matchParentWidth(list.id)
+                alignParent(list.id, ConstraintSet.BOTTOM, (-20).dpToPx())
+            }
+        }
     }
+
 }
