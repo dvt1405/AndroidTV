@@ -76,6 +76,17 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
                     recyclerView.showHideSkeleton(it)
                 }
             }
+
+            launch {
+                viewModels?.isMinimalPlayback?.collectLatest {
+                    val paddingSize: Int = if (it) {
+                        (screenHeight * 0.5).toInt()
+                    } else {
+                        0
+                    }
+                    binding.listChannelRecyclerview.setPadding(0, 0, 0 , paddingSize)
+                }
+            }
         }
 
         recyclerView.childItemClicks()

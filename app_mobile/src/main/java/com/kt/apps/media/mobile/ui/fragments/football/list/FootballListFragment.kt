@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
+import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
 import com.kt.apps.media.mobile.utils.ActivityIndicator
@@ -17,6 +18,7 @@ import com.kt.apps.media.mobile.viewmodels.FootballListInteractor
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.coroutineContext
 
 class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
 
@@ -35,7 +37,7 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
     }
 
     private val interactor: FootballListInteractor by lazy {
-        FootballListInteractor(ViewModelProvider(requireActivity(), factory))
+        FootballListInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }
 
     private val _adapter = FootballListAdapter().apply {
@@ -97,6 +99,17 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
             launch {
                 loadingMatches.isLoading.collectLatest {
                     swipeRefreshLayout?.isRefreshing = it
+                }
+            }
+
+            launch {
+                interactor.playbackPadding.collectLatest {
+                    val paddingSize: Int = if (it) {
+                        (screenHeight * 0.5).toInt()
+                    } else {
+                        0
+                    }
+                    binding.mainChannelRecyclerView.setPadding(0, 0, 0, paddingSize)
                 }
             }
         }

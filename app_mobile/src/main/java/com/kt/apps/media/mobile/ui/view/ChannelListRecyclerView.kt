@@ -7,6 +7,7 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import com.kt.apps.core.base.adapter.BaseAdapter
@@ -53,6 +54,7 @@ class ChannelListRecyclerView @JvmOverloads constructor(
         FlexboxLayoutManager(this.context).apply {
             flexDirection = FlexDirection.ROW
             justifyContent = JustifyContent.FLEX_START
+            flexWrap = FlexWrap.WRAP
         }
     }
     private val recyclerView by lazy {
@@ -89,7 +91,6 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     }
 
     fun reloadAllData(list: List<ChannelListData>) {
-//        adapter.onRefresh(list)
         if (list.size == 1) {
             if (
                 recyclerView.layoutManager !is FlexboxLayoutManager
@@ -115,6 +116,7 @@ class ChannelListRecyclerView @JvmOverloads constructor(
         }
     }
 
+    override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) = recyclerView.setPadding(left, top, right, bottom)
     fun showHideSkeleton(isShow: Boolean) {
         if (isShow) {
             skeletonScreen.run {  }
