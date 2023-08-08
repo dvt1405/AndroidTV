@@ -27,6 +27,7 @@ import com.google.android.exoplayer2.SeekParameters
 import com.google.android.exoplayer2.Timeline
 import com.google.android.exoplayer2.metadata.Metadata
 import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.R
 import com.kt.apps.core.base.leanback.*
 import com.kt.apps.core.base.leanback.media.LeanbackPlayerAdapter
@@ -90,6 +91,10 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private var seekBarContainer: ViewGroup? = null
     private var contentPositionView: TextView? = null
     private var contentDurationView: TextView? = null
+    private var centerContainerView: View? = null
+    private var videoInfoCodecContainerView: ViewGroup? = null
+    private var btnVideoCodecInfo: ImageButton? = null
+    private var btnFavoutiteVideo: ImageButton? = null
     protected var onItemClickedListener: OnItemViewClickedListener? = null
     private val mChildLaidOutListener = OnChildLaidOutListener { _, _, _, _ ->
     }
@@ -121,6 +126,13 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 super.onMetadata(metadata)
             }
 
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                super.onVideoSizeChanged(videoSize)
+                exoPlayerManager.exoPlayer?.let {
+                    setCodecInfo(it)
+                }
+            }
+
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
                 onHandlePlayerError(error)
@@ -140,6 +152,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     ) {
                         handleUI(OverlayUIState.STATE_INIT, true)
                     }
+                    exoPlayerManager.exoPlayer?.let {
+                        setCodecInfo(it)
+                    }
                 } else {
                     playPauseBtn?.setImageDrawable(
                         ContextCompat.getDrawable(
@@ -152,6 +167,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
             override fun onEvents(player: Player, events: Player.Events) {
                 super.onEvents(player, events)
+                exoPlayerManager.exoPlayer?.let {
+                    setCodecInfo(it)
+                }
                 if (events.containsAny(
                         Player.EVENT_PLAY_WHEN_READY_CHANGED,
                         Player.EVENT_PLAYBACK_STATE_CHANGED
@@ -228,6 +246,31 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         val contentDuration = " ${Util.getStringForTime(formatBuilder, formatter, player.contentDuration)}"
         contentPositionView?.text = contentPosition
         contentDurationView?.text = contentDuration
+    }
+
+    private fun setCodecInfo(player: ExoPlayer) {
+        view?.findViewById<TextView>(R.id.video_title)?.text = player.mediaMetadata.title
+        if (player.contentPosition < 120_000) {
+            view?.findViewById<TextView>(R.id.video_duration)?.gone()
+            view?.findViewById<TextView>(R.id.video_duration_title)?.gone()
+        } else {
+            view?.findViewById<TextView>(R.id.video_duration_title)?.visible()
+            view?.findViewById<TextView>(R.id.video_duration)
+                ?.let {
+                    it.visible()
+                    it.text = Util.getStringForTime(
+                        formatBuilder,
+                        formatter,
+                        player.contentPosition
+                    )
+                }
+        }
+        view?.findViewById<TextView>(R.id.video_resolution)?.text =
+            "${player.videoSize.width}x${player.videoSize.height}"
+        view?.findViewById<TextView>(R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
+        view?.findViewById<TextView>(R.id.video_codec)?.text = player.videoFormat?.codecs
+        view?.findViewById<TextView>(R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
+        view?.findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs
     }
 
     open fun onPlayerPlaybackStateChanged(playbackState: Int) {
@@ -309,6 +352,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         mGridViewOverlays = playbackOverlayContainer.findViewById(R.id.browse_grid_dock)
         setupVerticalGridView(playbackOverlayContainer)
         root.addView(playbackOverlayContainer)
+        videoInfoCodecContainerView = LayoutInflater.from(context)
+            .inflate(R.layout.layout_video_codec_info, container, false) as ViewGroup
+        root.addView(videoInfoCodecContainerView)
         mBackgroundView = root.findViewById(androidx.leanback.R.id.playback_fragment_background)
         playbackTitleTxtView = root.findViewById(R.id.playback_title)
         playbackInfoTxtView = root.findViewById(R.id.playback_info)
@@ -319,6 +365,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         seekBarContainer = root.findViewById(R.id.progress_bar_container)
         contentPositionView = root.findViewById(R.id.content_position)
         contentDurationView = root.findViewById(R.id.content_duration)
+        btnVideoCodecInfo = root.findViewById(R.id.btn_video_codec_info)
+        centerContainerView = root.findViewById(R.id.center_controls_container)
+        btnFavoutiteVideo = root.findViewById(R.id.btn_favourite)
         hideControlsOverlay(false)
         val controlBackground = root.findViewById<View>(androidx.leanback.R.id.playback_controls_dock)
         controlBackground.makeGone()
@@ -343,7 +392,18 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 }
             }
         }
+        videoInfoCodecContainerView?.gone()
+        btnVideoCodecInfo?.setOnClickListener {
+            mHandler.removeCallbacks(autoHideOverlayRunnable)
+            videoInfoCodecContainerView?.fadeIn {}
+        }
+        btnFavoutiteVideo?.setOnClickListener {
+            onFavoriteVideoClicked()
+        }
         return root
+    }
+
+    protected fun onFavoriteVideoClicked() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -575,7 +635,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private val btnPlayPauseAnimationUpdateListener by lazy {
         ValueAnimator.AnimatorUpdateListener {
             playPauseBtn?.alpha = it.animatedValue as Float
+            centerContainerView?.alpha = it.animatedValue as Float
             if (it.animatedValue == 1f) {
+                centerContainerView?.visible()
                 playPauseBtn?.visible()
             }
         }
@@ -602,13 +664,17 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 Logger.d(this, message = "y = ${mGridViewOverlays?.translationY} - $mGridViewPickHeight")
                 fun onlyShowGridView() {
                     playbackInfoContainerView?.fadeOut()
-                    playPauseBtn?.fadeOut()
+                    centerContainerView?.fadeOut()
                     mGridViewOverlays?.translateY(0f) {
                         mGridViewOverlays?.visible()
                         mGridViewHolder?.gridView?.requestFocus()
                     }
                 }
-                if ((currentState == OverlayUIState.STATE_INIT
+                if (currentState == OverlayUIState.STATE_HIDDEN) {
+                    mGridViewOverlays?.fadeIn {
+                        onlyShowGridView()
+                    }
+                } else if ((currentState == OverlayUIState.STATE_INIT
                             || currentState == OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY)
                     && fadeInAnimator.isRunning
                 ) {
@@ -858,6 +924,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     override fun onVideoSizeChanged(width: Int, height: Int) {
+        exoPlayerManager.exoPlayer?.let {
+            setCodecInfo(it)
+        }
         val screenWidth = requireView().width
         val screenHeight = requireView().height
         val p = mVideoSurface!!.layoutParams
@@ -879,11 +948,16 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     fun canBackToMain(): Boolean {
-        return overlaysUIState == OverlayUIState.STATE_HIDDEN
+        return overlaysUIState == OverlayUIState.STATE_HIDDEN && videoInfoCodecContainerView?.isVisible != true
     }
 
     fun hideOverlay() {
-        autoHideOverlayRunnable.run()
+        if (videoInfoCodecContainerView?.isVisible == true) {
+            videoInfoCodecContainerView?.fadeOut { }
+            mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
+        } else {
+            autoHideOverlayRunnable.run()
+        }
     }
 
     override fun onDestroyView() {
@@ -1143,6 +1217,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         contentPositionView = null
         contentDurationView = null
         contentPositionView = null
+        videoInfoCodecContainerView = null
         exoPlayerManager.detach(mPlayerListener)
         mGlueHost.setSurfaceHolderCallback(null)
         setSurfaceHolderCallback(null)

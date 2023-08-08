@@ -131,6 +131,15 @@
         <item name="android:singleLine">true</item>
     </style>
 
+    <style name="TextViewTitleVideoInfo">
+        <item name="android:textSize">12sp</item>
+        <item name="android:layout_marginTop">16dp</item>
+    </style>
+
+    <style name="TextViewDescriptionVideoInfo">
+        <item name="android:textSize">16sp</item>
+    </style>
+
 
 
 </resources>
