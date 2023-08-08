@@ -72,9 +72,6 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
             onChildItemClickListener = { item, _ ->
                 when (item) {
                     is ChannelElement.TVChannelElement -> onClickItemChannel(item.model)
-//                    is ChannelElement.ExtensionChannelElement -> tvChannelViewModel?.getExtensionChannel(
-//                        item.model
-//                    )
                 }
             }
         }
@@ -116,11 +113,8 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
             val spacing = it.context.resources.getDimensionPixelSize(R.dimen.item_channel_decoration)
             val preferWidth = viewWidth / 3 - spacing * 2
             adapter.preferWidth = preferWidth
-            binding.mainChannelRecyclerView.adapter = null
-            binding.mainChannelRecyclerView.adapter = adapter
         }
 
-        skeletonScreen.run()
     }
 
 
@@ -129,16 +123,16 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
-                networkStateViewModel?.networkStatus?.collectLatest {
-                    if (it == NetworkState.Connected) {
-                        if (adapter.itemCount == 0) {
-                        } else if (skeletonScreen.isRunning) {
-                            skeletonScreen.hide()
-                        }
-                    }
-                    if (it == NetworkState.Connected && adapter.itemCount == 0)
-                        viewModel.getListTVChannel(forceRefresh = true)
-                }
+//                networkStateViewModel?.networkStatus?.collectLatest {
+//                    if (it == NetworkState.Connected) {
+//                        if (adapter.itemCount == 0) {
+//                        } else if (skeletonScreen.isRunning) {
+//                            skeletonScreen.hide()
+//                        }
+//                    }
+//                    if (it == NetworkState.Connected && adapter.itemCount == 0)
+//                        viewModel.getListTVChannel(forceRefresh = true)
+//                }
             }
         }
 
@@ -205,43 +199,15 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         }
         swipeRefreshLayout.isRefreshing = false
         adapter.onRefresh(grouped)
-//        extensionsViewModel?.perExtensionChannelData?.replayCache?.forEach {
-//            appendExtensionSource(it)
+
+//        skeletonScreen.hide {
+//            scrollToPosition(0)
 //        }
-        skeletonScreen.hide {
-            scrollToPosition(0)
-        }
     }
 
     private fun scrollToPosition(index: Int) {
         Log.d(TAG, "scrollToPosition: $index")
         mainRecyclerView.fastSmoothScrollToPosition(index)
-    }
-
-
-    private fun deleteExtension(sourceName: String) {
-//        extensionsViewModel?.deleteExtension(sourceName = sourceName)
-        adapter.listItem.filter {
-            return@filter (it.second.firstOrNull() as? ChannelElement.ExtensionChannelElement)
-                ?.model
-                ?.sourceFrom == sourceName
-        }.forEach {
-            adapter.onDelete(it)
-        }
-    }
-
-    private fun reloadNavigationBar(extra: List<ExtensionsConfig>) {
-        _cacheMenuItem = mutableMapOf()
-
-        val extraSection = extra.map {
-            val id = View.generateViewId()
-            _cacheMenuItem[it.sourceName] = id
-            SectionItemElement.MenuItem(
-                displayTitle = it.sourceName,
-                id = id,
-                icon = resources.getDrawable(R.drawable.round_add_circle_outline_24)
-            )
-        }
     }
 
     abstract fun onClickItemChannel(channel: TVChannel)

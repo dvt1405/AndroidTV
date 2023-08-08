@@ -51,28 +51,9 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
     override val playbackViewModel: BasePlaybackInteractor
         get() = _playbackViewModel
 
-    private var avoidTouchGesture: AtomicBoolean = AtomicBoolean(false)
 
     override fun initView(savedInstanceState: Bundle?) {
         super.initView(savedInstanceState)
-        channelListRecyclerView?.changeDisplayStyle(ChannelListView.DisplayStyle.FLEX)
-        channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-                when(newState) {
-                    SCROLL_STATE_IDLE, SCROLL_STATE_SETTLING -> avoidTouchGesture.set(false)
-                    else -> { }
-                }
-            }
-
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                Log.d(TAG, "onScrolled: $dx $dy")
-                if (abs(dy) > 10) {
-                    avoidTouchGesture.set(true)
-                }
-            }
-        })
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -109,30 +90,17 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
         }
     }
 
-    override fun onSwipeUp() {
-        if (avoidTouchGesture.get()) {
-            return
-        }
-        super.onSwipeUp()
-    }
 
-    override fun onSwipeDown() {
-        if (avoidTouchGesture.get()) {
-            return
-        }
-        super.onSwipeDown()
-    }
-
-    override fun showChannelListLayout(): ConstraintSet? {
-        return safeLet(binding.exoPlayer, binding.channelList) { exoplayer, list ->
-            ConstraintSet().apply {
-                clone(this)
-                clear(list.id)
-                fillParent(list.id)
-                setMargin(list.id, ConstraintSet.TOP, (40).dpToPx())
-            }
-        }
-    }
+//    override fun showChannelListLayout(): ConstraintSet? {
+//        return safeLet(binding.exoPlayer, binding.channelList) { exoplayer, list ->
+//            ConstraintSet().apply {
+//                clone(this)
+//                clear(list.id)
+//                fillParent(list.id)
+//                setMargin(list.id, ConstraintSet.TOP, (40).dpToPx())
+//            }
+//        }
+//    }
 
     companion object {
         const val screenName = "IPTVPlaybackFragment"

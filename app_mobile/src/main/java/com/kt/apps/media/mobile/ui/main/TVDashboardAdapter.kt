@@ -132,6 +132,11 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
     override fun onViewRecycled(holder: BaseViewHolder<Pair<String, List<IChannelElement>>, ItemRowChannelBinding>) {
         super.onViewRecycled(holder)
         holder.cacheItem = holder.viewBinding.tvChannelChildRecyclerView.adapter
+        with(holder.viewBinding.tvChannelChildRecyclerView) {
+            while (itemDecorationCount > 0) {
+                removeItemDecorationAt(0)
+            }
+        }
         Logger.d(this, message = "OnView recycler")
     }
 

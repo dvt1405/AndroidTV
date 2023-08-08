@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
+import android.graphics.PointF
 import android.os.Bundle
 import android.util.Log
 import android.view.Display
@@ -128,6 +129,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     private val isProgressing = MutableStateFlow(true)
     protected val isShowChannelList = MutableStateFlow(false)
 
+    protected var retryTimes: Int = 3
 
     protected abstract val playbackViewModel: BasePlaybackInteractor
 
@@ -161,8 +163,23 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         override fun onPlayerError(error: PlaybackException) {
             super.onPlayerError(error)
             Log.d(TAG, "onPlayerError: $error")
-            lifecycleScope.launch {
-                playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
+            if (retryTimes > 0) {
+                playbackViewModel.state.replayCache.lastOrNull()
+                    ?.let { it as? PlaybackViewModel.State.PLAYING }
+                    ?.run {
+                        retryTimes -= 1
+                        lifecycleScope.launch {
+                            playVideo(this@run.data)
+                        }
+                } ?: kotlin.run {
+                    lifecycleScope.launch {
+                        playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
+                    }
+                }
+            } else {
+                lifecycleScope.launch {
+                    playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
+                }
             }
         }
 
@@ -260,7 +277,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                         Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
                         when(state) {
                             is PlaybackViewModel.State.LOADING -> preparePlayView(state.data)
-                            is PlaybackViewModel.State.PLAYING -> playVideo(state.data)
+                            is PlaybackViewModel.State.PLAYING -> {
+                                retryTimes = 3
+                                playVideo(state.data)
+                            }
                             is PlaybackViewModel.State.ERROR -> onError(state.error)
                             else -> {}
                         }
@@ -306,9 +326,24 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
 
+    var lastY = 0f
     override fun onDispatchTouchEvent(view: View?, mv: MotionEvent) {
         leakView?.run {
             gestureDetector.onTouch(this, mv)
+//            Log.d(TAG, "onDispatchTouchEvent: $mv")
+        }
+        when(mv.actionMasked) {
+            MotionEvent.ACTION_DOWN ->  lastY = mv.rawY
+            MotionEvent.ACTION_MOVE -> {
+                val delta = mv.rawY - lastY
+                Log.d(TAG, "onDispatchTouchEvent: $delta")
+                moveChannelListLayout(delta.toInt())?.run {
+                    motionLayout?.let {
+                        this.applyTo(it)
+                    }
+                }
+            }
+            MotionEvent.ACTION_UP -> lastY = 0f
         }
     }
     override fun onStop() {
@@ -555,7 +590,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 clone(this)
                 clear(exoplayer.id)
                 listOf(ConstraintSet.START, ConstraintSet.TOP, ConstraintSet.END).forEach {
-                    alignParent(exoplayer.id, it, 20.dpToPx())
+                    alignParent(exoplayer.id, it)
                 }
                 connect(exoplayer.id, ConstraintSet.BOTTOM, list.id, ConstraintSet.TOP, (-88).dpToPx())
                 clear(list.id)
@@ -565,5 +600,16 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
     }
+
+    open fun moveChannelListLayout(value: Int): ConstraintSet? {
+        return safeLet(motionLayout, exoPlayer, channelListRecyclerView) {
+                layout, exoplayer, list -> ConstraintSet().apply {
+            clone(layout)
+
+            setMargin(list.id, ConstraintSet.TOP, (-88 + value).dpToPx())
+        }
+        }
+    }
+
 
 }

@@ -35,7 +35,7 @@ import kotlinx.coroutines.flow.callbackFlow
 
 class ChannelListView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : FadingEdgeLayout(context, attrs) {
+) : FrameLayout(context, attrs) {
     enum class DisplayStyle {
         FLEX, HORIZONTAL_LINEAR
     }

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.kt.apps.media.mobile.ui.view.FadingEdgeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:fel_edge="top|bottom"
-    app:fel_size_top="@dimen/fading_edge_size"
-    app:fel_size_bottom="@dimen/fading_edge_size"
-    android:clipToPadding="false"
     >
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:fadingEdge="vertical"
+        android:requiresFadingEdge="vertical"
+        android:fadingEdgeLength="@dimen/fading_edge_size"
         >
-        <androidx.recyclerview.widget.RecyclerView
+        <com.kt.apps.media.mobile.utils.FadingEdgeRecyclerView
             android:id="@+id/main_channel_recycler_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:nestedScrollingEnabled="true"
             android:orientation="vertical"
-            android:clipToPadding="true"
+            android:clipToPadding="false"
+
             />
     </androidx.core.widget.NestedScrollView>
 
-</com.kt.apps.media.mobile.ui.view.FadingEdgeLayout>
+</FrameLayout>

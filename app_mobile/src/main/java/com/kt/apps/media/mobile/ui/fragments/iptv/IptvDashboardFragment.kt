@@ -110,14 +110,13 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             viewModel.extensionConfigs.collectLatest {
                 if (it.isNotEmpty()) {
-                    delay(250)
-                    motionLayout?.transitionToState(R.id.end)
-                    list.clear()
-                    list.addAll(it)
-                    _adapter.notifyDataSetChanged()
+                    motionLayout?.jumpToState(R.id.end)
                 } else {
                     motionLayout?.transitionToState(R.id.start)
                 }
+                list.clear()
+                list.addAll(it)
+                _adapter.notifyDataSetChanged()
             }
         }
     }
