@@ -67,7 +67,7 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                         (it as? ChannelElement.ExtensionChannelElement)?.model
                     } ?: emptyFlow()
                 ).collectLatest {
-                    isShowChannelList.emit(false)
+                    isShowChannelList.emit(ChannelListState.HIDE)
                     _playbackViewModel.loadIPTVJob(it)
                 }
             }
