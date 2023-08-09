@@ -75,7 +75,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         }
 
         layoutHandler?.onPlaybackStateChange = {
-            viewModel.onChangePlayerState(it)
+            lifecycleScope.launch {
+                viewModel.onChangePlayerState(it)
+            }
         }
         binding.parseSourceLoadingContainer?.visibility = View.INVISIBLE
 

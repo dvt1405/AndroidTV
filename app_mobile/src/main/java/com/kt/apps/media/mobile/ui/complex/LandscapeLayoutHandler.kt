@@ -139,6 +139,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     }
 
     private fun transitionFullscreen() {
+        state = State.FULLSCREEN
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -149,14 +150,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
             TransitionManager.beginDelayedTransition(
                 surfaceView,
-                CustomTransition().apply {
-                    addListener(object: TransitionCallback() {
-                        override fun onTransitionStart(transition: Transition) {
-                            super.onTransitionStart(transition)
-                            this@LandscapeLayoutHandler.state = State.FULLSCREEN
-                        }
-                    })
-                }
+                AutoTransition()
             )
             set.applyTo(surfaceView)
         }
