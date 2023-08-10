@@ -30,36 +30,8 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
-class FootballPlaybackFragment: BasePlaybackFragment<FragmentFootballPlaybackBinding>() {
-    override val layoutResId: Int
-        get() = R.layout.fragment_football_playback
-    override val screenName: String
-        get() = "Fragment Playback"
-    override val exoPlayer: StyledPlayerView? by lazy {
-        binding.exoPlayer
-    }
-    override val motionLayout: ConstraintLayout? by lazy {
-        binding.motionLayout
-    }
-    override val minimalLayout: View? by lazy {
-        binding.minimalLayout
-    }
-
-    override val minimalProgress by lazy {
-        binding.minimalLoading
-    }
-
-    protected override val minimalPlayPause by lazy {
-        binding.minimalPlayButton
-    }
-    override val minimalTitleTv: TextView? by lazy {
-        binding.minimalTitleTv
-    }
-
+class FootballPlaybackFragment: ChannelPlaybackFragment() {
     private val _adapter: SubFootballListAdapter = SubFootballListAdapter()
-    protected override val channelListRecyclerView: RecyclerView? by lazy {
-        binding.footballListRecyclerView
-    }
 
     override val exitButton: View? by lazy {
         binding.exitButton
@@ -113,26 +85,7 @@ class FootballPlaybackFragment: BasePlaybackFragment<FragmentFootballPlaybackBin
         channelListRecyclerView?.adapter = _adapter
     }
 
-    override fun provideMinimalLayout(): ConstraintSet? {
-        return safeLet(binding.motionLayout, binding.exoPlayer, binding.minimalLayout, binding.footballListRecyclerView) {
-                mainLayout, exoplayer,  minimal, list ->
-            ConstraintSet().apply {
-                clone(mainLayout)
-                arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
-                    clear(it)
-                }
 
-                setVisibility(list.id, View.INVISIBLE)
-                matchParentWidth(list.id)
-                matchParentWidth(minimal.id)
-                matchParentWidth(exoplayer.id)
-                constrainHeight(minimal.id, ConstraintSet.WRAP_CONTENT)
-                connect(exoplayer.id, ConstraintSet.BOTTOM, minimal.id, ConstraintSet.TOP)
-                alignParent(minimal.id, ConstraintSet.BOTTOM)
-                alignParent(exoplayer.id, ConstraintSet.TOP)
-            }
-        }
-    }
 
     companion object {
         const val screenName: String = "TVPlaybackFragment"

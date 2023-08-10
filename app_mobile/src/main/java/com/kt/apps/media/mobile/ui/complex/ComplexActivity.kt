@@ -216,8 +216,8 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
             }
         }?.run {
-            touchListenerList.clear()
-            touchListenerList.add(this as IDispatchTouchListener)
+//            touchListenerList.clear()
+//            touchListenerList.add(this as IDispatchTouchListener)
             if (!isVisible) {
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container_playback, this, IPTVPlaybackFragment.screenName)

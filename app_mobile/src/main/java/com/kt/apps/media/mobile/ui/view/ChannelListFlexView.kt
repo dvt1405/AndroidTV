@@ -46,7 +46,7 @@ class ChannelListView @JvmOverloads constructor(
     }
     var onChildItemClickListener: (IChannelElement, Int) -> Unit = { _, _ -> }
 
-    private val _adapter by lazy { Adapter().apply {
+    private val _adapter by lazy { RowItemChannelAdapter().apply {
         onItemRecyclerViewCLickListener = { item, position ->
             this@ChannelListView.onChildItemClickListener(item, position)
         }
@@ -54,13 +54,6 @@ class ChannelListView @JvmOverloads constructor(
 
     init {
         View.inflate(context, R.layout.channel_list_recyclerview, this)
-        doOnPreDraw { it ->
-            val viewWidth = it.measuredWidth.takeIf { w -> w > 0 } ?: (this.parent as View).measuredWidth
-            val spacing = context.resources.getDimensionPixelSize(R.dimen.item_channel_decoration)
-            val preferWidth = viewWidth / 3 - spacing * 2
-            _adapter.preferWidth = preferWidth
-            forceRedraw()
-        }
     }
 
     override fun setOnTouchListener(l: OnTouchListener?) {
@@ -105,43 +98,28 @@ class ChannelListView @JvmOverloads constructor(
     override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) =
         recyclerView.setPadding(left, top, right, bottom)
 
-    class Adapter: BaseAdapter<IChannelElement, ItemChannelBinding>() {
-        var preferWidth: Int = Int.MAX_VALUE
+}
 
-        override val itemLayoutRes: Int
-            get() = R.layout.item_channel
+class RowItemChannelAdapter: BaseAdapter<IChannelElement, ItemChannelBinding>() {
 
-        override fun bindItem(
-            item: IChannelElement,
-            binding: ItemChannelBinding,
-            position: Int,
-            holder: BaseViewHolder<IChannelElement, ItemChannelBinding>
-        ) {
-            with(binding) {
-                val currentWidth = binding.logo.context.resources
-                    .getDimensionPixelSize(R.dimen.item_channel_width)
-                val currentHeight = binding.logo.context.resources
-                    .getDimensionPixelSize(R.dimen.item_channel_height)
+    override val itemLayoutRes: Int
+        get() = R.layout.item_channel
 
-                if (currentWidth > preferWidth && preferWidth > (100).dpToPx()) {
-                    val newWidth = preferWidth
-                    val newHeight = preferWidth * currentHeight / currentWidth
-                    logo.updateLayoutParams<ViewGroup.LayoutParams> {
-                        width = newWidth
-                        height = newHeight
-                    }
-                }
-            }
-            binding.item = item
-            binding.title.isSelected = true
-            binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)
-        }
+    override fun bindItem(
+        item: IChannelElement,
+        binding: ItemChannelBinding,
+        position: Int,
+        holder: BaseViewHolder<IChannelElement, ItemChannelBinding>
+    ) {
+        binding.item = item
+        binding.title.isSelected = true
+        binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)
+    }
 
-        override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {
-            super.onViewRecycled(holder)
-            Log.d(TAG, "onViewRecycled: ${holder.viewBinding.title.text}")
-            holder.viewBinding.logo.setImageBitmap(null)
-        }
+    override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {
+        super.onViewRecycled(holder)
+        Log.d(TAG, "onViewRecycled: ${holder.viewBinding.title.text}")
+        holder.viewBinding.logo.setImageBitmap(null)
     }
 }
 
@@ -154,5 +132,15 @@ fun ChannelListView.childClicks() : Flow<IChannelElement> {
         awaitClose {
             onChildItemClickListener = { _, _ ->}
         }
+    }
+}
+
+fun RowItemChannelAdapter.childClicks(): Flow<IChannelElement> {
+    return callbackFlow {
+        onItemRecyclerViewCLickListener = { item, pos ->
+            trySend(item)
+        }
+
+        awaitClose { onItemRecyclerViewCLickListener = { _, _ -> } }
     }
 }

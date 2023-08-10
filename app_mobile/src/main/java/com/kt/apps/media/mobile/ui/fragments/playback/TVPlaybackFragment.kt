@@ -11,13 +11,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
+import com.kt.apps.media.mobile.ui.view.RowItemChannelAdapter
 import com.kt.apps.media.mobile.ui.view.childClicks
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
@@ -36,13 +40,31 @@ import kotlinx.coroutines.launch
 interface IDispatchTouchListener {
     fun onDispatchTouchEvent(view: View?, mv: MotionEvent)
 }
-class TVPlaybackFragment: ChannelPlaybackFragment() {
+class
+TVPlaybackFragment: ChannelPlaybackFragment() {
     private val _playbackInteractor by lazy {
         TVPlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }
+
     override val playbackViewModel: BasePlaybackInteractor
         get() = _playbackInteractor
 
+    private val itemAdapter by lazy {
+        RowItemChannelAdapter()
+    }
+    override fun initView(savedInstanceState: Bundle?) {
+        super.initView(savedInstanceState)
+        progressBar?.visibility = View.GONE
+
+        channelListRecyclerView?.apply {
+            adapter = itemAdapter
+            addItemDecoration(channelItemDecoration)
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
+                isItemPrefetchEnabled = true
+                initialPrefetchItemCount = 9
+            }
+        }
+    }
 
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
@@ -51,9 +73,9 @@ class TVPlaybackFragment: ChannelPlaybackFragment() {
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
-                channelListRecyclerView?.childClicks()
-                    ?.mapNotNull { it as? ChannelElement.TVChannelElement }
-                    ?.collectLatest {
+                itemAdapter.childClicks()
+                    .mapNotNull { it as? ChannelElement.TVChannelElement }
+                    .collectLatest {
                         _playbackInteractor.loadLinkStreamChannel(it)
                     }
             }
@@ -69,7 +91,7 @@ class TVPlaybackFragment: ChannelPlaybackFragment() {
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
                 _playbackInteractor.channelElementList.collectLatest {
-                    channelListRecyclerView?.reloadAllData(it)
+                    itemAdapter.onRefresh(it)
                 }
             }
         }
@@ -95,6 +117,25 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
     override val playbackViewModel: BasePlaybackInteractor
         get() = _playbackInteractor
 
+    private val itemAdapter by lazy {
+        RowItemChannelAdapter()
+    }
+    override fun initView(savedInstanceState: Bundle?) {
+        super.initView(savedInstanceState)
+        progressBar?.visibility = View.GONE
+
+        channelListRecyclerView?.apply {
+            adapter = itemAdapter
+            addItemDecoration(channelItemDecoration)
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
+                isItemPrefetchEnabled = true
+                initialPrefetchItemCount = 9
+            }
+        }
+
+        binding.exoPlayer.useArtwork = true
+        binding.exoPlayer.defaultArtwork = resources.getDrawable(com.kt.apps.core.R.drawable.bg_radio_playing   )
+    }
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
         val itemToPlay = arguments?.get(TVPlaybackFragment.EXTRA_TV_CHANNEL) as? TVChannel
@@ -103,9 +144,8 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
             launch {
                 merge(
                     itemToPlay?.let { flowOf(ChannelElement.TVChannelElement(it)) } ?: emptyFlow(),
-                    channelListRecyclerView?.childClicks()
-                        ?.mapNotNull { it as? ChannelElement.TVChannelElement }
-                        ?: emptyFlow()
+                    itemAdapter.childClicks()
+                        .mapNotNull { it as? ChannelElement.TVChannelElement }
                 ).collectLatest {
                     _playbackInteractor.loadLinkStreamChannel(it)
                 }
@@ -113,7 +153,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
 
             launch {
                 _playbackInteractor.radioChannelList.collectLatest {
-                    channelListRecyclerView?.reloadAllData(it)
+                    itemAdapter.onRefresh(it)
                 }
             }
         }
@@ -121,16 +161,16 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
 
     override suspend fun preparePlayView(data: PrepareStreamLinkData) {
         super.preparePlayView(data)
-        (data as? PrepareStreamLinkData.Radio)?.apply {
+        (data as? PrepareStreamLinkData.Radio)?.run {
             loadArtwork(this.data)
         }
     }
 
     override suspend fun playVideo(data: StreamLinkData) {
         super.playVideo(data)
-//        (data as? StreamLinkData.TVStreamLinkData)?.apply {
-//            loadArtwork(this.data.channel)
-//        }
+        (data as? StreamLinkData.TVStreamLinkData)?.run {
+            loadArtwork(this.data.channel)
+        }
     }
     private fun loadArtwork(data: TVChannel) {
         context?.run {

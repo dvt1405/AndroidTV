@@ -15,6 +15,12 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.marginBottom
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener
+import androidx.recyclerview.widget.RecyclerView.Recycler
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
 import androidx.transition.AutoTransition
 import androidx.transition.ChangeBounds
 import androidx.transition.Fade
@@ -24,6 +30,7 @@ import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ui.DefaultTimeBar
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.button.MaterialButton
@@ -62,23 +69,6 @@ interface IPlaybackControl {
     var callback: IPlaybackAction?
 }
 
-sealed class DisplayMode {
-    object IDLE: DisplayMode()
-    data class FULLSCREEN(val shouldRedraw: Boolean): DisplayMode()
-    object MINIMAL: DisplayMode()
-    object PIP: DisplayMode()
-
-    companion object {
-        fun fromPlaybackState(state: PlaybackState) : DisplayMode {
-            return when(state) {
-                PlaybackState.Fullscreen -> FULLSCREEN(true)
-                PlaybackState.Minimal -> MINIMAL
-                PlaybackState.Invisible -> IDLE
-            }
-        }
-    }
-}
-
 sealed class LayoutState {
     data class FULLSCREEN(val shouldRedraw: Boolean): LayoutState()
     object MINIMAL: LayoutState()
@@ -87,12 +77,8 @@ sealed class LayoutState {
     object MOVE_CHANNEL: LayoutState()
 }
 
-enum class ChannelListState {
-    SHOW, HIDE, MOVING
-}
-
-data class ScreenState(val playbackState: PlaybackState, val isInPIPMode: Boolean, val channelListState: ChannelListState)
-abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>(), IDispatchTouchListener, IPlaybackControl {
+data class ScreenState(val playbackState: PlaybackState, val isInPIPMode: Boolean)
+abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>(), IPlaybackControl {
 
     override val screenName: String
         get() = "Fragment Playback"
@@ -111,6 +97,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
     }
 
+    protected val progressBar: DefaultTimeBar? by lazy {
+        exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_progress)
+    }
+
     private val playPauseButton: ImageButton? by lazy {
         exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
     }
@@ -127,6 +117,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.title)
     }
 
+    protected val channelListRecyclerView: RecyclerView? by lazy {
+        exoPlayer?.findViewById(R.id.exo_channel_list)
+    }
+
     protected abstract val exoPlayer: StyledPlayerView?
 
     protected abstract val motionLayout: ConstraintLayout?
@@ -139,14 +133,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected abstract val minimalTitleTv: TextView?
 
-    protected abstract val channelListRecyclerView: View?
+
 
     protected abstract val exitButton: View?
 
     private val currentLayout = MutableStateFlow<LayoutState>(LayoutState.FULLSCREEN(true))
     private val title = MutableStateFlow("")
     private val isProgressing = MutableStateFlow(true)
-    protected val isShowChannelList = MutableStateFlow(ChannelListState.HIDE)
+    protected val isPlayingState = MutableStateFlow(false)
 
     protected var retryTimes: Int = 3
 
@@ -157,6 +151,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     private var playerListener: Player.Listener = object: Player.Listener {
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            super.onIsPlayingChanged(isPlaying)
+            isPlayingState.value = isPlaying
+        }
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == ExoPlayer.STATE_READY) {
                 isProgressing.value = false
@@ -195,10 +193,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             Log.d(TAG, "onVideoSizeChanged: $videoSize")
         }
     }
-
-    var lastPointF = PointF(0f, 0f)
-    var startPointF = PointF(0f, 0f)
-    var avoidTouchGesture = AtomicBoolean(false)
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
         exoPlayer?.apply {
@@ -224,20 +218,39 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
 
         channelListRecyclerView?.visibility = View.VISIBLE
-        channelListRecyclerView?.setOnTouchListener { view, motionEvent ->
-            when (motionEvent.actionMasked) {
-                MotionEvent.ACTION_MOVE -> {
-                    Log.d(TAG, "channelListRecyclerView: ACTION_MOVE $motionEvent")
-                    avoidTouchGesture.set(true)
+        channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
+            var isChanged: Boolean = false
+            var showTimeout: Int = 1000
+            var hideOnTouch: Boolean = true
+            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                when(newState) {
+                    SCROLL_STATE_IDLE -> {
+                        Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_IDLE")
+                        if (isChanged) {
+                            exoPlayer?.apply {
+                                controllerShowTimeoutMs = showTimeout
+                                controllerHideOnTouch = hideOnTouch
+                            }
+                            isChanged = false
+                        }
+                    }
+                    SCROLL_STATE_SETTLING -> { Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_SETTLING") }
+                    SCROLL_STATE_DRAGGING -> {
+                        Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_DRAGGING")
+                        if (!isChanged) {
+                            exoPlayer?.apply {
+                                showTimeout = controllerShowTimeoutMs
+                                hideOnTouch = controllerHideOnTouch
+
+                                controllerShowTimeoutMs = -1
+                                controllerHideOnTouch = false
+                            }
+                            isChanged = true
+                        }
+                    }
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    Log.d(TAG, "channelListRecyclerView: ACTION_UP $motionEvent")
-                    avoidTouchGesture.set(false)
-                }
-                else -> { }
             }
-            false
-        }
+        })
     }
     fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
@@ -301,20 +314,20 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 combine(
                     playbackViewModel.playbackState,
                     playbackViewModel.isInPipMode,
-                    isShowChannelList
-                ) { playbackState, isInPipMode, channelListState ->
-                    ScreenState(playbackState, isInPipMode, channelListState)
+                ) { playbackState, isInPipMode ->
+                    ScreenState(playbackState, isInPipMode)
                 }.collectLatest { state ->
                     if (state.isInPIPMode) {
                         currentLayout.emit(LayoutState.PIP)
                     } else {
                         when(state.playbackState) {
                             PlaybackState.Fullscreen -> {
-                                when(state.channelListState) {
-                                    ChannelListState.SHOW -> currentLayout.emit(LayoutState.SHOW_CHANNEL)
-                                    ChannelListState.MOVING -> currentLayout.emit(LayoutState.MOVE_CHANNEL)
-                                    ChannelListState.HIDE -> currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
-                                }
+                                currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
+//                                when(state.channelListState) {
+//                                    ChannelListState.SHOW -> currentLayout.emit(LayoutState.SHOW_CHANNEL)
+//                                    ChannelListState.MOVING -> currentLayout.emit(LayoutState.MOVE_CHANNEL)
+//                                    ChannelListState.HIDE -> currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
+//                                }
                             }
                             PlaybackState.Minimal -> currentLayout.emit(LayoutState.MINIMAL)
                             else -> {
@@ -329,40 +342,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 currentLayout.collectLatest {
                     when(it) {
                         is LayoutState.FULLSCREEN -> changeFullScreenLayout(it.shouldRedraw)
-                        is LayoutState.SHOW_CHANNEL -> showChannelList()
+                        is LayoutState.SHOW_CHANNEL -> changeFullScreenLayout(false)
                         is LayoutState.PIP -> togglePIPLayout(true)
                         is LayoutState.MINIMAL -> changeMinimalLayout()
                         is LayoutState.MOVE_CHANNEL -> { }
                     }
                 }
-            }
-        }
-    }
-    override fun onDispatchTouchEvent(view: View?, mv: MotionEvent) {
-        when(mv.actionMasked) {
-            MotionEvent.ACTION_DOWN ->  {
-                lastPointF = PointF(mv.rawX, mv.rawY)
-                startPointF = PointF(mv.rawX, mv.rawY)
-            }
-            MotionEvent.ACTION_MOVE -> {
-                if (avoidTouchGesture.get()) {
-                    return
-                }
-                val deltaY = mv.rawY - lastPointF.y
-                val deltaX = mv.rawX - lastPointF.x
-                Log.d(TAG, "onDispatchTouchEvent: $deltaX $deltaY")
-                lastPointF = PointF(mv.rawX, mv.rawY)
-                moveChannelList(-deltaY.toInt())
-            }
-            MotionEvent.ACTION_UP -> {
-                val deltaY = mv.rawY - startPointF.y
-                val deltaX = mv.rawX - startPointF.x
-                if (abs(deltaY) >= 1 || abs(deltaX) >= 1) {
-                    onTouchEnd()
-                }
-
-                lastPointF = PointF(0f, 0f)
-                startPointF = PointF(0f, 0f)
             }
         }
     }
@@ -465,22 +450,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         safeLet(motionLayout, provideMinimalLayout()) {
                 mainLayout, constraintSet ->
             performTransition(mainLayout, constraintSet)
-            isShowChannelList.value = ChannelListState.HIDE
-        }
-    }
-    protected fun showChannelList() {
-        if (isLandscape) {
-            exoPlayer?.apply {
-                useController = true
-                controllerShowTimeoutMs = -1
-                controllerHideOnTouch = false
-                channelListRecyclerView?.visibility = View.VISIBLE
-                showController()
-            }
-            safeLet(motionLayout, showChannelListLayout()) {
-                    mainLayout, constraintSet ->
-                performTransition(mainLayout, constraintSet, transition = ChangeBounds())
-            }
         }
     }
     protected open suspend fun preparePlayView(data: PrepareStreamLinkData) {
@@ -498,37 +467,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         title.emit(data.title)
     }
 
-
-    private fun onTouchEnd() {
-        if (!isLandscape) { return }
-        val channelList = channelListRecyclerView ?: return
-
-        if (abs(channelList.marginBottom) <= abs(marginBottomSize) / 2) {
-            lifecycleScope.launch {
-                isShowChannelList.emit(ChannelListState.SHOW)
-            }
-        } else {
-            lifecycleScope.launch {
-                isShowChannelList.emit(ChannelListState.HIDE)
-            }
-        }
-    }
-    private fun moveChannelList(value: Int) {
-        if (!isLandscape) { return }
-        val channelList = channelListRecyclerView ?: return
-        if (channelList.marginBottom + value > 0 || abs(channelList.marginBottom + value) > abs(marginBottomSize)) {
-            return
-        }
-        exoPlayer?.apply {
-            showController()
-            controllerShowTimeoutMs = -1
-            controllerHideOnTouch = false
-            isShowChannelList.value = ChannelListState.MOVING
-            safeLet(motionLayout, moveChannelListLayout(value)) { layout, constraint ->
-                constraint.applyTo(layout)
-            }
-        }
-    }
     private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, transition: Transition = Fade(), onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {
         Log.d(TAG, "performTransition: ${set.TAG}")
         TransitionManager.beginDelayedTransition(layout, transition.apply {
@@ -641,38 +579,4 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
     }
-
-    open fun showChannelListLayout(): ConstraintSet? {
-        Log.d(TAG, "showChannelListLayout: ")
-        return safeLet(exoPlayer, channelListRecyclerView, provideFullScreenLayout()) {
-                exoplayer, list, fullsreenLayout -> ConstraintSet().apply {
-                clone(fullsreenLayout)
-                clear(exoplayer.id)
-                listOf(ConstraintSet.START, ConstraintSet.TOP, ConstraintSet.END).forEach {
-                    alignParent(exoplayer.id, it)
-                }
-                connect(exoplayer.id, ConstraintSet.BOTTOM, list.id, ConstraintSet.TOP, (-88).dpToPx())
-                clear(list.id)
-                constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
-                matchParentWidth(list.id)
-                alignParent(list.id, ConstraintSet.BOTTOM, (-20).dpToPx())
-            }
-        }
-    }
-
-    open fun moveChannelListLayout(value: Int): ConstraintSet? {
-        return safeLet(
-            motionLayout,
-            exoPlayer,
-            channelListRecyclerView
-        ) { layout, exoplayer, list ->
-            ConstraintSet().apply {
-                clone(layout)
-                val currentMargin = getConstraint(list.id).layout.bottomMargin
-                Log.d(TAG, "moveChannelListLayout: $currentMargin")
-                setMargin(list.id, ConstraintSet.BOTTOM, currentMargin + value)
-            }
-        }
-    }
-
 }

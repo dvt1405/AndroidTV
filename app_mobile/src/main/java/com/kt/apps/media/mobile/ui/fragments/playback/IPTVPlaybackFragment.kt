@@ -10,6 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
@@ -21,8 +22,10 @@ import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListView
+import com.kt.apps.media.mobile.ui.view.RowItemChannelAdapter
 import com.kt.apps.media.mobile.ui.view.childClicks
 import com.kt.apps.media.mobile.utils.alignParent
+import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.matchParentWidth
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
@@ -51,9 +54,20 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
     override val playbackViewModel: BasePlaybackInteractor
         get() = _playbackViewModel
 
+    private val itemAdapter by lazy {
+        RowItemChannelAdapter()
+    }
 
     override fun initView(savedInstanceState: Bundle?) {
         super.initView(savedInstanceState)
+        channelListRecyclerView?.apply {
+            adapter = itemAdapter
+            addItemDecoration(channelItemDecoration)
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
+                isItemPrefetchEnabled = true
+                initialPrefetchItemCount = 9
+            }
+        }
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -63,11 +77,10 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
             launch {
                 merge(
                     extensionsChannel?.let { flowOf(it) } ?: emptyFlow(),
-                    channelListRecyclerView?.childClicks()?.mapNotNull {
+                    itemAdapter.childClicks().mapNotNull {
                         (it as? ChannelElement.ExtensionChannelElement)?.model
-                    } ?: emptyFlow()
+                    }
                 ).collectLatest {
-                    isShowChannelList.emit(ChannelListState.HIDE)
                     _playbackViewModel.loadIPTVJob(it)
                 }
             }
@@ -84,23 +97,11 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
             launch {
                 _playbackViewModel.relatedItems
                     .collectLatest {
-                        binding.channelList?.reloadAllData(it)
+                       itemAdapter.onRefresh(it)
                     }
             }
         }
     }
-
-
-//    override fun showChannelListLayout(): ConstraintSet? {
-//        return safeLet(binding.exoPlayer, binding.channelList) { exoplayer, list ->
-//            ConstraintSet().apply {
-//                clone(this)
-//                clear(list.id)
-//                fillParent(list.id)
-//                setMargin(list.id, ConstraintSet.TOP, (40).dpToPx())
-//            }
-//        }
-//    }
 
     companion object {
         const val screenName = "IPTVPlaybackFragment"
