@@ -110,11 +110,7 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
                     isItemPrefetchEnabled = true
                 }
             } else {
-                FlexboxLayoutManager(binding.root.context).apply {
-                    isItemPrefetchEnabled = true
-                    flexDirection = FlexDirection.ROW
-                    justifyContent = JustifyContent.FLEX_START
-                }
+                GridLayoutManager(binding.root.context, 4)
             }
             addItemDecoration(channelItemDecoration)
             setHasFixedSize(true)

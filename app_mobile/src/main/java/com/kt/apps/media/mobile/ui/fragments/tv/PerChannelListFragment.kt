@@ -35,7 +35,7 @@ abstract class PerChannelListFragment : BaseMobileFragment<FragmentTvChannelList
     }
 
     override fun initView(savedInstanceState: Bundle?) {
-        binding.verticalRecyclerView.changeDisplayStyle(ChannelListView.DisplayStyle.FLEX)
+        binding.verticalRecyclerView.changeDisplayStyle(ChannelListView.DisplayStyle.GRID)
     }
 
     override fun initAction(savedInstanceState: Bundle?) {

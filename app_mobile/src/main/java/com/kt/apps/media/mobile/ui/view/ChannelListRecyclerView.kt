@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.flexbox.FlexDirection
@@ -51,11 +52,7 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     } }
 
     private val singleLayoutManager by lazy {
-        FlexboxLayoutManager(this.context).apply {
-            flexDirection = FlexDirection.ROW
-            justifyContent = JustifyContent.FLEX_START
-            flexWrap = FlexWrap.WRAP
-        }
+        GridLayoutManager(context, 4)
     }
     private val recyclerView by lazy {
         findViewById<RecyclerView>(R.id.main_channel_recycler_view)
@@ -93,7 +90,7 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     fun reloadAllData(list: List<ChannelListData>) {
         if (list.size == 1) {
             if (
-                recyclerView.layoutManager !is FlexboxLayoutManager
+                recyclerView.layoutManager !is GridLayoutManager
                 || recyclerView.adapter != singleAdapter
                     ) {
                 recyclerView.adapter = singleAdapter

@@ -10,6 +10,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import androidx.core.view.doOnPreDraw
 import androidx.core.view.updateLayoutParams
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.flexbox.FlexDirection
@@ -25,6 +26,7 @@ import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.ui.main.IChannelElement
+import com.kt.apps.media.mobile.utils.GridAutoFitLayoutManager
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.skeleton.KunSkeleton
@@ -37,7 +39,7 @@ class ChannelListView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
     enum class DisplayStyle {
-        FLEX, HORIZONTAL_LINEAR
+        GRID, HORIZONTAL_LINEAR
     }
     private val recyclerView by lazy {
         findViewById<RecyclerView>(R.id.main_channel_recycler_view)
@@ -84,12 +86,7 @@ class ChannelListView @JvmOverloads constructor(
     }
     fun changeDisplayStyle(style: DisplayStyle) {
         recyclerView.layoutManager = when(style) {
-            DisplayStyle.FLEX -> FlexboxLayoutManager(context).apply {
-                isItemPrefetchEnabled = false
-                flexDirection = FlexDirection.ROW
-                justifyContent = JustifyContent.FLEX_START
-                flexWrap = FlexWrap.WRAP
-            }
+            DisplayStyle.GRID -> GridAutoFitLayoutManager(context, resources.getDimension(R.dimen.item_channel_width).toInt())
             DisplayStyle.HORIZONTAL_LINEAR -> LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
                 isItemPrefetchEnabled = false
             }

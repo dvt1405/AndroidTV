@@ -10,27 +10,28 @@
             type="com.kt.apps.media.mobile.ui.main.IChannelElement" />
     </data>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="@dimen/item_channel_width"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
         android:foreground="@drawable/ripple_selected_item"
         android:foregroundTint="@color/white"
-        android:gravity="top"
-        android:orientation="vertical"
         tools:targetApi="m">
 
 
         <androidx.cardview.widget.CardView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="12dp"
+            android:id="@+id/card_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintDimensionRatio="1.8"
+            app:cardCornerRadius="4dp"
             android:background="#33FFFFFF"
             >
             <ImageView
-                android:layout_width="@dimen/item_channel_width"
-                android:layout_height="@dimen/item_channel_height"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:id="@+id/logo"/>
         </androidx.cardview.widget.CardView>
 
@@ -42,13 +43,13 @@
             android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
             android:paddingVertical="10dp"
-            android:gravity="left"
             android:singleLine="true"
-            android:textSize="14sp"
+            android:textSize="@dimen/item_channel_fontsize"
             android:textColor="@color/white"
             android:text="@{item.name}"
             tools:text="Channel name"
             android:padding="8dp"
+            app:layout_constraintTop_toBottomOf="@id/card_view"
             />
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

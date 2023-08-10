@@ -15,4 +15,5 @@
     <dimen name="football_item_width_live">300dp</dimen>
     <dimen name="football_item_height_live">170dp</dimen>
     <dimen name="football_logo_size">80dp</dimen>
+    <dimen name="item_channel_fontsize">14sp</dimen>
 </resources>
