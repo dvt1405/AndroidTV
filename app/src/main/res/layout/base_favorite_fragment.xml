@@ -25,6 +25,7 @@
                 android:layout_width="160dp"
                 android:layout_height="160dp"
                 android:alpha="0.15"
+                android:theme="@style/Theme.AppCompat"
                 android:src="@drawable/ic_round_bookmark_border_24"
                 android:visibility="visible" />
 

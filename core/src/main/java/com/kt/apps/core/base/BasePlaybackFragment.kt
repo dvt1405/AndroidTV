@@ -15,6 +15,7 @@ import android.view.*
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -94,8 +95,8 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private var contentDurationView: TextView? = null
     private var centerContainerView: View? = null
     private var videoInfoCodecContainerView: ViewGroup? = null
-    private var btnVideoCodecInfo: ImageButton? = null
-    private var btnFavouriteVideo: ImageButton? = null
+    private var btnVideoCodecInfo: ImageView? = null
+    private var btnFavouriteVideo: ImageView? = null
     protected var onItemClickedListener: OnItemViewClickedListener? = null
     private val mChildLaidOutListener = OnChildLaidOutListener { _, _, _, _ ->
     }
@@ -947,9 +948,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     fun hideOverlay() {
         if (videoInfoCodecContainerView?.isVisible == true) {
-            videoInfoCodecContainerView?.fadeOut { }
+            videoInfoCodecContainerView?.fadeOut {
+                videoInfoCodecContainerView?.gone()
+            }
             mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
         } else {
+            videoInfoCodecContainerView?.gone()
             autoHideOverlayRunnable.run()
         }
     }

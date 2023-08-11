@@ -28,11 +28,12 @@
             android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-            <androidx.appcompat.widget.AppCompatImageButton
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/btn_favourite"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_gravity="center"
+                android:nextFocusLeft="@id/btn_favourite"
                 android:theme="@style/Theme.AppCompat"
                 android:layout_marginEnd="36dp"
                 android:background="@drawable/base_background_btn_circle_focused"
@@ -62,7 +63,7 @@
                 tools:ignore="UseAppTint"
                 tools:targetApi="o" />
 
-            <androidx.appcompat.widget.AppCompatImageButton
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/btn_video_codec_info"
                 android:layout_width="60dp"
                 android:theme="@style/Theme.AppCompat"
