@@ -24,6 +24,7 @@ import com.kt.apps.core.logging.logStreamingTV
 import com.kt.apps.core.utils.expandUrl
 import com.kt.apps.core.utils.isShortLink
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -49,6 +50,9 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
     private val extensionsViewModel by lazy {
         ViewModelProvider(requireActivity(), factory)[ExtensionsViewModel::class.java]
     }
+    private val _favoriteViewModel by lazy {
+        ViewModelProvider(requireActivity(), factory)[FavoriteViewModel::class.java]
+    }
 
     private val extension: ExtensionsConfig by lazy {
         requireArguments().getParcelable(EXTRA_EXTENSION_ID)!!
@@ -62,9 +66,18 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
         return extension.sourceName
     }
 
+    override fun onFavoriteVideoClicked(isFavorite: Boolean) {
+        if (isFavorite) {
+            itemToPlay?.let { _favoriteViewModel.saveFavorite(it) }
+        } else {
+            itemToPlay?.let { _favoriteViewModel.deleteFavorite(it) }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         itemToPlay = requireArguments()[EXTRA_TV_CHANNEL] as ExtensionsChannel?
+        favoriteViewModel = _favoriteViewModel
     }
 
     override fun onHandlePlayerError(error: PlaybackException) {

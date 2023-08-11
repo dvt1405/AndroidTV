@@ -36,6 +36,7 @@ import com.kt.apps.core.base.leanback.media.SurfaceHolderGlueHost
 import com.kt.apps.core.base.player.AbstractExoPlayerManager
 import com.kt.apps.core.base.player.ExoPlayerManager
 import com.kt.apps.core.base.player.LinkStream
+import com.kt.apps.core.base.viewmodels.BaseFavoriteViewModel
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.*
@@ -94,7 +95,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private var centerContainerView: View? = null
     private var videoInfoCodecContainerView: ViewGroup? = null
     private var btnVideoCodecInfo: ImageButton? = null
-    private var btnFavoutiteVideo: ImageButton? = null
+    private var btnFavouriteVideo: ImageButton? = null
     protected var onItemClickedListener: OnItemViewClickedListener? = null
     private val mChildLaidOutListener = OnChildLaidOutListener { _, _, _, _ ->
     }
@@ -106,25 +107,11 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private val mainLooper by lazy {
         Handler(Looper.getMainLooper())
     }
+    protected var favoriteViewModel: BaseFavoriteViewModel? = null
 
     private var durationSet = false
     private val mPlayerListener by lazy {
         object : Player.Listener {
-            override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-                super.onTimelineChanged(timeline, reason)
-            }
-
-            override fun onSeekBackIncrementChanged(seekBackIncrementMs: Long) {
-                super.onSeekBackIncrementChanged(seekBackIncrementMs)
-            }
-
-            override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) {
-                super.onSeekForwardIncrementChanged(seekForwardIncrementMs)
-            }
-
-            override fun onMetadata(metadata: Metadata) {
-                super.onMetadata(metadata)
-            }
 
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 super.onVideoSizeChanged(videoSize)
@@ -367,7 +354,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         contentDurationView = root.findViewById(R.id.content_duration)
         btnVideoCodecInfo = root.findViewById(R.id.btn_video_codec_info)
         centerContainerView = root.findViewById(R.id.center_controls_container)
-        btnFavoutiteVideo = root.findViewById(R.id.btn_favourite)
+        btnFavouriteVideo = root.findViewById(R.id.btn_favourite)
         hideControlsOverlay(false)
         val controlBackground = root.findViewById<View>(androidx.leanback.R.id.playback_controls_dock)
         controlBackground.makeGone()
@@ -385,6 +372,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 if (overlaysUIState == OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY
                     || overlaysUIState == OverlayUIState.STATE_INIT
                 ) {
+                    btnFavouriteVideo?.fadeIn {}
                     playPauseBtn?.fadeIn {
                         focusedPlayBtnIfNotSeeking()
                         overlaysUIState = OverlayUIState.STATE_INIT
@@ -397,13 +385,16 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             mHandler.removeCallbacks(autoHideOverlayRunnable)
             videoInfoCodecContainerView?.fadeIn {}
         }
-        btnFavoutiteVideo?.setOnClickListener {
-            onFavoriteVideoClicked()
+        btnFavouriteVideo?.setOnClickListener {
+            it.isSelected = !it.isSelected
+            onFavoriteVideoClicked(it.isSelected)
+            mHandler.removeCallbacks(autoHideOverlayRunnable)
+            mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
         }
         return root
     }
 
-    protected fun onFavoriteVideoClicked() {
+    protected open fun onFavoriteVideoClicked(isFavorite: Boolean) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -435,6 +426,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private fun onPlayPauseIconClicked() {
         mHandler.removeCallbacks(autoHideOverlayRunnable)
         try {
+            if (overlaysUIState == OverlayUIState.STATE_HIDDEN) {
+                handleUI(OverlayUIState.STATE_INIT, true)
+            }
             if (true == exoPlayerManager.playerAdapter?.isPlaying) {
                 exoPlayerManager.playerAdapter?.pause()
             } else {
@@ -671,7 +665,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     }
                 }
                 if (currentState == OverlayUIState.STATE_HIDDEN) {
-                    mGridViewOverlays?.fadeIn {
+                    playbackOverlaysContainerView?.fadeIn {
                         onlyShowGridView()
                     }
                 } else if ((currentState == OverlayUIState.STATE_INIT
@@ -752,6 +746,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 fadeInAnimator.addUpdateListener(btnPlayPauseAnimationUpdateListener)
                 fadeInAnimator.resume()
             } else {
+                centerContainerView?.fadeIn {}
                 playPauseBtn?.fadeIn {
                     focusedPlayBtnIfNotSeeking()
                 }
@@ -967,7 +962,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     override fun onDpadCenter() {
-        showGridMenu()
+        if (overlaysUIState == OverlayUIState.STATE_HIDDEN) {
+            handleUI(OverlayUIState.STATE_INIT, true)
+        }
     }
 
     fun isMenuShowed(): Boolean {
@@ -1190,6 +1187,15 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onResume() {
         super.onResume()
+        favoriteViewModel?.getListFavorite()
+        favoriteViewModel?.listFavoriteLiveData?.observe(viewLifecycleOwner) {
+            if (it is DataState.Success) {
+                btnFavouriteVideo?.isSelected = it.data.any {
+                    it.id == exoPlayerManager.exoPlayer?.currentMediaItem?.mediaId &&
+                            it.title == exoPlayerManager.exoPlayer?.currentMediaItem?.mediaMetadata?.title
+                }
+            }
+        }
         if (mGridViewPickHeight == mGridViewOverlays?.translationY) {
             playPauseBtn?.requestFocus()
         } else {

@@ -6,10 +6,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Parcelable
+import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
+import com.kt.apps.core.base.BasePlaybackFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.model.TVChannel
@@ -19,6 +21,7 @@ import com.kt.apps.media.xemtv.R
 import com.kt.apps.media.xemtv.databinding.ActivityPlaybackBinding
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.extensions.FragmentExtensionsPlayback
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import com.kt.apps.media.xemtv.ui.football.FootballPlaybackFragment
 import com.kt.apps.media.xemtv.ui.football.FootballViewModel
 import com.kt.apps.media.xemtv.ui.main.MainActivity
@@ -36,6 +39,8 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
+        Logger.d(this@PlaybackActivity, "InstanceState", "$savedInstanceState")
+        Logger.d(this@PlaybackActivity, "initAction", "${intent.extras} - ${intent.data}")
         when (intent.getParcelableExtra<Type>(EXTRA_PLAYBACK_TYPE)) {
             Type.FOOTBALL -> {
                 footballViewModel.getAllMatches()
@@ -49,24 +54,20 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
             }
 
             Type.TV, Type.RADIO -> {
-                if (savedInstanceState == null) {
-                    tvChannelViewModel.getListTVChannel(false)
-                    supportFragmentManager.beginTransaction()
-                        .replace(
-                            android.R.id.content, TVPlaybackVideoFragment.newInstance(
-                                intent.getParcelableExtra(EXTRA_PLAYBACK_TYPE)!!,
-                                intent.extras!!.getParcelable(EXTRA_TV_CHANNEL)!!
+                tvChannelViewModel.getListTVChannel(false)
+                supportFragmentManager.beginTransaction()
+                    .replace(
+                        android.R.id.content, TVPlaybackVideoFragment.newInstance(
+                            intent.getParcelableExtra(EXTRA_PLAYBACK_TYPE)!!,
+                            intent.extras!!.getParcelable(EXTRA_TV_CHANNEL)!!
 
-                            )
                         )
-                        .commit()
-                }
+                    )
+                    .commit()
             }
 
             Type.EXTENSION -> {
-                if (savedInstanceState == null) {
-                    startPlaybackExtensionsChannel(intent)
-                }
+                startPlaybackExtensionsChannel(intent)
             }
 
             else -> {
@@ -98,6 +99,15 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
                 else -> {
 
                 }
+            }
+        }
+        tvChannelViewModel.tvWithLinkStreamLiveData.observe(this) {
+            if (it is DataState.Success) {
+                favoriteViewModel.getListFavorite()
+                supportFragmentManager.findFragmentById(android.R.id.content)
+                    .takeIf {
+                        it is BasePlaybackFragment
+                    }
             }
         }
 
@@ -148,6 +158,9 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
     }
     private val footballViewModel: FootballViewModel by lazy {
         ViewModelProvider(this, factory)[FootballViewModel::class.java]
+    }
+    private val favoriteViewModel by lazy {
+        ViewModelProvider(this, factory)[FavoriteViewModel::class.java]
     }
 
     override fun onNewIntent(intent: Intent?) {

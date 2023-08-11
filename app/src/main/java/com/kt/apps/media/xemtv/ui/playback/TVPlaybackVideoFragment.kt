@@ -14,7 +14,6 @@ import com.google.android.exoplayer2.PlaybackException
 import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.R
 import com.kt.apps.core.base.BasePlaybackFragment
-import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -29,6 +28,7 @@ import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import dagger.android.AndroidInjector
 import javax.inject.Inject
 import kotlin.math.max
@@ -41,8 +41,27 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     private val tvChannelViewModel: TVChannelViewModel by lazy {
         ViewModelProvider(requireActivity(), factory)[TVChannelViewModel::class.java]
     }
+    private val _favoriteViewModel by lazy {
+        ViewModelProvider(requireActivity(), factory)[FavoriteViewModel::class.java]
+    }
     private val retryTimes by lazy {
         mutableMapOf<String, Int>()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        favoriteViewModel = _favoriteViewModel
+    }
+
+    override fun onFavoriteVideoClicked(isFavorite: Boolean) {
+        super.onFavoriteVideoClicked(isFavorite)
+        tvChannelViewModel.lastWatchedChannel?.channel?.let {
+            if (isFavorite) {
+                _favoriteViewModel.saveTVChannel(it)
+            } else {
+                _favoriteViewModel.deleteFavoriteTvChannel(it)
+            }
+        }
     }
 
     override fun getSearchFilter(): String {

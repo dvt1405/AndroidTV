@@ -101,6 +101,31 @@ open class BaseTVChannelViewModel constructor(
         }
     }
 
+    fun getLinkStreamById(channelId: String) {
+        if (lastTVStreamLinkTask?.isDisposed != true) {
+            lastTVStreamLinkTask?.dispose()
+        }
+
+        lastTVStreamLinkTask = interactors.getChannelLinkStreamById(channelId)
+            .subscribe({
+                markLastWatchedChannel(it)
+                loadProgramForChannel(it.channel)
+                enqueueInsertWatchNextTVChannel(it.channel)
+                _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
+                Logger.d(
+                    this, message = "play by deeplink result: {" +
+                            "channelId: $channelId, " +
+                            "channel: $it" +
+                            "}"
+                )
+                actionLogger.logStreamingTV(it.channel.tvChannelName)
+            }, {
+                _tvWithLinkStreamLiveData.postValue(DataState.Error(it))
+                Logger.e(this, exception = it)
+            })
+        add(lastTVStreamLinkTask!!)
+    }
+
     fun playTvByDeepLinks(uri: Uri) {
         val lastPath = uri.pathSegments.last() ?: return
         Logger.d(
@@ -112,7 +137,7 @@ open class BaseTVChannelViewModel constructor(
         if (lastTVStreamLinkTask?.isDisposed != true) {
             lastTVStreamLinkTask?.dispose()
         }
-
+        _tvWithLinkStreamLiveData.postValue(DataState.Loading())
         lastTVStreamLinkTask = interactors.getChannelLinkStreamById(lastPath)
             .subscribe({
                 markLastWatchedChannel(it)

@@ -5,6 +5,7 @@
 
     <string name="nav_search_title">Tìm kiếm</string>
     <string name="nav_tv_title">Truyền hình</string>
+    <string name="nav_favorite_title">Yêu thích</string>
     <string name="nav_radio_title">Phát thanh</string>
     <string name="nav_football_title">Bóng đá</string>
     <string name="nav_iptv_title">IPTV</string>

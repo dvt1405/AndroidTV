@@ -47,9 +47,10 @@ import com.kt.apps.core.utils.replaceVNCharsToLatinChars
         TVScheduler::class,
         ExtensionsChannelFts4::class,
         HistoryMediaItemDTO::class,
-        TVChannelFts4::class
+        TVChannelFts4::class,
+        VideoFavoriteDTO::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
     views = [
         ExtensionChannelDatabaseViews::class,
@@ -69,6 +70,7 @@ abstract class RoomDataBase : RoomDatabase() {
     abstract fun extensionsTVChannelProgramDao(): TVProgramScheduleDao
     abstract fun tvSchedulerDao(): TVSchedulerDAO
     abstract fun historyItemDao(): HistoryMediaDAO
+    abstract fun videoFavoriteDao(): VideoFavoriteDAO
 
     companion object {
         private val MIGRATE_1_2 by lazy {
@@ -221,6 +223,13 @@ abstract class RoomDataBase : RoomDatabase() {
             }
         }
 
+        private val MIGRATE_12_13 by lazy {
+            object : Migration(12, 13) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("CREATE TABLE IF NOT EXISTS `VideoFavoriteDTO` (`id` TEXT NOT NULL, `url` TEXT NOT NULL, `title` TEXT NOT NULL, `category` TEXT NOT NULL, `logoUrl` TEXT NOT NULL, `sourceFrom` TEXT NOT NULL, `type` TEXT NOT NULL, PRIMARY KEY(`id`, `url`))")
+                }
+            }
+        }
         fun query(
             db: SupportSQLiteDatabase, sqLiteQuery: SupportSQLiteQuery,
             maybeCopy: Boolean, signal: CancellationSignal?
@@ -330,7 +339,7 @@ abstract class RoomDataBase : RoomDatabase() {
                     MIGRATE_1_2, MIGRATE_2_3, MIGRATE_3_4,
                     MIGRATE_4_5, MIGRATE_5_6, MIGRATE_6_7,
                     MIGRATE_7_8, MIGRATE_8_9, MIGRATE_9_10,
-                    MIGRATE_10_11, MIGRATE_11_12
+                    MIGRATE_10_11, MIGRATE_11_12, MIGRATE_12_13
                 )
                 .build()
                 .also {

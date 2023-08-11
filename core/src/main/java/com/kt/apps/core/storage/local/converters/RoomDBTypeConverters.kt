@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.storage.local.dto.FootballTeamEntity
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 
 class RoomDBTypeConverters {
 
@@ -74,6 +75,22 @@ class RoomDBTypeConverters {
         type.name
     } catch (e: java.lang.Exception) {
         HistoryMediaItemDTO.Type.IPTV.name
+    }
+
+
+    @TypeConverter
+    fun stringToVideoFavoriteDTOType(str: String): VideoFavoriteDTO.Type = try {
+        VideoFavoriteDTO.Type
+            .valueOf(str)
+    } catch (e: java.lang.Exception) {
+        VideoFavoriteDTO.Type.IPTV
+    }
+
+    @TypeConverter
+    fun videoFavoriteDTOTypeToString(type: VideoFavoriteDTO.Type): String = try {
+        type.name
+    } catch (e: java.lang.Exception) {
+        VideoFavoriteDTO.Type.IPTV.name
     }
 
     companion object {

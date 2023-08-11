@@ -12,6 +12,7 @@ import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.base.viewmodels.HistoryIteractors
 import com.kt.apps.core.extensions.ParserExtensionsProgramSchedule
 import com.kt.apps.core.extensions.ParserExtensionsSource
+import com.kt.apps.core.repository.IFavoriteRepository
 import com.kt.apps.core.repository.IMediaHistoryRepository
 import com.kt.apps.core.storage.IKeyValueStorage
 import com.kt.apps.core.storage.local.RoomDataBase
@@ -58,6 +59,7 @@ interface CoreComponents {
     fun inject(scope: BaseViewModel)
 
     fun keyValueStorage(): IKeyValueStorage
+    fun favoriteRepo(): IFavoriteRepository
 
     @Component.Builder
     interface Builder {

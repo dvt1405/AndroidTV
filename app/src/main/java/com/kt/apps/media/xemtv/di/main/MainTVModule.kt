@@ -10,6 +10,7 @@ import com.kt.apps.media.xemtv.ui.extensions.FragmentAddExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentExtensionsPlayback
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteFragment
 import com.kt.apps.media.xemtv.ui.football.FootballFragment
 import com.kt.apps.media.xemtv.ui.football.FootballPlaybackFragment
 import com.kt.apps.media.xemtv.ui.main.DashboardFragment
@@ -96,5 +97,7 @@ abstract class MainTVModule {
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentInfo(): FragmentInfo
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentFavorite(): FavoriteFragment
 
 }

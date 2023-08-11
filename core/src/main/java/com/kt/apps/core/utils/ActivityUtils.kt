@@ -19,12 +19,12 @@ import cn.pedant.SweetAlert.SweetAlertDialog
 import com.kt.apps.core.logging.Logger
 import java.util.*
 
-fun Context.updateLocale(language: String = "vi") {
+fun Context.updateLocale(language: String = "vi"): Context {
     val config = Configuration()
     val locale = Locale(language)
     config.setLocale(locale)
     Locale.setDefault(locale)
-    createConfigurationContext(config)
+    return createConfigurationContext(config)
 }
 
 fun Fragment.hideKeyboard() {
