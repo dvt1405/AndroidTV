@@ -43,6 +43,7 @@
         android:paddingBottom="92dp"
         android:clipToPadding="false"
         >
+
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tv_live_time"
             android:layout_width="wrap_content"

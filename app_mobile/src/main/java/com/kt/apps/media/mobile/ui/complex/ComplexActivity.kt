@@ -185,7 +185,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         Log.d(TAG, "loadPlayback: $data")
         when(data) {
             is PrepareStreamLinkData.TV -> TVPlaybackFragment.newInstance(data.data)
-            is PrepareStreamLinkData.IPTV -> IPTVPlaybackFragment.newInstance(data.data, data.configId)
+            is PrepareStreamLinkData.IPTV -> IPTVPlaybackFragment.newInstance(data.data, data.configId, data.data.tvGroup)
             is PrepareStreamLinkData.Radio -> RadioPlaybackFragment.newInstance(data.data)
             is PrepareStreamLinkData.Football -> FootballPlaybackFragment.newInstance(data.data)
             else -> null

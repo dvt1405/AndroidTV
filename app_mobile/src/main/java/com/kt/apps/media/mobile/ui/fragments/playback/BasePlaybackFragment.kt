@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -121,6 +122,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.exo_channel_list)
     }
 
+    protected val liveLabel: LinearLayout? by lazy {
+        exoPlayer?.findViewById(R.id.tv_live_label)
+    }
+
+    protected val categoryLabel: MaterialTextView? by lazy {
+        exoPlayer?.findViewById(R.id.category_tv)
+    }
+
     protected abstract val exoPlayer: StyledPlayerView?
 
     protected abstract val motionLayout: ConstraintLayout?
@@ -195,6 +204,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
+        liveLabel?.visibility = View.GONE
         exoPlayer?.apply {
             player = exoPlayerManager.exoPlayer
             showController()
@@ -435,8 +445,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     private fun changeMinimalLayout() {
         if (isLandscape) {
             exoPlayer?.apply {
-                useController = false
                 hideController()
+                useController = false
             }
         } else {
             exoPlayer?.apply {
@@ -469,21 +479,21 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, transition: Transition = Fade(), onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {
         Log.d(TAG, "performTransition: ${set.TAG}")
-        TransitionManager.beginDelayedTransition(layout, transition.apply {
-            interpolator = AccelerateInterpolator()
-            duration = 500
-            addListener(object: TransitionCallback() {
-                override fun onTransitionStart(transition: Transition) {
-                    super.onTransitionStart(transition)
-                    onStart?.invoke()
-                }
-
-                override fun onTransitionEnd(transition: Transition) {
-                    super.onTransitionEnd(transition)
-                    onEnd?.invoke()
-                }
-            })
-        })
+//        TransitionManager.beginDelayedTransition(layout, transition.apply {
+//            interpolator = AccelerateInterpolator()
+//            duration = 500
+//            addListener(object: TransitionCallback() {
+//                override fun onTransitionStart(transition: Transition) {
+//                    super.onTransitionStart(transition)
+//                    onStart?.invoke()
+//                }
+//
+//                override fun onTransitionEnd(transition: Transition) {
+//                    super.onTransitionEnd(transition)
+//                    onEnd?.invoke()
+//                }
+//            })
+//        })
         set.applyTo(layout)
     }
 

@@ -11,13 +11,13 @@
         android:id="@+id/tv"
         android:enabled="true"
         android:icon="@drawable/ic_tv"
-        android:title="Truyền Hình" />
+        android:title="@string/tv_page_title" />
 
     <item
         android:id="@+id/radio"
         android:enabled="true"
         android:icon="@drawable/ic_radio"
-        android:title="Truyền Thanh" />
+        android:title="@string/radio_page_title" />
 
     <item
         android:id="@+id/football"

@@ -162,6 +162,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     }
 
     private fun transitionMinimal() {
+        state = State.MINIMAL
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -173,14 +174,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 constrainPercentHeight(playback.id, 0.5f)
             }
 
-            TransitionManager.beginDelayedTransition(surfaceView, CustomTransition().apply {
-                addListener(object: TransitionCallback() {
-                    override fun onTransitionStart(transition: Transition) {
-                        super.onTransitionStart(transition)
-                        this@LandscapeLayoutHandler.state = State.MINIMAL
-                    }
-                })
-            })
+            TransitionManager.beginDelayedTransition(surfaceView, CustomTransition())
             set.applyTo(surfaceView)
             playback.background = AppCompatResources.getDrawable(playback.context, R.drawable.playback_minimal_bg)
             playback.clipToOutline = true

@@ -55,7 +55,7 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
     override fun initView(savedInstanceState: Bundle?) {
         super.initView(savedInstanceState)
         progressBar?.visibility = View.GONE
-
+        categoryLabel?.text = getString(R.string.tv_page_title)
         channelListRecyclerView?.apply {
             adapter = itemAdapter
             addItemDecoration(channelItemDecoration)
@@ -95,7 +95,15 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
                 }
             }
         }
+    }
 
+    override suspend fun preparePlayView(data: PrepareStreamLinkData) {
+        super.preparePlayView(data)
+        liveLabel?.visibility = View.GONE
+    }
+    override suspend fun playVideo(data: StreamLinkData) {
+        super.playVideo(data)
+        liveLabel?.visibility = View.VISIBLE
     }
     companion object {
         const val screenName: String = "TVPlaybackFragment"
@@ -123,7 +131,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
     override fun initView(savedInstanceState: Bundle?) {
         super.initView(savedInstanceState)
         progressBar?.visibility = View.GONE
-
+        categoryLabel?.text = getString(R.string.radio_page_title)
         channelListRecyclerView?.apply {
             adapter = itemAdapter
             addItemDecoration(channelItemDecoration)
@@ -161,6 +169,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
 
     override suspend fun preparePlayView(data: PrepareStreamLinkData) {
         super.preparePlayView(data)
+        liveLabel?.visibility = View.GONE
         (data as? PrepareStreamLinkData.Radio)?.run {
             loadArtwork(this.data)
         }
@@ -168,6 +177,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
 
     override suspend fun playVideo(data: StreamLinkData) {
         super.playVideo(data)
+        liveLabel?.visibility = View.VISIBLE
         (data as? StreamLinkData.TVStreamLinkData)?.run {
             loadArtwork(this.data.channel)
         }

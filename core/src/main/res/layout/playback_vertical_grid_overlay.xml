@@ -96,12 +96,12 @@
                         style="@style/TextAppearance.Leanback.PlaybackControlLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#99ffffff"
                         android:drawableEnd="@drawable/background_live_football_circle"
                         android:drawablePadding="8dp"
                         android:gravity="center"
                         android:includeFontPadding="false"
                         android:text="LIVE"
+                        android:textColor="#99ffffff"
                         android:visibility="gone" />
                 </LinearLayout>
 

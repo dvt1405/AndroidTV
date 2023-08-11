@@ -34,11 +34,7 @@ import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.IPTVPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadIPTVJob
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
@@ -68,6 +64,7 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                 initialPrefetchItemCount = 9
             }
         }
+        categoryLabel?.text = (arguments?.get(EXTRA_EXTENSION_GROUP) as? String)
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -86,9 +83,12 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
             }
 
             launch {
-                (((arguments?.get(EXTRA_EXTENSION_ID) as? String)?.let { flowOf(it) }) ?: emptyFlow())
+                combine(
+                    (((arguments?.get(EXTRA_EXTENSION_ID) as? String)?.let { flowOf(it) }) ?: flowOf("")),
+                    (((arguments?.get(EXTRA_EXTENSION_GROUP) as? String)?.let { flowOf(it) }) ?: flowOf(""))
+                ) { id, group -> Pair(id, group)}
                     .collectLatest {
-                        _playbackViewModel.loadChannelConfig(it)
+                        _playbackViewModel.loadChannelConfig(it.first, it.second)
                     }
             }
         }
@@ -107,13 +107,16 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
         const val screenName = "IPTVPlaybackFragment"
         private const val EXTRA_EXTENSION_ID = "extra:extension_id"
         private const val EXTRA_TV_CHANNEL = "extra:tv_channel"
+        private const val EXTRA_EXTENSION_GROUP = "extra:extension_group"
         fun newInstance(
             tvChannel: ExtensionsChannel,
-            extension: String
+            extension: String,
+            groupTitle: String
         ) = IPTVPlaybackFragment().apply {
             arguments = bundleOf(
                 EXTRA_TV_CHANNEL to tvChannel,
-                EXTRA_EXTENSION_ID to extension
+                EXTRA_EXTENSION_ID to extension,
+                EXTRA_EXTENSION_GROUP to groupTitle
             )
         }
     }
