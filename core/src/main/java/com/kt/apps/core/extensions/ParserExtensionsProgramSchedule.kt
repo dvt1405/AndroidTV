@@ -128,26 +128,43 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                 } else {
                     DATE_TIME_FORMAT
                 }
-                val start: Long = it.start.toDate(
-                    pattern,
-                    Locale.getDefault(),
-                    false
-                )?.time ?: return@filter false
+                val start: Long = if (it.start.trim() == "+0700") {
+                    val calendar = Calendar.getInstance()
+                    calendar.set(Calendar.HOUR, 0)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.timeInMillis
+                } else {
+                    it.start.toDate(
+                        pattern,
+                        Locale.getDefault(),
+                        false
+                    )?.time ?: return@filter false
+                }
 
                 val patternStop = if (it.stop.contains("+0700")) {
                     DATE_TIME_FORMAT_0700
                 } else {
                     DATE_TIME_FORMAT
                 }
-                val stop: Long = it.stop.toDate(
-                    patternStop,
-                    Locale.getDefault(),
-                    false
-                )?.time ?: return@filter false
-                (start <= currentTime) && stop >= currentTime
+                val stop: Long = if (it.stop.trim() == "+0700") {
+                    val calendar = Calendar.getInstance()
+                    calendar.add(Calendar.DATE, 1)
+                    calendar.set(Calendar.HOUR, 0)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.timeInMillis
+                } else {
+                    it.stop.toDate(
+                        patternStop,
+                        Locale.getDefault(),
+                        false
+                    )?.time ?: return@filter false
+                }
+                ((start <= currentTime) && stop >= currentTime)
             } else {
                 true
             }
+        }.doOnNext {
+            Logger.d(this@ParserExtensionsProgramSchedule, tag = "Epg" ,message = "$it")
         }
     }
 
