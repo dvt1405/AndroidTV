@@ -111,7 +111,11 @@ abstract class BaseGridViewFragment<T : ViewDataBinding> : Fragment(),
         mAdapter = ArrayObjectAdapter(mPresenter)
         updateAdapter()
         onCreateAdapter()
-        mainFragmentAdapter.fragmentHost.notifyDataReady(mMainFragmentAdapter)
+        if (savedInstanceState == null) {
+            try {
+                mainFragmentAdapter.fragmentHost.notifyDataReady(mMainFragmentAdapter)
+            } catch (_: NullPointerException) { }
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
