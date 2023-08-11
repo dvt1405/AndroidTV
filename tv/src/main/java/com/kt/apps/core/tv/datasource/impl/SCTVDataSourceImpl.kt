@@ -15,6 +15,7 @@ import com.kt.apps.core.tv.di.TVScope
 import com.kt.apps.core.tv.model.*
 import com.kt.apps.core.tv.storage.TVStorage
 import com.kt.apps.core.utils.removeAllSpecialChars
+import com.kt.apps.core.utils.trustEveryone
 import io.reactivex.rxjava3.core.Observable
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -158,6 +159,7 @@ class SCTVDataSourceImpl @Inject constructor(
 
         return Observable.create {
             val response = try {
+                trustEveryone()
                 okHttpClient.newCall(
                     Request.Builder()
                         .header("origin", "https://sctvonline.vn")
@@ -173,6 +175,7 @@ class SCTVDataSourceImpl @Inject constructor(
                         .build()
                 ).execute()
             } catch (e: Exception) {
+                it.onError(e)
                 return@create
             }
 
@@ -223,7 +226,7 @@ class SCTVDataSourceImpl @Inject constructor(
                     it.onComplete()
                 }
             }
-        }
+        }.retry(3)
     }
 
     private fun getTVChannelPageForMenu(menuId: String = "truyen-hinh-ecb1ec92"): Observable<List<SCTVPages.Ribbon>> {
