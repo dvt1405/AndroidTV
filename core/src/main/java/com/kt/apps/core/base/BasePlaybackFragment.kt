@@ -227,7 +227,6 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         seekBar?.max = realDurationMillis.toInt()
         contentPosition = player.contentPosition
         seekBar?.setSecondaryProgress(player.bufferedPosition.toInt())
-        player.contentBufferedPosition
         seekBar?.progress = player.contentPosition.toInt()
         val contentPosition = "${Util.getStringForTime(formatBuilder, formatter, player.contentPosition)} /"
         val contentDuration = " ${Util.getStringForTime(formatBuilder, formatter, player.contentDuration)}"
@@ -1088,8 +1087,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onDpadLeft() {
         if (seekBar?.isFocused == true) {
-            exoPlayerManager.exoPlayer?.seekTo(contentPosition - MIN_SEEK_DURATION)
             exoPlayerManager.exoPlayer?.let {
+                if (contentPosition - MIN_SEEK_DURATION >= 0) {
+                    it.seekTo(contentPosition - MIN_SEEK_DURATION)
+                } else if (contentPosition >= 0) {
+                    it.seekTo(0L)
+                }
                 updateProgress(it)
             }
         }
@@ -1107,8 +1110,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onDpadRight() {
         if (seekBar?.isFocused == true) {
-            exoPlayerManager.exoPlayer?.seekTo(contentPosition + MIN_SEEK_DURATION)
             exoPlayerManager.exoPlayer?.let {
+                if (contentPosition + MIN_SEEK_DURATION <= it.duration) {
+                    it.seekTo(contentPosition + MIN_SEEK_DURATION)
+                } else if (contentPosition < it.duration) {
+                    it.seekTo(it.duration - contentPosition)
+                }
                 updateProgress(it)
             }
         }
