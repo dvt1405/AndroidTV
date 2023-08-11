@@ -998,6 +998,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     override fun onDpadDown() {
+        if (true == videoInfoCodecContainerView?.isVisible) {
+            return
+        }
         if (overlaysUIState == OverlayUIState.STATE_HIDDEN) {
             if (progressManager.isShowing) {
                 handleUI(OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY, true)
@@ -1033,6 +1036,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onDpadUp() {
         when {
+            true == videoInfoCodecContainerView?.isVisible -> {
+
+            }
             !isMenuShowed() -> {
                 showGridMenu()
             }
