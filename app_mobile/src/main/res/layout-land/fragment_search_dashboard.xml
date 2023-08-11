@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data></data>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ui.fragments.search.SearchDashboardFragment"
+        tools:background="@color/black"
+        >
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="40dp"
+            app:hintEnabled="false"
+            android:theme="@style/TextInputLayout"
+
+            android:textColorHint="@color/edittext_border"
+            app:startIconDrawable="@drawable/ic_search_24p"
+            app:startIconTint="@color/white"
+            app:boxStrokeColor="@color/box_stroke_color"
+            app:boxBackgroundColor="#36FFFFFF"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeWidth="2dp"
+            app:boxCornerRadiusBottomEnd="@dimen/search_box_corner_radius"
+            app:boxCornerRadiusBottomStart="@dimen/search_box_corner_radius"
+            app:boxCornerRadiusTopEnd="@dimen/search_box_corner_radius"
+            app:boxCornerRadiusTopStart="@dimen/search_box_corner_radius"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+
+            >
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/search_input_text"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:imeOptions="actionDone"
+                android:inputType="textWebEmailAddress"
+                android:textColor="@color/white"
+                android:paddingTop="10dp"
+                android:hint="@string/search_input_placeholder"
+                android:textColorHint="@color/edittext_border"
+                android:textSize="22sp" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/current_search_container"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayout1"
+            app:layout_constraintStart_toStartOf="@id/textInputLayout1"
+            app:layout_constraintEnd_toEndOf="@id/textInputLayout1"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal"
+            >
+        </androidx.recyclerview.widget.RecyclerView>
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/fragment_container"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:name="com.kt.apps.media.mobile.ui.fragments.search.SearchListFragment"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/current_search_container"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:layout="@layout/fragment_search_list" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

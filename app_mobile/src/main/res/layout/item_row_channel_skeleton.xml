@@ -17,7 +17,7 @@
 
         <TextView
             android:id="@+id/title"
-            android:layout_width="150dp"
+            android:layout_width="@dimen/item_channel_width"
             android:layout_height="12dp"
             android:layout_marginStart="16dp"
             android:background="@drawable/anim_list_text_view" />

@@ -2,4 +2,19 @@
 <resources>
 
     <dimen name="common_padding">16dp</dimen>
+    <dimen name="search_box_corner_radius">40dp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="item_channel_height">90dp</dimen>
+    <dimen name="item_channel_width">150dp</dimen>
+    <dimen name="item_row_title">16sp</dimen>
+    <dimen name="item_channel_decoration">20dp</dimen>
+    <dimen name="fading_edge_size">12dp</dimen>
+    <dimen name="tab_spacing">32dp</dimen>
+    <dimen name="football_item_width">224dp</dimen>
+    <dimen name="football_item_height">128dp</dimen>
+    <dimen name="football_item_width_live">300dp</dimen>
+    <dimen name="football_item_height_live">170dp</dimen>
+    <dimen name="football_logo_size">80dp</dimen>
+    <dimen name="item_channel_fontsize">14sp</dimen>
+    <dimen name="exoplayer_controller_padding">24dp</dimen>
 </resources>

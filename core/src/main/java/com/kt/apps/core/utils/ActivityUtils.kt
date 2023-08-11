@@ -54,6 +54,7 @@ fun Fragment.showErrorDialog(
     titleText: String? = null,
     confirmText: String? = "OK",
     delayMillis: Int? = 1900,
+    cancellable: Boolean = true,
     onDismissListener: (() -> Unit)? = null,
     onShowListener: (() -> Unit)? = null,
 ) {
@@ -64,7 +65,7 @@ fun Fragment.showErrorDialog(
         .showCancelButton(false)
 
     successAlert.showContentText(content != null)
-    successAlert.setCancelable(true)
+    successAlert.setCancelable(cancellable)
     successAlert.contentText = content
     successAlert.titleText = titleText
     successAlert.confirmText = confirmText

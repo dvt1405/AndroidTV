@@ -6,14 +6,30 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.LinearInterpolator
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
+import androidx.transition.AutoTransition
+import androidx.transition.ChangeBounds
+import androidx.transition.ChangeScroll
+import androidx.transition.ChangeTransform
+import androidx.transition.Explode
+import androidx.transition.Fade
+import androidx.transition.Slide
+import androidx.transition.Transition
+import androidx.transition.TransitionManager
+import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.visible
-import com.kt.apps.media.mobile.R
-import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
-import com.kt.apps.media.mobile.utils.hitRectOnScreen
+import com.kt.apps.media.mobile.models.PlaybackState
+import com.kt.apps.media.mobile.utils.CustomTransition
+import com.kt.apps.media.mobile.utils.alignParent
+import com.kt.apps.media.mobile.utils.fillParent
+import com.kt.apps.media.mobile.utils.safeLet
 import java.lang.ref.WeakReference
+import kotlin.properties.Delegates
 
 class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActivity>) : ComplexLayoutHandler  {
     sealed class State {
@@ -22,9 +38,16 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         object FULLSCREEN: State()
     }
 
-    private var state: State = State.IDLE
-    private var cachedVideoSize: VideoSize? = null
-    private var videoIsLoading: Boolean = false
+//    private var state: State = State.IDLE
+    private var state: State by Delegates.observable(State.IDLE) { property, oldValue, newValue ->
+        if (oldValue !== newValue) {
+            onPlaybackStateChange(when(newValue) {
+                State.IDLE -> PlaybackState.Invisible
+                State.MINIMAL -> PlaybackState.Minimal
+                State.FULLSCREEN -> PlaybackState.Fullscreen
+            })
+        }
+    }
 
     private val context: Context?
         get() = weakActivity.get()
@@ -32,8 +55,9 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     private val fragmentContainerPlayback: View?
         get() = weakActivity.get()?.binding?.fragmentContainerPlayback
 
-    override val motionLayout: MotionLayout?
-        get() = weakActivity.get()?.binding?.complexMotionLayout
+    private val surfaceView: ConstraintLayout? by lazy {
+        weakActivity.get()?.binding?.surfaceView as? ConstraintLayout
+    }
 
     override var onPlaybackStateChange: (PlaybackState) -> Unit = { }
 
@@ -59,111 +83,46 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
             })
         }
     }
-    init {
-        motionLayout?.setTransitionListener(object : MotionLayout.TransitionListener {
-            override fun onTransitionStarted(
-                motionLayout: MotionLayout?,
-                startId: Int,
-                endId: Int
-            ) {
-                Log.d(TAG, "onTransitionStarted: $startId $endId")
-            }
-
-            override fun onTransitionChange(
-                motionLayout: MotionLayout?,
-                startId: Int,
-                endId: Int,
-                progress: Float
-            ) {
-                Log.d(TAG, "onTransitionChange: $startId $endId")
-            }
-
-            override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-                Log.d(TAG, "onTransitionCompleted: $currentId ${R.id.fullscreen}")
-                onPlaybackStateChange(when(currentId) {
-                    R.id.fullscreen -> PlaybackState.Fullscreen
-                    R.id.end -> PlaybackState.Minimal
-                    R.id.start -> PlaybackState.Invisible
-                    else -> PlaybackState.Invisible
-                })
-            }
-
-            override fun onTransitionTrigger(
-                motionLayout: MotionLayout?,
-                triggerId: Int,
-                positive: Boolean,
-                progress: Float
-            ) {
-                Log.d(TAG, "onTransitionChange: $triggerId")
-            }
-
-        })
-    }
     override fun onStartLoading() {
-        if (state != State.FULLSCREEN) {
-            motionLayout?.setTransitionDuration(250)
-            motionLayout?.transitionToState(R.id.fullscreen)
-            state = State.FULLSCREEN
+        if (state == State.FULLSCREEN) {
+            return
         }
-        videoIsLoading = true
+        Log.d(TAG, "onStartLoading: $state")
+        transitionFullscreen()
     }
 
-    override fun onLoadedVideoSuccess(videoSize: VideoSize) {
-        cachedVideoSize = videoSize
-        val isFullScreenState = motionLayout?.currentState == R.id.fullscreen
-        if (state != State.FULLSCREEN || !isFullScreenState) {
-            motionLayout?.setTransitionDuration(250)
-            motionLayout?.transitionToState(R.id.fullscreen)
-            state = State.FULLSCREEN
-        }
-        videoIsLoading = false
-    }
+    override fun onLoadedVideoSuccess(videoSize: VideoSize) { }
 
     override fun onOpenFullScreen() {
-        state = if (state != State.FULLSCREEN) {
-            motionLayout?.transitionToState(R.id.fullscreen)
-            State.FULLSCREEN
+        if (state != State.FULLSCREEN) {
+            transitionFullscreen()
         } else {
-            motionLayout?.transitionToState(R.id.end)
-            State.MINIMAL
+            transitionMinimal()
         }
+    }
+
+    override fun forceFullScreen() {
+        transitionFullscreen()
+    }
+
+    override fun onCloseMinimal() {
+        transitionIDLE()
     }
 
     override fun onBackEvent(): Boolean {
-        val isFullScreenState = motionLayout?.currentState == R.id.fullscreen
-        if (state == State.FULLSCREEN || isFullScreenState) {
-            motionLayout?.transitionToState(R.id.end)
-            state = State.MINIMAL
+        if (state == State.FULLSCREEN) {
+            transitionMinimal()
             return true
         }
         return false
     }
 
     override fun onReset(isPlaying: Boolean) {
-        state = if (isPlaying) {
-            motionLayout?.transitionToState(R.id.fullscreen)
-            State.FULLSCREEN
+        if (isPlaying) {
+            transitionFullscreen()
         } else {
-            motionLayout?.transitionToState(R.id.start)
-            State.IDLE
+            transitionIDLE()
         }
-    }
-
-    override fun onPlayPause(isPause: Boolean) {
-        super.onPlayPause(isPause)
-        if (videoIsLoading) return
-        if (isPause) {
-            if (state == State.FULLSCREEN) {
-                motionLayout?.transitionToState(R.id.end)
-                state = State.MINIMAL
-            }
-        } else {
-            if (state != State.FULLSCREEN) {
-                motionLayout?.transitionToState(R.id.fullscreen)
-                state = State.FULLSCREEN
-            }
-        }
-
     }
 
     override fun onTouchEvent(ev: MotionEvent) {
@@ -175,8 +134,94 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         if (fragmentContainerPlayback?.visibility == View.VISIBLE) else return
         fragmentContainerPlayback?.getHitRect(hitRect)
         if (hitRect.contains(ev.x.toInt(), ev.y.toInt())) {
-            motionLayout?.transitionToState(R.id.fullscreen)
+            transitionFullscreen()
         }
+    }
+
+    private fun transitionFullscreen() {
+        state = State.FULLSCREEN
+        safeLet(surfaceView, fragmentContainerPlayback) {
+                surfaceView, playback ->
+            val set = ConstraintSet().apply {
+                clone(surfaceView)
+                clear(playback.id)
+                fillParent(playback.id)
+            }
+
+            TransitionManager.beginDelayedTransition(
+                surfaceView,
+                AutoTransition()
+            )
+            set.applyTo(surfaceView)
+        }
+    }
+
+    private fun transitionMinimal() {
+        safeLet(surfaceView, fragmentContainerPlayback) {
+                surfaceView, playback ->
+            val set = ConstraintSet().apply {
+                clone(surfaceView)
+                clear(playback.id)
+                alignParent(playback.id, ConstraintSet.BOTTOM)
+                alignParent(playback.id, ConstraintSet.END)
+                constrainPercentWidth(playback.id, 0.4f)
+                constrainPercentHeight(playback.id, 0.5f)
+            }
+
+            TransitionManager.beginDelayedTransition(surfaceView, CustomTransition().apply {
+                addListener(object: TransitionCallback() {
+                    override fun onTransitionStart(transition: Transition) {
+                        super.onTransitionStart(transition)
+                        this@LandscapeLayoutHandler.state = State.MINIMAL
+                    }
+                })
+            })
+            set.applyTo(surfaceView)
+        }
+    }
+
+
+    private fun transitionIDLE() {
+        safeLet(surfaceView, fragmentContainerPlayback) {
+                surfaceView, playback ->
+            val set = ConstraintSet().apply {
+                clone(surfaceView)
+                clear(playback.id)
+                alignParent(playback.id, ConstraintSet.BOTTOM)
+                alignParent(playback.id, ConstraintSet.END)
+            }
+            TransitionManager.beginDelayedTransition(surfaceView, CustomTransition().apply {
+                addListener(object: TransitionCallback() {
+                    override fun onTransitionStart(transition: Transition) {
+                        super.onTransitionStart(transition)
+                        this@LandscapeLayoutHandler.state = State.IDLE
+                    }
+                })
+            })
+            set.applyTo(surfaceView)
+        }
+    }
+
+}
+open class TransitionCallback: Transition.TransitionListener {
+    override fun onTransitionStart(transition: Transition) {
+        Log.d(TAG, "onTransitionStart: $transition")
+    }
+
+    override fun onTransitionEnd(transition: Transition) {
+        Log.d(TAG, "onTransitionEnd: $transition")
+    }
+
+    override fun onTransitionCancel(transition: Transition) {
+        Log.d(TAG, "onTransitionCancel: $transition")
+    }
+
+    override fun onTransitionPause(transition: Transition) {
+        Log.d(TAG, "onTransitionPause: $transition")
+    }
+
+    override fun onTransitionResume(transition: Transition) {
+        Log.d(TAG, "onTransitionResume: $transition")
     }
 
 }

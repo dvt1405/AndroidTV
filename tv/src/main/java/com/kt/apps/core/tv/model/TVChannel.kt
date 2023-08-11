@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 import com.kt.apps.core.base.player.AbstractExoPlayerManager
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.model.TVScheduler
+import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.storage.local.dto.TVChannelEntity
 import com.kt.apps.core.storage.local.dto.TVChannelWithUrls
 import com.kt.apps.core.tv.datasource.impl.MainTVDataSource
@@ -99,6 +100,16 @@ class TVChannel(
             sourceFrom = entity.sourceFrom,
             channelId = entity.channelId,
             logoChannel = entity.logoChannel.toString(),
+            urls = listOf()
+        )
+
+        fun fromTVChannelDTO(value: TVChannelDTO) = TVChannel(
+            tvChannelName = value.tvChannelName,
+            tvGroup = value.tvGroup,
+            tvChannelWebDetailPage = "",
+            sourceFrom = value.sourceFrom,
+            channelId = value.channelId,
+            logoChannel = value.logoChannel.toString(),
             urls = listOf()
         )
 

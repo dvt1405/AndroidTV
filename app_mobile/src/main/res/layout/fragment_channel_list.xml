@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:wheel="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+    </data>
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:layout_width="match_parent"
+        android:id="@+id/swipe_refresh_layout"
+        android:layout_height="match_parent">
+        <com.kt.apps.media.mobile.utils.ErrorPlaceholderView
+            android:id="@+id/view_switcher"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <com.kt.apps.media.mobile.ui.view.ChannelListRecyclerView
+                android:id="@+id/list_channel_recyclerview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                />
+        </com.kt.apps.media.mobile.utils.ErrorPlaceholderView>
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+</layout>

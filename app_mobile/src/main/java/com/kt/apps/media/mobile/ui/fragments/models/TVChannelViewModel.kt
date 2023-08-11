@@ -22,14 +22,13 @@ import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-class TVChannelViewModel @Inject constructor(
+open class TVChannelViewModel @Inject constructor(
     private val interactors: TVChannelInteractors,
     private val app: App,
     private val workManager: WorkManager
 ) : BaseTVChannelViewModel(interactors) {
-
     override fun getListTVChannel(forceRefresh: Boolean, sourceFrom: TVDataSourceFrom) {
-        if(app.isNetworkAvailable())
+        if (app.isNetworkAvailable())
             super.getListTVChannel(forceRefresh, sourceFrom)
         else {
             if (interactors.getListChannel.cacheData != null) {
@@ -47,7 +46,8 @@ class TVChannelViewModel @Inject constructor(
         else
             _tvWithLinkStreamLiveData.postValue(DataState.Error(NoNetworkException()))
     }
-    fun playMobileTvByDeepLinks(uri: Uri) : Boolean {
+
+    fun playMobileTvByDeepLinks(uri: Uri): Boolean {
         !(uri.host?.contentEquals(Constants.DEEPLINK_HOST) ?: return false)
         val lastPath = uri.pathSegments.last() ?: return false
         _tvWithLinkStreamLiveData.postValue(DataState.Loading())
@@ -55,7 +55,7 @@ class TVChannelViewModel @Inject constructor(
         return true
     }
 
-    fun  getExtensionChannel(tvChannel: ExtensionsChannel) {
+    fun getExtensionChannel(tvChannel: ExtensionsChannel) {
         val linkToPlay = tvChannel.tvStreamLink
         if (linkToPlay.isShortLink()) {
             compositeDisposable.add(
@@ -64,10 +64,12 @@ class TVChannelViewModel @Inject constructor(
                     .subscribeOn(AndroidSchedulers.mainThread())
                     .subscribe {
                         _tvWithLinkStreamLiveData.postValue(
-                            DataState.Success(TVChannelLinkStream(
-                                TVChannel.fromChannelExtensions(tvChannel),
-                                arrayListOf(it)
-                            ))
+                            DataState.Success(
+                                TVChannelLinkStream(
+                                    TVChannel.fromChannelExtensions(tvChannel),
+                                    arrayListOf(it)
+                                )
+                            )
                         )
                     }
             )
@@ -80,10 +82,12 @@ class TVChannelViewModel @Inject constructor(
                     .subscribeOn(AndroidSchedulers.mainThread())
                     .subscribe {
                         _tvWithLinkStreamLiveData.postValue(
-                            DataState.Success(TVChannelLinkStream(
-                                TVChannel.fromChannelExtensions(tvChannel),
-                                arrayListOf(linkToPlay)
-                            ))
+                            DataState.Success(
+                                TVChannelLinkStream(
+                                    TVChannel.fromChannelExtensions(tvChannel),
+                                    arrayListOf(linkToPlay)
+                                )
+                            )
                         )
                     }
             )

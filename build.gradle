@@ -3,7 +3,7 @@ buildscript {
     ext {
         kotlin_version = '1.8.0'
         props = new Properties()
-        file("./build.properties").withInputStream { props.load(it) }
+//        file("./build.properties").withInputStream { props.load(it) }
     }
     dependencies {
         classpath 'com.google.gms:google-services:4.3.15'

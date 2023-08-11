@@ -1,46 +1,52 @@
 package com.kt.apps.media.mobile.ui.complex
 
 import android.app.AlertDialog
+import android.app.PictureInPictureParams
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
-import android.view.KeyEvent
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
-import android.widget.ImageView
-import android.widget.Toast
-import androidx.lifecycle.*
-import com.google.android.exoplayer2.PlaybackException
+import androidx.activity.OnBackPressedCallback
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.video.VideoSize
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.dialog.MaterialDialogs
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
-import com.kt.apps.core.base.DataState
 import com.kt.apps.core.logging.IActionLogger
-import com.kt.apps.core.logging.logPlaybackShowError
-import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.fadeIn
+import com.kt.apps.core.utils.fadeOut
+import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
-import com.kt.apps.media.mobile.models.NetworkState
-import com.kt.apps.media.mobile.models.NoNetworkException
-import com.kt.apps.media.mobile.models.PlaybackFailException
-import com.kt.apps.media.mobile.ui.fragments.channels.IPlaybackAction
-import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackFragment
-import com.kt.apps.media.mobile.ui.fragments.channels.PlaybackViewModel
-import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
-import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
-import kotlinx.coroutines.*
+import com.kt.apps.media.mobile.models.*
+import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
+import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.IDispatchTouchListener
+import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
+import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
+import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 
-enum class  PlaybackState {
-    Fullscreen, Minimal, Invisible
-}
+
 class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     @Inject
     lateinit var factory: ViewModelProvider.Factory
@@ -53,29 +59,10 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     private var layoutHandler: ComplexLayoutHandler? = null
 
-    private val tvChannelViewModel: TVChannelViewModel? by lazy {
-        ViewModelProvider(this, factory)[TVChannelViewModel::class.java].apply {
-            this.tvWithLinkStreamLiveData.observe(this@ComplexActivity, linkStreamDataObserver)
-        }
-    }
+    private var touchListenerList: MutableList<IDispatchTouchListener> = mutableListOf()
 
-    private val playbackViewModel: PlaybackViewModel by lazy {
-        ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
-    }
-
-    private val networkStateViewModel: NetworkStateViewModel? by lazy {
-        ViewModelProvider(this, factory)[NetworkStateViewModel::class.java]
-    }
-
-    private val linkStreamDataObserver: Observer<DataState<TVChannelLinkStream>> by lazy {
-        Observer {dataState ->
-            when(dataState) {
-                is DataState.Loading ->
-                    layoutHandler?.onStartLoading()
-                is DataState.Error -> handleError(dataState.throwable)
-                else -> return@Observer
-            }
-        }
+    private val viewModel: ComplexInteractors by lazy {
+        ComplexInteractors(ViewModelProvider(this, factory), lifecycleScope)
     }
 
     override fun initView(savedInstanceState: Bundle?) {
@@ -88,23 +75,125 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         }
 
         layoutHandler?.onPlaybackStateChange = {
-            playbackViewModel.changeDisplayState(it)
+            lifecycleScope.launch {
+                viewModel.onChangePlayerState(it)
+            }
         }
+        binding.parseSourceLoadingContainer?.visibility = View.INVISIBLE
 
-    }
+        onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (layoutHandler?.onBackEvent() == true) {
+                    return
+                }
+                finish()
+            }
+        })
+     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        tvChannelViewModel?.apply {
-            tvWithLinkStreamLiveData.observe(this@ComplexActivity, linkStreamDataObserver)
-            tvChannelLiveData.observe(this@ComplexActivity) {dataState ->
-                when(dataState) {
-                    is DataState.Error -> handleError(dataState.throwable)
-                    else -> { }
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                viewModel.networkStatus.collectLatest {state ->
+                    if (state == NetworkState.Unavailable)
+                        showNoNetworkAlert(autoHide = true)
                 }
             }
         }
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                viewModel.openPlaybackEvent.collectLatest {
+                    loadPlayback(it)
+                }
+            }
 
-        binding.fragmentContainerPlayback.getFragment<PlaybackFragment>().apply {
+            launch {
+                viewModel.addSourceState.filter { it is AddSourceState.Success }
+                    .collectLatest {
+                        delay(500)
+                        onAddedExtension()
+                    }
+            }
+
+            launch {
+                viewModel.addSourceState.filter { it is AddSourceState.Error }
+                    .collectLatest {
+                        delay(500)
+                        showErrorAlert("Đã xảy ra lỗi vui lòng thử lại sau")
+                    }
+            }
+
+            launch {
+                viewModel.addSourceState.collectLatest {
+                    handleAddSourceState(it)
+                }
+            }
+
+        }
+
+        //Deeplink handle
+        handleIntent(intent)
+    }
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (!viewModel.isShowingPlayback.value) {
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+            && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+
+            MainScope().launch {
+                viewModel.changePiPMode(true)
+                layoutHandler?.forceFullScreen()
+                delay(200)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val params = PictureInPictureParams.Builder()
+                    this@ComplexActivity.enterPictureInPictureMode(params.build())
+                } else {
+                    this@ComplexActivity.enterPictureInPictureMode()
+                }
+            }
+
+        }
+    }
+
+    private suspend fun handleAddSourceState(state: AddSourceState) {
+        when(state) {
+            is AddSourceState.StartLoad -> {
+                binding.parseSourceLoadingContainer?.fadeIn {
+                    binding.parseSourceLoadingContainer?.invalidate()
+                }
+                binding.statusView?.startLoading()
+                binding.loadingDescription?.text = "Đang thêm nguồn: ${state.source.sourceUrl}..."
+            }
+            is AddSourceState.Success -> {
+                binding.statusView?.showSuccess()
+                binding.loadingDescription?.text = "Đã thêm nguồn: ${state.source.sourceUrl}"
+            }
+            is AddSourceState.Error -> {
+                binding.statusView?.showError()
+                binding.loadingDescription?.text = "Xảy ra lỗi"
+            }
+            else -> {
+                binding.parseSourceLoadingContainer?.fadeOut {  }
+                binding.loadingDescription?.text = ""
+            }
+        }
+        if (state is AddSourceState.Success || state is AddSourceState.Error) {
+            delay(1500)
+            binding.parseSourceLoadingContainer?.fadeOut {  }
+            binding.loadingDescription?.text = ""
+        }
+    }
+    private fun loadPlayback(data: PrepareStreamLinkData) {
+        Log.d(TAG, "loadPlayback: $data")
+        when(data) {
+            is PrepareStreamLinkData.TV -> TVPlaybackFragment.newInstance(data.data)
+            is PrepareStreamLinkData.IPTV -> IPTVPlaybackFragment.newInstance(data.data, data.configId)
+            is PrepareStreamLinkData.Radio -> RadioPlaybackFragment.newInstance(data.data)
+            is PrepareStreamLinkData.Football -> FootballPlaybackFragment.newInstance(data.data)
+            else -> null
+        }?.apply {
             this.callback = object: IPlaybackAction {
                 override fun onLoadedSuccess(videoSize: VideoSize) {
                     layoutHandler?.onLoadedVideoSuccess(videoSize)
@@ -121,56 +210,56 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 override fun onPlayAction(userAction: Boolean) {
                     if (userAction) layoutHandler?.onPlayPause(isPause = false)
                 }
-            }
-        }
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    networkStateViewModel?.networkStatus?.
-                    collectLatest {state ->
-                        if (state == NetworkState.Unavailable)
-                            showNoNetworkAlert(autoHide = true)
-                    }
-                }
-
-                launch {
-                    playbackViewModel.state.collectLatest { state ->
-                        when (state) {
-                            is PlaybackViewModel.State.FINISHED ->
-                                if (state.error != null && state.error is PlaybackFailException) {
-                                    logger.logPlaybackShowError(
-                                        state.error.error,
-                                        tvChannelViewModel?.lastWatchedChannel?.channel?.tvChannelName ?: ""
-                                    )
-                                    handleError(state.error)
-                                }
-                            else -> { }
-                        }
-                    }
+                override fun onExitMinimal() {
+                    layoutHandler?.onCloseMinimal()
                 }
             }
+        }?.run {
+//            touchListenerList.clear()
+//            touchListenerList.add(this as IDispatchTouchListener)
+            if (!isVisible) {
+                supportFragmentManager.beginTransaction()
+                    .replace(R.id.fragment_container_playback, this, IPTVPlaybackFragment.screenName)
+                    .commit()
+            }
+
+            layoutHandler?.onStartLoading()
         }
 
-        //Deeplink handle
-        handleIntent(intent)
+    }
+    override fun onResume() {
+        super.onResume()
+
+        MainScope().launch {
+            val last = viewModel.isInPIPMode.value
+            if (last) {
+                viewModel.changePiPMode(false)
+                layoutHandler?.onStartLoading()
+            }
+
+        }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (binding.fragmentContainerPlayback.getFragment<PlaybackFragment>().onKeyDown(keyCode, event)) {
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
+
     override fun onBackPressed() {
-        if (layoutHandler?.onBackEvent() == true) {
-            return
+        if (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStack()
+        } else {
+            if (layoutHandler?.onBackEvent() == true) {
+                return
+            }
+            super.onBackPressed()
         }
-        super.onBackPressed()
+
+
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
         layoutHandler?.onTouchEvent(ev)
+        touchListenerList.forEach {
+            it.onDispatchTouchEvent(null, ev)
+        }
         return super.dispatchTouchEvent(ev)
     }
 
@@ -184,7 +273,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         if (deeplink.host?.equals(Constants.HOST_TV) == true || deeplink.host?.equals(Constants.HOST_RADIO) == true) {
             if(deeplink.path?.contains("channel") == true) {
-                tvChannelViewModel?.playMobileTvByDeepLinks(uri = deeplink)
                 intent.data = null
             } else {
                 intent.data = null
@@ -198,14 +286,21 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             is TimeoutException -> showErrorAlert("Đã xảy ra lỗi, hãy kiểm tra kết nối mạng")
             is PlaybackFailException -> {
                 val error = throwable.error
-                val channelName = (tvChannelViewModel?.lastWatchedChannel?.channel?.tvChannelName ?: "")
-                val message = "Kênh $channelName hiện tại đang lỗi hoặc chưa hỗ trợ nội dung miễn phí: ${error.errorCode} ${error.message}"
+//                val channelName = (tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "")
+                val message = "Kênh hiện tại đang lỗi hoặc chưa hỗ trợ nội dung miễn phí: ${error.errorCode} ${error.message}"
                 showErrorAlert(message)
             }
             else -> {
                 showErrorAlert("Lỗi")
             }
         }
+    }
+
+    private fun onAddedExtension() {
+        Log.d(TAG, "onAddedExtension: success")
+        showSuccessDialog(
+            content = "Thêm nguồn kênh thành công!\r\nKhởi động lại ứng dụng để kiểm tra nguồn kênh"
+        )
     }
     private fun showNoNetworkAlert(autoHide: Boolean = false) {
         val dialog = AlertDialog.Builder(this, R.style.WrapContentDialog).apply {

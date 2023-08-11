@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+    </data>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:orientation="vertical">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/card_view"
+            android:layout_width="@dimen/football_item_width"
+            android:layout_height="@dimen/football_item_height">
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitXY"
+                android:src="@drawable/bacground_for_football_match" />
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5" />
+            <com.kt.apps.resources.customview.ImageViewGradientBackground
+                android:id="@+id/home_team"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_gravity="start"
+                android:layout_marginEnd="-5dp"
+                android:src="@drawable/app_icon"
+                app:imageHeight="100dp"
+                app:imageWidth="100dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/guideline2"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:rounded="left" />
+
+            <com.kt.apps.resources.customview.ImageViewGradientBackground
+                android:id="@+id/away_team"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_gravity="end"
+                android:layout_marginStart="-5dp"
+                android:src="@drawable/app_icon"
+                app:imageHeight="@dimen/football_logo_size"
+                app:imageWidth="@dimen/football_logo_size"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/guideline2"
+                app:layout_constraintTop_toTopOf="parent"
+                app:rounded="right" />
+            <TextView
+                android:id="@+id/match_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/background_corners_4dp"
+                android:backgroundTint="#30000000"
+                android:drawablePadding="5dp"
+                android:gravity="center|center_vertical"
+                android:includeFontPadding="false"
+                android:paddingHorizontal="5dp"
+                android:paddingVertical="3dp"
+                tools:drawableEnd="@drawable/background_live_football_circle"
+                tools:text="LIVE"
+                tools:textSize="12sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/match_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:textSize="17sp"
+                android:ellipsize="marquee"
+                android:gravity="center"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:singleLine="true"
+                android:textStyle="bold"
+                tools:targetApi="o"
+                tools:text="Match name"
+                tools:textStyle="bold"
+                android:textColor="@color/white"
+                />
+
+            <TextView
+                android:id="@+id/league"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/transparent"
+                android:ellipsize="marquee"
+                android:gravity="center"
+                android:singleLine="true"
+                tools:text="League"
+                tools:textSize="13sp"
+                android:textColor="@color/white"
+                />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</layout>

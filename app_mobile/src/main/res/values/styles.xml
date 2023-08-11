@@ -36,4 +36,26 @@
 
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
+    
+    <style name="TabTextAppearance" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textSize">@dimen/item_row_title</item>
+    </style>
+
+    <style name="RoundedCornersImageView" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="NavigationItemView" parent="">
+        <item name="colorPrimary">@color/red_btn_bg_color</item>
+        <item name="colorOnPrimary">@color/blue_btn_bg_color</item>
+    </style>
+
+    <style name="NavigationView" parent="Widget.MaterialComponents.NavigationRailView.Colored">
+        <item name="labelVisibilityMode">labeled</item>
+    </style>
+    <style name="Theme.AppCompat" parent="Base.Theme.AppCompat"/>
+    <style name="OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="rippleColor">@color/gray_btn_bg_pressed_color</item>
+    </style>
 </resources>

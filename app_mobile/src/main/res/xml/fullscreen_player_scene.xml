@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MotionScene xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ConstraintSet android:id="@+id/start">
+        <Constraint android:id="@+id/exo_player"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+<!--        <Constraint android:id="@+id/channel_list"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:layout_constraintTop_toBottomOf="parent"-->
+<!--            android:layout_marginTop="-88dp"-->
+<!--            />-->
+    </ConstraintSet>
+
+    <ConstraintSet android:id="@+id/end">
+        <Constraint android:id="@+id/exo_player"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="-88dp"
+            app:layout_constraintBottom_toTopOf="@id/channel_list"
+            />
+<!--        <Constraint android:id="@+id/channel_list"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            android:layout_marginBottom="20dp"-->
+<!--            />-->
+    </ConstraintSet>
+
+    <Transition
+        app:constraintSetEnd="@id/end"
+        app:constraintSetStart="@+id/start"
+        app:duration="100"
+        >
+        <OnSwipe
+            app:touchAnchorId="@id/channel_list"
+            app:dragDirection="dragUp"
+            app:touchAnchorSide="top"
+            app:onTouchUp="autoComplete"
+            app:dragThreshold="20"
+            />
+    </Transition>
+</MotionScene>
