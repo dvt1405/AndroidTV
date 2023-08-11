@@ -7,7 +7,6 @@
         android:id="@+id/motion_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/black"
         app:layoutDescription="@xml/fragment_playback_scene">
         <com.google.android.exoplayer2.ui.StyledPlayerView
             android:id="@+id/exo_player"
@@ -38,7 +37,7 @@
                 android:textColor="@color/white"
                 android:paddingStart="16dp"
                 android:paddingEnd="8dp"
-                android:textSize="16sp"
+                android:textSize="24sp"
                 android:singleLine="true"
                 />
             <com.google.android.material.progressindicator.CircularProgressIndicator
@@ -56,6 +55,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 app:icon="@drawable/ic_play"
+                app:iconSize="48dp"
                 app:iconTint="@color/white"
                 android:background="@color/transparent"
                 app:iconPadding="0dp"
@@ -67,6 +67,7 @@
                 style="@style/Widget.Material3.Button.IconButton"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
+                app:iconSize="48dp"
                 app:icon="@drawable/ic_clear"
                 app:iconTint="@color/white"
                 android:background="@color/transparent"

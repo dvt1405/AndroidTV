@@ -20,10 +20,15 @@ class UIControlViewModel @Inject constructor(): BaseViewModel() {
     val isInPIPMode
         get() = _isInPIPMode.asStateFlow()
 
+    private var _addSourceState: MutableStateFlow<AddSourceState> = MutableStateFlow(AddSourceState.IDLE)
+    val addSourceState = _addSourceState.asStateFlow()
     suspend fun openPlayback(data: PrepareStreamLinkData) {
         _openPlayback.emit(data)
     }
 
+    suspend fun changeAddSourceState(data: AddSourceState) {
+        _addSourceState.emit(data)
+    }
     fun changePlayerState(state: PlaybackState) {
         _playerState.value = state
     }

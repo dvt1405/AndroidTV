@@ -57,14 +57,6 @@ class ExtensionsViewModel @Inject constructor(
     storage,
     historyIteractors
 ) {
-    private var _processingExtensionConfig: MutableStateFlow<ExtensionsConfig?> = MutableStateFlow(null)
-    val processingExtensionConfig
-        get() = _processingExtensionConfig.asStateFlow()
-
-    fun cacheProcessingSource(ex: ExtensionsConfig?) {
-        _processingExtensionConfig.value = ex
-    }
-
     fun removeExtensionConfig(extensionsConfig: ExtensionsConfig) {
 //        storage.removeLastRefreshExtensions(extensionsConfig)
         add(
@@ -82,5 +74,4 @@ class ExtensionsViewModel @Inject constructor(
                 })
         )
     }
-
 }

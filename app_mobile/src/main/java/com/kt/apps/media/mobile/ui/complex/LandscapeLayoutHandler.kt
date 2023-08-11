@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.ui.complex
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Rect
 import android.util.Log
 import android.view.GestureDetector
@@ -8,6 +9,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.LinearInterpolator
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -23,6 +25,7 @@ import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.utils.CustomTransition
 import com.kt.apps.media.mobile.utils.alignParent
@@ -153,6 +156,8 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 AutoTransition()
             )
             set.applyTo(surfaceView)
+            playback.setBackgroundColor(Color.BLACK)
+            playback.clipToOutline = false
         }
     }
 
@@ -177,6 +182,9 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 })
             })
             set.applyTo(surfaceView)
+            playback.background = AppCompatResources.getDrawable(playback.context, R.drawable.playback_minimal_bg)
+            playback.clipToOutline = true
+
         }
     }
 

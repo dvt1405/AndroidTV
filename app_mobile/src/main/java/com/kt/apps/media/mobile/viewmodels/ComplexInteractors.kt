@@ -39,25 +39,9 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
 
     val networkStatus: StateFlow<NetworkState> = networkStateViewModel.networkStatus
 
-    private val progressingExtensionsConfig: StateFlow<ExtensionsConfig?> by lazy {
-        extensionViewModel.processingExtensionConfig
-    }
-    val addSourceState: SharedFlow<AddSourceState> by lazy {
-        extensionViewModel.addExtensionConfigLiveData
-            .asDataStateFlow(tag = "addSourceState")
-            .combine(progressingExtensionsConfig) {
-                dataState, progressingSource ->
-                if (progressingSource == null) {
-                    return@combine AddSourceState.IDLE
-                }
-                when(dataState) {
-                    is DataState.Loading -> AddSourceState.StartLoad(progressingSource)
-                    is DataState.Success -> AddSourceState.Success(dataState.data)
-                    is DataState.Error -> AddSourceState.Error(dataState.throwable)
-                    else -> AddSourceState.IDLE
-                }
-            }
-            .shareIn(scope, SharingStarted.WhileSubscribed())
+    val addSourceState: StateFlow<AddSourceState> by lazy {
+        uiControlViewModel.addSourceState
+            .stateIn(scope, SharingStarted.WhileSubscribed(), AddSourceState.IDLE)
     }
 
     val openPlaybackEvent = uiControlViewModel.openPlayback
@@ -77,15 +61,6 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
     val isInPIPMode by lazy {
         uiControlViewModel.isInPIPMode
             .stateIn(scope, SharingStarted.Eagerly, false)
-    }
-
-    init {
-
-        addSourceState.filter { it is AddSourceState.Success || it is AddSourceState.Error }
-            .onEach {
-                extensionViewModel.cacheProcessingSource(null)
-            }
-            .launchIn(scope)
     }
 
     fun onChangePlayerState(state: PlaybackState) {

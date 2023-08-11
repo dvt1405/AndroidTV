@@ -158,6 +158,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
     private suspend fun handleAddSourceState(state: AddSourceState) {
+        Log.d(TAG, "handleAddSourceState: $state")
         when(state) {
             is AddSourceState.StartLoad -> {
                 binding.parseSourceLoadingContainer?.fadeIn {
@@ -175,14 +176,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 binding.loadingDescription?.text = "Xảy ra lỗi"
             }
             else -> {
-                binding.parseSourceLoadingContainer?.fadeOut {  }
+                binding.parseSourceLoadingContainer?.visibility = View.GONE
                 binding.loadingDescription?.text = ""
             }
-        }
-        if (state is AddSourceState.Success || state is AddSourceState.Error) {
-            delay(1500)
-            binding.parseSourceLoadingContainer?.fadeOut {  }
-            binding.loadingDescription?.text = ""
         }
     }
     private fun loadPlayback(data: PrepareStreamLinkData) {
