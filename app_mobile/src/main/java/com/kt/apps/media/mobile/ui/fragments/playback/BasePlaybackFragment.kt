@@ -10,6 +10,7 @@ import android.view.View
 import android.view.animation.AccelerateInterpolator
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -79,7 +80,7 @@ sealed class LayoutState {
 }
 
 data class ScreenState(val playbackState: PlaybackState, val isInPIPMode: Boolean)
-abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>(), IPlaybackControl {
+abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>(), IPlaybackControl, Player.Listener {
 
     override val screenName: String
         get() = "Fragment Playback"
@@ -98,8 +99,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
     }
 
-    protected val progressBar: DefaultTimeBar? by lazy {
-        exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_progress)
+    protected val progressBar: SeekBar? by lazy {
+        exoPlayer?.findViewById(R.id.exo_progress_bar)
     }
 
     private val playPauseButton: ImageButton? by lazy {
@@ -159,49 +160,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         ( resources.getDimensionPixelSize(R.dimen.item_channel_height) + resources.getDimensionPixelSize(R.dimen.item_channel_decoration)) * 2 / 3
     }
 
-    private var playerListener: Player.Listener = object: Player.Listener {
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            super.onIsPlayingChanged(isPlaying)
-            isPlayingState.value = isPlaying
-        }
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            if (playbackState == ExoPlayer.STATE_READY) {
-                isProgressing.value = false
-                exoPlayer?.keepScreenOn = true
-            }
-            if (playbackState == ExoPlayer.STATE_ENDED) {
-                exoPlayer?.keepScreenOn = false
-            }
-        }
-
-        override fun onPlayerError(error: PlaybackException) {
-            super.onPlayerError(error)
-            Log.d(TAG, "onPlayerError: $error")
-            if (retryTimes > 0) {
-                playbackViewModel.state.replayCache.lastOrNull()
-                    ?.let { it as? PlaybackViewModel.State.PLAYING }
-                    ?.run {
-                        retryTimes -= 1
-                        lifecycleScope.launch {
-                            playVideo(this@run.data)
-                        }
-                } ?: kotlin.run {
-                    lifecycleScope.launch {
-                        playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
-                    }
-                }
-            } else {
-                lifecycleScope.launch {
-                    playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
-                }
-            }
-        }
-
-        override fun onVideoSizeChanged(videoSize: VideoSize) {
-            super.onVideoSizeChanged(videoSize)
-            Log.d(TAG, "onVideoSizeChanged: $videoSize")
-        }
-    }
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
         liveLabel?.visibility = View.GONE
@@ -221,6 +179,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
         playPauseButton?.visibility = View.INVISIBLE
         progressWheel?.visibility = View.INVISIBLE
+
+        progressBar?.isEnabled = false
 
         fullScreenButton?.visibility = View.VISIBLE
         fullScreenButton?.setOnClickListener {
@@ -373,7 +333,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy: ")
-        exoPlayerManager.detach(playerListener)
+        exoPlayerManager.detach(this)
     }
 
     override fun onResume() {
@@ -398,6 +358,51 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     protected open fun onRedraw() { }
+
+    override fun onIsPlayingChanged(isPlaying: Boolean) {
+        super.onIsPlayingChanged(isPlaying)
+        isPlayingState.value = isPlaying
+    }
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        if (playbackState == ExoPlayer.STATE_READY) {
+            isProgressing.value = false
+            exoPlayer?.keepScreenOn = true
+            progressBar?.isEnabled = true
+        } else {
+            progressBar?.isEnabled = false
+        }
+        if (playbackState == ExoPlayer.STATE_ENDED) {
+            exoPlayer?.keepScreenOn = false
+        }
+    }
+
+    override fun onPlayerError(error: PlaybackException) {
+        super.onPlayerError(error)
+        Log.d(TAG, "onPlayerError: $error")
+        if (retryTimes > 0) {
+            playbackViewModel.state.replayCache.lastOrNull()
+                ?.let { it as? PlaybackViewModel.State.PLAYING }
+                ?.run {
+                    retryTimes -= 1
+                    lifecycleScope.launch {
+                        playVideo(this@run.data)
+                    }
+                } ?: kotlin.run {
+                lifecycleScope.launch {
+                    playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
+                }
+            }
+        } else {
+            lifecycleScope.launch {
+                playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
+            }
+        }
+    }
+
+    override fun onVideoSizeChanged(videoSize: VideoSize) {
+        super.onVideoSizeChanged(videoSize)
+        Log.d(TAG, "onVideoSizeChanged: $videoSize")
+    }
 
     private fun togglePIPLayout(isInPIPMode: Boolean) {
 
@@ -472,28 +477,13 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         if (exoPlayerManager.exoPlayer?.isPlaying == true) {
             return
         }
-        exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , playerListener)
+        exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , this)
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)
     }
 
     private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, transition: Transition = Fade(), onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {
         Log.d(TAG, "performTransition: ${set.TAG}")
-//        TransitionManager.beginDelayedTransition(layout, transition.apply {
-//            interpolator = AccelerateInterpolator()
-//            duration = 500
-//            addListener(object: TransitionCallback() {
-//                override fun onTransitionStart(transition: Transition) {
-//                    super.onTransitionStart(transition)
-//                    onStart?.invoke()
-//                }
-//
-//                override fun onTransitionEnd(transition: Transition) {
-//                    super.onTransitionEnd(transition)
-//                    onEnd?.invoke()
-//                }
-//            })
-//        })
         set.applyTo(layout)
     }
 

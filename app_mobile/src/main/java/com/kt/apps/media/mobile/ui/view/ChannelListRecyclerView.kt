@@ -20,6 +20,7 @@ import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
 import com.kt.apps.media.mobile.ui.fragments.football.list.FootballAdapterType
 import com.kt.apps.media.mobile.ui.main.IChannelElement
+import com.kt.apps.media.mobile.utils.GridAutoFitLayoutManager
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.channels.awaitClose
@@ -52,7 +53,7 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     } }
 
     private val singleLayoutManager by lazy {
-        GridLayoutManager(context, 4)
+        GridAutoFitLayoutManager(context, resources.getDimension(R.dimen.item_channel_width).toInt())
     }
     private val recyclerView by lazy {
         findViewById<RecyclerView>(R.id.main_channel_recycler_view)

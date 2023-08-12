@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.widget.SeekBar
+import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
@@ -16,9 +18,12 @@ import androidx.recyclerview.widget.RecyclerView.OnScrollListener
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.util.Util
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListView
@@ -36,11 +41,17 @@ import com.kt.apps.media.mobile.viewmodels.features.loadIPTVJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.lang.StringBuilder
+import java.util.Formatter
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.abs
 
 class IPTVPlaybackFragment : ChannelPlaybackFragment() {
 
+    private val durationTV: TextView? by lazy {
+        exoPlayer?.findViewById(R.id.tv_live_time)
+    }
     private val _playbackViewModel by lazy {
         IPTVPlaybackInteractor(
             ViewModelProvider(requireActivity(), factory),
@@ -54,6 +65,9 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
         RowItemChannelAdapter()
     }
 
+    private val stringBuilder = StringBuilder()
+    private val formatter = Formatter(stringBuilder, Locale.getDefault())
+    private var isSeeking = AtomicBoolean(false)
     override fun initView(savedInstanceState: Bundle?) {
         super.initView(savedInstanceState)
         channelListRecyclerView?.apply {
@@ -65,6 +79,28 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
             }
         }
         categoryLabel?.text = (arguments?.get(EXTRA_EXTENSION_GROUP) as? String)
+        progressBar?.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(p0: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) {
+                    isSeeking.set(true)
+                    exoPlayer?.controllerShowTimeoutMs = 0
+                    exoPlayer?.player?.run {
+                        durationTV?.text = "${Util.getStringForTime(stringBuilder, formatter, progress.toLong())}/${Util.getStringForTime(stringBuilder, formatter, contentDuration)}"
+                    }
+                }
+            }
+
+            override fun onStartTrackingTouch(p0: SeekBar?) {
+                isSeeking.set(true)
+                exoPlayer?.controllerShowTimeoutMs = 0
+            }
+
+            override fun onStopTrackingTouch(p0: SeekBar?) {
+                exoPlayer?.player?.seekTo(p0?.progress?.toLong() ?: 0)
+                isSeeking.set(false)
+                exoPlayer?.controllerShowTimeoutMs = 1000
+            }
+        })
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -100,9 +136,43 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                        itemAdapter.onRefresh(it)
                     }
             }
+
+            launch {
+                while(true) {
+                    exoPlayer?.player?.run {
+                        if (playbackState == ExoPlayer.STATE_READY) {
+                            if (!isSeeking.get()) {
+                                durationTV?.text = "${Util.getStringForTime(stringBuilder, formatter, contentPosition)}/${Util.getStringForTime(stringBuilder, formatter, contentDuration)}"
+                                progressBar?.progress= contentPosition.toInt()
+                                progressBar?.secondaryProgress = bufferedPosition.toInt()
+                            }
+                        }
+                    }
+                    delay(1000)
+                }
+            }
         }
     }
 
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        super.onPlaybackStateChanged(playbackState)
+        if (playbackState == ExoPlayer.STATE_READY) {
+            if(exoPlayer?.player?.isCurrentMediaItemLive == true) {
+                progressBar?.visibility = View.GONE
+                durationTV?.visibility = View.GONE
+                liveLabel?.visibility = View.VISIBLE
+            } else {
+                progressBar?.visibility = View.VISIBLE
+                durationTV?.visibility = View.VISIBLE
+                liveLabel?.visibility = View.GONE
+                progressBar?.apply {
+                    isEnabled = true
+                    max = exoPlayer?.player?.duration?.toInt() ?: 0
+                    progress = 0
+                }
+            }
+        }
+    }
     companion object {
         const val screenName = "IPTVPlaybackFragment"
         private const val EXTRA_EXTENSION_ID = "extra:extension_id"
