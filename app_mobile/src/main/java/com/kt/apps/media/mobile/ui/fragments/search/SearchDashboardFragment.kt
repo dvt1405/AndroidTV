@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.ui.fragments.search
 
 import android.graphics.Rect
 import android.os.Bundle
+import android.text.Editable
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -68,12 +69,24 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
     }
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
+        Log.d(TAG, "SearchDashboardFragment: initAction")
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+            launch {
+                viewModel.searchQueryData
+                    .collectLatest {
+                        Log.d(TAG, "SearchDashboardFragment: $it")
+                        binding.searchInputText.setText(it)
+                    }
+            }
+        }
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
                 viewModel.registerHistorySearchList().collectLatest {
                     historyAdapter.onRefresh(it)
                 }
             }
+
+
 
             if (!isLandscape) {
                 launch {
@@ -83,6 +96,7 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
                         }
                 }
             }
+
         }
 
         binding.searchInputText?.textChanges()
@@ -99,6 +113,8 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
             ?.distinctUntilChanged()
             ?.onEach(performSearchChange)
             ?.launchIn(viewLifecycleOwner.lifecycleScope)
+
+
     }
 
     private val performSearchChange: (String) -> Unit = {
@@ -106,6 +122,13 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
             viewModel.performSearch(it)
         } else {
             viewModel.performClearSearch()
+        }
+    }
+
+    companion object {
+        fun newInstance(): SearchDashboardFragment {
+            val fragment = SearchDashboardFragment()
+            return fragment
         }
     }
 

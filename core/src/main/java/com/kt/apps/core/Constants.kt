@@ -16,7 +16,10 @@ object Constants {
     const val HOST_TV = "tv"
     const val HOST_FOOTBALL = "bongda"
     const val HOST_RADIO = "radio"
+    const val HOST_IPTV = "iptv"
     const val SCHEME_DEFAULT = "xemtv"
+
+    const val PATH_CHANNEL = "channel"
 
     const val EXTRA_PLAYBACK_TYPE = "extra:playback_type"
     const val EXTRA_FOOTBALL_MATCH = "extra:football_match"

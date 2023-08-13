@@ -1,29 +1,33 @@
 package com.kt.apps.media.mobile.viewmodels
 
 
-import android.util.Log
+import android.net.Uri
 import androidx.lifecycle.ViewModelProvider
-import com.kt.apps.core.base.DataState
-import com.kt.apps.core.extensions.ExtensionsConfig
-import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.Constants
 import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
-import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
-import com.kt.apps.media.mobile.utils.asDataStateFlow
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
+import com.kt.apps.media.mobile.utils.ActivityIndicator
+import com.kt.apps.media.mobile.utils.trackActivity
+import com.kt.apps.media.mobile.viewmodels.features.IFetchDeepLinkControl
+import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
+import com.kt.apps.media.mobile.viewmodels.features.loadByDeepLink
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
-import kotlin.coroutines.coroutineContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class ComplexInteractors(private val provider: ViewModelProvider, scope: CoroutineScope) {
+class ComplexInteractors(private val provider: ViewModelProvider, private val scope: CoroutineScope):
+    IFetchDeepLinkControl {
     @Inject
     lateinit var factory: ViewModelProvider.Factory
+
+    val loadingDeepLink: ActivityIndicator = ActivityIndicator()
 
     private val networkStateViewModel: NetworkStateViewModel by lazy {
         provider[NetworkStateViewModel::class.java]
@@ -33,8 +37,16 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
         provider[ExtensionsViewModel::class.java]
     }
 
-    private val uiControlViewModel by lazy {
+    override val uiControlViewModel by lazy {
         provider[UIControlViewModel::class.java]
+    }
+
+    override val tvChannelViewModel: TVChannelViewModel by lazy {
+        provider[TVChannelViewModel::class.java]
+    }
+
+    override val playbackViewModel: PlaybackViewModel by lazy {
+        provider[PlaybackViewModel::class.java]
     }
 
     val networkStatus: StateFlow<NetworkState> = networkStateViewModel.networkStatus
@@ -74,5 +86,16 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
 
     fun changePiPMode(isEnable: Boolean) {
         uiControlViewModel.changePIPMode(isEnable)
+    }
+
+    suspend fun loadChannelDeepLinkJob(deepLink: Uri) {
+        scope.launch {
+            loadByDeepLink(deepLink)
+        }.trackActivity(loadingDeepLink)
+    }
+
+    suspend fun openSearch(deepLink: Uri) {
+        val queryParams = deepLink.lastPathSegment ?: ""
+        uiControlViewModel.openSearch(queryParams)
     }
 }

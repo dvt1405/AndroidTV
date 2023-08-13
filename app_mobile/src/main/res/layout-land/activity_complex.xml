@@ -30,6 +30,19 @@
             tools:layout="@layout/fragment_playback"
             android:clickable="true"
             android:focusable="true" />
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/progress_wheel"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:indeterminate="true"
+            app:trackColor="@color/gray_btn_bg_pressed_color"
+            app:indicatorColor="@color/white"
+            android:layout_gravity="center"
+            />
         <LinearLayout
             android:id="@+id/parse_source_loading_container"
             android:layout_width="wrap_content"

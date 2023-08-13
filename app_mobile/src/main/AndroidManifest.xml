@@ -47,10 +47,13 @@
                 <data android:host="xemtivihd.net/xemtv/" />
                 <data android:host="xemtivihd.net/" />
                 <data android:host="bongda" />
+                <data android:host="iptv"/>
+                <data android:pathPrefix="/search"/>
                 <data android:pathPrefix="/dashboard" />
                 <data android:pathPrefix="/match" />
                 <data android:pathPrefix="/channel" />
                 <data android:pathPrefix="/channel" />
+
             </intent-filter>
             <intent-filter>
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />

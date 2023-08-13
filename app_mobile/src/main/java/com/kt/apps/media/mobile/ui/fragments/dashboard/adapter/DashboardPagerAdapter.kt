@@ -27,7 +27,7 @@ class DashboardPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateA
             R.id.tv -> FragmentTVDashboard.newInstance(false)
             R.id.radio -> FragmentTVDashboard.newInstance(true)
             R.id.extension -> IptvDashboardFragment() //FragmentIptvDashboard()
-            R.id.search -> SearchDashboardFragment() //FragmentSearch()
+            R.id.search -> SearchDashboardFragment.newInstance() //FragmentSearch()
             R.id.football -> FootballDashboardFragment()
             R.id.info -> InfoFragment()
             else -> throw IllegalStateException("Not support for item: ${_listItem[position]}")

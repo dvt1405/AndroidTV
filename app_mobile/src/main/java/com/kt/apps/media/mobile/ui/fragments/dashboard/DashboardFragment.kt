@@ -116,7 +116,13 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
             }
         }
 
-
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+            launch {
+                uiControlViewModel.openSearchEvent.collectLatest {
+                    (binding.bottomNavigation as NavigationBarView).selectedItemId = R.id.search
+                }
+            }
+        }
 
         (binding.bottomNavigation as NavigationBarView).selectedItemId = R.id.tv
     }

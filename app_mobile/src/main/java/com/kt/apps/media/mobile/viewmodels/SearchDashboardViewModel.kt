@@ -27,6 +27,8 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
         provider[UIControlViewModel::class.java]
     }
 
+    val searchQueryData = uiControlViewModel.searchQuery
+
     val onOpenPlayback = uiControlViewModel.openPlayback
 
     suspend fun registerHistorySearchList(): Flow<List<String>> {

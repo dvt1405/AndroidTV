@@ -166,6 +166,12 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
             }
 
+            launch {
+                viewModel.loadingDeepLink.isLoading?.collectLatest {
+                    binding.progressWheel?.visibility = if (it) View.VISIBLE else View.GONE
+                }
+            }
+
         }
 
         //Deeplink handle
@@ -290,13 +296,18 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     private fun handleIntent(intent: Intent?) {
         val deeplink = intent?.data ?: return
 
-        if (deeplink.host?.equals(Constants.HOST_TV) == true || deeplink.host?.equals(Constants.HOST_RADIO) == true) {
-            if(deeplink.path?.contains("channel") == true) {
-                intent.data = null
-            } else {
-                intent.data = null
+
+        if (arrayListOf(Constants.HOST_TV, Constants.HOST_RADIO).contains(deeplink.host)) {
+            lifecycleScope.launch {
+                viewModel.loadChannelDeepLinkJob(deeplink)
+            }
+        } else if (deeplink.host == Constants.HOST_IPTV && deeplink.path?.contains("search/") == true) {
+            lifecycleScope.launch {
+                layoutHandler?.onCloseMinimal()
+                viewModel.openSearch(deeplink)
             }
         }
+        intent?.data = null
     }
 
     private fun handleError(throwable: Throwable) {

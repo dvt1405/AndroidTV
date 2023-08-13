@@ -1,10 +1,14 @@
 package com.kt.apps.media.mobile.viewmodels.features
 
 import com.kt.apps.core.base.BaseViewModel
+import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import java.lang.StringBuilder
 import javax.inject.Inject
 
 class UIControlViewModel @Inject constructor(): BaseViewModel() {
@@ -22,6 +26,13 @@ class UIControlViewModel @Inject constructor(): BaseViewModel() {
 
     private var _addSourceState: MutableStateFlow<AddSourceState> = MutableStateFlow(AddSourceState.IDLE)
     val addSourceState = _addSourceState.asStateFlow()
+
+    private var _openSearchEvent: MutableSharedFlow<Unit> = MutableSharedFlow()
+    val openSearchEvent = _openSearchEvent.asSharedFlow()
+
+    private var _searchQuery: MutableStateFlow<String> = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
+
     suspend fun openPlayback(data: PrepareStreamLinkData) {
         _openPlayback.emit(data)
     }
@@ -35,6 +46,11 @@ class UIControlViewModel @Inject constructor(): BaseViewModel() {
 
     fun changePIPMode(isEnable: Boolean) {
        _isInPIPMode.value = isEnable
+    }
+
+    suspend fun openSearch(query: String) {
+        _openSearchEvent.emit(Unit)
+        _searchQuery.emit(query)
     }
 
 }
