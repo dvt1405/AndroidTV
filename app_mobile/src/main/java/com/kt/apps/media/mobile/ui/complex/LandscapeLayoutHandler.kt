@@ -35,20 +35,10 @@ import java.lang.ref.WeakReference
 import kotlin.properties.Delegates
 
 class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActivity>) : ComplexLayoutHandler  {
-    sealed class State {
-        object IDLE: State()
-        object MINIMAL: State()
-        object FULLSCREEN: State()
-    }
 
-//    private var state: State = State.IDLE
-    private var state: State by Delegates.observable(State.IDLE) { property, oldValue, newValue ->
+    private var state: PlaybackState by Delegates.observable(PlaybackState.Invisible) { _, oldValue, newValue ->
         if (oldValue !== newValue) {
-            onPlaybackStateChange(when(newValue) {
-                State.IDLE -> PlaybackState.Invisible
-                State.MINIMAL -> PlaybackState.Minimal
-                State.FULLSCREEN -> PlaybackState.Fullscreen
-            })
+            onPlaybackStateChange(newValue)
         }
     }
 
@@ -71,12 +61,12 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         }).apply {
             this.setOnDoubleTapListener(object: GestureDetector.OnDoubleTapListener {
                 override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                    this@LandscapeLayoutHandler.onDoubleTap(e)
                     return true
                 }
 
                 override fun onDoubleTap(e: MotionEvent): Boolean {
                     Log.d(TAG, "onDoubleTap: ")
-                    this@LandscapeLayoutHandler.onDoubleTap(e)
                     return true
                 }
 
@@ -86,8 +76,18 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
             })
         }
     }
+
+    override fun confirmState(state: PlaybackState) {
+        if (state != this.state) {
+            when(state) {
+                PlaybackState.Fullscreen -> transitionFullscreen()
+                PlaybackState.Minimal -> transitionMinimal()
+                PlaybackState.Invisible -> transitionIDLE()
+            }
+        }
+    }
     override fun onStartLoading() {
-        if (state == State.FULLSCREEN) {
+        if (state == PlaybackState.Fullscreen) {
             return
         }
         Log.d(TAG, "onStartLoading: $state")
@@ -97,7 +97,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     override fun onLoadedVideoSuccess(videoSize: VideoSize) { }
 
     override fun onOpenFullScreen() {
-        if (state != State.FULLSCREEN) {
+        if (state != PlaybackState.Fullscreen) {
             transitionFullscreen()
         } else {
             transitionMinimal()
@@ -113,7 +113,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     }
 
     override fun onBackEvent(): Boolean {
-        if (state == State.FULLSCREEN) {
+        if (state == PlaybackState.Fullscreen) {
             transitionMinimal()
             return true
         }
@@ -142,7 +142,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     }
 
     private fun transitionFullscreen() {
-        state = State.FULLSCREEN
+        state = PlaybackState.Fullscreen
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -162,7 +162,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     }
 
     private fun transitionMinimal() {
-        state = State.MINIMAL
+        state = PlaybackState.Minimal
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -196,7 +196,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 addListener(object: TransitionCallback() {
                     override fun onTransitionStart(transition: Transition) {
                         super.onTransitionStart(transition)
-                        this@LandscapeLayoutHandler.state = State.IDLE
+                        this@LandscapeLayoutHandler.state = PlaybackState.Invisible
                     }
                 })
             })

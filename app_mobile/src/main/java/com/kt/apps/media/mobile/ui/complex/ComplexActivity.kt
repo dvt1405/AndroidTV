@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -27,6 +28,7 @@ import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
 import com.kt.apps.media.mobile.models.*
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
+import com.kt.apps.media.mobile.ui.fragments.playback.BasePlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IDispatchTouchListener
 import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
@@ -65,6 +67,28 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         ComplexInteractors(ViewModelProvider(this, factory), lifecycleScope)
     }
 
+    private val playbackAction = object: IPlaybackAction {
+        override fun onLoadedSuccess(videoSize: VideoSize) {
+            layoutHandler?.onLoadedVideoSuccess(videoSize)
+        }
+
+        override fun onOpenFullScreen() {
+            layoutHandler?.onOpenFullScreen()
+        }
+
+        override fun onPauseAction(userAction: Boolean) {
+            if (userAction) layoutHandler?.onPlayPause(isPause = true)
+        }
+
+        override fun onPlayAction(userAction: Boolean) {
+            if (userAction) layoutHandler?.onPlayPause(isPause = false)
+        }
+
+        override fun onExitMinimal() {
+            layoutHandler?.onCloseMinimal()
+        }
+    }
+
     override fun initView(savedInstanceState: Bundle?) {
 
         val metrics = resources.displayMetrics
@@ -89,6 +113,10 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 finish()
             }
         })
+
+        binding.fragmentContainerPlayback.getFragment<BasePlaybackFragment<*>>()?.apply {
+            this.callback = playbackAction
+        }
      }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -126,6 +154,15 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             launch {
                 viewModel.addSourceState.collectLatest {
                     handleAddSourceState(it)
+                }
+            }
+
+            launch {
+                viewModel.playerState.collectLatest { state ->
+                    layoutHandler?.confirmState(state)
+                    if (state == PlaybackState.Invisible) {
+                        stopPlayback()
+                    }
                 }
             }
 
@@ -190,39 +227,25 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             is PrepareStreamLinkData.Football -> FootballPlaybackFragment.newInstance(data.data)
             else -> null
         }?.apply {
-            this.callback = object: IPlaybackAction {
-                override fun onLoadedSuccess(videoSize: VideoSize) {
-                    layoutHandler?.onLoadedVideoSuccess(videoSize)
-                }
-
-                override fun onOpenFullScreen() {
-                    layoutHandler?.onOpenFullScreen()
-                }
-
-                override fun onPauseAction(userAction: Boolean) {
-                    if (userAction) layoutHandler?.onPlayPause(isPause = true)
-                }
-
-                override fun onPlayAction(userAction: Boolean) {
-                    if (userAction) layoutHandler?.onPlayPause(isPause = false)
-                }
-
-                override fun onExitMinimal() {
-                    layoutHandler?.onCloseMinimal()
-                }
-            }
+            this.callback = playbackAction
         }?.run {
-//            touchListenerList.clear()
-//            touchListenerList.add(this as IDispatchTouchListener)
             if (!isVisible) {
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.fragment_container_playback, this, IPTVPlaybackFragment.screenName)
+                    .replace(R.id.fragment_container_playback, this, screenName)
                     .commit()
             }
 
             layoutHandler?.onStartLoading()
         }
+    }
 
+    private fun stopPlayback() {
+            binding.fragmentContainerPlayback.getFragment<Fragment>().takeIf { it != null }
+                ?.run {
+                supportFragmentManager.beginTransaction()
+                    .remove(this)
+                    .commit()
+            }
     }
     override fun onResume() {
         super.onResume()

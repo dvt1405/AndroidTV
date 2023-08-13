@@ -63,6 +63,11 @@ class ComplexInteractors(private val provider: ViewModelProvider, scope: Corouti
             .stateIn(scope, SharingStarted.Eagerly, false)
     }
 
+    val playerState by lazy {
+        uiControlViewModel.playerState
+            .stateIn(scope, SharingStarted.Eagerly, PlaybackState.Invisible)
+    }
+
     fun onChangePlayerState(state: PlaybackState) {
         uiControlViewModel.changePlayerState(state)
     }

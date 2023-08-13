@@ -4,10 +4,10 @@
     <dimen name="common_padding">16dp</dimen>
     <dimen name="search_box_corner_radius">40dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
-    <dimen name="item_channel_height">90dp</dimen>
-    <dimen name="item_channel_width">150dp</dimen>
+    <dimen name="item_channel_height">72dp</dimen>
+    <dimen name="item_channel_width">120dp</dimen>
     <dimen name="item_row_title">16sp</dimen>
-    <dimen name="item_channel_decoration">20dp</dimen>
+    <dimen name="item_channel_decoration">12dp</dimen>
     <dimen name="fading_edge_size">12dp</dimen>
     <dimen name="tab_spacing">32dp</dimen>
     <dimen name="football_item_width">224dp</dimen>

@@ -36,15 +36,11 @@ interface ComplexLayoutHandler {
     fun onBackEvent() : Boolean { return false }
     fun onReset(isPlaying: Boolean) { }
     fun onPlayPause(isPause: Boolean) { }
+
+    fun confirmState(state: PlaybackState) { }
 }
 
 class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActivity>) : ComplexLayoutHandler {
-    sealed class State {
-        object IDLE: State()
-        object MINIMAL: State()
-        object FULLSCREEN: State()
-    }
-
 
     private val swipeThreshold = 100
     private val velocitySwipeThreshold = 100
@@ -55,22 +51,14 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     private val fragmentContainerPlayback: View?
         get() = weakActivity.get()?.binding?.fragmentContainerPlayback
 
-    private val surfaceView: ConstraintLayout? by lazy {
-        weakActivity.get()?.binding?.surfaceView as? ConstraintLayout
-    }
-
     private val guideline by lazy {
         weakActivity.get()?.binding?.guidelineComplex
     }
 
     override var onPlaybackStateChange: (PlaybackState) -> Unit = { }
-    private var state: State by Delegates.observable(State.IDLE) { property, oldValue, newValue ->
+    private var state: PlaybackState by Delegates.observable(PlaybackState.Invisible) { _, oldValue, newValue ->
         if (oldValue !== newValue) {
-            onPlaybackStateChange(when(newValue) {
-                State.IDLE -> PlaybackState.Invisible
-                State.MINIMAL -> PlaybackState.Minimal
-                State.FULLSCREEN -> PlaybackState.Fullscreen
-            })
+            onPlaybackStateChange(newValue)
         }
     }
     private val gestureDetector: GestureDetector by lazy {
@@ -98,15 +86,21 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
         })
     }
 
-    init {
-
+    override fun confirmState(state: PlaybackState) {
+        if (state != this.state) {
+            when(state) {
+                PlaybackState.Invisible -> transitionIDLE()
+                PlaybackState.Fullscreen -> transitionFullscreen()
+                PlaybackState.Minimal -> transitionMinimal()
+            }
+        }
     }
     override fun onTouchEvent(ev: MotionEvent) {
         gestureDetector.onTouchEvent(ev)
     }
 
     override fun onOpenFullScreen() {
-        if (state != State.FULLSCREEN) {
+        if (state != PlaybackState.Fullscreen) {
             transitionFullscreen()
         } else {
             transitionMinimal()
@@ -117,7 +111,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     override fun forceFullScreen() {
         guideline?.run {
             setGuidelinePercent(1f)
-            this@PortraitLayoutHandler.state = State.FULLSCREEN
+            this@PortraitLayoutHandler.state = PlaybackState.Fullscreen
         }
     }
 
@@ -126,7 +120,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     }
 
     override fun onBackEvent() : Boolean {
-        if (state == State.FULLSCREEN) {
+        if (state == PlaybackState.Fullscreen) {
             onOpenFullScreen()
             return true
         }
@@ -134,7 +128,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     }
 
     override fun onStartLoading() {
-        if (state == State.IDLE) {
+        if (state != PlaybackState.Minimal) {
             transitionMinimal()
         }
     }
@@ -158,7 +152,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
             getLocationOnScreen(location)
             if (hitRect.contains(e1.x.toInt(), e1.y.toInt())) {
                 Log.d(TAG, "onSwipeUp: ")
-                if (state == State.FULLSCREEN) {
+                if (state == PlaybackState.Fullscreen) {
                     transitionMinimal()
                 }
             }
@@ -179,21 +173,21 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     private fun transitionFullscreen() {
         guideline?.run {
             setGuidelinePercent(0.6f)
-            this@PortraitLayoutHandler.state = State.FULLSCREEN
+            this@PortraitLayoutHandler.state = PlaybackState.Fullscreen
         }
     }
 
     private fun transitionMinimal() {
         guideline?.run {
             setGuidelinePercent(0.3f)
-            this@PortraitLayoutHandler.state = State.MINIMAL
+            this@PortraitLayoutHandler.state = PlaybackState.Minimal
         }
     }
 
     private fun transitionIDLE() {
         guideline?.run {
             setGuidelinePercent(0f)
-            this@PortraitLayoutHandler.state = State.IDLE
+            this@PortraitLayoutHandler.state = PlaybackState.Invisible
         }
     }
 }

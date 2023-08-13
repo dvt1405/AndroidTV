@@ -108,33 +108,12 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
             setDistanceToTriggerSync(screenHeight / 3)
         }
 
-        binding.mainChannelRecyclerView.doOnPreDraw {
-            val viewWidth = it.measuredWidth
-            val spacing = it.context.resources.getDimensionPixelSize(R.dimen.item_channel_decoration)
-            val preferWidth = viewWidth / 3 - spacing * 2
-            adapter.preferWidth = preferWidth
-        }
-
     }
 
 
     override fun initAction(savedInstanceState: Bundle?) {
         playbackViewModel
 
-        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launch {
-//                networkStateViewModel?.networkStatus?.collectLatest {
-//                    if (it == NetworkState.Connected) {
-//                        if (adapter.itemCount == 0) {
-//                        } else if (skeletonScreen.isRunning) {
-//                            skeletonScreen.hide()
-//                        }
-//                    }
-//                    if (it == NetworkState.Connected && adapter.itemCount == 0)
-//                        viewModel.getListTVChannel(forceRefresh = true)
-//                }
-            }
-        }
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch(CoroutineExceptionHandler { _, _ ->

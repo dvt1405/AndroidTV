@@ -19,7 +19,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/transparent"
-            app:icon="@drawable/ic_arrow_back"
+            app:icon="@drawable/ic_clear"
             app:iconSize="48dp"
             />
         <com.google.android.material.textview.MaterialTextView
@@ -44,6 +44,17 @@
         android:clipToPadding="false"
         >
 
+        <include
+            layout="@layout/layout_live_label"
+            android:id="@+id/tv_live_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="@id/exo_fullscreen"
+            app:layout_constraintBottom_toBottomOf="@id/exo_fullscreen"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="36dp"
+            />
+
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tv_live_time"
             android:layout_width="wrap_content"
@@ -56,15 +67,21 @@
             app:layout_constraintTop_toTopOf="@id/exo_fullscreen"
             app:layout_constraintBottom_toBottomOf="@id/exo_fullscreen"
             />
-        <com.google.android.exoplayer2.ui.DefaultTimeBar
-            android:id="@id/exo_progress"
+        <SeekBar
+            android:id="@+id/exo_progress_bar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
+            android:layout_height="10dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
             app:layout_constraintTop_toBottomOf="@id/exo_fullscreen"
+            android:thumbTint="@color/white"
+            android:progressTint="@color/white"
+            android:progressBackgroundTint="@color/item_gray_light"
+            android:secondaryProgressTint="@color/lb_grey"
+            tools:max="100"
+            tools:progress="50"
+            android:secondaryProgress="60"
             android:layout_marginTop="0dp"
-            android:layout_marginStart="36dp"
-            android:layout_marginEnd="36dp"
             />
 
         <ImageButton
