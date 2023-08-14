@@ -1,6 +1,9 @@
 package com.kt.apps.media.xemtv.ui.playback
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -36,6 +39,34 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
         get() = R.layout.activity_playback
 
     override fun initView(savedInstanceState: Bundle?) {
+    }
+
+    private val _timeReceiver by lazy {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.action ?: return
+                if (intent.action == Intent.ACTION_TIME_TICK) {
+                    val fragment = supportFragmentManager.findFragmentById(android.R.id.content)
+                        .takeIf {
+                            it is BasePlaybackFragment &&
+                                    !it.isHidden && !it.isDetached
+                        }?.let {
+                            it as BasePlaybackFragment
+                        } ?: return
+                    if (fragment.isPlaying()) {
+                        fragment.onRefreshProgram()
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        registerReceiver(_timeReceiver, IntentFilter().apply {
+            this.addAction(Intent.ACTION_TIME_TICK)
+            this.addAction(Intent.ACTION_TIME_CHANGED)
+        })
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -117,27 +148,25 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
         when {
             deepLink.host.equals(Constants.HOST_FOOTBALL) -> {
                 footballViewModel.streamFootballByDeepLinks(deepLink)
-                if (savedInstanceState == null) {
-                    supportFragmentManager.beginTransaction()
-                        .replace(android.R.id.content, FootballPlaybackFragment())
-                        .commit()
-                }
+                supportFragmentManager.findFragmentById(android.R.id.content)
+                    .takeIf {
+                        it is FootballPlaybackFragment && !it.isDetached
+                                && !it.isHidden
+                    } ?: supportFragmentManager.beginTransaction()
+                    .replace(android.R.id.content, FootballPlaybackFragment())
+                    .commit()
                 intent?.data = null
             }
 
             deepLink.host.equals(Constants.HOST_TV) || deepLink.host.equals(Constants.HOST_RADIO) -> {
                 tvChannelViewModel.playTvByDeepLinks(deepLink)
-                if (savedInstanceState == null) {
-                    supportFragmentManager.fragments
-                        .forEach {
-                            supportFragmentManager.beginTransaction()
-                                .remove(it)
-                                .commitNow()
-                        }
-                    supportFragmentManager.beginTransaction()
-                        .replace(android.R.id.content, TVPlaybackVideoFragment())
-                        .commit()
-                }
+                supportFragmentManager.findFragmentById(android.R.id.content)
+                    .takeIf {
+                        it is TVPlaybackVideoFragment && !it.isDetached
+                                && !it.isHidden
+                    } ?: supportFragmentManager.beginTransaction()
+                    .replace(android.R.id.content, TVPlaybackVideoFragment())
+                    .commit()
                 intent?.data = null
             }
 
@@ -239,6 +268,14 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
     @Parcelize
     enum class Type : Parcelable {
         TV, FOOTBALL, RADIO, EXTENSION
+    }
+
+    override fun onDestroy() {
+        try {
+            unregisterReceiver(_timeReceiver)
+        } catch (_: Exception) {
+        }
+        super.onDestroy()
     }
 
     companion object {

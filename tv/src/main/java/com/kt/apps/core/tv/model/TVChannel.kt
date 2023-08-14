@@ -54,7 +54,7 @@ class TVChannel(
     fun getMapData() = mapOf(
         AbstractExoPlayerManager.EXTRA_MEDIA_ID to channelId,
         AbstractExoPlayerManager.EXTRA_MEDIA_TITLE to tvChannelName,
-        AbstractExoPlayerManager.EXTRA_MEDIA_DESCRIPTION to (currentProgramme?.description ?: ""),
+        AbstractExoPlayerManager.EXTRA_MEDIA_DESCRIPTION to (currentProgramme?.getProgramDescription() ?: ""),
         AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_TITLE to tvGroup,
         AbstractExoPlayerManager.EXTRA_MEDIA_THUMB to logoChannel,
         AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_ARTIST to sourceFrom

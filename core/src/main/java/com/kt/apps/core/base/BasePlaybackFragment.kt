@@ -164,7 +164,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     )
                 ) {
                     if (player.playbackState == Player.STATE_BUFFERING) {
-                        progressManager.show()
+                        if (!progressManager.isShowing) {
+                            progressManager.show()
+                        }
                     } else {
                         if (player.playbackState != Player.STATE_IDLE) {
                             progressManager.hide()
@@ -538,6 +540,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         isLive: Boolean,
         showProgressManager: Boolean = true
     ) {
+        Logger.d(this@BasePlaybackFragment, "ShowVideoInfo", "$title - $subTitle - $isLive")
         mHandler.removeCallbacks(autoHideOverlayRunnable)
         setVideoInfo(title, subTitle, isLive)
 
@@ -1218,6 +1221,13 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         } else {
             mGridViewOverlays?.requestFocus()
         }
+    }
+    fun isPlaying(): Boolean {
+        return exoPlayerManager.exoPlayer?.isPlaying == true
+    }
+
+    open fun onRefreshProgram() {
+
     }
 
     class BasePlaybackSupportFragmentGlueHost(

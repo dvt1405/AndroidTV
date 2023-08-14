@@ -246,7 +246,9 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
         useCatchup: Boolean = false,
         refreshProgramForChannel: Boolean = true
     ) {
-        progressManager.show()
+        if (!progressManager.isShowing) {
+            progressManager.show()
+        }
         if (refreshProgramForChannel) {
             extensionsViewModel.loadProgramForChannel(extensionsChannel, extension.type)
         }

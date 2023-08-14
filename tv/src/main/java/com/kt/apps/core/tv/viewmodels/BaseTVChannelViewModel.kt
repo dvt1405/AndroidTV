@@ -201,6 +201,9 @@ open class BaseTVChannelViewModel constructor(
     val programmeForChannelLiveData: LiveData<DataState<TVScheduler.Programme>>
         get() = _programmeForChannelLiveData
 
+    var lastGetProgramme: Long = 0L
+        private set
+
     fun loadProgramForChannel(channel: TVChannel) {
         add(
             interactors.getCurrentProgrammeForChannel.invoke(channel.channelId)
@@ -211,6 +214,7 @@ open class BaseTVChannelViewModel constructor(
                             ?.removeAllSpecialChars()
                             ?.removePrefix("viechannel")
                     ) {
+                        lastGetProgramme = System.currentTimeMillis()
                         _programmeForChannelLiveData.postValue(DataState.Success(it))
                     } else {
                         _programmeForChannelLiveData.postValue(

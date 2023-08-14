@@ -263,7 +263,9 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             }
 
             is DataState.Loading -> {
-                progressBarManager.show()
+                if (!progressManager.isShowing) {
+                    progressBarManager.show()
+                }
             }
 
             is DataState.Error -> {
@@ -294,22 +296,33 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     }
 
     private fun showInfo(tvChannel: TVScheduler.Programme, channel: TVChannel) {
-        Logger.d(this@TVPlaybackVideoFragment, "ChannelInfo", message = "$tvChannel")
-        val channelTitle = tvChannel.title.takeIf {
-            it.trim().isNotBlank()
-        }?.trim() ?: ""
         prepare(
-            channel.tvChannelName + if (channelTitle.isNotBlank()) {
-                " - $channelTitle"
-            } else {
-                ""
-            },
-            tvChannel.description.takeIf {
-                it.isNotBlank()
-            }?.trim(),
+            channel.tvChannelName,
+            buildVideoDescription(tvChannel),
             isLive = true,
             showProgressManager = false
         )
+    }
+
+    private fun buildVideoDescription(programme: TVScheduler.Programme): String {
+        val description = programme.getProgramDescription()
+        Logger.d(this@TVPlaybackVideoFragment, "ChannelInfo", message = "$programme,\n" +
+                "description: $description" +
+                "")
+
+        val channelTitle = programme.title.takeIf {
+            it.trim().isNotBlank()
+        }?.trim() ?: ""
+
+        return if (channelTitle.isEmpty()) {
+            description
+        } else {
+            channelTitle + if (description.isEmpty()) {
+                ""
+            } else {
+                " • $description"
+            }
+        }
     }
 
     private fun playVideo(tvChannelLinkStream: TVChannelLinkStream, showVideoInfo: Boolean = true) {
@@ -341,6 +354,15 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             } ?: 0
         }
 
+    }
+
+    override fun onRefreshProgram() {
+        super.onRefreshProgram()
+        tvChannelViewModel.lastWatchedChannel?.let {
+            if (System.currentTimeMillis() - tvChannelViewModel.lastGetProgramme >= 1 * 60 * 1000) {
+                tvChannelViewModel.loadProgramForChannel(it.channel)
+            }
+        }
     }
 
     override fun onDetach() {

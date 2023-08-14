@@ -41,6 +41,17 @@ class TVScheduler @JvmOverloads constructor(
         var extensionsConfigId: String = "",
         var extensionEpgUrl: String = ""
     ) {
+        fun getProgramDescription(): String {
+            return description.let {
+                var newDesc = it
+                for (i in programmeWhiteList) {
+                    newDesc = newDesc.replace(Regex("$i này có thời lượng (là |)\\d+ ((giờ \\d+ phút)|phút|giờ|)(\\.|)"), "")
+                }
+                newDesc
+            }.takeIf {
+                it.isNotBlank()
+            }?.trim() ?: ""
+        }
         override fun toString(): String {
             return "{" +
                     "channel: $channel,\n" +
@@ -61,5 +72,11 @@ class TVScheduler @JvmOverloads constructor(
                 "sourceInfoUrl: $generatorInfoUrl,\n" +
                 "listTV: $extensionsConfigId,\n" +
                 "}"
+    }
+
+    companion object {
+        val programmeWhiteList by lazy {
+            arrayOf("[nN]ội dung", "[cC]hương trình")
+        }
     }
 }
