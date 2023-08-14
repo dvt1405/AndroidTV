@@ -174,6 +174,19 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         }
 
+        addOnPictureInPictureModeChangedListener {
+            if (it.isInPictureInPictureMode) {
+                viewModel.changePiPMode(true)
+                layoutHandler?.forceFullScreen()
+            } else {
+                val last = viewModel.isInPIPMode.value
+                if (last) {
+                    viewModel.changePiPMode(false)
+                    layoutHandler?.onStartLoading()
+                }
+            }
+        }
+
         //Deeplink handle
         handleIntent(intent)
     }
@@ -184,18 +197,22 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
             && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-
-            MainScope().launch {
-                viewModel.changePiPMode(true)
-                layoutHandler?.forceFullScreen()
-                delay(200)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val params = PictureInPictureParams.Builder()
-                    this@ComplexActivity.enterPictureInPictureMode(params.build())
-                } else {
-                    this@ComplexActivity.enterPictureInPictureMode()
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val params = PictureInPictureParams.Builder()
+                this@ComplexActivity.enterPictureInPictureMode(params.build())
+            } else {
+                this@ComplexActivity.enterPictureInPictureMode()
             }
+//            lifecycleScope.launch {
+//                viewModel.changePiPMode(true)
+//                layoutHandler?.forceFullScreen()
+//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                    val params = PictureInPictureParams.Builder()
+//                    this@ComplexActivity.enterPictureInPictureMode(params.build())
+//                } else {
+//                    this@ComplexActivity.enterPictureInPictureMode()
+//                }
+//            }
 
         }
     }
@@ -253,17 +270,36 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                     .commit()
             }
     }
+
+    override fun onStop() {
+        Log.d(TAG, "onStop: ")
+        super.onStop()
+    }
+    override fun onStart() {
+        Log.d(TAG, "onStart: ")
+        super.onStart()
+    }
+
+    override fun onDestroy() {
+        Log.d(TAG, "onDestroy: ")
+        super.onDestroy()
+    }
+
+    override fun onPause() {
+        Log.d(TAG, "onPause: ")
+        super.onPause()
+    }
     override fun onResume() {
+        Log.d(TAG, "onResume: ")
         super.onResume()
 
-        MainScope().launch {
-            val last = viewModel.isInPIPMode.value
-            if (last) {
-                viewModel.changePiPMode(false)
-                layoutHandler?.onStartLoading()
-            }
-
-        }
+//        MainScope().launch {
+//            val last = viewModel.isInPIPMode.value
+//            if (last) {
+//                viewModel.changePiPMode(false)
+//                layoutHandler?.onStartLoading()
+//            }
+//        }
     }
 
 
