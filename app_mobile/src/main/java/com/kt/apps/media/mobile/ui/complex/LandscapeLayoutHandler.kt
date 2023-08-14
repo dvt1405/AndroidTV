@@ -61,6 +61,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         }).apply {
             this.setOnDoubleTapListener(object: GestureDetector.OnDoubleTapListener {
                 override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+
                     this@LandscapeLayoutHandler.onDoubleTap(e)
                     return true
                 }
@@ -129,7 +130,9 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     }
 
     override fun onTouchEvent(ev: MotionEvent) {
-        gestureDetector.onTouchEvent(ev)
+        if (state == PlaybackState.Minimal) {
+            gestureDetector.onTouchEvent(ev)
+        }
     }
 
     private fun onDoubleTap(ev: MotionEvent) {
@@ -137,7 +140,9 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         if (fragmentContainerPlayback?.visibility == View.VISIBLE) else return
         fragmentContainerPlayback?.getHitRect(hitRect)
         if (hitRect.contains(ev.x.toInt(), ev.y.toInt())) {
-            transitionFullscreen()
+            if (state == PlaybackState.Minimal) {
+                transitionFullscreen()
+            }
         }
     }
 

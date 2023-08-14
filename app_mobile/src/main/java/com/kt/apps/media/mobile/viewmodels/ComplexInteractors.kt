@@ -95,7 +95,7 @@ class ComplexInteractors(private val provider: ViewModelProvider, private val sc
     }
 
     suspend fun openSearch(deepLink: Uri) {
-        val queryParams = deepLink.lastPathSegment ?: ""
-        uiControlViewModel.openSearch(queryParams)
+        val filter = deepLink.getQueryParameter("query")
+        uiControlViewModel.openSearch(filter ?: "")
     }
 }

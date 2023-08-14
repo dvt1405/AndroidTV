@@ -301,7 +301,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             lifecycleScope.launch {
                 viewModel.loadChannelDeepLinkJob(deeplink)
             }
-        } else if (deeplink.host == Constants.HOST_IPTV && deeplink.path?.contains("search/") == true) {
+        } else if (deeplink.host == Constants.HOST_IPTV && deeplink.lastPathSegment == "search") {
             lifecycleScope.launch {
                 layoutHandler?.onCloseMinimal()
                 viewModel.openSearch(deeplink)
