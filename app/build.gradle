@@ -10,21 +10,26 @@ plugins {
 android {
     namespace 'com.kt.apps.media.xemtv'
     compileSdk 33
-    def version_name = "23.07.01"
+    def version_name = "23.08.01"
 
     defaultConfig {
         applicationId "com.kt.apps.media.xemtv"
         minSdk 26
         targetSdk 33
-        versionCode 23072701
+        versionCode 23081401
         versionName version_name
         setProperty("archivesBaseName", "iMedia.$versionName")
+        kapt {
+            arguments {
+                arg("room.schemaLocation", "$projectDir/schemas")
+            }
+        }
 
     }
 
     signingConfigs {
         release {
-            storeFile file("../keys/Untitled")
+            storeFile file("$rootDir/keys/Untitled")
             storePassword props.getProperty("pass")
             keyAlias props.getProperty("alias.tv")
             keyPassword props.getProperty("pass")
@@ -64,7 +69,13 @@ android {
             buildConfigField "boolean", "isBeta", "true"
         }
     }
-
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
 }
 
 dependencies {
