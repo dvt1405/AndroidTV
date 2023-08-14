@@ -13,8 +13,10 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logPlayByDeeplinkTV
 import com.kt.apps.core.logging.logStreamingTV
 import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
+import com.kt.apps.core.utils.removeAllSpecialChars
 import io.reactivex.rxjava3.disposables.Disposable
 import javax.inject.Inject
 
@@ -76,10 +78,7 @@ open class BaseTVChannelViewModel constructor(
         if (lastTVStreamLinkTask?.isDisposed != true) {
             lastTVStreamLinkTask?.dispose()
         }
-        _lastWatchedChannel = TVChannelLinkStream(
-            tvDetail,
-            listOf()
-        )
+        markLastWatchedChannel(tvDetail)
         lastTVStreamLinkTask = interactors.getChannelLinkStream(tvDetail, isBackup)
             .subscribe({
                 Logger.d(this, message = Gson().toJson(it))
@@ -95,8 +94,14 @@ open class BaseTVChannelViewModel constructor(
         add(lastTVStreamLinkTask!!)
     }
 
+    fun cancelCurrentGetStreamLinkTask() {
+        lastTVStreamLinkTask?.let {
+            compositeDisposable.remove(it)
+            it.dispose()
+        }
+    }
+
     fun playTvByDeepLinks(uri: Uri) {
-        !(uri.host?.contentEquals(Constants.DEEPLINK_HOST) ?: return)
         val lastPath = uri.pathSegments.last() ?: return
         Logger.d(
             this, message = "play by deeplink: {" +
@@ -111,6 +116,7 @@ open class BaseTVChannelViewModel constructor(
         lastTVStreamLinkTask = interactors.getChannelLinkStreamById(lastPath)
             .subscribe({
                 markLastWatchedChannel(it)
+                loadProgramForChannel(it.channel)
                 enqueueInsertWatchNextTVChannel(it.channel)
                 _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
                 Logger.d(
@@ -134,6 +140,12 @@ open class BaseTVChannelViewModel constructor(
 
     fun markLastWatchedChannel(tvChannel: TVChannelLinkStream?) {
         _lastWatchedChannel = tvChannel
+    }
+    fun markLastWatchedChannel(tvChannel: TVChannel) {
+        _lastWatchedChannel = TVChannelLinkStream(
+            tvChannel,
+            listOf()
+        )
     }
 
     fun retryGetLastWatchedChannel() {
@@ -168,9 +180,46 @@ open class BaseTVChannelViewModel constructor(
         add(
             interactors.getCurrentProgrammeForChannel.invoke(channel.channelId)
                 .subscribe({
-                    _programmeForChannelLiveData.postValue(DataState.Success(it))
+                    if (it.channel == lastWatchedChannel
+                            ?.channel
+                            ?.channelId
+                            ?.removeAllSpecialChars()
+                            ?.removePrefix("viechannel")
+                    ) {
+                        _programmeForChannelLiveData.postValue(DataState.Success(it))
+                    } else {
+                        _programmeForChannelLiveData.postValue(
+                            DataState.Success(
+                                TVScheduler.Programme(
+                                    channel = channel.channelId
+                                        .removeAllSpecialChars()
+                                        .removePrefix("viechannel"),
+                                    title = "",
+                                    description = try {
+                                        TVChannelGroup.valueOf(channel.tvGroup).value
+                                    } catch (e: Exception) {
+                                        channel.tvGroup
+                                    },
+                                )
+                            )
+                        )
+                    }
                 }, {
-                    _programmeForChannelLiveData.postValue(DataState.Error(it))
+                    _programmeForChannelLiveData.postValue(
+                        DataState.Success(
+                            TVScheduler.Programme(
+                                channel = channel.channelId
+                                    .removeAllSpecialChars()
+                                    .removePrefix("viechannel"),
+                                title = "",
+                                description = try {
+                                    TVChannelGroup.valueOf(channel.tvGroup).value
+                                } catch (e: Exception) {
+                                    channel.tvGroup
+                                },
+                            )
+                        )
+                    )
                 })
         )
     }

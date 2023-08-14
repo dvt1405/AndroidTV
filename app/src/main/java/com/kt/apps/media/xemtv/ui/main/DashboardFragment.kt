@@ -1,22 +1,18 @@
 package com.kt.apps.media.xemtv.ui.main
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.Message
 import android.view.*
-import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.leanback.app.*
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.tabs.TabLayout
-import com.kt.apps.autoupdate.ui.AppUpdateActivity
 import com.kt.apps.core.Constants
 import com.kt.apps.core.R
 import com.kt.apps.core.base.IKeyCodeHandler
@@ -31,10 +27,12 @@ import com.kt.apps.core.utils.leanback.findCurrentFocusedView
 import com.kt.apps.core.utils.leanback.findCurrentSelectedPosition
 import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
+import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.extensions.FragmentAddExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
-import com.kt.apps.media.xemtv.ui.search.TVSearchActivity
+import com.kt.apps.media.xemtv.ui.search.SearchViewModels
 import com.kt.apps.media.xemtv.ui.tv.BaseTabLayoutFragment
+import com.kt.apps.media.xemtv.ui.tv.FragmentTVDashboardNew
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
@@ -62,9 +60,18 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         })
     }
 
-    private val _mainHandler by lazy {
-        Handler(Looper.getMainLooper())
+    private val searchViewModels by lazy {
+        ViewModelProvider(requireActivity(), viewModelFactory)[SearchViewModels::class.java]
     }
+    private val tvChannelViewModel by lazy {
+        ViewModelProvider(requireActivity(), viewModelFactory)[TVChannelViewModel::class.java]
+    }
+    val disableFocusSearch: Boolean
+        get() = if (mMainFragment is FragmentTVDashboardNew) {
+            (mMainFragment as FragmentTVDashboardNew).isProgressShowing()
+        } else {
+            false
+        }
 
     private val childFocusSearchListener by lazy {
         object : BrowseFrameLayout.OnFocusSearchListener {
@@ -88,12 +95,6 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                     && focused is TabLayout.TabView
                     && direction == View.FOCUS_UP
                 ) {
-                    startActivity(
-                        Intent(
-                            requireContext(),
-                            TVSearchActivity::class.java
-                        )
-                    )
                     return focused
                 }
 
@@ -102,25 +103,25 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                     && mMainFragment is BaseTabLayoutFragment
                 ) {
                     (mMainFragment as BaseTabLayoutFragment).apply {
-                        return this.tabLayout.getTabAt(this.currentPage)?.view
+                        return this.tabLayout?.getTabAt(this.currentPage)?.view
                     }
                 } else if (mMainFragment is BaseTabLayoutFragment
                     && focused is TabLayout.TabView
                     && direction == View.FOCUS_LEFT
                 ) {
-                    val tabCount = (mMainFragment as BaseTabLayoutFragment).tabLayout.tabCount
-                    val tabFocused = (mMainFragment as BaseTabLayoutFragment).tabLayout
+                    val tabCount = (mMainFragment as BaseTabLayoutFragment).tabLayout?.tabCount ?: 0
+                    val tabFocused = (mMainFragment as BaseTabLayoutFragment).tabLayout!!
                         .findCurrentFocusedPosition()
                     if (tabFocused > 0) {
-                        return (mMainFragment as BaseTabLayoutFragment).tabLayout
+                        return (mMainFragment as BaseTabLayoutFragment).tabLayout!!
                             .getTabAt((tabFocused - 1) % tabCount)!!.view
                     }
                 } else if (mMainFragment is BaseTabLayoutFragment
                     && focused is TabLayout.TabView
                     && direction == View.FOCUS_RIGHT
                 ) {
-                    val tabCount = (mMainFragment as BaseTabLayoutFragment).tabLayout.tabCount
-                    val tabFocused = (mMainFragment as BaseTabLayoutFragment).tabLayout
+                    val tabCount = (mMainFragment as BaseTabLayoutFragment).tabLayout!!.tabCount
+                    val tabFocused = (mMainFragment as BaseTabLayoutFragment).tabLayout!!
                         .findCurrentFocusedPosition()
                     if (tabFocused == tabCount - 1) {
                         return focused
@@ -161,28 +162,6 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         return super.onCreateView(inflater, container, savedInstanceState)
     }
 
-    private val displayVersionName: String
-        get() {
-            return StringBuilder().append(getString(R.string.app_name))
-                .append(
-                    if (BuildConfig.isBeta) {
-                        "_BETA"
-                    } else {
-                        ""
-                    }
-                )
-                .append(".")
-                .append(BuildConfig.VERSION_NAME)
-                .append(
-                    if (BuildConfig.DEBUG) {
-                        "-" + BuildConfig.BUILD_TYPE
-                    } else {
-                        ""
-                    }
-                )
-                .toString()
-        }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initAction()
@@ -199,49 +178,31 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
     }
 
     private fun initAction() {
+        var lastSelectedItem = -1
         navDrawerView.onNavDrawerItemSelected = object : INavDrawerItemSelected {
             override fun onSelected(position: Int, itemSelected: Int) {
-
-                when (itemSelected) {
-                    com.kt.apps.media.xemtv.R.id.search -> {
-                        navDrawerView.forceCloseNav()
-                        _mainHandler.removeCallbacksAndMessages(navDrawerView)
-                        val message = Message.obtain(_mainHandler) {
-                            startActivity(
-                                Intent(
-                                    requireContext(),
-                                    TVSearchActivity::class.java
-                                )
-                            )
-                        }
-                        message.obj = navDrawerView
-                        _mainHandler.sendMessageDelayed(message, NavDrawerView.DEFAULT_DURATION)
+                if (position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_SEARCH)) {
+                    if (lastSelectedItem != position) {
+                        searchViewModels.queryDefaultSearch()
                     }
+                } else {
+                    searchViewModels.clearLastSelectedItem()
+                }
 
-                    R.id.info -> {
-                        navDrawerView.forceCloseNav()
-                        _mainHandler.removeCallbacksAndMessages(navDrawerView)
-                        val message = Message.obtain(_mainHandler) {
-                            startActivity(
-                                Intent(
-                                    requireContext(),
-                                    AppUpdateActivity::class.java
-                                )
-                            )
-                        }
-                        message.obj = navDrawerView
-                        _mainHandler.sendMessageDelayed(message, NavDrawerView.DEFAULT_DURATION)
-                    }
-
-                    else -> {
-                        onRowSelected(position)
+                if (position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_TV)
+                    || position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_RADIO)
+                ) {
+                    if (lastSelectedItem != position) {
+                        tvChannelViewModel.cancelCurrentGetStreamLinkTask()
+                        tvChannelViewModel.clearCurrentPlayingChannelState()
                     }
                 }
+                onRowSelected(position)
+                lastSelectedItem = position
             }
         }
 
         Logger.d(this, message = "initAction")
-        requireView().findViewById<TextView>(R.id.app_version).text = displayVersionName
         activity?.intent?.data?.let {
             selectPageRowByUri(it)
         }
@@ -263,6 +224,9 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
             rowsAdapter.add(pageRow)
         }
         startEntranceTransition()
+        Handler(Looper.getMainLooper()).postDelayed({
+            navDrawerView.setCloseState()
+        }, 200)
     }
 
     fun selectPageRowByUri(uri: Uri) {
@@ -298,7 +262,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
             if (mMainFragment is BaseTabLayoutFragment) {
                 (mMainFragment as BaseTabLayoutFragment)
                     .requestFocusChildContent()
-                    .requestFocus()
+                    ?.requestFocus()
                 navDrawerView.setEnableSelectedItem(selectedPosition, true)
             }
         }
@@ -311,6 +275,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 ContextCompat.getDrawable(requireContext(), R.drawable.tv_bg)
             }
         }
+        searchViewModels.queryDefaultSearch()
     }
     override fun onDestroyView() {
         firstInit = true
@@ -331,6 +296,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
 
     override fun onPause() {
         super.onPause()
+        searchViewModels.clearLastSelectedItem()
 //        navDrawerView.setItemSelected(selectedPosition, true)
     }
 
@@ -396,16 +362,22 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                         return
                     }
                 }
+                if (this is FragmentTVDashboardNew) {
+                    if (this.isProgressShowing()) {
+                        this.dismissProgressAndCancelCurrentTask()
+                        return
+                    }
+                }
                 if (isShowingHeaders) {
                     finishActivityIfNeeded()
                 } else {
-                    val currentTabFocused = this.tabLayout.findCurrentFocusedView()
+                    val currentTabFocused = this.tabLayout?.findCurrentFocusedView()
                     if (currentTabFocused == null) {
-                        val currentTabSelected = this.tabLayout.findCurrentSelectedPosition()
+                        val currentTabSelected = this.tabLayout?.findCurrentSelectedPosition() ?: -1
                         if (currentTabSelected >= 0) {
-                            this.tabLayout.getTabAt(currentTabSelected)?.view?.requestFocus()
+                            this.tabLayout!!.getTabAt(currentTabSelected)?.view?.requestFocus()
                         } else {
-                            this.tabLayout.getTabAt(0)?.view?.requestFocus()
+                            navDrawerView.openNav()
                         }
                     } else {
                         navDrawerView.requestFocus()
@@ -438,26 +410,32 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         val defaultPages by lazy {
             if (BuildConfig.isBeta) {
                 mapOf(
+                    DashboardPageRowFactory.ROW_SEARCH to "Tìm kiếm",
                     DashboardPageRowFactory.ROW_TV to "Truyền hình",
                     DashboardPageRowFactory.ROW_RADIO to "Phát thanh",
                     DashboardPageRowFactory.ROW_FOOTBALL to "Bóng đá",
                     DashboardPageRowFactory.ROW_IPTV to "IPTV",
+                    DashboardPageRowFactory.ROW_INFO to "Thông tin"
                 )
             } else {
                 mapOf(
+                    DashboardPageRowFactory.ROW_SEARCH to "Tìm kiếm",
                     DashboardPageRowFactory.ROW_TV to "Truyền hình",
                     DashboardPageRowFactory.ROW_RADIO to "Phát thanh",
                     DashboardPageRowFactory.ROW_IPTV to "IPTV",
+                    DashboardPageRowFactory.ROW_INFO to "Thông tin"
                 )
             }
         }
         private val defaultPagesIcon by lazy {
             mapOf(
+                DashboardPageRowFactory.ROW_SEARCH to R.drawable.ic_search_24p,
                 DashboardPageRowFactory.ROW_TV to R.drawable.ic_tv,
                 DashboardPageRowFactory.ROW_FOOTBALL to R.drawable.ic_soccer_ball,
                 DashboardPageRowFactory.ROW_RADIO to R.drawable.ic_radio,
                 DashboardPageRowFactory.ROW_ADD_EXTENSION to com.kt.apps.media.xemtv.R.drawable.round_add_circle_outline_24,
-                DashboardPageRowFactory.ROW_IPTV to R.drawable.iptv
+                DashboardPageRowFactory.ROW_IPTV to R.drawable.iptv,
+                DashboardPageRowFactory.ROW_INFO to R.drawable.ic_outline_info_24,
             )
         }
 

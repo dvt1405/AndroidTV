@@ -2,14 +2,9 @@
 
     <style name="Theme.XemTv" parent="@style/Theme.SplashScreen.Common">
         <item name="navMenu">@menu/dashboard_menu</item>
+        <item name="defaultSelectedPosition">1</item>
         <item name="imageCardViewTitleStyle">@style/ImageCardViewStyleTitleDefault</item>
         <item name="android:progressBarStyleLarge">@style/ThemeProgressLarge</item>
-    </style>
-
-    <style name="ImageCardViewStyleTitleDefault" parent="Widget.Leanback.ImageCardView.TitleStyle">
-        <item name="android:ellipsize">marquee</item>
-        <item name="android:marqueeRepeatLimit">3</item>
-        <item name="android:singleLine">true</item>
     </style>
 
     <style name="ImageCardViewStyleTitle" parent="Widget.Leanback.ImageCardViewStyle">

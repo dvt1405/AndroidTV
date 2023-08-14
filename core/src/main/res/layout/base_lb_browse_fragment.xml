@@ -61,7 +61,8 @@
             android:gravity="center_vertical"
             android:orientation="vertical"
             app:childSpacingBetween="10dp"
-            app:navMenu="?navMenu" />
+            app:navMenu="?navMenu"
+            app:defaultSelectedPosition="?defaultSelectedPosition"/>
 
         <TextView
             android:id="@+id/app_version"
@@ -73,6 +74,7 @@
             android:paddingVertical="16dp"
             tools:text="iMedia.Beta.230613"
             android:gravity="center"
+            android:visibility="gone"
             android:layout_gravity="start|bottom"
             android:textAppearance="@style/TextAppearance.Leanback.DetailsDescriptionBody"
             android:textSize="12sp" />

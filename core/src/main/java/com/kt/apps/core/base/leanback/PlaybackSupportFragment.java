@@ -1165,14 +1165,6 @@ public class PlaybackSupportFragment extends Fragment {
      * @param start True for buffering start, false otherwise.
      */
     protected void onBufferingStateChanged(boolean start) {
-        ProgressBarManager progressBarManager = getProgressBarManager();
-        if (progressBarManager != null) {
-            if (start) {
-                progressBarManager.show();
-            } else {
-                progressBarManager.hide();
-            }
-        }
     }
 
     /**

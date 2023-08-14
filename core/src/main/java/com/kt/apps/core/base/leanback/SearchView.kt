@@ -83,6 +83,7 @@ class SearchView @JvmOverloads constructor(
     private var mSubmitButtonEnabled = false
     private val mExpandedInActionView = false
     var mSuggestionsAdapter: CursorAdapter? = null
+    var showKeyBoardOnDefaultFocus = false
     private val mOnEditorActionListener by lazy {
         TextView.OnEditorActionListener { v, actionId, event ->
             onSubmitQuery()
@@ -96,8 +97,7 @@ class SearchView @JvmOverloads constructor(
         }
         Logger.d(
             this@SearchView,
-            message = "mTextListener.onKey(" + keyCode + "," + event + "), selection: "
-                    + mSearchSrcTextView!!.listSelection
+            message = "mTextListener.onKey($keyCode,$event), selection: "
         )
         if (event.hasNoModifiers()
             && event.action == KeyEvent.ACTION_UP
@@ -136,6 +136,7 @@ class SearchView @JvmOverloads constructor(
             return hint
         }
         set(value) {
+            mSearchSrcTextView?.hint = value
             mQueryHint = value
         }
 
@@ -566,26 +567,24 @@ class SearchView @JvmOverloads constructor(
                     "direction: $direction" +
                     "}"
         )
-//        if (focused == mVoiceButton && direction == View.FOCUS_RIGHT) {
-//            return if (mSearchSrcTextView?.isEmpty == true) {
-//                mSearchSrcTextView
-//            } else {
-//                mCloseButton
-//            }
-//        } else
         if (focused == mSearchSrcTextView
             && (mSearchSrcTextView?.isEmpty == true
                     || mSearchSrcTextView!!.selectionStart == 0)
             && ((direction == View.FOCUS_LEFT) || (direction == View.FOCUS_UP))
         ) {
-            return focused
+            return if (direction == View.FOCUS_UP) {
+                focused
+            } else {
+                super.focusSearch(focused, direction)
+            }
         } else if (focused == mSearchSrcTextView
-            && (mSearchSrcTextView?.isEmpty == true
-                    || mSearchSrcTextView!!.selectionEnd == mSearchSrcTextView?.text?.length?.minus(1)
-                    )
             && direction == View.FOCUS_RIGHT
+            && (mSearchSrcTextView?.isEmpty == true
+                    || mSearchSrcTextView!!.selectionEnd == mSearchSrcTextView?.text?.length)
         ) {
             return mCloseButton
+        } else if (focused == mCloseButton && (direction == View.FOCUS_UP || direction == View.FOCUS_LEFT)) {
+            return mSearchSrcTextView
         }
         return super.focusSearch(focused, direction)
     }
@@ -889,7 +888,9 @@ class SearchView @JvmOverloads constructor(
         override fun onWindowFocusChanged(hasWindowFocus: Boolean) {
             super.onWindowFocusChanged(hasWindowFocus)
             Logger.d(this@SearchAutoComplete, message = "onWindowFocusChanged")
-            if (hasWindowFocus && mSearchView!!.hasFocus() && (visibility == View.VISIBLE)) {
+            if (hasWindowFocus && mSearchView!!.hasFocus() && (visibility == View.VISIBLE)
+                && mSearchView!!.showKeyBoardOnDefaultFocus
+            ) {
                 // Since InputMethodManager#onPostWindowFocus() will be called after this callback,
                 // it is a bit too early to call InputMethodManager#showSoftInput() here. We still
                 // need to wait until the system calls back onCreateInputConnection() to call

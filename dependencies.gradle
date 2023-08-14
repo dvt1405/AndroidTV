@@ -1,4 +1,5 @@
 ext {
+    firebaseBomVersion = '32.1.1'
     appDependencies = [
             coreKt            : 'androidx.core:core-ktx:1.10.1',
             appCompat         : 'androidx.appcompat:appcompat:1.6.1',
@@ -74,7 +75,7 @@ ext {
             database    : 'com.google.firebase:firebase-database-ktx',
             dynamicLinks: 'com.google.firebase:firebase-dynamic-links-ktx',
             crashlytics : 'com.google.firebase:firebase-crashlytics-ktx',
-            remoteConfig: 'com.google.firebase:firebase-config-ktx:21.0.2',
+            remoteConfig: 'com.google.firebase:firebase-config-ktx',
             messaging   : 'com.google.firebase:firebase-messaging-ktx:23.1.0'
     ]
 

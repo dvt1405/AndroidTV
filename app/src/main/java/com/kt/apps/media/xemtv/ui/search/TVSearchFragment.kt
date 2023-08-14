@@ -4,6 +4,7 @@ import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
+import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.KeyEvent
@@ -13,16 +14,19 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.AutoCompleteTextView
 import android.widget.ImageView
+import android.widget.ProgressBar
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
 import com.kt.apps.core.R
 import com.kt.apps.core.base.BaseRowSupportFragment
+import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.IKeyCodeHandler
 import com.kt.apps.core.base.leanback.ArrayObjectAdapter
 import com.kt.apps.core.base.leanback.BrowseFrameLayout
 import com.kt.apps.core.base.leanback.BrowseFrameLayout.OnChildFocusListener
+import com.kt.apps.core.base.leanback.BrowseSupportFragment
 import com.kt.apps.core.base.leanback.HeaderItem
 import com.kt.apps.core.base.leanback.ListRow
 import com.kt.apps.core.base.leanback.ListRowPresenter
@@ -33,6 +37,8 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
+import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.visible
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
 import com.kt.apps.media.xemtv.presenter.SearchPresenter
@@ -60,10 +66,41 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
     private var _rootView: BrowseFrameLayout? = null
     private var _btnClose: ImageView? = null
     private var _btnVoice: ImageView? = null
+    private var _loadingIcon: ProgressBar? = null
+    private var _emptySearchIcon: ImageView? = null
     private var autoCompleteView: SearchView.SearchAutoComplete? = null
 
     override fun getLayoutResourceId(): Int {
         return R.layout.base_lb_search_fragment
+    }
+
+    private var mContainerListAlignTop: Int = 35.dpToPx()
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        context ?: return
+        val ta = requireContext().obtainStyledAttributes(
+            com.kt.apps.resources.R.style.Theme_BaseLeanBack_SearchScreen,
+            androidx.leanback.R.styleable.LeanbackTheme
+        )
+        mContainerListAlignTop = ta.getDimension(
+            androidx.leanback.R.styleable.LeanbackTheme_browseRowsMarginTop,
+            requireContext().resources.getDimensionPixelSize(
+                androidx.leanback.R.dimen.lb_browse_rows_margin_top
+            ).toFloat()
+        ).toInt()
+        ta.recycle()
+    }
+
+    override fun getMainFragmentAdapter(): BrowseSupportFragment.MainFragmentAdapter<*> {
+        if (mMainFragmentAdapter == null) {
+            mMainFragmentAdapter = object : MainFragmentAdapter(this) {
+                override fun setAlignment(windowAlignOffsetFromTop: Int) {
+                    super.setAlignment(mContainerListAlignTop)
+                }
+            }
+        }
+
+        return mMainFragmentAdapter
     }
 
     override fun initView(rootView: View) {
@@ -71,10 +108,15 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         _searchView = rootView.findViewById(R.id.search_view)
         _btnVoice = rootView.findViewById(androidx.appcompat.R.id.search_voice_btn)
         _btnClose = rootView.findViewById(androidx.appcompat.R.id.search_close_btn)
+        _emptySearchIcon = rootView.findViewById(R.id.ic_empty_search)
+        _loadingIcon = rootView.findViewById(R.id.ic_loading)
         autoCompleteView = _searchView?.searchEdtAutoComplete
         _searchFilter = arguments?.getString(EXTRA_QUERY_FILTER)
         _queryHint = arguments?.getString(EXTRA_QUERY_HINT).takeIf {
             !it.isNullOrBlank()
+        }
+        viewModel.lastSearchQuery?.let {
+            autoCompleteView?.setText(it)
         }
 
         adapter = mRowsAdapter
@@ -105,7 +147,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
             })
             arguments?.getString(EXTRA_QUERY_KEY)?.let {
-                this.setQuery(it, false)
+                _searchView?.showKeyBoardOnDefaultFocus = false
+                if (it.isNotEmpty()) {
+                    _btnClose?.requestFocus()
+                }
+                this.setQuery(it, true)
             }
 
             setQueryHint(this, _queryHint)
@@ -173,8 +219,10 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                         _searchView?.searchEdtAutoComplete?.requestFocus()
                         return@setOnDispatchKeyListener true
                     } else if (focused == _searchView?.searchEdtAutoComplete) {
-                        activity?.finish()
-                        return@setOnDispatchKeyListener true
+                        if (activity is TVSearchActivity) {
+                            finishActivityIfNeeded()
+                            return@setOnDispatchKeyListener true
+                        }
                     }
                     return@setOnDispatchKeyListener false
                 }
@@ -212,6 +260,10 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                     return@OnFocusSearchListener _btnClose
                 } else if (focused == verticalGridView && direction == View.FOCUS_UP) {
                     return@OnFocusSearchListener _btnClose
+                } else if (direction == View.FOCUS_LEFT) {
+                    if (verticalGridView.selectedSubPosition == 0){
+                        return@OnFocusSearchListener null
+                    }
                 }
                 return@OnFocusSearchListener focused
             }
@@ -242,8 +294,21 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
     private fun handleSearchResult(autoCompleteView: SearchView.SearchAutoComplete?): (t: DataState<Map<String, List<SearchForText.SearchResult>>>) -> Unit =
         {
+            if (it is DataState.Loading && !autoCompleteView?.text?.trim().isNullOrBlank()) {
+                _loadingIcon?.visible()
+                _loadingIcon?.isIndeterminate = true
+                _emptySearchIcon?.gone()
+            } else {
+                _loadingIcon?.isIndeterminate = false
+                _loadingIcon?.gone()
+            }
             when (it) {
                 is DataState.Success -> {
+                    if (it.data.isEmpty()) {
+                        _emptySearchIcon?.visible()
+                    } else {
+                        _emptySearchIcon?.gone()
+                    }
                     verticalGridView?.visible()
                     val channelWithCategory = it.data
                     mRowsAdapter.clear()
@@ -256,7 +321,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                         } catch (e: Exception) {
                             HeaderItem(group)
                         }
-                        headerItem.contentDescription = SearchPresenter.getHighlightTitle(
+                        headerItem.contentDescription = SearchForText.getHighlightTitle(
                             headerItem.name,
                             childPresenter.filterKeyWords
                         )
@@ -276,6 +341,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         }
 
     private fun handleSelectedItem(): (t: DataState<Any>) -> Unit = {
+        if (it is DataState.Loading) {
+            progressManager.show()
+        } else {
+            progressManager.hide()
+        }
         when (it) {
             is DataState.Success -> {
                 when (val data = it.data) {
@@ -322,20 +392,20 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString(EXTRA_QUERY_FILTER, _searchFilter)
-        outState.putString(EXTRA_QUERY_HINT, _queryHint)
+//        outState.putString(EXTRA_QUERY_FILTER, _searchFilter)
+//        outState.putString(EXTRA_QUERY_HINT, _queryHint)
     }
 
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
-        if (savedInstanceState != null) {
-            savedInstanceState.getString(EXTRA_QUERY_FILTER)?.let {
-                _searchFilter = it
-            }
-            savedInstanceState.getString(EXTRA_QUERY_HINT).takeIf {
-                !it.isNullOrBlank()
-            }
-        }
+//        if (savedInstanceState != null) {
+//            savedInstanceState.getString(EXTRA_QUERY_FILTER)?.let {
+//                _searchFilter = it
+//            }
+//            savedInstanceState.getString(EXTRA_QUERY_HINT).takeIf {
+//                !it.isNullOrBlank()
+//            }
+//        }
     }
 
     override fun onDpadCenter() {
@@ -400,11 +470,27 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         Logger.d(this, message = "onBackPressed view focused $viewFocus")
         _searchView?.searchEdtAutoComplete?.let {
             if (_searchView?.isFocused == true) {
-                activity?.finish()
+                finishActivityIfNeeded()
             } else {
                 it.requestFocus(View.FOCUS_UP)
             }
-        } ?: activity?.finish()
+        } ?: finishActivityIfNeeded()
+    }
+
+    private fun finishActivityIfNeeded() {
+        if (activity is TVSearchActivity) {
+            if (CoreApp.activityCount == 1) {
+                startActivity(Intent().apply {
+                    this.data = Uri.parse("xemtv://tv/dashboard/")
+                    this.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                })
+                activity?.finish()
+            } else {
+                activity?.finish()
+            }
+        } else {
+            activity?.finish()
+        }
     }
 
     fun onSearchFromDeeplink(query: String?, filter: String?, queryHint: String?) {
@@ -415,7 +501,23 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         _searchFilter = filter
         _queryHint = queryHint
         setQueryHint(_searchView, queryHint)
-        _searchView?.searchEdtAutoComplete?.setText(query)
+        _searchView?.setQuery(query, true)
+        query?.takeIf {
+            it.isNotEmpty() && it.isNotBlank()
+        }?.let {
+            _btnClose?.requestFocus()
+            _searchView?.showKeyBoardOnDefaultFocus = false
+        }
+    }
+
+    override fun onDestroyView() {
+        _searchView = null
+        _rootView = null
+        _btnClose = null
+        _btnVoice = null
+        _emptySearchIcon = null
+        autoCompleteView = null
+        super.onDestroyView()
     }
 
     companion object {

@@ -10,13 +10,14 @@ plugins {
 android {
     namespace 'com.kt.apps.media.xemtv'
     compileSdk 33
+    def version_name = "23.07.01"
 
     defaultConfig {
         applicationId "com.kt.apps.media.xemtv"
         minSdk 26
         targetSdk 33
-        versionCode 23070501
-        versionName "230701"
+        versionCode 23072701
+        versionName version_name
         setProperty("archivesBaseName", "iMedia.$versionName")
 
     }
@@ -55,6 +56,13 @@ android {
             dimension "version"
             buildConfigField "boolean", "isBeta", "true"
         }
+
+        apkPure {
+            dimension "version"
+            applicationId "com.kt.apps.media.xemtv.beta"
+            versionName "${version_name}.B"
+            buildConfigField "boolean", "isBeta", "true"
+        }
     }
 
 }
@@ -79,7 +87,7 @@ dependencies {
     implementation retrofitDependencies.values()
     implementation okhttpDependencies.values()
     kapt complier.values()
-    implementation platform('com.google.firebase:firebase-bom:30.2.0')
+    implementation platform("com.google.firebase:firebase-bom:$firebaseBomVersion")
     implementation firebaseDependencies.values()
     implementation externalDependencies.values()
     implementation authen.values()

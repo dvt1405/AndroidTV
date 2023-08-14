@@ -24,6 +24,8 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.lang.ref.WeakReference
+import java.net.UnknownHostException
+import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 
 @CoreScope
@@ -85,7 +87,13 @@ open class BaseExtensionsViewModel @Inject constructor(
         Logger.e(this, message = "id = $id")
         _extensionsChannelListCache[id] = WeakReference(channelList)
     }
+    private var _currentLiveDataConfig: LiveData<DataState<List<ExtensionsChannel>>>? = null
+    val currentLiveDataConfig: LiveData<DataState<List<ExtensionsChannel>>>?
+        get() = _currentLiveDataConfig
 
+    fun setCurrentDisplayData(currentDisplayData: LiveData<DataState<List<ExtensionsChannel>>>?) {
+        _currentLiveDataConfig = currentDisplayData
+    }
     fun loadChannelForConfig(configId: String): LiveData<DataState<List<ExtensionsChannel>>> {
         if (_extensionsChannelListCache[configId] != null
             && !_extensionsChannelListCache[configId]!!.get().isNullOrEmpty()
@@ -236,12 +244,19 @@ open class BaseExtensionsViewModel @Inject constructor(
                     }
                 }
                 .subscribe({
-                    Logger.e(this@BaseExtensionsViewModel, message = "addIPTVSource Success: $extensionsConfig")
+                    Logger.d(this@BaseExtensionsViewModel, message = "addIPTVSource Success: $extensionsConfig")
                 }, {
+                    Logger.e(this@BaseExtensionsViewModel, message = "addIPTVSource Error: $extensionsConfig")
                     if (pendingIptvSource?.sourceUrl != extensionsConfig.sourceUrl) {
                         return@subscribe
                     }
-                    _addExtensionConfigLiveData.postValue(DataState.Error(it))
+                    if (it is TimeoutException) {
+                        _addExtensionConfigLiveData.postValue(DataState.Error(Throwable("Vui lòng kiểm tra kết nối internet hoặc đường dẫn!")))
+                    } else if (it is UnknownHostException || it.message?.contains("timeout") == true) {
+                        _addExtensionConfigLiveData.postValue(DataState.Error(Throwable("Vui lòng kiểm tra kết nối internet hoặc đường dẫn!")))
+                    } else {
+                        _addExtensionConfigLiveData.postValue(DataState.Error(Throwable("Định dạng nguồn kênh chưa được hỗ trợ!")))
+                    }
                     Logger.e(this@BaseExtensionsViewModel, exception = it)
                 })
         )

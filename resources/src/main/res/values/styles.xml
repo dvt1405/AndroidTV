@@ -13,6 +13,7 @@
         <item name="sweet_alert_content_text_color">@color/white</item>
         <item name="sweet_alert_btn_confirm_default_focus">true</item>
         <item name="sweet_alert_bg_drawable">@null</item>
+        <item name="imageCardViewTitleStyle">@style/ImageCardViewStyleTitleDefault</item>
     </style>
 
     <style name="ThemeCompat" parent="Theme.AppCompat">
@@ -44,6 +45,33 @@
         <item name="android:stretchMode">columnWidth</item>
         <item name="android:paddingTop">21dp</item>
         <item name="android:numColumns">auto_fit</item>
+    </style>
+
+    <style name="BaseGridViewStyle.NoPadding" parent="BaseGridViewStyle">
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingStart">0dp</item>
+        <item name="android:paddingEnd">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="browseRowsMarginTop">0dp</item>
+        <item name="android:gravity">start</item>
+    </style>
+
+    <style name="Theme.BaseLeanBack.SearchScreen" parent="Theme.BaseLeanBack">
+        <item name="browsePaddingStart">40dp</item>
+        <item name="browseRowsMarginTop">35dp</item>
+    </style>
+
+    <!--    Copy from leanback-->
+    <style name="BaseRowHorizontalGridView">
+        <item name="android:focusable">true</item>
+        <item name="android:focusableInTouchMode">true</item>
+        <item name="android:paddingStart">?attr/browsePaddingStart</item>
+        <item name="android:paddingEnd">?attr/browsePaddingEnd</item>
+        <item name="android:paddingBottom">@dimen/lb_browse_item_vertical_spacing</item>
+        <item name="android:paddingTop">@dimen/lb_browse_item_vertical_spacing</item>
+        <item name="android:horizontalSpacing">@dimen/lb_browse_item_horizontal_spacing</item>
+        <item name="android:verticalSpacing">@dimen/lb_browse_item_vertical_spacing</item>
+        <item name="focusOutFront">true</item>
     </style>
 
     <style name="ThemeProgressLarge">
@@ -96,6 +124,22 @@
         <item name="android:textAppearance">@style/TextAppearance.AppCompat.Widget.Button.Colored
         </item>
     </style>
+
+    <style name="ImageCardViewStyleTitleDefault" parent="Widget.Leanback.ImageCardView.TitleStyle">
+        <item name="android:ellipsize">marquee</item>
+        <item name="android:marqueeRepeatLimit">3</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <style name="TextViewTitleVideoInfo">
+        <item name="android:textSize">12sp</item>
+        <item name="android:layout_marginTop">16dp</item>
+    </style>
+
+    <style name="TextViewDescriptionVideoInfo">
+        <item name="android:textSize">16sp</item>
+    </style>
+
 
 
 </resources>

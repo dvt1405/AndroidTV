@@ -31,13 +31,14 @@ class GetChannelLinkStreamById @Inject constructor(
                 getStreamLinkStreamFrom(chanel)
                     .retry(2)
             } catch (e: NoSuchElementException) {
-                Observable.error(Throwable("Không tìm thấy kênh phù hợp!"))
+                Observable.error(ChannelNotFoundThrowable("Không tìm thấy kênh phù hợp!"))
             } catch (e: Exception) {
                 Logger.e(this, exception = e)
                 Observable.error(e)
             }
         }
     }
+    class ChannelNotFoundThrowable(override val message: String) : Throwable(message)
 
     operator fun invoke(channelId: String): Observable<TVChannelLinkStream> = execute(
         mapOf(

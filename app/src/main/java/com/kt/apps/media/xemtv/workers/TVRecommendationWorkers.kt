@@ -94,12 +94,11 @@ class TVRecommendationWorkers(
                     .setTitle(tvChannelEntity.tvChannelName)
                     .setThumbnailUri(tvChannelEntity.logoChannel)
                     .setSearchable(true)
-                    .setDurationMillis(3 * 60 * 1000)
+                    .setPosterArtUri(tvChannelEntity.logoChannel)
+                    .setLogoUri(tvChannelEntity.logoChannel)
                     .setReleaseDate(Calendar.getInstance(Locale.TAIWAN).time)
-                    .setSearchable(true)
                     .setType(TvContractCompat.WatchNextPrograms.TYPE_CHANNEL)
                     .setWatchNextType(TvContractCompat.WatchNextPrograms.WATCH_NEXT_TYPE_CONTINUE)
-                    .setLogoUri(tvChannelEntity.logoChannel)
                     .build()
                 Logger.d(this@TVRecommendationWorkers, "WatchNextChannel", "$continueProgram")
 
@@ -163,9 +162,9 @@ class TVRecommendationWorkers(
                     }
 
                     val displayName: String = if (isRadio) {
-                        "Radio"
+                        RADIO_PREVIEW_CHANNEL_DISPLAY_NAME
                     } else {
-                        "XemTV"
+                        TV_PREVIEW_CHANNEL_DISPLAY_NAME
                     }
 
                     val channelUri = if (isRadio) {
@@ -319,7 +318,8 @@ class TVRecommendationWorkers(
         private const val DEBUG = false
         const val EXTRA_TYPE = "extra:type"
         const val EXTRA_TV_PROGRAM_ID = "extra:program_id"
-
+        private const val TV_PREVIEW_CHANNEL_DISPLAY_NAME = "Truyền hình"
+        private const val RADIO_PREVIEW_CHANNEL_DISPLAY_NAME = "Phát thanh"
         @SuppressLint("RestrictedApi")
         fun getAllChannels(context: Context): List<PreviewChannel> {
             val cursor: Cursor? = context.contentResolver

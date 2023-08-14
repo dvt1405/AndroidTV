@@ -12,6 +12,7 @@ public final class ProgressBarManager {
     private static final long DEFAULT_PROGRESS_BAR_DELAY = 1000;
 
     private long mInitialDelay = DEFAULT_PROGRESS_BAR_DELAY;
+    private OnProgressShowHideListener onProgressShowHideListener;
     ViewGroup rootView;
     View mProgressBarView;
     private Handler mHandler = new Handler();
@@ -60,7 +61,14 @@ public final class ProgressBarManager {
         if (mEnableProgressBar) {
             mIsShowing = true;
             mHandler.postDelayed(runnable, mInitialDelay);
+            if (onProgressShowHideListener != null) {
+                onProgressShowHideListener.onShowOrHide(true);
+            }
         }
+    }
+
+    public interface OnProgressShowHideListener {
+        void onShowOrHide(boolean show);
     }
 
     /**
@@ -76,6 +84,9 @@ public final class ProgressBarManager {
         }
 
         mHandler.removeCallbacks(runnable);
+        if (onProgressShowHideListener != null) {
+            onProgressShowHideListener.onShowOrHide(false);
+        }
     }
 
     public boolean isShowing() {
@@ -108,5 +119,9 @@ public final class ProgressBarManager {
 
     public void enableProgressBar() {
         mEnableProgressBar = true;
+    }
+
+    public void setOnProgressShowHideListener(OnProgressShowHideListener onProgressShowHideListener) {
+        this.onProgressShowHideListener = onProgressShowHideListener;
     }
 }

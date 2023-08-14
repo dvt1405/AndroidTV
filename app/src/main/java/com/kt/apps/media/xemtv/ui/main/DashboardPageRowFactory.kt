@@ -1,8 +1,11 @@
 package com.kt.apps.media.xemtv.ui.main
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.leanback.app.BackgroundManager
+import com.kt.apps.autoupdate.ui.FragmentInfo
 import com.kt.apps.core.base.leanback.Row
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.R
@@ -11,6 +14,7 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
 import com.kt.apps.media.xemtv.ui.football.FootballFragment
 import com.kt.apps.media.xemtv.ui.playback.PlaybackActivity
+import com.kt.apps.media.xemtv.ui.search.TVSearchFragment
 import com.kt.apps.media.xemtv.ui.tv.FragmentTVDashboardNew
 
 typealias OnFragmentChange = (pageID: Long) -> Unit
@@ -25,7 +29,6 @@ class DashboardPageRowFactory(
         onFragmentChangeListener?.invoke(rowId)
         return when (rowId) {
             ROW_TV -> {
-                backgroundManager.drawable = ContextCompat.getDrawable(CoreApp.getInstance(), R.drawable.bg_football)
                 backgroundManager.drawable = ContextCompat.getDrawable(CoreApp.getInstance(), R.drawable.tv_bg)
                 FragmentTVDashboardNew.newInstance(PlaybackActivity.Type.TV)
             }
@@ -45,8 +48,19 @@ class DashboardPageRowFactory(
                 FragmentDashboardExtensions()
             }
 
+            ROW_SEARCH -> {
+                backgroundManager.drawable = ColorDrawable(Color.BLACK)
+                TVSearchFragment()
+            }
+
+            ROW_INFO -> {
+                backgroundManager.drawable = ContextCompat.getDrawable(CoreApp.getInstance(), R.drawable.tv_bg)
+                FragmentInfo()
+            }
+
             ROW_ADD_EXTENSION -> {
-                return FragmentDashboardExtensions()
+                backgroundManager.drawable = ContextCompat.getDrawable(CoreApp.getInstance(), R.drawable.tv_bg)
+                FragmentDashboardExtensions()
             }
 
             else -> {
@@ -66,5 +80,7 @@ class DashboardPageRowFactory(
         const val ROW_RADIO = 10997L
         const val ROW_ADD_EXTENSION = 10996L
         const val ROW_IPTV = 10995L
+        const val ROW_SEARCH = 10994L
+        const val ROW_INFO = 10993L
     }
 }

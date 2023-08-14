@@ -127,3 +127,10 @@ fun String.replaceVNCharsToLatinChars() = this.replace(Regex(Constants.REGEX_VN_
     .replace(Regex(Constants.REGEX_VN_I), "i")
     .replace(Regex(Constants.REGEX_VN_O), "o")
     .replace(Regex(Constants.REGEX_VN_U), "u")
+
+fun String.getLatinWords() = this.lowercase()
+    .replaceVNCharsToLatinChars()
+    .split(" ")
+    .filter {
+        it.isNotBlank() && it.isNotEmpty()
+    }

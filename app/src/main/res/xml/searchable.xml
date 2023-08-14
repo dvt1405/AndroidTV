@@ -12,7 +12,7 @@
     android:searchMode="showSearchLabelAsBadge"
     android:voiceLanguageModel="free_form"
     android:voicePromptText="Tìm kiếm"
-    android:searchSuggestAuthority="com.kt.apps.media.xemtv"
+    android:searchSuggestAuthority="${applicationId}"
     android:searchSuggestPath="search"
     android:searchSuggestSelection="word MATCH ?"
     android:searchSuggestIntentAction="android.intent.action.VIEW"

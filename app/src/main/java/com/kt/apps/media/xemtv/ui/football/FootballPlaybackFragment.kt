@@ -94,10 +94,9 @@ class FootballPlaybackFragment : BasePlaybackFragment() {
             linkStreams = linkStreams,
             playItemMetaData = matchWithStreamLink.match.getMediaItemData(),
             headers = null,
-            listener = null,
             isLive = matchWithStreamLink.match.isLiveMatch,
             isHls = true,
-            hideGridView = true
+            forceShowVideoInfoContainer = true
         )
     }
 

@@ -1,12 +1,22 @@
 package com.kt.apps.core.storage.local
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.database.AbstractWindowedCursor
+import android.database.Cursor
+import android.database.MatrixCursor
+import android.os.Build
+import android.os.CancellationSignal
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
+import androidx.room.util.CursorUtil
+import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteQuery
+import androidx.sqlite.db.SupportSQLiteStatement
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -16,6 +26,8 @@ import com.kt.apps.core.storage.local.databaseviews.ExtensionChannelDatabaseView
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelFts4
 import com.kt.apps.core.storage.local.dto.*
+import com.kt.apps.core.utils.removeAllSpecialChars
+import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 
 @TypeConverters(
     RoomDBTypeConverters::class
@@ -34,9 +46,10 @@ import com.kt.apps.core.storage.local.dto.*
         TVScheduler.Programme::class,
         TVScheduler::class,
         ExtensionsChannelFts4::class,
-        HistoryMediaItemDTO::class
+        HistoryMediaItemDTO::class,
+        TVChannelFts4::class
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
     views = [
         ExtensionChannelDatabaseViews::class,
@@ -161,13 +174,152 @@ abstract class RoomDataBase : RoomDatabase() {
                 override fun migrate(database: SupportSQLiteDatabase) {
                     database.execSQL("CREATE VIEW `ExtensionsChannelDBWithCategoryViews` AS SELECT configSourceUrl, name as categoryName, tvChannelName, logoChannel, tvStreamLink, sourceFrom FROM ExtensionChannelCategory AS Category INNER JOIN ExtensionChannelDatabaseViews ON Category.name = tvGroup");
                     database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS `ExtensionsChannelFts4` USING FTS4(tokenize=unicode61, content=`ExtensionsChannel`)")
-                    database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ExtensionsChannelFts4_BEFORE_UPDATE BEFORE UPDATE ON `ExtensionsChannel` BEGIN DELETE FROM `Fts4Test` WHERE `docid`=OLD.`rowid`; END")
-                    database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ExtensionsChannelFts4_BEFORE_DELETE BEFORE DELETE ON `ExtensionsChannel` BEGIN DELETE FROM `Fts4Test` WHERE `docid`=OLD.`rowid`; END")
-                    database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ExtensionsChannelFts4_AFTER_UPDATE AFTER UPDATE ON `ExtensionsChannel` BEGIN INSERT INTO `Fts4Test`(`docid`) VALUES (NEW.`rowid`); END")
-                    database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ExtensionsChannelFts4_AFTER_INSERT AFTER INSERT ON `ExtensionsChannel` BEGIN INSERT INTO `Fts4Test`(`docid`) VALUES (NEW.`rowid`); END")
+                    database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ExtensionsChannelFts4_BEFORE_UPDATE BEFORE UPDATE ON `ExtensionsChannel` BEGIN DELETE FROM `ExtensionsChannelFts4` WHERE `docid`=OLD.`rowid`; END")
+                    database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ExtensionsChannelFts4_BEFORE_DELETE BEFORE DELETE ON `ExtensionsChannel` BEGIN DELETE FROM `ExtensionsChannelFts4` WHERE `docid`=OLD.`rowid`; END")
+                    database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ExtensionsChannelFts4_AFTER_UPDATE AFTER UPDATE ON `ExtensionsChannel` BEGIN INSERT INTO `ExtensionsChannelFts4`(`docid`, `tvGroup`, `logoChannel`, `tvChannelName`, `tvStreamLink`, `sourceFrom`, `channelId`, `channelPreviewProviderId`, `isHls`, `catchupSource`, `userAgent`, `referer`, `props`, `extensionSourceId`) VALUES (NEW.`rowid`, NEW.`tvGroup`, NEW.`logoChannel`, NEW.`tvChannelName`, NEW.`tvStreamLink`, NEW.`sourceFrom`, NEW.`channelId`, NEW.`channelPreviewProviderId`, NEW.`isHls`, NEW.`catchupSource`, NEW.`userAgent`, NEW.`referer`, NEW.`props`, NEW.`extensionSourceId`); END")
+                    database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_ExtensionsChannelFts4_AFTER_INSERT AFTER INSERT ON `ExtensionsChannel` BEGIN INSERT INTO `ExtensionsChannelFts4`(`docid`, `tvGroup`, `logoChannel`, `tvChannelName`, `tvStreamLink`, `sourceFrom`, `channelId`, `channelPreviewProviderId`, `isHls`, `catchupSource`, `userAgent`, `referer`, `props`, `extensionSourceId`) VALUES (NEW.`rowid`, NEW.`tvGroup`, NEW.`logoChannel`, NEW.`tvChannelName`, NEW.`tvStreamLink`, NEW.`sourceFrom`, NEW.`channelId`, NEW.`channelPreviewProviderId`, NEW.`isHls`, NEW.`catchupSource`, NEW.`userAgent`, NEW.`referer`, NEW.`props`, NEW.`extensionSourceId`); END")
                     database.execSQL("CREATE TABLE IF NOT EXISTS `HistoryMediaItemDTO` (`itemId` TEXT NOT NULL, `category` TEXT NOT NULL, `displayName` TEXT NOT NULL, `thumb` TEXT NOT NULL, `currentPosition` INTEGER NOT NULL, `contentDuration` INTEGER NOT NULL, `isLiveStreaming` INTEGER NOT NULL, `description` TEXT NOT NULL, `linkPlay` TEXT NOT NULL, `type` TEXT NOT NULL, `lastViewTime` INTEGER NOT NULL, PRIMARY KEY(`itemId`, `linkPlay`))")
                 }
             }
+        }
+
+        private val MIGRATE_11_12 by lazy {
+            object : Migration(11, 12) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("CREATE TABLE IF NOT EXISTS `TVChannelDTO_New` (`tvGroup` TEXT NOT NULL, `logoChannel` TEXT NOT NULL, `tvChannelName` TEXT NOT NULL, `sourceFrom` TEXT NOT NULL, `channelId` TEXT NOT NULL, `searchKey` TEXT NOT NULL, PRIMARY KEY(`channelId`))")
+                    migrateCopyData11to12(database)
+                    database.execSQL("DROP TABLE TVChannelDTO")
+                    database.execSQL("ALTER TABLE TVChannelDTO_New RENAME TO TVChannelDTO")
+
+                    database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS `TVChannelFts4` USING FTS4(`tvGroup` TEXT NOT NULL, `logoChannel` TEXT NOT NULL, `tvChannelName` TEXT NOT NULL, `sourceFrom` TEXT NOT NULL, `channelId` TEXT NOT NULL, `searchKey` TEXT NOT NULL, tokenize=unicode61, content=`TVChannelDTO`)")
+
+                    database.execSQL(
+                        "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_TVChannelFts4_BEFORE_UPDATE " +
+                                "BEFORE UPDATE ON `TVChannelDTO` BEGIN DELETE FROM `TVChannelFts4` " +
+                                "WHERE `docid`=OLD.`rowid`; END"
+                    )
+                    database.execSQL(
+                        "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_TVChannelFts4_BEFORE_DELETE " +
+                                "BEFORE DELETE ON `TVChannelDTO` BEGIN DELETE FROM `TVChannelFts4` " +
+                                "WHERE `docid`=OLD.`rowid`; END"
+                    )
+                    database.execSQL(
+                        "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_TVChannelFts4_AFTER_UPDATE " +
+                                "AFTER UPDATE ON `TVChannelDTO` BEGIN INSERT INTO `TVChannelFts4`(" +
+                                "`docid`, `tvGroup`, `logoChannel`, `tvChannelName`, `sourceFrom`, `channelId`) " +
+                                "VALUES (NEW.`rowid`, NEW.`tvGroup`, NEW.`logoChannel`, NEW.`tvChannelName`, " +
+                                "NEW.`sourceFrom`, NEW.`channelId`); END"
+                    )
+                    database.execSQL(
+                        "CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_TVChannelFts4_AFTER_INSERT " +
+                                "AFTER INSERT ON `TVChannelDTO` BEGIN INSERT INTO `TVChannelFts4`(" +
+                                "`docid`, `tvGroup`, `logoChannel`, `tvChannelName`, `sourceFrom`, `channelId`) " +
+                                "VALUES (NEW.`rowid`, NEW.`tvGroup`, NEW.`logoChannel`, NEW.`tvChannelName`, " +
+                                "NEW.`sourceFrom`, NEW.`channelId`); END"
+                    )
+                }
+            }
+        }
+
+        fun query(
+            db: SupportSQLiteDatabase, sqLiteQuery: SupportSQLiteQuery,
+            maybeCopy: Boolean, signal: CancellationSignal?
+        ): Cursor {
+            val cursor = db.query(sqLiteQuery, signal)
+            if (maybeCopy && cursor is AbstractWindowedCursor) {
+                val rowsInCursor = cursor.count
+                val rowsInWindow: Int = if (cursor.hasWindow()) {
+                    cursor.window.numRows
+                } else {
+                    rowsInCursor
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || rowsInWindow < rowsInCursor) {
+                    return copyAndClose(cursor)
+                }
+            }
+            return cursor
+        }
+        private fun copyAndClose(cursor: Cursor): Cursor {
+            val matrixCursor: MatrixCursor
+            cursor.use { c ->
+                matrixCursor = MatrixCursor(c.columnNames, c.count)
+                while (c.moveToNext()) {
+                    val row = arrayOfNulls<Any>(c.columnCount)
+                    for (i in 0 until c.columnCount) {
+                        when (c.getType(i)) {
+                            Cursor.FIELD_TYPE_NULL -> row[i] = null
+                            Cursor.FIELD_TYPE_INTEGER -> row[i] = c.getLong(i)
+                            Cursor.FIELD_TYPE_FLOAT -> row[i] = c.getDouble(i)
+                            Cursor.FIELD_TYPE_STRING -> row[i] = c.getString(i)
+                            Cursor.FIELD_TYPE_BLOB -> row[i] = c.getBlob(i)
+                            else -> throw IllegalStateException()
+                        }
+                    }
+                    matrixCursor.addRow(row)
+                }
+            }
+            return matrixCursor
+        }
+        @SuppressLint("RestrictedApi")
+        private fun migrateCopyData11to12(sqLiteDatabase: SupportSQLiteDatabase) {
+            sqLiteDatabase.beginTransaction()
+            val tvChannelDTOS = ArrayList<TVChannelDTO>()
+            try {
+                val cursor = query(sqLiteDatabase, SimpleSQLiteQuery("SELECT * FROM TVChannelDTO"),
+                    true,
+                    null)
+                cursor.use { c ->
+                    val indexOfTvGroup = CursorUtil.getColumnIndexOrThrow(c, "tvGroup")
+                    val indexOfLogoChannel = CursorUtil.getColumnIndexOrThrow(c, "logoChannel")
+                    val indexOfTvChannelName = CursorUtil.getColumnIndexOrThrow(c, "tvChannelName")
+                    val indexOfSourceFrom = CursorUtil.getColumnIndexOrThrow(c, "sourceFrom")
+                    val indexOfChannelId = CursorUtil.getColumnIndexOrThrow(c, "channelId")
+                    while (c.moveToNext()) {
+                        val channelId = c.getString(indexOfChannelId)
+                        val tvGroup = c.getString(indexOfTvGroup)
+                        val logoChannel = c.getString(indexOfLogoChannel)
+                        val tvChannelName = c.getString(indexOfTvChannelName)
+                        val tvSourceFrom = c.getString(indexOfSourceFrom)
+                        tvChannelDTOS.add(
+                            TVChannelDTO(
+                                channelId = channelId,
+                                tvGroup = tvGroup,
+                                logoChannel = logoChannel,
+                                tvChannelName = tvChannelName,
+                                sourceFrom = tvSourceFrom,
+                                searchKey = tvChannelName.lowercase()
+                                    .replaceVNCharsToLatinChars()
+                                    .removeAllSpecialChars()
+                            )
+                        )
+                    }
+                    c.moveToPosition(-1)
+                    sqLiteDatabase.setTransactionSuccessful()
+                }
+            } finally {
+                sqLiteDatabase.endTransaction()
+            }
+
+            val insertQuery = "INSERT OR REPLACE INTO `TVChannelDTO_New` (`tvGroup`,`logoChannel`,`tvChannelName`,`sourceFrom`,`channelId`,`searchKey`) VALUES (?,?,?,?,?,?)"
+            sqLiteDatabase.beginTransaction()
+            try {
+                val stmt = sqLiteDatabase.compileStatement(insertQuery)
+                for (item in tvChannelDTOS) {
+                    bind(stmt, item)
+                    stmt.executeInsert()
+                }
+                sqLiteDatabase.setTransactionSuccessful()
+            } finally {
+                sqLiteDatabase.endTransaction()
+            }
+        }
+        fun bind(stmt: SupportSQLiteStatement, value: TVChannelDTO) {
+            stmt.bindString(1, value.tvGroup)
+            stmt.bindString(2, value.logoChannel)
+            stmt.bindString(3, value.tvChannelName)
+            stmt.bindString(4, value.sourceFrom)
+            stmt.bindString(5, value.channelId)
+            stmt.bindString(6, value.searchKey)
         }
 
         @Volatile
@@ -178,7 +330,7 @@ abstract class RoomDataBase : RoomDatabase() {
                     MIGRATE_1_2, MIGRATE_2_3, MIGRATE_3_4,
                     MIGRATE_4_5, MIGRATE_5_6, MIGRATE_6_7,
                     MIGRATE_7_8, MIGRATE_8_9, MIGRATE_9_10,
-                    MIGRATE_10_11
+                    MIGRATE_10_11, MIGRATE_11_12
                 )
                 .build()
                 .also {

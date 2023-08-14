@@ -1,5 +1,6 @@
 package com.kt.apps.media.xemtv
 
+import androidx.core.os.bundleOf
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
@@ -21,6 +22,8 @@ import java.time.Duration
 import javax.inject.Inject
 
 class App : CoreApp() {
+
+    private var logLowMemory = false
 
     private val _coreComponents by lazy {
         DaggerCoreComponents.builder()
@@ -46,6 +49,7 @@ class App : CoreApp() {
             .coreComponents(_coreComponents)
             .build()
     }
+    var startTimeTracker = System.currentTimeMillis()
 
     override val coreComponents: CoreComponents
         get() = _coreComponents
@@ -93,6 +97,25 @@ class App : CoreApp() {
             .appUpdateComponent(_appUpdateComponent)
             .app(this)
             .build()
+    }
+    override fun onLowMemory() {
+        super.onLowMemory()
+        try {
+            if (!logLowMemory) {
+                (applicationInjector() as AppComponents).actionLogger()
+                    .log(
+                        "LowMemory", bundleOf(
+                            "LiveTimeBeforeLowMemory" to "${System.currentTimeMillis() - startTimeTracker}"
+                        )
+                    )
+                logLowMemory = true
+            }
+            clearCacheMemory()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun clearCacheMemory() {
     }
 
     companion object {

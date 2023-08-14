@@ -3,6 +3,7 @@
     <declare-styleable name="NavDrawerView">
         <attr name="navMenu" format="reference" />
         <attr name="childSpacingBetween" format="dimension" />
+        <attr name="defaultSelectedPosition" format="integer" />
     </declare-styleable>
 
     <declare-styleable name="SearchView">

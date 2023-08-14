@@ -7,76 +7,80 @@
 
     </data>
 
-    <androidx.appcompat.widget.LinearLayoutCompat
+    <com.kt.apps.core.base.leanback.BrowseFrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#D9000000"
-        android:gravity="center"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="160dp"
-            android:layout_height="105dp"
-            app:srcCompat="@drawable/app_icon_large" />
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/version_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/common_padding"
-            android:textColor="@color/white"
-            android:textSize="22sp"
-            tools:text="iMedia version 23.06.01" />
+            <androidx.appcompat.widget.AppCompatImageView
+                android:layout_width="160dp"
+                android:layout_height="105dp"
+                app:srcCompat="@drawable/app_icon_large" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_check_update"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_marginVertical="@dimen/common_padding_32dp"
-            android:focusable="true"
-            android:focusedByDefault="true"
-            android:minWidth="200dp"
-            android:nextFocusDown="@id/fb_group_link"
-            android:text="Kiểm tra cập nhật"
-            android:textAllCaps="false"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            android:theme="@style/Theme.MaterialComponents"
-            app:backgroundTint="@color/background_tint_color"
-            app:cornerRadius="50dp"
-            app:icon="@drawable/ic_play_store"
-            app:iconSize="24dp"
-            app:iconTint="@color/white"
-            app:strokeColor="#99FFFFFF"
-            app:strokeWidth="1.5dp" />
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/version_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/common_padding"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                tools:text="iMedia version 23.06.01" />
 
-        <TextView
-            android:id="@+id/fb_group_link"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@color/background_tint_color"
-            android:focusable="true"
-            android:minWidth="200dp"
-            android:nextFocusUp="@id/btn_check_update"
-            android:nextFocusDown="@id/zalo_group_link"
-            android:paddingHorizontal="10dp"
-            android:text="http://fb.com/imediaapp"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_check_update"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_marginVertical="@dimen/common_padding_32dp"
+                android:focusable="true"
+                android:focusedByDefault="true"
+                android:minWidth="200dp"
+                android:nextFocusDown="@id/fb_group_link"
+                android:text="Kiểm tra cập nhật"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:theme="@style/Theme.MaterialComponents"
+                app:backgroundTint="@color/background_tint_color"
+                app:cornerRadius="50dp"
+                app:icon="@drawable/ic_play_store"
+                app:iconSize="24dp"
+                app:iconTint="@color/white"
+                app:strokeColor="#99FFFFFF"
+                app:strokeWidth="1.5dp" />
 
-        <TextView
-            android:id="@+id/zalo_group_link"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/common_padding"
-            android:background="@color/background_tint_color"
-            android:focusable="true"
-            android:minWidth="200dp"
-            android:nextFocusUp="@id/fb_group_link"
-            android:paddingHorizontal="10dp"
-            android:text="http://zalo.me/imediaapp"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
+            <TextView
+                android:id="@+id/fb_group_link"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/background_tint_color"
+                android:focusable="true"
+                android:minWidth="200dp"
+                android:nextFocusUp="@id/btn_check_update"
+                android:nextFocusDown="@id/zalo_group_link"
+                android:paddingHorizontal="10dp"
+                android:text="https://fb.com/groups/imediaapp/"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
 
-    </androidx.appcompat.widget.LinearLayoutCompat>
+            <TextView
+                android:id="@+id/zalo_group_link"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/common_padding"
+                android:background="@color/background_tint_color"
+                android:focusable="true"
+                android:minWidth="200dp"
+                android:nextFocusUp="@id/fb_group_link"
+                android:paddingHorizontal="10dp"
+                android:text="https://zalo.me/g/bcdftf650"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </com.kt.apps.core.base.leanback.BrowseFrameLayout>
 </layout>

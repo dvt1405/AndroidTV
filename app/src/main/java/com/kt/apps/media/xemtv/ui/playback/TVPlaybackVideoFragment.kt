@@ -3,16 +3,18 @@ package com.kt.apps.media.xemtv.ui.playback
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import com.kt.apps.core.base.leanback.ArrayObjectAdapter
 import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import com.kt.apps.core.base.leanback.PresenterSelector
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.observe
 import com.google.android.exoplayer2.PlaybackException
+import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.R
 import com.kt.apps.core.base.BasePlaybackFragment
+import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -22,12 +24,11 @@ import com.kt.apps.core.logging.logPlaybackRetryPlayVideo
 import com.kt.apps.core.logging.logPlaybackShowError
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.removeAllSpecialChars
-import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
-import com.kt.apps.media.xemtv.ui.main.MainActivity
 import dagger.android.AndroidInjector
 import javax.inject.Inject
 import kotlin.math.max
@@ -72,7 +73,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                     newStreamList
                 )
                 tvChannelViewModel.markLastWatchedChannel(newChannelWithLink)
-                playVideo(newChannelWithLink)
+                playVideo(newChannelWithLink, false)
                 actionLogger.logPlaybackRetryPlayVideo(
                     error,
                     tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "Unknown",
@@ -142,15 +143,17 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
 
         val tvChannel = arguments?.getParcelable<TVChannelLinkStream?>(PlaybackActivity.EXTRA_TV_CHANNEL)
-        tvChannelViewModel.markLastWatchedChannel(tvChannel)
         tvChannel?.let {
             mCurrentSelectedChannel = it.channel
             setBackgroundByStreamingType(it)
+            tvChannelViewModel.loadProgramForChannel(it.channel)
             playVideo(tvChannel)
             tvChannelViewModel.markLastWatchedChannel(it)
         }
         onItemClickedListener = OnItemViewClickedListener { itemViewHolder, item, rowViewHolder, row ->
-            tvChannelViewModel.getLinkStreamForChannel(item as TVChannel)
+            tvChannelViewModel.markLastWatchedChannel(item as TVChannel)
+            tvChannelViewModel.loadProgramForChannel(item)
+            tvChannelViewModel.getLinkStreamForChannel(item)
             (mAdapter as ArrayObjectAdapter).indexOf(item)
                 .takeIf {
                     it > -1
@@ -163,19 +166,23 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
 
         tvChannelViewModel.tvChannelLiveData.observe(viewLifecycleOwner) {
-            loadChannelListByDataState(it)
+            val isRadio = tvChannel?.channel?.isRadio ?: false
+            loadChannelListByDataState(it, isRadio)
         }
         tvChannelViewModel.programmeForChannelLiveData.observe(viewLifecycleOwner) {
             if (it is DataState.Success) {
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel
                 if (
-                    tvChannelViewModel.lastWatchedChannel
-                        ?.channel
+                    lastWatchedChannel
                         ?.channelId
                         ?.removeAllSpecialChars()
                         ?.removePrefix("viechannel")
                     == it.data.channel
                 ) {
-                    showInfo(it.data)
+                    showInfo(
+                        it.data,
+                        lastWatchedChannel
+                    )
                 }
             }
         }
@@ -189,10 +196,18 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
     }
 
-    private fun loadChannelListByDataState(dataState: DataState<List<TVChannel>>) {
+    private fun loadChannelListByDataState(dataState: DataState<List<TVChannel>>, isRadio: Boolean) {
         when (dataState) {
             is DataState.Success -> {
-                setupRowAdapter(dataState.data)
+                if (isRadio) {
+                    setupRowAdapter(dataState.data.filter {
+                        it.isRadio
+                    })
+                } else {
+                    setupRowAdapter(dataState.data.filter {
+                        !it.isRadio
+                    })
+                }
                 if (mPlayingPosition <= 0 && mCurrentSelectedChannel != null) {
                     mPlayingPosition = dataState.data.indexOfLast {
                         it.channelId == mCurrentSelectedChannel!!.channelId
@@ -224,7 +239,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                 } else {
                     getBackgroundView()?.background = ColorDrawable(Color.TRANSPARENT)
                 }
-                playVideo(tvChannel)
+                playVideo(tvChannel, false)
                 Logger.d(this, message = "Play media source")
             }
 
@@ -234,12 +249,23 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
 
             is DataState.Error -> {
                 progressBarManager.hide()
-
-                showErrorDialog(content = dataState.throwable.message,
-                    onSuccessListener = {
-                        startActivity(Intent(requireContext(), MainActivity::class.java))
-                        requireActivity().finish()
-                    })
+                if (dataState.throwable is GetChannelLinkStreamById.ChannelNotFoundThrowable) {
+                    showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR, dataState.throwable.message) {
+                        try {
+                            startActivity(Intent().apply {
+                                this.data = Uri.parse("xemtv://tv/dashboard")
+                                this.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            })
+                            activity?.finish()
+                        } catch (_: Exception) {
+                        }
+                    }
+                } else {
+                    showErrorDialogWithErrorCode(ErrorCode.GET_STREAM_LINK_ERROR)
+                }
+                tvChannelViewModel.lastWatchedChannel?.let {
+                    retryTimes[it.channel.channelId] = 0
+                }
             }
 
             else -> {
@@ -248,13 +274,13 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
     }
 
-    private fun showInfo(tvChannel: TVScheduler.Programme) {
+    private fun showInfo(tvChannel: TVScheduler.Programme, channel: TVChannel) {
         Logger.d(this@TVPlaybackVideoFragment, "ChannelInfo", message = "$tvChannel")
         val channelTitle = tvChannel.title.takeIf {
             it.trim().isNotBlank()
         }?.trim() ?: ""
         prepare(
-            tvChannel.channel.uppercase() + if (channelTitle.isNotBlank()) {
+            channel.tvChannelName + if (channelTitle.isNotBlank()) {
                 " - $channelTitle"
             } else {
                 ""
@@ -267,24 +293,25 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         )
     }
 
-    private fun playVideo(tvChannelLinkStream: TVChannelLinkStream) {
+    private fun playVideo(tvChannelLinkStream: TVChannelLinkStream, showVideoInfo: Boolean = true) {
         playVideo(
-            linkStreams = tvChannelLinkStream.linkStream.map {
-                LinkStream(
-                    it,
-                    tvChannelLinkStream.channel.referer,
-                    streamId = tvChannelLinkStream.channel.channelId,
-                    isHls = it.contains("m3u8")
-                )
-            },
+            linkStreams = tvChannelLinkStream.linkStream
+                .filter {
+                    Uri.parse(it).host != null
+                }.map {
+                    LinkStream(
+                        it,
+                        tvChannelLinkStream.channel.referer,
+                        streamId = tvChannelLinkStream.channel.channelId,
+                        isHls = it.contains("m3u8")
+                    )
+                },
             playItemMetaData = tvChannelLinkStream.channel.getMapData(),
             isHls = tvChannelLinkStream.channel.isHls,
             headers = null,
             isLive = true,
-            listener = null,
-            hideGridView = true
+            forceShowVideoInfoContainer = showVideoInfo
         )
-        tvChannelViewModel.loadProgramForChannel(tvChannelLinkStream.channel)
         Logger.d(this, message = "PlayVideo: $tvChannelLinkStream")
         if (tvChannelViewModel.tvChannelLiveData.value is DataState.Success) {
             val listChannel = (tvChannelViewModel.tvChannelLiveData.value as DataState.Success<List<TVChannel>>).data

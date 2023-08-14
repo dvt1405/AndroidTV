@@ -2,6 +2,7 @@
 <com.kt.apps.core.base.leanback.BrowseFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/browse_grid_dock"
+    android:theme="@style/Theme.BaseLeanBack.SearchScreen"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -22,18 +23,43 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:layout_marginHorizontal="40dp"
-                android:layout_marginVertical="24dp"
+                android:layout_marginBottom="24dp"
+                android:layout_marginTop="@dimen/common_padding_32dp"
                 android:theme="@style/ThemeCompat.Search"
                 app:defaultQueryHint="@string/search_query_hint_default" />
 
         </com.kt.apps.core.base.leanback.BrowseFrameLayout>
 
-        <com.kt.apps.core.base.leanback.VerticalGridView
-            android:id="@+id/container_list"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#DD000000"
-            android:nextFocusUp="@id/search_voice_btn"
-            android:visibility="visible" />
+            android:background="#DD000000">
+
+            <ProgressBar
+                android:id="@+id/ic_loading"
+                style="?android:progressBarStyleLarge"
+                android:layout_width="match_parent"
+                android:layout_height="32dp"
+                android:layout_gravity="center_horizontal"
+                android:background="#DD000000"
+                android:visibility="invisible" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/ic_empty_search"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="center"
+                android:alpha="0.15"
+                android:src="@drawable/ic_search_24p"
+                android:visibility="visible" />
+
+            <com.kt.apps.core.base.leanback.VerticalGridView
+                android:id="@+id/container_list"
+                style="@style/BaseGridViewStyle.NoPadding"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:nextFocusUp="@id/search_voice_btn"
+                android:visibility="visible" />
+        </FrameLayout>
     </LinearLayout>
 </com.kt.apps.core.base.leanback.BrowseFrameLayout>

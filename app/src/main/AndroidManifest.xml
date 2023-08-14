@@ -157,7 +157,7 @@
 
         <provider
             android:name=".contentprovider.TVContentProvider"
-            android:authorities="com.kt.apps.media.xemtv"
+            android:authorities="${applicationId}"
             android:exported="true"
             android:permission="${applicationId}.MEDIA">
             <path-permission

@@ -7,5 +7,5 @@
     <string name="user_agent">Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36</string>
     <string name="double_back_to_finish_title">Nhấn back lần nữa để thoát</string>
     <string name="football_live_match_title">LIVE</string>
-    <string name="search_query_hint_default">Tìm kiếm</string>
+    <string name="search_query_hint_default">Nhập nội dung tìm kiếm</string>
 </resources>

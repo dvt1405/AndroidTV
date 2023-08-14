@@ -342,17 +342,18 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
                 this, "BackPressed", message = "" +
                         "{" +
                         "className: ${this.componentName.className}, " +
-                        "isTaskRoot: $isTaskRoot" +
+                        "isTaskRoot: $isTaskRoot," +
+                        "activityCount: ${CoreApp.activityCount}" +
                         "}"
             )
-            if (this.componentName.className.contains("PlaybackActivity") && CoreApp.activityCount == 1) {
+            if (this.componentName.flattenToString().contains("PlaybackActivity") && CoreApp.activityCount == 1) {
                 startActivity(Intent().apply {
                     this.data = Uri.parse("xemtv://tv/dashboard")
                     this.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK
                 })
                 finish()
             } else {
-                super.onBackPressed()
+                finish()
             }
         } else {
             fragment.hideOverlay()
