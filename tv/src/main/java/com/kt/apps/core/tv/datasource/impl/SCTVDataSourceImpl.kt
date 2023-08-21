@@ -108,6 +108,7 @@ class SCTVDataSourceImpl @Inject constructor(
                     totalChannel.addAll(keyValueStorage.getTvByGroup(group))
                     count++
                     if (count == listGroup.size) {
+                        if (emitter.isDisposed) return@create
                         emitter.onNext(totalChannel)
                         emitter.onComplete()
                     }
@@ -118,6 +119,7 @@ class SCTVDataSourceImpl @Inject constructor(
                         totalChannel.addAll(it)
                         count++
                         if (count == listGroup.size) {
+                            if (emitter.isDisposed) return@fetchTvList
                             emitter.onNext(totalChannel)
                             if (needRefresh) {
                                 keyValueStorage.saveRefreshInVersion(
@@ -129,6 +131,7 @@ class SCTVDataSourceImpl @Inject constructor(
                         }
                     }.addOnFailureListener {
                         count++
+                        if (emitter.isDisposed) return@addOnFailureListener
                         emitter.onError(it)
                     }
                 }
@@ -175,6 +178,7 @@ class SCTVDataSourceImpl @Inject constructor(
                         .build()
                 ).execute()
             } catch (e: Exception) {
+                if (it.isDisposed) return@create
                 it.onError(e)
                 return@create
             }

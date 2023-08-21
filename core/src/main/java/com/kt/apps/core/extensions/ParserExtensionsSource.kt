@@ -108,11 +108,13 @@ class ParserExtensionsSource @Inject constructor(
                     tag = "OnlineSource",
                     message = "Pending source: $status"
                 )
-                if (status == Status.SUCCESS) {
-                    it.onComplete()
-                } else if (status == Status.ERROR) {
-                    pendingObservableSourceStatus.remove(extension.sourceUrl)
-                    it.onError(Throwable("Retry"))
+                if (!it.isDisposed) {
+                    if (status == Status.SUCCESS) {
+                        it.onComplete()
+                    } else if (status == Status.ERROR) {
+                        pendingObservableSourceStatus.remove(extension.sourceUrl)
+                        it.onError(Throwable("Retry"))
+                    }
                 }
             }.andThen(getListIptvFromLocalDB(extension))
                 .onErrorResumeNext {
@@ -479,7 +481,9 @@ class ParserExtensionsSource @Inject constructor(
                             val jsonArray: JSONArray = try {
                                 JSONArray(remoteConfig.getString("default_iptv_channel"))
                             } catch (e: Exception) {
-                                emitter.onError(e)
+                                if (!emitter.isDisposed) {
+                                    emitter.onError(e)
+                                }
                                 return@addOnSuccessListener
                             }
 

@@ -1,5 +1,6 @@
 package com.kt.apps.core.extensions
 
+import android.text.format.DateUtils
 import com.kt.apps.core.di.CoreScope
 import com.kt.apps.core.di.NetworkModule
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -159,6 +160,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                         false
                     )?.time ?: return@filter false
                 }
+                if (!DateUtils.isToday(start) && !DateUtils.isToday(stop)) return@filter false
                 ((start <= currentTime) && stop >= currentTime)
             } else {
                 true
@@ -307,6 +309,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
         val node: InputNode = try {
             NodeBuilder.read(stream)
         } catch (e: Exception) {
+            if (emitter.isDisposed) return@create
             emitter.onNext(InvalidFormatThrowable("Cannot retry"))
             return@create
         }
@@ -328,6 +331,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                     } catch (_: Exception) {
                     }
 
+                    if (emitter.isDisposed) return@create
                     emitter.onNext(tvScheduler)
                 }
 
@@ -399,6 +403,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                         }
                     }
                     listProgram.add(programme)
+                    if (emitter.isDisposed) return@create
                     if (listProgram.size > 50) {
                         emitter.onNext(listProgram)
                         listProgram = mutableListOf()
@@ -411,6 +416,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
             readNode = node.next
         }
 
+        if (emitter.isDisposed) return@create
         if (listProgram.isNotEmpty()) {
             emitter.onNext(listProgram)
         }
