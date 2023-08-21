@@ -204,7 +204,7 @@ open class BaseTVChannelViewModel constructor(
     var lastGetProgramme: Long = 0L
         private set
 
-    fun loadProgramForChannel(channel: TVChannel) {
+    fun loadProgramForChannel(channel: TVChannel, silentUpdate: Boolean = false) {
         add(
             interactors.getCurrentProgrammeForChannel.invoke(channel.channelId)
                 .subscribe({
@@ -215,43 +215,50 @@ open class BaseTVChannelViewModel constructor(
                             ?.removePrefix("viechannel")
                     ) {
                         lastGetProgramme = System.currentTimeMillis()
-                        _programmeForChannelLiveData.postValue(DataState.Success(it))
+
+                        if (silentUpdate) {
+                            _programmeForChannelLiveData.postValue(DataState.Update(it))
+                        } else {
+                            _programmeForChannelLiveData.postValue(DataState.Success(it))
+                        }
                     } else {
-                        _programmeForChannelLiveData.postValue(
-                            DataState.Success(
-                                TVScheduler.Programme(
-                                    channel = channel.channelId
-                                        .removeAllSpecialChars()
-                                        .removePrefix("viechannel"),
-                                    title = "",
-                                    description = try {
-                                        TVChannelGroup.valueOf(channel.tvGroup).value
-                                    } catch (e: Exception) {
-                                        channel.tvGroup
-                                    },
-                                )
+                        if (silentUpdate) {
+                            _programmeForChannelLiveData.postValue(
+                                DataState.Update(channel.toDefaultProgramme())
                             )
-                        )
+                        } else {
+                            _programmeForChannelLiveData.postValue(
+                                DataState.Success(channel.toDefaultProgramme())
+                            )
+                        }
+
                     }
                 }, {
-                    _programmeForChannelLiveData.postValue(
-                        DataState.Success(
-                            TVScheduler.Programme(
-                                channel = channel.channelId
-                                    .removeAllSpecialChars()
-                                    .removePrefix("viechannel"),
-                                title = "",
-                                description = try {
-                                    TVChannelGroup.valueOf(channel.tvGroup).value
-                                } catch (e: Exception) {
-                                    channel.tvGroup
-                                },
-                            )
+                    if (silentUpdate) {
+                        _programmeForChannelLiveData.postValue(
+                            DataState.Update(channel.toDefaultProgramme())
                         )
-                    )
+                    } else {
+                        _programmeForChannelLiveData.postValue(
+                            DataState.Success(channel.toDefaultProgramme())
+                        )
+                    }
+
                 })
         )
     }
+
+    private fun TVChannel.toDefaultProgramme() = TVScheduler.Programme(
+        channel = this.channelId
+            .removeAllSpecialChars()
+            .removePrefix("viechannel"),
+        title = "",
+        description = try {
+            TVChannelGroup.valueOf(this.tvGroup).value
+        } catch (e: Exception) {
+            this.tvGroup
+        },
+    )
 
 
     fun clearCurrentPlayingChannelState() {

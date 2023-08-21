@@ -202,6 +202,23 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                         it.data,
                         lastWatchedChannel
                     )
+                    lastWatchedChannel.currentProgramme = it.data
+                }
+            } else if (it is DataState.Update) {
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel
+                if (
+                    lastWatchedChannel
+                        ?.channelId
+                        ?.removeAllSpecialChars()
+                        ?.removePrefix("viechannel")
+                    == it.data.channel
+                ) {
+                    updateVideoInfo(
+                        it.data.title,
+                        buildVideoDescription(it.data),
+                        true
+                    )
+                    lastWatchedChannel.currentProgramme = it.data
                 }
             }
         }
@@ -360,7 +377,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         super.onRefreshProgram()
         tvChannelViewModel.lastWatchedChannel?.let {
             if (System.currentTimeMillis() - tvChannelViewModel.lastGetProgramme >= 1 * 60 * 1000) {
-                tvChannelViewModel.loadProgramForChannel(it.channel)
+                tvChannelViewModel.loadProgramForChannel(it.channel, true)
             }
         }
     }
