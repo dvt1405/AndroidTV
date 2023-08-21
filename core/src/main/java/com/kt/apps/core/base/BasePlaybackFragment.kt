@@ -130,10 +130,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 super.onIsPlayingChanged(isPlaying)
                 if (isPlaying) {
                     playPauseBtn?.setImageDrawable(
-                        ContextCompat.getDrawable(
-                            requireContext(),
-                            R.drawable.round_pause_24
-                        )
+                        context?.let {
+                            ContextCompat.getDrawable(
+                                it,
+                                R.drawable.round_pause_24
+                            )
+                        }
                     )
                     if (overlaysUIState != OverlayUIState.STATE_HIDDEN
                         && overlaysUIState != OverlayUIState.STATE_ONLY_GRID_CONTENT
@@ -145,10 +147,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     }
                 } else {
                     playPauseBtn?.setImageDrawable(
-                        ContextCompat.getDrawable(
-                            requireContext(),
-                            R.drawable.round_play_arrow_24
-                        )
+                        context?.let {
+                            ContextCompat.getDrawable(
+                                it,
+                                R.drawable.round_play_arrow_24
+                            )
+                        }
                     )
                 }
             }
@@ -892,6 +896,18 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         }
     }
 
+    protected fun updateVideoInfo(title: String?, description: String?, isLive: Boolean = false) {
+        if (!playbackTitleTxtView?.text.toString().equals(title, ignoreCase = true)) {
+            playbackTitleTxtView?.text = title
+        }
+        if (!playbackInfoTxtView?.text.toString().equals(description, ignoreCase = true)) {
+            playbackInfoTxtView?.text = description?.trim()
+        }
+        if (playbackTitleTxtView?.isSelected != true) {
+            playbackTitleTxtView?.isSelected = true
+        }
+    }
+
     private fun setVideoInfo(title: String?, description: String?, isLive: Boolean = false) {
         if (!playbackTitleTxtView?.text.toString().equals(title, ignoreCase = true)) {
             playbackTitleTxtView?.text = title
@@ -1170,7 +1186,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     fun showErrorDialogWithErrorCode(errorCode: Int, errorMessage: String? = null, onDismiss: () -> Unit = {}) {
-        if (this.isDetached || this.isHidden) {
+        if (this.isDetached || this.isHidden || !this.isAdded || context == null) {
             return
         }
         showErrorDialog(

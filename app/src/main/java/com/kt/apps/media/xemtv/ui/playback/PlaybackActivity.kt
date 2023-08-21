@@ -119,10 +119,12 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
                     }, 5000)
 
                     Handler(Looper.getMainLooper()).postDelayed({
-                        showErrorDialog(
-                            content = dataState.throwable.message,
-                            autoDismiss = false
-                        )
+                        if (!this.isDestroyed) {
+                            showErrorDialog(
+                                content = dataState.throwable.message,
+                                autoDismiss = false
+                            )
+                        }
                     }, 2000)
 
                 }

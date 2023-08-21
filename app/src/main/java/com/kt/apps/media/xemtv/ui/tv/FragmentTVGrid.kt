@@ -77,7 +77,7 @@ class FragmentTVGrid : BaseGridViewFragment<FragmentTvGridBinding>() {
             if (item !is TVChannel) {
                 return@OnItemViewClickedListener
             }
-            if (!item.isFreeContent) {
+            if (!item.isFreeContent && !this.isDetached && !this.isHidden) {
                 showErrorDialog(content = "Đây là nội dung tính phí\r\nLiên hệ đội phát triển để có thêm thông tin")
                 return@OnItemViewClickedListener
             }
