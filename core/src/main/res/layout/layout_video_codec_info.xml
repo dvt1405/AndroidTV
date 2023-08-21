@@ -73,6 +73,12 @@
         android:layout_height="wrap_content" />
 
     <TextView
+        style="@style/TextViewTitleVideoInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Audio codec" />
+
+    <TextView
         android:id="@+id/audio_codec"
         style="@style/TextViewDescriptionVideoInfo"
         android:layout_width="match_parent"

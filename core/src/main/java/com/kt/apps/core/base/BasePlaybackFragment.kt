@@ -243,7 +243,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     private fun setCodecInfo(player: ExoPlayer) {
         view?.findViewById<TextView>(R.id.video_title)?.text = player.mediaMetadata.title
-        if (player.contentPosition < 120_000) {
+        if (player.contentDuration < 120_000) {
             view?.findViewById<TextView>(R.id.video_duration)?.gone()
             view?.findViewById<TextView>(R.id.video_duration_title)?.gone()
         } else {
@@ -254,7 +254,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     it.text = Util.getStringForTime(
                         formatBuilder,
                         formatter,
-                        player.contentPosition
+                        player.contentDuration
                     )
                 }
         }
@@ -263,7 +263,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         view?.findViewById<TextView>(R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
         view?.findViewById<TextView>(R.id.video_codec)?.text = player.videoFormat?.codecs
         view?.findViewById<TextView>(R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
-        view?.findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs
+        view?.findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
+            !it?.trim().isNullOrEmpty()
+        } ?: "NoValue"
     }
 
     open fun onPlayerPlaybackStateChanged(playbackState: Int) {
