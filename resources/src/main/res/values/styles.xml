@@ -140,6 +140,11 @@
         <item name="android:textSize">16sp</item>
     </style>
 
+    <style name="CircleImageView">
+        <item name="cornerSize">50%</item>
+<!--        <item name="cornerRadius">50%</item>-->
+    </style>
+
 
 
 </resources>

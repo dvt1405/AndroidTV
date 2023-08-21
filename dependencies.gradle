@@ -118,7 +118,8 @@ ext {
     ]
 
     otherLibs = [
-            palette: 'androidx.palette:palette:1.0.0'
+            palette: 'androidx.palette:palette:1.0.0',
+            zxingQrCode: 'com.google.zxing:core:3.3.3'
 //            checkApi: "com.kt:api:1.1.15"
     ]
 }

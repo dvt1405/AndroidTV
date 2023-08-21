@@ -2,6 +2,7 @@ package com.kt.apps.media.xemtv.di.main
 
 import com.kt.apps.autoupdate.ui.AppUpdateActivity
 import com.kt.apps.autoupdate.ui.FragmentInfo
+import com.kt.apps.autoupdate.ui.FragmentQrCode
 import com.kt.apps.media.xemtv.di.viewmodels.ViewModelModule
 import com.kt.apps.media.xemtv.ui.DialogActivity
 import com.kt.apps.media.xemtv.ui.details.DetailsActivity
@@ -99,5 +100,7 @@ abstract class MainTVModule {
     internal abstract fun fragmentInfo(): FragmentInfo
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentFavorite(): FavoriteFragment
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentQrCode(): FragmentQrCode
 
 }

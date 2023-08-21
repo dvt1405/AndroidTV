@@ -13,6 +13,7 @@ import androidx.core.os.bundleOf
 import androidx.leanback.app.*
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.tabs.TabLayout
+import com.kt.apps.autoupdate.ui.FragmentQrCode
 import com.kt.apps.core.Constants
 import com.kt.apps.core.R
 import com.kt.apps.core.base.IKeyCodeHandler
@@ -248,12 +249,33 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 Logger.d(this, message = uri.toString())
                 when (uri.host) {
                     Constants.HOST_FOOTBALL -> {
+                        try {
+                            if (requireActivity().supportFragmentManager.findFragmentById(android.R.id.content) is FragmentQrCode) {
+                                requireActivity().supportFragmentManager.popBackStackImmediate()
+                            }
+                        } catch (_: Exception) {
+                        }
+
                         onRowSelected(defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_FOOTBALL))
                     }
                     Constants.HOST_TV -> {
+                        try {
+                            if (requireActivity().supportFragmentManager.findFragmentById(android.R.id.content) is FragmentQrCode) {
+                                requireActivity().supportFragmentManager.popBackStackImmediate()
+                            }
+                        } catch (_: Exception) {
+                        }
+
                         onRowSelected(defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_TV))
                     }
                     Constants.HOST_RADIO -> {
+                        try {
+                            if (requireActivity().supportFragmentManager.findFragmentById(android.R.id.content) is FragmentQrCode) {
+                                requireActivity().supportFragmentManager.popBackStackImmediate()
+                            }
+                        } catch (_: Exception) {
+                        }
+
                         onRowSelected(defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_RADIO))
                     }
                 }
