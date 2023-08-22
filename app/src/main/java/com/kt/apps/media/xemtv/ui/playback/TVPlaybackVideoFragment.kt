@@ -190,36 +190,20 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
         tvChannelViewModel.programmeForChannelLiveData.observe(viewLifecycleOwner) {
             if (it is DataState.Success) {
-                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel
-                if (
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel ?: return@observe
+                showInfo(
+                    programme = it.data,
                     lastWatchedChannel
-                        ?.channelId
-                        ?.removeAllSpecialChars()
-                        ?.removePrefix("viechannel")
-                    == it.data.channel
-                ) {
-                    showInfo(
-                        it.data,
-                        lastWatchedChannel
-                    )
-                    lastWatchedChannel.currentProgramme = it.data
-                }
+                )
+                lastWatchedChannel.currentProgramme = it.data
             } else if (it is DataState.Update) {
-                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel
-                if (
-                    lastWatchedChannel
-                        ?.channelId
-                        ?.removeAllSpecialChars()
-                        ?.removePrefix("viechannel")
-                    == it.data.channel
-                ) {
-                    updateVideoInfo(
-                        it.data.title,
-                        buildVideoDescription(it.data),
-                        true
-                    )
-                    lastWatchedChannel.currentProgramme = it.data
-                }
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel ?: return@observe
+                updateVideoInfo(
+                    lastWatchedChannel.tvChannelName,
+                    buildVideoDescription(it.data),
+                    true
+                )
+                lastWatchedChannel.currentProgramme = it.data
             }
         }
     }
@@ -312,10 +296,10 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
     }
 
-    private fun showInfo(tvChannel: TVScheduler.Programme, channel: TVChannel) {
+    private fun showInfo(programme: TVScheduler.Programme, channel: TVChannel) {
         prepare(
             channel.tvChannelName,
-            buildVideoDescription(tvChannel),
+            buildVideoDescription(programme),
             isLive = true,
             showProgressManager = false
         )
@@ -365,7 +349,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         if (tvChannelViewModel.tvChannelLiveData.value is DataState.Success) {
             val listChannel = (tvChannelViewModel.tvChannelLiveData.value as DataState.Success<List<TVChannel>>).data
             mPlayingPosition = listChannel.indexOfLast {
-                it.channelId == mCurrentSelectedChannel!!.channelId
+                it.channelId == mCurrentSelectedChannel?.channelId
             }.takeIf {
                 it >= 0
             } ?: 0
@@ -393,9 +377,12 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         mPlayingPosition = max(0, mPlayingPosition) - 1
         setSelectedPosition(mPlayingPosition)
         Logger.d(this, message = "onKeyCodeChannelDown: $mPlayingPosition")
-        if (mPlayingPosition > 0) {
+        val maxItemCount = mGridViewHolder?.gridView?.adapter?.itemCount ?: 0
+        if (mPlayingPosition <= maxItemCount - 1) {
             val item = mAdapter?.get(mPlayingPosition)
             tvChannelViewModel.getLinkStreamForChannel(item as TVChannel)
+        } else {
+            mPlayingPosition = maxItemCount - 1
         }
     }
 
