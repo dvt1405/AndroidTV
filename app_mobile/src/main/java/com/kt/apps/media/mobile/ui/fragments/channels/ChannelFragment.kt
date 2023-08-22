@@ -1,23 +1,15 @@
 package com.kt.apps.media.mobile.ui.fragments.channels
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityMainBinding
-import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
@@ -33,7 +25,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.collections.set
 
 abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
 

@@ -8,9 +8,7 @@ import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FootballItemRowChannelBinding
-import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.channelItemDecoration
-import com.kt.apps.media.mobile.utils.groupAndSort
 
 data class FootballAdapterType(
     val data: Pair<String, List<FootballMatch>>,

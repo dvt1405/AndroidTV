@@ -17,7 +17,6 @@ import com.kt.apps.media.mobile.ui.view.ChannelListData
 import com.kt.apps.media.mobile.ui.view.childItemClicks
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.IPTVListInteractor
-import com.kt.apps.media.mobile.viewmodels.features.loadIPTVJob
 import com.kt.apps.media.mobile.viewmodels.features.openPlayback
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*

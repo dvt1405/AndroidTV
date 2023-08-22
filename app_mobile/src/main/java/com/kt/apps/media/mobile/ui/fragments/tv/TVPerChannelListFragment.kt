@@ -12,7 +12,6 @@ import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentInteractors
-import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
 import com.kt.apps.media.mobile.viewmodels.features.openPlayback
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.mapNotNull

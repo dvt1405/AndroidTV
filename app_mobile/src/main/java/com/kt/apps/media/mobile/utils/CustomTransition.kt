@@ -1,8 +1,6 @@
 package com.kt.apps.media.mobile.utils
 
-import android.view.animation.AccelerateInterpolator
 import android.view.animation.LinearInterpolator
-import androidx.transition.Explode
 import androidx.transition.Fade
 import androidx.transition.TransitionSet
 

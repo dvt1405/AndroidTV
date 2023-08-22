@@ -1,16 +1,10 @@
 package com.kt.apps.media.mobile.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.extensions.ExtensionsConfig
-import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment.Companion.TAG
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
-import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.utils.asSuccessFlow
-import com.kt.apps.media.mobile.utils.await
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
 
 class IPTVViewModel(private val provider: ViewModelProvider) {
     private val extensionViewModel: ExtensionsViewModel by lazy {

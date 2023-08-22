@@ -5,11 +5,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
-import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.utils.asSuccessFlow
 import com.kt.apps.media.mobile.utils.groupAndSort
 import com.kt.apps.media.mobile.viewmodels.features.IFetchIPTVControl
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 
 class IPTVPlaybackInteractor(provider: ViewModelProvider, private val coroutineScope: LifecycleCoroutineScope) :

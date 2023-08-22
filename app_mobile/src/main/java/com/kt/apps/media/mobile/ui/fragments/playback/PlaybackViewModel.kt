@@ -1,12 +1,11 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
-import android.util.Log
 import com.kt.apps.core.base.BaseViewModel
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
 
 class PlaybackViewModel @Inject constructor(): BaseViewModel() {

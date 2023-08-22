@@ -2,17 +2,10 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.tv.model.TVChannel
-import com.kt.apps.core.utils.TAG
-import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.models.PlaybackState
-import com.kt.apps.media.mobile.models.PrepareStreamLinkData
-import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
-import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
-import com.kt.apps.media.mobile.ui.main.ChannelElement
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.utils.*
-import com.kt.apps.media.mobile.viewmodels.features.IFetchRadioChannel
-import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.CoroutineScope

@@ -5,16 +5,10 @@ import android.view.View
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.Lifecycle
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.material.button.MaterialButton
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentPlaybackBinding
-import com.kt.apps.media.mobile.ui.view.ChannelListView
-import com.kt.apps.media.mobile.ui.view.RowItemChannelAdapter
-import com.kt.apps.media.mobile.utils.channelItemDecoration
-import com.kt.apps.media.mobile.utils.clicks
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch

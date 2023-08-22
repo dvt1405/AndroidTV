@@ -4,9 +4,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.kt.apps.media.mobile.R
-import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.football.dashboard.FootballDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvDashboardFragment
+import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
 import com.kt.apps.media.mobile.ui.info.InfoFragment
 

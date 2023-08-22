@@ -1,11 +1,9 @@
 package com.kt.apps.media.mobile.ui.main
 
-import com.kt.apps.core.Constants
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
-import com.kt.apps.core.utils.loadImgByUrl
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 

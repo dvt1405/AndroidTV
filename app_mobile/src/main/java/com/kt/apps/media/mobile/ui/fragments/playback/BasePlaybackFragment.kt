@@ -1,61 +1,50 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
-import android.graphics.PointF
 import android.os.Bundle
 import android.util.Log
-import android.view.Display
 import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.View
-import android.view.animation.AccelerateInterpolator
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.view.marginBottom
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
+import androidx.mediarouter.app.MediaRouteButton
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.OnScrollListener
-import androidx.recyclerview.widget.RecyclerView.Recycler
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
+import androidx.recyclerview.widget.RecyclerView.*
 import androidx.transition.AutoTransition
-import androidx.transition.ChangeBounds
 import androidx.transition.Fade
 import androidx.transition.Transition
-import androidx.transition.TransitionManager
-import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.ui.DefaultTimeBar
+import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.video.VideoSize
+import com.google.android.gms.cast.framework.CastButtonFactory
+import com.google.android.gms.cast.framework.CastContext
+import com.google.android.gms.cast.framework.CastState
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.core.utils.setVisible
 import com.kt.apps.core.utils.showErrorDialog
+import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
-import com.kt.apps.media.mobile.ui.complex.TransitionCallback
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
-import kotlin.math.abs
-import kotlin.math.log
 
 interface IPlaybackAction {
     fun onLoadedSuccess(videoSize: VideoSize)
@@ -80,7 +69,8 @@ sealed class LayoutState {
 }
 
 data class ScreenState(val playbackState: PlaybackState, val isInPIPMode: Boolean)
-abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>(), IPlaybackControl, Player.Listener {
+abstract class BasePlaybackFragment<T : ViewDataBinding>
+    : BaseMobileFragment<T>(), IPlaybackControl, Player.Listener, SessionAvailabilityListener {
 
     override val screenName: String
         get() = "Fragment Playback"
@@ -90,6 +80,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     @Inject
     lateinit var exoPlayerManager: ExoPlayerManagerMobile
+
+    private val castContext by lazy {
+        CastContext.getSharedInstance(App.get().applicationContext)
+    }
 
     private var _cachePlayingState: Boolean = false
 
@@ -129,6 +123,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected val categoryLabel: MaterialTextView? by lazy {
         exoPlayer?.findViewById(R.id.category_tv)
+    }
+
+    protected val mediaRouteButton: MediaRouteButton? by lazy {
+        exoPlayer?.findViewById(R.id.media_route_button)
     }
 
     protected abstract val exoPlayer: StyledPlayerView?
@@ -221,6 +219,18 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 }
             }
         })
+
+        mediaRouteButton?.apply {
+            CastButtonFactory.setUpMediaRouteButton(App.get().applicationContext, this)
+            setAlwaysVisible(true)
+        }
+
+        castContext.addCastStateListener {state ->
+            mediaRouteButton?.setVisible(when(state) {
+                CastState.NO_DEVICES_AVAILABLE -> false
+                else -> true
+            })
+        }
     }
     fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
@@ -293,11 +303,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                         when(state.playbackState) {
                             PlaybackState.Fullscreen -> {
                                 currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
-//                                when(state.channelListState) {
-//                                    ChannelListState.SHOW -> currentLayout.emit(LayoutState.SHOW_CHANNEL)
-//                                    ChannelListState.MOVING -> currentLayout.emit(LayoutState.MOVE_CHANNEL)
-//                                    ChannelListState.HIDE -> currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
-//                                }
                             }
                             PlaybackState.Minimal -> currentLayout.emit(LayoutState.MINIMAL)
                             else -> {
@@ -319,7 +324,35 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             }
+
+            launch {
+                if (castContext?.castState != CastState.NO_DEVICES_AVAILABLE) {
+                    mediaRouteButton?.setVisible(true)
+                }
+            }
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        exoPlayerManager.prepare()
+        exoPlayerManager.setSessionAvailabilityListener(this)
+    }
+
+    override fun onCastSessionAvailable() {
+        val castPlayer = exoPlayerManager.castPlayer ?: return
+        exoPlayer?.player = castPlayer
+        val currentPlayer = exoPlayerManager.exoPlayer ?: return
+        currentPlayer.pause()
+
+        val currentRunning = currentPlayer.currentMediaItem ?: return
+        castPlayer.setMediaItem(currentRunning, 0)
+        castPlayer.playWhenReady = true
+        castPlayer.prepare()
+    }
+
+    override fun onCastSessionUnavailable() {
+
     }
 
     override fun onStop() {

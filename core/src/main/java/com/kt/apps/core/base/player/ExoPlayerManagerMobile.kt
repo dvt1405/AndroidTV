@@ -1,6 +1,9 @@
 package com.kt.apps.core.base.player
 
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.ext.cast.CastPlayer
+import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener
+import com.google.android.gms.cast.framework.CastContext
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.repository.IMediaHistoryRepository
 import javax.inject.Inject
@@ -11,12 +14,23 @@ class ExoPlayerManagerMobile @Inject constructor(
     private val _audioFocusManager: AudioFocusManager,
     private val historyManager: IMediaHistoryRepository
 ) : AbstractExoPlayerManager(_application, _audioFocusManager, historyManager) {
+    private val castContext by lazy {
+        CastContext.getSharedInstance(_application.applicationContext)
+    }
 
+    private var _castPlayer: CastPlayer? = null
+    val castPlayer: CastPlayer?
+        get() = _castPlayer
     override fun prepare() {
         if (exoPlayer == null) {
             mExoPlayer?.stop()
             mExoPlayer?.release()
             mExoPlayer = buildExoPlayer()
+        }
+
+        if (_castPlayer == null) {
+            _castPlayer = CastPlayer(castContext)
+            _castPlayer?.addListener(this.playerListener)
         }
     }
     override fun playVideo(
@@ -38,6 +52,10 @@ class ExoPlayerManagerMobile @Inject constructor(
         _audioFocusManager.releaseFocus()
         mExoPlayer?.release()
         mExoPlayer = null
+    }
+
+    fun setSessionAvailabilityListener(listener: SessionAvailabilityListener) {
+        _castPlayer?.setSessionAvailabilityListener(listener)
     }
 
 }

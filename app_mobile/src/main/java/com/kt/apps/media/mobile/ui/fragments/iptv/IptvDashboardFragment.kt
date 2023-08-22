@@ -2,12 +2,7 @@ package com.kt.apps.media.mobile.ui.fragments.iptv
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -15,22 +10,13 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.extensions.ExtensionsConfig
-import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentIptvDashboardBinding
-import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.IDashboardHelper
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
-import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVDashboardAdapter
-import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
 import com.kt.apps.media.mobile.utils.clicks
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.IPTVViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch

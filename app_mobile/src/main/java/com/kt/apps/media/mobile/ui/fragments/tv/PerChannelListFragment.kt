@@ -3,9 +3,6 @@ package com.kt.apps.media.mobile.ui.fragments.tv
 import android.os.Bundle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
-import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentTvChannelListBinding
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment

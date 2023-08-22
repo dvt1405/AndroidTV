@@ -5,10 +5,8 @@ import androidx.lifecycle.lifecycleScope
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.channels.ChannelFragment
-import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentInteractors
-import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
 import com.kt.apps.media.mobile.viewmodels.features.openPlayback
 import kotlinx.coroutines.launch
 

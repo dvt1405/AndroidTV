@@ -1,7 +1,6 @@
 package com.kt.apps.media.mobile.viewmodels.features
 
 import android.net.Uri
-import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData

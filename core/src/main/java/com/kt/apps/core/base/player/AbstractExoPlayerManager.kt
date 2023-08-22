@@ -15,6 +15,7 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.google.android.exoplayer2.util.MimeTypes
 import com.kt.apps.core.R
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.logging.Logger
@@ -31,6 +32,7 @@ abstract class AbstractExoPlayerManager(
 ) : Application.ActivityLifecycleCallbacks, AudioFocusManager.OnFocusChange {
 
     protected var mExoPlayer: ExoPlayer? = null
+    var lastedMediaSource: List<MediaSource>? = null
 
     private val _playerListenerObserver by lazy {
         mutableListOf<(() -> Unit)>()
@@ -103,6 +105,7 @@ abstract class AbstractExoPlayerManager(
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
                 mExoPlayer = null
+                lastedMediaSource = null
                 Logger.d(
                     this@AbstractExoPlayerManager,
                     message = error.message?.plus(error.errorCodeName) ?: error.errorCodeName
@@ -255,6 +258,7 @@ abstract class AbstractExoPlayerManager(
             .setMediaId(mediaData?.get(EXTRA_MEDIA_ID) ?: linkStream.streamId)
             .setRequestMetadata(requestMetadata)
             .setMediaMetadata(mediaMetadata)
+            .setMimeType(MimeTypes.APPLICATION_M3U8)
             .build()
     }
 

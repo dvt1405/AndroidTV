@@ -5,16 +5,12 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.motion.widget.MotionLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.kt.apps.core.extensions.ExtensionsChannel
-import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
@@ -23,17 +19,14 @@ import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.RowItemChannelAdapter
 import com.kt.apps.media.mobile.ui.view.childClicks
-import com.kt.apps.media.mobile.utils.*
+import com.kt.apps.media.mobile.utils.channelItemDecoration
+import com.kt.apps.media.mobile.utils.loadImgDrawable
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.RadioPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.TVPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 

@@ -1,6 +1,5 @@
 package com.kt.apps.media.mobile.models
 
-import com.airbnb.lottie.L
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream

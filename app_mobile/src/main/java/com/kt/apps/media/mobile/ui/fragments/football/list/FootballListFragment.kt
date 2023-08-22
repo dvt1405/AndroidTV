@@ -6,19 +6,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
-import com.kt.apps.media.mobile.utils.ActivityIndicator
-import com.kt.apps.media.mobile.utils.onRefresh
-import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
-import com.kt.apps.media.mobile.utils.screenHeight
-import com.kt.apps.media.mobile.utils.trackActivity
+import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.FootballListInteractor
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.coroutines.coroutineContext
 
 class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
 

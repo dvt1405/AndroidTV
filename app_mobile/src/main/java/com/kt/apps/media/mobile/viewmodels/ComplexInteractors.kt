@@ -3,7 +3,6 @@ package com.kt.apps.media.mobile.viewmodels
 
 import android.net.Uri
 import androidx.lifecycle.ViewModelProvider
-import com.kt.apps.core.Constants
 import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
@@ -14,7 +13,6 @@ import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.features.IFetchDeepLinkControl
-import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import com.kt.apps.media.mobile.viewmodels.features.loadByDeepLink
 import kotlinx.coroutines.*

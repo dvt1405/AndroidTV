@@ -1,7 +1,6 @@
 package com.kt.apps.media.mobile.di.workers
 
 import android.content.Context
-import android.database.Observable
 import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters

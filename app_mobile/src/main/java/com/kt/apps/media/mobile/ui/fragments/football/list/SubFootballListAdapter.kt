@@ -2,11 +2,9 @@ package com.kt.apps.media.mobile.ui.fragments.football.list
 
 import android.graphics.Color
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.updateLayoutParams
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.loadImageBitmap
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.football.model.FootballTeam

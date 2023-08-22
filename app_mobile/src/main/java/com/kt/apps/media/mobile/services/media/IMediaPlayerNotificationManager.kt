@@ -1,10 +1,5 @@
 package com.kt.apps.media.mobile.services.media
 
-import android.content.Context
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import com.kt.apps.media.mobile.R
-
 const val NOW_PLAYING_CHANNEL_ID = "iMedia"
 const val NOW_PLAYING_NOTIFICATION_ID = 1234
 //

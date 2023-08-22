@@ -1,51 +1,32 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
 import android.os.Bundle
-import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.OnScrollListener
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.util.Util
 import com.kt.apps.core.extensions.ExtensionsChannel
-import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
-import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
-import com.kt.apps.media.mobile.ui.view.ChannelListView
 import com.kt.apps.media.mobile.ui.view.RowItemChannelAdapter
 import com.kt.apps.media.mobile.ui.view.childClicks
-import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.channelItemDecoration
-import com.kt.apps.media.mobile.utils.fillParent
-import com.kt.apps.media.mobile.utils.matchParentWidth
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
-import com.kt.apps.media.mobile.utils.safeLet
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.IPTVPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadIPTVJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.lang.StringBuilder
-import java.util.Formatter
-import java.util.Locale
+import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.abs
 
 class IPTVPlaybackFragment : ChannelPlaybackFragment() {
 

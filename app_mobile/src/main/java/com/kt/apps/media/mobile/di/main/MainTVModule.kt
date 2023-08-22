@@ -1,6 +1,5 @@
 package com.kt.apps.media.mobile.di.main
 
-import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.di.viewmodels.ViewModelModule
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.dashboard.DashboardFragment
@@ -14,6 +13,7 @@ import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.search.SearchListFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
 import com.kt.apps.media.mobile.ui.fragments.tv.RadioPerChannelListFragment

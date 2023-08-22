@@ -15,16 +15,16 @@ import com.google.android.exoplayer2.Player
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.base.DataState
-import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.base.player.LinkStream
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityPlaybackBinding
-import com.kt.apps.media.mobile.ui.main.TVChannelAdapter
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.ui.main.TVChannelAdapter
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 

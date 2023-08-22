@@ -102,7 +102,8 @@ ext {
             ima         : 'com.google.android.exoplayer:extension-ima:2.18.1',
             dash        : 'com.google.android.exoplayer:exoplayer-dash:2.18.1',
             mediaSession: 'com.google.android.exoplayer:extension-mediasession:2.18.1',
-            rtsp        : 'com.google.android.exoplayer:exoplayer-rtsp:2.18.1'
+            rtsp        : 'com.google.android.exoplayer:exoplayer-rtsp:2.18.1',
+            cast        : 'com.google.android.exoplayer:extension-cast:2.18.1'
     ]
 
     authen = [

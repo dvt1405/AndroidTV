@@ -5,7 +5,6 @@ import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballDashboardBinding
 import com.kt.apps.media.mobile.ui.fragments.football.list.FootballListFragment
-import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
 
 class FootballDashboardFragment: BaseFragment<FragmentFootballDashboardBinding>() {
     override val layoutResId: Int

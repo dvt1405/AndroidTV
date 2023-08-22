@@ -11,7 +11,6 @@ import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
 import com.kt.apps.core.tv.di.DaggerTVComponents
-import com.kt.apps.core.tv.di.TVChannelModule
 import com.kt.apps.core.tv.di.TVComponents
 import com.kt.apps.football.di.DaggerFootballComponents
 import com.kt.apps.football.di.FootballComponents

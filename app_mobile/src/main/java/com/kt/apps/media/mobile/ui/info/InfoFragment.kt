@@ -2,11 +2,8 @@ package com.kt.apps.media.mobile.ui.info
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.BuildConfig
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentInfoBinding

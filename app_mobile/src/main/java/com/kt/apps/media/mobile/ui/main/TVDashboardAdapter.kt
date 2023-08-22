@@ -1,36 +1,23 @@
 package com.kt.apps.media.mobile.ui.main
 
-import android.graphics.Rect
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.flexbox.JustifyContent
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.Logger
-import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
-import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
-import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
-import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
-import com.kt.apps.media.mobile.utils.LinearLayoutPagerManager
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 
 interface IChannelElement {

@@ -5,7 +5,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
-import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
 import com.kt.apps.media.mobile.databinding.LightItemChannelBinding

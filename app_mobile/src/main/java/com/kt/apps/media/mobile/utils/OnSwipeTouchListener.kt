@@ -7,7 +7,6 @@ import android.view.MotionEvent
 import android.view.View
 import com.kt.apps.core.utils.TAG
 import kotlin.math.abs
-import kotlin.math.log
 
 open class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
 

@@ -13,20 +13,17 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.annotation.CheckResult
-import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.*
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.kt.apps.core.GlideApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
-import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
-import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.utils.*
@@ -36,8 +33,7 @@ import com.kt.apps.resources.R
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import java.util.Calendar
-import java.util.Locale
+import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 

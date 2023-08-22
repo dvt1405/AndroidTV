@@ -1,10 +1,7 @@
 package com.kt.apps.media.mobile.viewmodels
 
-import android.text.SpannableString
 import androidx.lifecycle.ViewModelProvider
-import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsChannelAndConfig
-import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
@@ -12,18 +9,15 @@ import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.utils.await
-import com.kt.apps.media.mobile.utils.toExtensionChannel
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
 import com.kt.apps.media.mobile.viewmodels.features.SearchViewModels
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import com.kt.apps.media.mobile.viewmodels.features.openPlayback
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.withContext
 
 class SearchListViewModel(private val provider: ViewModelProvider): IUIControl {
     private val searchViewModel by lazy {
