@@ -207,31 +207,23 @@ open class BaseTVChannelViewModel constructor(
     fun loadProgramForChannel(channel: TVChannel, silentUpdate: Boolean = false) {
         add(
             interactors.getCurrentProgrammeForChannel.invoke(channel.channelId)
+                .filter {
+                    it.channel.removeAllSpecialChars()
+                        .removePrefix("viechannel")
+                        .removeSuffix("hd") == lastWatchedChannel
+                        ?.channel
+                        ?.channelId
+                        ?.removeAllSpecialChars()
+                        ?.removePrefix("viechannel")
+                        ?.removeSuffix("hd")
+                }
                 .subscribe({
-                    if (it.channel == lastWatchedChannel
-                            ?.channel
-                            ?.channelId
-                            ?.removeAllSpecialChars()
-                            ?.removePrefix("viechannel")
-                    ) {
-                        lastGetProgramme = System.currentTimeMillis()
+                    lastGetProgramme = System.currentTimeMillis()
 
-                        if (silentUpdate) {
-                            _programmeForChannelLiveData.postValue(DataState.Update(it))
-                        } else {
-                            _programmeForChannelLiveData.postValue(DataState.Success(it))
-                        }
+                    if (silentUpdate) {
+                        _programmeForChannelLiveData.postValue(DataState.Update(it))
                     } else {
-                        if (silentUpdate) {
-                            _programmeForChannelLiveData.postValue(
-                                DataState.Update(channel.toDefaultProgramme())
-                            )
-                        } else {
-                            _programmeForChannelLiveData.postValue(
-                                DataState.Success(channel.toDefaultProgramme())
-                            )
-                        }
-
+                        _programmeForChannelLiveData.postValue(DataState.Success(it))
                     }
                 }, {
                     if (silentUpdate) {
@@ -274,7 +266,6 @@ open class BaseTVChannelViewModel constructor(
 
     init {
         instance++
-        Logger.d(this, message = "TVChannelViewModel instance count: $instance")
     }
 
     companion object {

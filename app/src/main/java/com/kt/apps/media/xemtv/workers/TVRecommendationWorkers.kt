@@ -196,7 +196,7 @@ class TVRecommendationWorkers(
                         resourceUri(App.get().resources, com.kt.apps.core.R.drawable.app_icon_fg)
                     }
                     val channelUpdate = channelBuilder.setDisplayName(displayName)
-                        .setLogo(Uri.parse("android.resource://com.kt.apps.media.xemtv/drawable/app_icon_fg"))
+                        .setLogo(Uri.parse("android.resource://${context.packageName}/drawable/app_icon_fg"))
                         .setDescription("iMedia")
                         .setInternalProviderId(tvChannelProviderId)
                         .setAppLinkIntentUri(channelUri)
@@ -264,10 +264,11 @@ class TVRecommendationWorkers(
                     }
                     tvChannelDAO.insert(channelEntity)
                 }
+                .retry(3)
                 .subscribe({
                     Logger.d(this@TVRecommendationWorkers, message = "Insert preview channel success")
                 }, {
-                    insertOrUpdatePreviewChannel()
+                    Logger.e(this@TVRecommendationWorkers, exception = it)
                 })
 
         )
