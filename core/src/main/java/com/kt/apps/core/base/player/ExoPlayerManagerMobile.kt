@@ -1,11 +1,14 @@
 package com.kt.apps.core.base.player
 
+import android.util.Log
+import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.cast.CastPlayer
 import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener
 import com.google.android.gms.cast.framework.CastContext
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.repository.IMediaHistoryRepository
+import com.kt.apps.core.utils.TAG
 import javax.inject.Inject
 
 
@@ -30,7 +33,18 @@ class ExoPlayerManagerMobile @Inject constructor(
 
         if (_castPlayer == null) {
             _castPlayer = CastPlayer(castContext)
-            _castPlayer?.addListener(this.playerListener)
+//            _castPlayer?.addListener(this.playerListener)
+            _castPlayer?.addListener(object: Player.Listener {
+                override fun onPlayerError(error: PlaybackException) {
+                    super.onPlayerError(error)
+                    Log.d(TAG, "onPlayerError: $error")
+                }
+
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    super.onPlaybackStateChanged(playbackState)
+                    Log.d(TAG, "onPlaybackStateChanged: $playbackState")
+                }
+            })
         }
     }
     override fun playVideo(

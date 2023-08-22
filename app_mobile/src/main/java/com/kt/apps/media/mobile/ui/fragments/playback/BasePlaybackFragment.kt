@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -10,6 +11,7 @@ import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.os.bundleOf
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
 import androidx.mediarouter.app.MediaRouteButton
@@ -19,16 +21,23 @@ import androidx.transition.AutoTransition
 import androidx.transition.Fade
 import androidx.transition.Transition
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.MediaItem.RequestMetadata
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.cast.SessionAvailabilityListener
 import com.google.android.exoplayer2.ui.StyledPlayerView
+import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.video.VideoSize
+import com.google.android.gms.cast.MediaInfo
+import com.google.android.gms.cast.MediaMetadata
+import com.google.android.gms.cast.MediaQueueItem
 import com.google.android.gms.cast.framework.CastButtonFactory
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastState
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
+import com.kt.apps.core.base.player.AbstractExoPlayerManager.Companion.EXTRA_MEDIA_REFERER
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.setVisible
@@ -346,9 +355,29 @@ abstract class BasePlaybackFragment<T : ViewDataBinding>
         currentPlayer.pause()
 
         val currentRunning = currentPlayer.currentMediaItem ?: return
-        castPlayer.setMediaItem(currentRunning, 0)
+
+//        val mediaQueue = MediaQueueItem.Builder(
+//            MediaInfo.Builder("https://assets.afcdn.com/video49/20210722/v_645516.m3u8")
+//                .setStreamType(MediaInfo.STREAM_TYPE_LIVE)
+//                .setContentType(MimeTypes.APPLICATION_M3U8)
+//                .setMetadata(MediaMetadata(MediaMetadata.MEDIA_TYPE_TV_SHOW).apply {
+//                    putString(MediaMetadata.KEY_TITLE, "Hello")
+//                })
+//                .build()
+//        ).build()
+
+        val item = MediaItem.Builder()
+            .setUri("https://e1.endpoint.cdn.sctvonline.vn/channel/sctv4/index.m3u8")
+            .setMimeType(MimeTypes.APPLICATION_M3U8)
+            .setMediaMetadata(com.google.android.exoplayer2.MediaMetadata.Builder()
+                .setTitle("Hello")
+                .build())
+            .build()
+
+        castPlayer.setMediaItems(arrayListOf(item), 0, 0 )
         castPlayer.playWhenReady = true
         castPlayer.prepare()
+        castPlayer.play()
     }
 
     override fun onCastSessionUnavailable() {
