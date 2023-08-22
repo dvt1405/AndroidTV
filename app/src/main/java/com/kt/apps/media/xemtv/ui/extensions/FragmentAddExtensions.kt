@@ -1,5 +1,6 @@
 package com.kt.apps.media.xemtv.ui.extensions
 
+import android.net.Uri
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -7,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.chip.ChipGroup
@@ -95,31 +97,50 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
 
     override fun initAction(rootView: View) {
         rootView.findViewById<TextInputEditText>(R.id.textInputEditText_2)
-            .setOnEditorActionListener { v, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_DONE) {
-                    val imm: InputMethodManager = requireContext().getSystemService(
-                        InputMethodManager::class.java
-                    )
-                    if (imm.isActive(v)) {
-                        imm.hideSoftInputFromWindow(v.windowToken, 0)
+            .apply {
+                this.doOnTextChanged { text, start, before, count ->
+                    Uri.parse(text.toString()).pathSegments.lastOrNull {
+                        it.trim().isNotEmpty()
+                    }?.let {
+                        rootView.findViewById<TextInputLayout>(R.id.textInputLayout).hint = it
+                    } ?: kotlin.run {
+                        rootView.findViewById<TextInputLayout>(R.id.textInputLayout).hint = "Tên nguồn"
                     }
-                    addExtensionsSource()
-                } else if (actionId == EditorInfo.IME_ACTION_NEXT) {
-                    val imm: InputMethodManager = requireContext().getSystemService(
-                        InputMethodManager::class.java
-                    )
-                    if (imm.isActive(v)) {
-                        imm.hideSoftInputFromWindow(v.windowToken, 0)
-                    }
-                    rootView.findViewById<ChipGroup>(R.id.type_group).requestFocus()
                 }
-                return@setOnEditorActionListener true
+                this.setOnEditorActionListener { v, actionId, _ ->
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        val imm: InputMethodManager = requireContext().getSystemService(
+                            InputMethodManager::class.java
+                        )
+                        if (imm.isActive(v)) {
+                            imm.hideSoftInputFromWindow(v.windowToken, 0)
+                        }
+                        addExtensionsSource()
+                    } else if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                        val imm: InputMethodManager = requireContext().getSystemService(
+                            InputMethodManager::class.java
+                        )
+                        if (imm.isActive(v)) {
+                            imm.hideSoftInputFromWindow(v.windowToken, 0)
+                        }
+                        rootView.findViewById<TextInputEditText>(R.id.textInputEditText).requestFocus()
+                    }
+                    return@setOnEditorActionListener true
+                }
             }
 
         rootView.findViewById<TextInputEditText>(R.id.textInputEditText)
             .setOnEditorActionListener { v, actionId, _ ->
-                if (actionId == EditorInfo.IME_ACTION_NEXT) {
-                    rootView.findViewById<TextInputEditText?>(R.id.textInputEditText_2)
+                if (actionId == EditorInfo.IME_ACTION_NEXT
+                    || actionId == EditorInfo.IME_ACTION_DONE
+                ) {
+                    val imm: InputMethodManager = requireContext().getSystemService(
+                        InputMethodManager::class.java
+                    )
+                    if (imm.isActive(v)) {
+                        imm.hideSoftInputFromWindow(v.windowToken, 0)
+                    }
+                    rootView.findViewById<ChipGroup?>(R.id.type_group)
                         ?.requestFocus()
                 }
                 return@setOnEditorActionListener true
@@ -142,10 +163,6 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
     }
 
     private fun addExtensionsSource() {
-        if (view?.findViewById<TextInputEditText>(R.id.textInputEditText)?.text.isNullOrBlank()) {
-            showErrorDialog(content = "Tên nguồn không được bỏ trống")
-            return
-        }
         val inputTextUrl = view?.findViewById<TextInputEditText>(R.id.textInputEditText_2)
         if (inputTextUrl?.text.isNullOrBlank()) {
             showErrorDialog(
@@ -167,8 +184,13 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
             R.id.type_movie -> ExtensionsConfig.Type.MOVIE
             else -> ExtensionsConfig.Type.TV_CHANNEL
         }
+        val name = (view?.findViewById<TextInputEditText>(R.id.textInputEditText)
+            ?.text?.trim().takeIf {
+                !it.isNullOrEmpty()
+            } ?: view?.findViewById<TextInputLayout>(R.id.textInputLayout)
+            ?.hint).toString()
         val extensionsConfig = ExtensionsConfig(
-            view?.findViewById<TextInputEditText>(R.id.textInputEditText)?.text.toString(),
+            name,
             sourceUrl,
             type
         )

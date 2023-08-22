@@ -46,45 +46,6 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/textInputLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginTop="20dp"
-                    android:gravity="center_vertical"
-                    android:hint="Tên nguồn"
-                    android:theme="@style/TextInputLayout"
-                    app:boxBackgroundMode="outline"
-                    app:boxCornerRadiusBottomEnd="8dp"
-                    app:boxCornerRadiusBottomStart="8dp"
-                    app:boxCornerRadiusTopEnd="8dp"
-                    app:boxCornerRadiusTopStart="8dp"
-                    app:boxStrokeColor="@color/box_stroke_color"
-                    app:hintTextColor="@color/box_stroke_color"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/title">
-
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/textInputEditText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/roboto_regular"
-                        android:imeOptions="actionNext"
-                        android:inputType="text"
-                        android:nextFocusLeft="@id/btn_save"
-                        android:nextFocusRight="@id/textInputEditText_2"
-                        android:nextFocusUp="@id/btn_save"
-                        android:nextFocusDown="@id/textInputEditText_2"
-                        android:paddingTop="15dp"
-                        android:paddingBottom="15dp"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
-                        android:textSize="22sp"
-                        tools:text="Test" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-
-                <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/textInputLayout_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -115,15 +76,53 @@
                         android:gravity="center_vertical"
                         android:imeOptions="actionNext"
                         android:inputType="textUri"
-                        android:nextFocusLeft="@id/textInputEditText"
-                        android:nextFocusRight="@id/type_tv"
-                        android:nextFocusUp="@id/textInputEditText"
-                        android:nextFocusDown="@id/type_tv"
+                        android:nextFocusLeft="@id/btn_save"
+                        android:nextFocusRight="@id/textInputEditText"
+                        android:nextFocusUp="@id/btn_save"
+                        android:nextFocusDown="@id/textInputEditText"
                         android:paddingTop="15dp"
                         android:paddingBottom="15dp"
                         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
                         android:textSize="22sp"
                         tools:text="imedia.com" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/textInputLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center_vertical"
+                    android:hint="Tên nguồn"
+                    android:theme="@style/TextInputLayout"
+                    app:boxBackgroundMode="outline"
+                    app:boxCornerRadiusBottomEnd="8dp"
+                    app:boxCornerRadiusBottomStart="8dp"
+                    app:boxCornerRadiusTopEnd="8dp"
+                    app:boxCornerRadiusTopStart="8dp"
+                    app:boxStrokeColor="@color/box_stroke_color"
+                    app:hintTextColor="@color/box_stroke_color"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/title">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/textInputEditText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/roboto_regular"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:nextFocusLeft="@id/textInputEditText_2"
+                        android:nextFocusRight="@id/type_tv"
+                        android:nextFocusUp="@id/textInputEditText_2"
+                        android:nextFocusDown="@id/type_tv"
+                        android:paddingTop="15dp"
+                        android:paddingBottom="15dp"
+                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
+                        android:textSize="22sp"
+                        tools:text="Test" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.chip.ChipGroup
@@ -145,7 +144,7 @@
                         android:checked="true"
                         android:fontFamily="@font/roboto_regular"
                         android:nextFocusLeft="@id/textInputEditText_2"
-                        android:nextFocusUp="@id/textInputEditText_2"
+                        android:nextFocusUp="@id/textInputEditText"
                         android:nextFocusDown="@id/btn_save"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="10dp"
@@ -165,7 +164,7 @@
                         android:layout_height="wrap_content"
                         android:checkable="true"
                         android:fontFamily="@font/roboto_regular"
-                        android:nextFocusUp="@id/textInputEditText_2"
+                        android:nextFocusUp="@id/textInputEditText"
                         android:nextFocusDown="@id/btn_save"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="10dp"
@@ -185,7 +184,7 @@
                         android:checkable="true"
                         android:fontFamily="@font/roboto_regular"
                         android:nextFocusRight="@id/btn_save"
-                        android:nextFocusUp="@id/textInputEditText_2"
+                        android:nextFocusUp="@id/textInputEditText"
                         android:nextFocusDown="@id/btn_save"
                         android:text="Bóng đá"
                         android:textSize="15sp"
@@ -210,9 +209,9 @@
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     android:nextFocusLeft="@id/type_football"
-                    android:nextFocusRight="@id/textInputEditText"
+                    android:nextFocusRight="@id/textInputEditText_2"
                     android:nextFocusUp="@id/type_tv"
-                    android:nextFocusDown="@id/textInputEditText"
+                    android:nextFocusDown="@id/textInputEditText_2"
                     android:text="Lưu"
                     android:textAllCaps="false"
                     android:textSize="22sp"
