@@ -48,13 +48,13 @@ ext {
             kapDaggerCompiler        : "com.google.dagger:dagger-compiler:2.44",
             kapDaggerAndroidProcessor: "com.google.dagger:dagger-android-processor:2.44",
             glide                    : "com.github.bumptech.glide:compiler:4.14.2",
-            roomCompiler             : "androidx.room:room-compiler:2.4.3",
+            roomCompiler             : "androidx.room:room-compiler:2.5.2",
             roomArch                 : "android.arch.persistence.room:compiler:1.1.1"
     ]
 
     roomDatabase = [
-            runtime   : "androidx.room:room-runtime:2.4.3",
-            roomRxJava: "androidx.room:room-rxjava3:2.4.3"
+            runtime   : "androidx.room:room-runtime:2.5.2",
+            roomRxJava: "androidx.room:room-rxjava3:2.5.2"
     ]
 
     retrofitDependencies = [
@@ -115,6 +115,11 @@ ext {
             applovinAdapter: "com.google.ads.mediation:applovin:11.5.5.0",
             meta           : "com.google.ads.mediation:facebook:6.12.0.0", //facebook
             adcolony       : "com.google.ads.mediation:adcolony:4.8.0.0",
+    ]
+
+    workManager = [
+            "work"  : "androidx.work:work-runtime-ktx:2.8.1",
+            "workRx": "androidx.work:work-rxjava3:2.8.1"
     ]
 
     otherLibs = [

@@ -10,7 +10,7 @@ plugins {
 android {
     namespace 'com.kt.apps.media.xemtv'
     compileSdk 33
-    def version_name = "23.08.01"
+    def version_name = "23.08.02"
 
     defaultConfig {
         applicationId "com.kt.apps.media.xemtv"
@@ -84,8 +84,7 @@ dependencies {
     implementation appDependencies.values()
     implementation "androidx.leanback:leanback-paging:1.1.0-alpha07"
     implementation "androidx.leanback:leanback-tab:1.1.0-beta01"
-    implementation 'androidx.work:work-runtime-ktx:2.7.1'
-    implementation("androidx.work:work-rxjava3:2.7.1")
+    implementation workManager.values()
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
