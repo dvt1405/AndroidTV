@@ -19,7 +19,11 @@
             android:layout_height="0dp"
             android:background="@color/transparent"
             app:layout_constraintBottom_toTopOf="@id/bottom_navigation"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:paddingVertical="@dimen/dashboard_padding_vertical"
+            android:paddingHorizontal="@dimen/dashboard_padding_horizontal"
+            android:clipToPadding="false"
+            />
 
 
         <com.google.android.material.bottomnavigation.BottomNavigationView

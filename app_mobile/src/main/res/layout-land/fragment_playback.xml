@@ -42,8 +42,8 @@
                 />
             <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/minimal_loading"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/base_icon_size"
+                android:layout_height="@dimen/base_icon_size"
                 android:indeterminate="true"
                 app:indicatorColor="@color/white"
                 android:layout_gravity="center"
@@ -52,10 +52,10 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/minimal_play_button"
                 style="@style/Widget.Material3.Button.IconButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="@dimen/image_button_size"
+                android:layout_height="@dimen/image_button_size"
                 app:icon="@drawable/ic_play"
-                app:iconSize="48dp"
+                app:iconSize="@dimen/base_icon_size"
                 app:iconTint="@color/white"
                 android:background="@color/transparent"
                 app:iconPadding="0dp"
@@ -65,9 +65,9 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/exit_button"
                 style="@style/Widget.Material3.Button.IconButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                app:iconSize="48dp"
+                android:layout_width="@dimen/image_button_size"
+                android:layout_height="@dimen/image_button_size"
+                app:iconSize="@dimen/base_icon_size"
                 app:icon="@drawable/ic_clear"
                 app:iconTint="@color/white"
                 android:background="@color/transparent"

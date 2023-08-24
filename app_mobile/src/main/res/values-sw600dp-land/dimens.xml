@@ -18,4 +18,7 @@
     <dimen name="font_size_label">14sp</dimen>
     <dimen name="font_size_label_medium">12sp</dimen>
     <dimen name="font_size_label_title">22sp</dimen>
+    <dimen name="player_controller_padding_top">8dp</dimen>
+    <dimen name="player_controller_padding_bottom">8dp</dimen>
+
 </resources>

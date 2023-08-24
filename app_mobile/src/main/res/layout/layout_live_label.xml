@@ -8,7 +8,7 @@ android:layout_height="wrap_content">
         android:layout_height="wrap_content"
         android:text="LIVE"
         android:textColor="@color/white"
-        android:textSize="20sp"
+        android:textAppearance="@style/TextAppearance.Label"
         />
     <ImageView
         android:layout_width="12dp"

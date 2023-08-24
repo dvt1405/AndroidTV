@@ -11,4 +11,13 @@
     <dimen name="football_item_width_live">400dp</dimen>
     <dimen name="football_item_height_live">228dp</dimen>
     <dimen name="football_logo_size">100dp</dimen>
+
+    <dimen name="dashboard_padding_vertical">24dp</dimen>
+    <dimen name="dashboard_padding_horizontal">40dp</dimen>
+    <dimen name="font_size_label">14sp</dimen>
+    <dimen name="font_size_label_medium">12sp</dimen>
+    <dimen name="font_size_label_title">22sp</dimen>
+    <dimen name="base_icon_size">24dp</dimen>
+    <dimen name="button_fullscreen_size">60dp</dimen>
+    <dimen name="image_button_size">48dp</dimen>
 </resources>

@@ -2,14 +2,18 @@ package com.kt.apps.media.mobile.ui.info
 
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.os.Handler
+import android.os.Looper
+import androidx.lifecycle.ViewModelProvider
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.BuildConfig
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentInfoBinding
+import org.json.JSONObject
+import javax.inject.Inject
 
 class InfoFragment : BaseFragment<FragmentInfoBinding>() {
 
@@ -18,26 +22,37 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
     override val screenName: String
         get() = "InfoFragment"
 
+    private var fbLink = "https://fb.com/groups/imediaapp/"
+    private var zlLink = "https://zalo.me/g/bcdftf650"
+
+    @Inject
+    lateinit var factory: ViewModelProvider.Factory
+
     override fun initView(savedInstanceState: Bundle?) {
         binding.appName.text = "iMedia version ${BuildConfig.VERSION_CODE}"
-        binding.faceBookTv.text = "http://fb.com/imediaapp"
-        binding.zaloTv.text = "http://zalo.me/imediaapp"
-
-        binding.faceBookTv.setOnClickListener {
-            openURL(binding.faceBookTv.text.toString())
+        binding.facebookBtn.setOnClickListener {
+            openURL(fbLink)
         }
-
-        binding.zaloTv.setOnClickListener {
-            openURL(binding.zaloTv.text.toString())
+        binding.zaloBtn.setOnClickListener {
+            openURL(zlLink)
         }
-
-        binding.updateCheck.setOnClickListener {
-            openURL("https://play.google.com/store/apps/details?id=com.kt.apps.media.mobile.xemtv")
-        }
+//        binding.zaloTv.text = "http://zalo.me/imediaapp"
+//
+//        binding.faceBookTv.setOnClickListener {
+//            openURL(binding.faceBookTv.text.toString())
+//        }
+//
+//        binding.zaloTv.setOnClickListener {
+//            openURL(binding.zaloTv.text.toString())
+//        }
+//
+//        binding.updateCheck.setOnClickListener {
+//            openURL("https://play.google.com/store/apps/details?id=com.kt.apps.media.mobile.xemtv")
+//        }
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-
+        getFbZlGroupsLink()
     }
 
     fun openURL(url: String) {
@@ -48,6 +63,34 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
 
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         startActivity(browserIntent)
+    }
+
+    private fun getFbZlGroupsLink(retryTimes: Int = 3) {
+        Firebase.remoteConfig
+            .fetch()
+            .addOnSuccessListener {
+                try {
+                    val jsonGroups = JSONObject(Firebase.remoteConfig.getString("user_groups"))
+                    jsonGroups.optString("facebook").takeIf {
+                        it.isNotEmpty() && it.isNotBlank()
+                    }?.let {
+                        fbLink = it
+                    }
+                    jsonGroups.optString("zalo").takeIf {
+                        it.isNotEmpty() && it.isNotBlank()
+                    }?.let {
+                        zlLink = it
+                    }
+                } catch (_: Exception) {
+                }
+            }
+            .addOnFailureListener {
+                if (retryTimes > 0) {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        getFbZlGroupsLink(retryTimes - 1)
+                    }, 2000)
+                }
+            }
     }
 
     companion object {

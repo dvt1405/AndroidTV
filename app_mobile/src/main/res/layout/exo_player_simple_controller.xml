@@ -20,7 +20,9 @@
             android:layout_height="wrap_content"
             android:background="@color/transparent"
             app:icon="@drawable/ic_clear"
-            app:iconSize="48dp"
+            app:iconSize="@dimen/base_icon_size"
+            app:iconTint="@color/white"
+            style="@style/Widget.Material3.Button.IconButton"
             />
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/title"
@@ -28,7 +30,7 @@
             android:layout_height="wrap_content"
             tools:text="VTV3"
             android:textColor="@color/white"
-            android:textSize="22sp"
+            android:textAppearance="@style/TextAppearance.Title"
             android:singleLine="true"
             android:ellipsize="marquee"
             />
@@ -39,8 +41,8 @@
         android:layout_height="wrap_content"
         android:background="@drawable/footer_background"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:paddingTop="64dp"
-        android:paddingBottom="92dp"
+        android:paddingTop="@dimen/player_controller_padding_top"
+        android:paddingBottom="@dimen/player_controller_padding_bottom"
         android:clipToPadding="false"
         >
 
@@ -87,12 +89,12 @@
         <ImageButton
             android:id="@id/exo_fullscreen"
             style="@style/ExoStyledControls.Button.Bottom.FullScreen"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
             android:visibility="visible"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginEnd="36dp"
+            android:layout_width="@dimen/button_fullscreen_size"
+            android:layout_height="@dimen/button_fullscreen_size"
             />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

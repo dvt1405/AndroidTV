@@ -17,12 +17,20 @@
     <dimen name="football_logo_size">80dp</dimen>
     <dimen name="item_channel_fontsize">14sp</dimen>
     <dimen name="exoplayer_controller_padding">24dp</dimen>
+    <dimen name="exoplayer_play_pause_margin_bottom">-24dp</dimen>
     <dimen name="common_spacing_32dp">32dp</dimen>
     <dimen name="tab_padding">28dp</dimen>
 
 <!-- text size-->
-    <dimen name="font_size_label">14sp</dimen>
-    <dimen name="font_size_label_medium">12sp</dimen>
-    <dimen name="font_size_label_title">22sp</dimen>
+    <dimen name="font_size_label">12sp</dimen>
+    <dimen name="font_size_label_medium">8sp</dimen>
+    <dimen name="font_size_label_title">14sp</dimen>
     <dimen name="tab_padding_vertical">4dp</dimen>
+    <dimen name="dashboard_padding_vertical">4dp</dimen>
+    <dimen name="dashboard_padding_horizontal">8dp</dimen>
+    <dimen name="player_controller_padding_top">64dp</dimen>
+    <dimen name="player_controller_padding_bottom">24dp</dimen>
+    <dimen name="base_icon_size">20dp</dimen>
+    <dimen name="button_fullscreen_size">48dp</dimen>
+    <dimen name="image_button_size">32dp</dimen>
 </resources>
