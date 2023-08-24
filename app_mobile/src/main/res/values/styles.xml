@@ -76,4 +76,9 @@
     <style name="TextAppearance.Title" parent="TextAppearance.Default" >
         <item name="android:textSize">@dimen/font_size_label_title</item>
     </style>
+    <style name="TextAppearance.Body" parent="TextAppearance.Default" >
+        <item name="android:textSize">@dimen/font_size_body</item>
+    </style>
+
+
 </resources>

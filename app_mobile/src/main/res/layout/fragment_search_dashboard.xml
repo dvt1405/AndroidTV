@@ -47,7 +47,8 @@
                 android:paddingTop="10dp"
                 android:hint="@string/search_input_placeholder"
                 android:textColorHint="@color/edittext_border"
-                android:textSize="22sp" />
+                android:textAppearance="@style/TextAppearance.Body"
+                />
         </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.recyclerview.widget.RecyclerView

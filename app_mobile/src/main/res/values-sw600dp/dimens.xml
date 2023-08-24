@@ -17,6 +17,7 @@
     <dimen name="font_size_label">14sp</dimen>
     <dimen name="font_size_label_medium">12sp</dimen>
     <dimen name="font_size_label_title">22sp</dimen>
+    <dimen name="font_size_body">16sp</dimen>
     <dimen name="base_icon_size">24dp</dimen>
     <dimen name="button_fullscreen_size">60dp</dimen>
     <dimen name="image_button_size">48dp</dimen>
