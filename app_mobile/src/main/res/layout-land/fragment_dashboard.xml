@@ -29,9 +29,14 @@
             android:layout_height="match_parent"
             android:minWidth="96dp"
             app:menu="@menu/bottom_navigation"
-            android:background="@color/black"
             app:layout_constraintStart_toStartOf="parent"
+            android:background="@color/transparent"
             style="@style/NavigationView"
+            app:itemActiveIndicatorStyle="@style/NavigationActiveIndicator"
+            app:itemTextColor="@color/white"
+            app:itemIconTint="@color/white"
+            app:itemTextAppearanceActive="@style/TextAppearance.Label.Medium"
+            app:itemTextAppearanceInactive="@style/TextAppearance.Label.Medium"
             />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

@@ -6,7 +6,6 @@
     <dimen name="item_row_title">22sp</dimen>
     <dimen name="item_channel_decoration">12dp</dimen>
     <dimen name="fading_edge_size">60dp</dimen>
-    <dimen name="tab_spacing">40dp</dimen>
     <dimen name="football_item_width">300dp</dimen>
     <dimen name="football_item_height">170dp</dimen>
     <dimen name="football_item_width_live">400dp</dimen>

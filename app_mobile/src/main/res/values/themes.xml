@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.XemTv" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.XemTv" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryVariant">@color/white</item>
@@ -24,6 +24,8 @@
         <item name="sweet_alert_content_text_color">@color/white</item>
         <item name="sweet_alert_btn_confirm_default_focus">true</item>
         <item name="sweet_alert_bg_drawable">@null</item>
+
+
     </style>
     <style name="Theme.XemTv.NoActionBar">
         <item name="windowActionBar">false</item>

@@ -6,7 +6,10 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.core.view.updateLayoutParams
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -69,6 +72,10 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
         binding.extensionSourceLink
     }
 
+    private val sourceLinkLayout by lazy {
+        binding.textInputLayout1
+    }
+
     private val saveButton by lazy {
         binding.saveButton
     }
@@ -90,8 +97,14 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
     private val errorText by lazy {
         binding.errorTextView
     }
+
+    private var isUserEditName: Boolean = false
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView: ")
+        sourceLinkLayout.prefixTextView.updateLayoutParams<ViewGroup.LayoutParams> {
+            height = ViewGroup.LayoutParams.MATCH_PARENT
+        }
+        sourceLinkLayout.prefixTextView.gravity = Gravity.CENTER
     }
 
     @OptIn(FlowPreview::class)
@@ -110,9 +123,19 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
 
         lifecycleScope.launch {
             sourceLinkEditText.textChanges().debounce(250).collect {
-                if(it.toString().isNotEmpty() && it?.startsWith("http") == false) {
+                val text = (it ?: "").let { t -> "${(sourceLinkLayout.prefixText ?: "")}${t}" }
+                if(text.isNotEmpty() && !text.startsWith("http")) {
                     sourceLinkEditText.error = "Đường dẫn không hợp lệ! Đường dẫn phải phải bắt đầu bằng: \"http\""
                 }
+                if (!isUserEditName && sourceLinkEditText.isFocused) {
+                    sourceNameEditText.setText(text)
+                }
+            }
+        }
+
+        sourceNameEditText.doAfterTextChanged {
+            if ((it ?: "").isNotEmpty() && !isUserEditName && sourceNameEditText.isFocused) {
+                isUserEditName = true
             }
         }
 
@@ -168,7 +191,9 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
 
     private suspend fun addExtensionsSource() {
         val name = sourceNameEditText.text.toString()
-        val link = sourceLinkEditText.text.toString()
+        val link = sourceLinkEditText.text.toString().let {
+            "${sourceLinkLayout.prefixText ?: ""}${it}"
+        }
         if (validateInfo(name, link)) {
             val  extensionConfig = ExtensionsConfig(
                 name,

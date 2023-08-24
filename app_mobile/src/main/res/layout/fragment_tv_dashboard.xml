@@ -23,12 +23,12 @@
             android:background="@color/transparent"
             app:tabIndicatorColor="@color/transparent"
             app:tabMode="scrollable"
-            app:tabPaddingStart="@dimen/tab_spacing"
-            app:tabPaddingEnd="@dimen/tab_spacing"
-            app:tabPaddingTop="6dp"
-            app:tabPaddingBottom="6dp"
-            app:tabMinWidth="20dp"
-            app:tabTextAppearance="@style/TabTextAppearance"
+            app:tabPaddingStart="@dimen/tab_padding"
+            app:tabPaddingEnd="@dimen/tab_padding"
+            app:tabMinWidth="40dp"
+            app:tabRippleColor="@color/transparent"
+            app:tabTextAppearance="@style/TextAppearance.Label"
+            android:layout_marginTop="@dimen/common_spacing_32dp"
             />
 
         <androidx.viewpager2.widget.ViewPager2

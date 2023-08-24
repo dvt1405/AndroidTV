@@ -53,9 +53,27 @@
 
     <style name="NavigationView" parent="Widget.MaterialComponents.NavigationRailView.Colored">
         <item name="labelVisibilityMode">labeled</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorOnSurfaceVariant">@color/white</item>
+    </style>
+    <style name="NavigationActiveIndicator" parent="Widget.Material3.NavigationRailView.ActiveIndicator">
+        <item name="android:color">#343434</item>
     </style>
     <style name="Theme.AppCompat" parent="Base.Theme.AppCompat"/>
     <style name="OutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
         <item name="rippleColor">@color/gray_btn_bg_pressed_color</item>
+    </style>
+
+    <style name="TextAppearance.Default" parent="">
+        <item name="android:textColor">@color/white</item>
+    </style>
+    <style name="TextAppearance.Label" parent="TextAppearance.Default" >
+        <item name="android:textSize">@dimen/font_size_label</item>
+    </style>
+    <style name="TextAppearance.Label.Medium" parent="TextAppearance.Default" >
+        <item name="android:textSize">@dimen/font_size_label_medium</item>
+    </style>
+    <style name="TextAppearance.Title" parent="TextAppearance.Default" >
+        <item name="android:textSize">@dimen/font_size_label_title</item>
     </style>
 </resources>
