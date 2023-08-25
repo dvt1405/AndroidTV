@@ -1,7 +1,7 @@
 package com.kt.apps.media.mobile.viewmodels.features
 
 import android.net.Uri
-import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.extensions.model.TVScheduler
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
@@ -30,6 +30,11 @@ interface IFetchTVChannelControl: IFetchDataControl {
         val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await()
         val data = mapSuccessValue(linkStream)
         playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
+    }
+
+    suspend fun loadProgramForChannel(element: ChannelElement.TVChannelElement): TVScheduler.Programme {
+        tvChannelViewModel.loadProgramForChannel(element.model)
+        return tvChannelViewModel.programmeForChannelLiveData.await()
     }
 }
 

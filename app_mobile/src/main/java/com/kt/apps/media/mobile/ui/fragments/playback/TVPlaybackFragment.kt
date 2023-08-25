@@ -17,6 +17,9 @@ import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.gone
+import com.kt.apps.core.utils.inVisible
+import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
@@ -28,12 +31,8 @@ import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.RadioPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.TVPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 
@@ -72,20 +71,32 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
         val itemToPlay = arguments?.get(EXTRA_TV_CHANNEL) as? TVChannel
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launch {
-                itemAdapter.childClicks()
-                    .mapNotNull { it as? ChannelElement.TVChannelElement }
-                    .collectLatest {
-                        _playbackInteractor.loadLinkStreamChannel(it)
-                    }
-            }
-
-            itemToPlay?.let {
-                launch {
-                    _playbackInteractor.loadLinkStreamChannel(ChannelElement.TVChannelElement(itemToPlay))
+            val loadItemFlow: Flow<ChannelElement.TVChannelElement> = merge(
+                itemAdapter.childClicks().mapNotNull { it as? ChannelElement.TVChannelElement },
+                itemToPlay?.let { flowOf(it) }?.map {  ChannelElement.TVChannelElement(it)} ?: emptyFlow()
+            ).stateIn(lifecycleScope)
+            launch(coroutineError()) {
+                loadItemFlow.collectLatest {
+                    title.emit(it.model.tvChannelName)
+                    _playbackInteractor.loadLinkStreamChannel(it)
                 }
             }
 
+            launch(CoroutineExceptionHandler { _, throwable ->
+                subTitle?.gone()
+            }) {
+                loadItemFlow.collectLatest {
+                    val infor = _playbackInteractor.loadProgramForChannel(it)
+                    infor.description.takeIf { t -> t.isNotBlank() }
+                        ?.run {
+                            subTitle?.visible()
+                            subTitle?.text = this
+                        }
+                        ?: kotlin.run {
+                            subTitle?.gone()
+                        }
+                }
+            }
         }
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -149,13 +160,32 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
         val itemToPlay = arguments?.get(TVPlaybackFragment.EXTRA_TV_CHANNEL) as? TVChannel
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launch {
-                merge(
-                    itemToPlay?.let { flowOf(ChannelElement.TVChannelElement(it)) } ?: emptyFlow(),
-                    itemAdapter.childClicks()
-                        .mapNotNull { it as? ChannelElement.TVChannelElement }
-                ).collectLatest {
+            val loadItemFlow = merge(
+                itemToPlay?.let { flowOf(ChannelElement.TVChannelElement(it)) } ?: emptyFlow(),
+                itemAdapter.childClicks()
+                    .mapNotNull { it as? ChannelElement.TVChannelElement }
+            ).stateIn(lifecycleScope)
+
+            launch(coroutineError()) {
+                loadItemFlow.collectLatest {
+                    title.emit(it.model.tvChannelName)
                     _playbackInteractor.loadLinkStreamChannel(it)
+                }
+            }
+
+            launch(CoroutineExceptionHandler { _, _ ->
+                subTitle?.gone()
+            }) {
+                loadItemFlow.collectLatest {
+                    val infor = _playbackInteractor.loadProgramForChannel(it)
+                    infor.description.takeIf { t -> t.isNotBlank() }
+                        ?.run {
+                            subTitle?.visible()
+                            subTitle?.text = this
+                        }
+                        ?: kotlin.run {
+                            subTitle?.gone()
+                        }
                 }
             }
 

@@ -94,6 +94,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     private var _cachePlayingState: Boolean = false
 
     override var callback: IPlaybackAction? = null
+
     //Views
     private val fullScreenButton: ImageButton? by lazy {
         exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_fullscreen)
@@ -101,6 +102,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected val progressBar: SeekBar? by lazy {
         exoPlayer?.findViewById(R.id.exo_progress_bar)
+    }
+
+    protected val subTitle: TextView? by lazy {
+        exoPlayer?.findViewById(R.id.sub_title)
     }
 
     private val playPauseButton: ImageButton? by lazy {
@@ -148,7 +153,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected abstract val exitButton: View?
 
     private val currentLayout = MutableStateFlow<LayoutState>(LayoutState.FULLSCREEN(true))
-    private val title = MutableStateFlow("")
+    protected val title = MutableStateFlow("")
     private val isProgressing = MutableStateFlow(true)
     protected val isPlayingState = MutableStateFlow(false)
 
@@ -346,7 +351,13 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.keepScreenOn = true
     }
 
-    private fun onError(throwable: Throwable?) {
+    protected fun coroutineError(): CoroutineExceptionHandler {
+        return CoroutineExceptionHandler { _, throwable ->
+            onError(throwable)
+        }
+    }
+
+    protected fun onError(throwable: Throwable?) {
         val errorCode = (throwable as? PlaybackThrowable)?.code ?: -1
         showErrorDialog(
             titleText = "Lỗi phát video",

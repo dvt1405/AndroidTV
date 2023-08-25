@@ -23,6 +23,7 @@ import androidx.transition.Slide
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
+import androidx.transition.Visibility
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
@@ -197,7 +198,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 alignParent(playback.id, ConstraintSet.BOTTOM)
                 alignParent(playback.id, ConstraintSet.END)
             }
-            TransitionManager.beginDelayedTransition(surfaceView, CustomTransition().apply {
+            TransitionManager.beginDelayedTransition(surfaceView, Fade(Fade.IN).apply {
                 addListener(object: TransitionCallback() {
                     override fun onTransitionStart(transition: Transition) {
                         super.onTransitionStart(transition)
@@ -205,6 +206,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                     }
                 })
             })
+//            this.state = PlaybackState.Invisible
             set.applyTo(surfaceView)
         }
     }

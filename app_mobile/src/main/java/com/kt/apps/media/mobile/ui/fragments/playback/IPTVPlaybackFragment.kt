@@ -21,8 +21,7 @@ import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.util.Util
 import com.kt.apps.core.extensions.ExtensionsChannel
-import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.core.utils.*
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
@@ -38,6 +37,7 @@ import com.kt.apps.media.mobile.utils.safeLet
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.IPTVPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadIPTVJob
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -52,6 +52,8 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
     private val durationTV: TextView? by lazy {
         exoPlayer?.findViewById(R.id.tv_live_time)
     }
+
+
     private val _playbackViewModel by lazy {
         IPTVPlaybackInteractor(
             ViewModelProvider(requireActivity(), factory),
@@ -107,14 +109,31 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
         super.initAction(savedInstanceState)
         val extensionsChannel = arguments?.get(EXTRA_TV_CHANNEL) as? ExtensionsChannel
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launch {
-                merge(
-                    extensionsChannel?.let { flowOf(it) } ?: emptyFlow(),
-                    itemAdapter.childClicks().mapNotNull {
-                        (it as? ChannelElement.ExtensionChannelElement)?.model
-                    }
-                ).collectLatest {
+            val loadChannelFlow = merge(
+                extensionsChannel?.let { flowOf(it) } ?: emptyFlow(),
+                itemAdapter.childClicks().mapNotNull {
+                    (it as? ChannelElement.ExtensionChannelElement)?.model
+                }
+            ).stateIn(lifecycleScope)
+            launch(coroutineError()) {
+                loadChannelFlow.collectLatest {
                     _playbackViewModel.loadIPTVJob(it)
+                }
+            }
+
+            launch(CoroutineExceptionHandler { coroutineContext, throwable ->
+                subTitle?.gone()
+            }) {
+                loadChannelFlow.collectLatest {
+                    val infor = _playbackViewModel.loadProgramForChanel(it)
+                    infor.description.takeIf { t -> t.isNotBlank() }
+                        ?.run {
+                            subTitle?.visible()
+                            subTitle?.text = this
+                        }
+                        ?: kotlin.run {
+                            subTitle?.inVisible()
+                        }
                 }
             }
 
