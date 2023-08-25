@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.viewmodels.features
 
 import android.net.Uri
+import com.google.firebase.inject.Deferred
 import com.kt.apps.core.extensions.model.TVScheduler
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.football.model.FootballMatch
@@ -9,14 +10,18 @@ import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
+import com.kt.apps.media.mobile.utils.asUpdateFlow
 import com.kt.apps.media.mobile.utils.await
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 interface IFetchDataControl {
     val playbackViewModel: PlaybackViewModel
 }
 interface IFetchTVChannelControl: IFetchDataControl {
     val tvChannelViewModel: TVChannelViewModel
-
     suspend fun loadLinkStreamAction(
         element: ChannelElement.TVChannelElement,
         mapPrepareValue: (ChannelElement.TVChannelElement) -> PrepareStreamLinkData,
@@ -32,9 +37,8 @@ interface IFetchTVChannelControl: IFetchDataControl {
         playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
     }
 
-    suspend fun loadProgramForChannel(element: ChannelElement.TVChannelElement): TVScheduler.Programme {
+    fun loadProgramForChannel(element: ChannelElement.TVChannelElement) {
         tvChannelViewModel.loadProgramForChannel(element.model)
-        return tvChannelViewModel.programmeForChannelLiveData.await()
     }
 }
 

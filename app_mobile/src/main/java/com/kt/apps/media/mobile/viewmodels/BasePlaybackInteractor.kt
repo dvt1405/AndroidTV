@@ -2,12 +2,14 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.ViewModelProvider
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.utils.asFlow
+import com.kt.apps.media.mobile.utils.asUpdateFlow
 import com.kt.apps.media.mobile.viewmodels.features.IFetchRadioChannel
 import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
@@ -56,8 +58,14 @@ class TVPlaybackInteractor(
 
     val tvChannelList by lazy {
         tvChannelViewModel.tvChannelLiveData
-            .asFlow("tvplayback")
+            .asFlow(TAG)
             .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), emptyList())
+    }
+
+    val currentProgrammeForChannel by lazy {
+        tvChannelViewModel.programmeForChannelLiveData
+            .asUpdateFlow(TAG)
+            .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), null)
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -88,5 +96,11 @@ class RadioPlaybackInteractor(
                 }
             }
             .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), emptyList())
+    }
+
+    val currentProgrammeForChannel by lazy {
+        tvChannelViewModel.programmeForChannelLiveData
+            .asUpdateFlow(TAG)
+            .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), null)
     }
 }

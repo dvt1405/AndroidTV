@@ -125,15 +125,16 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                 subTitle?.gone()
             }) {
                 loadChannelFlow.collectLatest {
-                    val infor = _playbackViewModel.loadProgramForChanel(it)
-                    infor.description.takeIf { t -> t.isNotBlank() }
-                        ?.run {
-                            subTitle?.visible()
-                            subTitle?.text = this
-                        }
-                        ?: kotlin.run {
-                            subTitle?.inVisible()
-                        }
+                    _playbackViewModel.loadProgramForChanel(it).collectLatest { infor ->
+                        infor.description.takeIf { t -> t.isNotBlank() }
+                            ?.run {
+                                subTitle?.visible()
+                                subTitle?.text = this
+                            }
+                            ?: kotlin.run {
+                                subTitle?.inVisible()
+                            }
+                    }
                 }
             }
 

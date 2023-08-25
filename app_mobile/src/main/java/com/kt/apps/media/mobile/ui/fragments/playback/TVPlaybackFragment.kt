@@ -32,6 +32,7 @@ import com.kt.apps.media.mobile.viewmodels.RadioPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.TVPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -65,6 +66,7 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
         }
     }
 
+    @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
 
@@ -75,9 +77,11 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
                 itemAdapter.childClicks().mapNotNull { it as? ChannelElement.TVChannelElement },
                 itemToPlay?.let { flowOf(it) }?.map {  ChannelElement.TVChannelElement(it)} ?: emptyFlow()
             ).stateIn(lifecycleScope)
+
             launch(coroutineError()) {
                 loadItemFlow.collectLatest {
                     title.emit(it.model.tvChannelName)
+                    _playbackInteractor.loadProgramForChannel(it)
                     _playbackInteractor.loadLinkStreamChannel(it)
                 }
             }
@@ -85,17 +89,18 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
             launch(CoroutineExceptionHandler { _, throwable ->
                 subTitle?.gone()
             }) {
-                loadItemFlow.collectLatest {
-                    val infor = _playbackInteractor.loadProgramForChannel(it)
-                    infor.description.takeIf { t -> t.isNotBlank() }
-                        ?.run {
-                            subTitle?.visible()
-                            subTitle?.text = this
-                        }
-                        ?: kotlin.run {
-                            subTitle?.gone()
-                        }
-                }
+                _playbackInteractor.currentProgrammeForChannel
+                    .mapNotNull { it }
+                    .collectLatest { infor ->
+                        infor.description.takeIf { t -> t.isNotBlank() }
+                            ?.run {
+                                subTitle?.visible()
+                                subTitle?.text = this
+                            }
+                            ?: kotlin.run {
+                                subTitle?.gone()
+                            }
+                    }
             }
         }
 
@@ -169,24 +174,26 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
             launch(coroutineError()) {
                 loadItemFlow.collectLatest {
                     title.emit(it.model.tvChannelName)
+                    _playbackInteractor.loadProgramForChannel(it)
                     _playbackInteractor.loadLinkStreamChannel(it)
                 }
             }
 
-            launch(CoroutineExceptionHandler { _, _ ->
+            launch(CoroutineExceptionHandler { _, throwable ->
                 subTitle?.gone()
             }) {
-                loadItemFlow.collectLatest {
-                    val infor = _playbackInteractor.loadProgramForChannel(it)
-                    infor.description.takeIf { t -> t.isNotBlank() }
-                        ?.run {
-                            subTitle?.visible()
-                            subTitle?.text = this
-                        }
-                        ?: kotlin.run {
-                            subTitle?.gone()
-                        }
-                }
+                _playbackInteractor.currentProgrammeForChannel
+                    .mapNotNull { it }
+                    .collectLatest { infor ->
+                        infor.description.takeIf { t -> t.isNotBlank() }
+                            ?.run {
+                                subTitle?.visible()
+                                subTitle?.text = this
+                            }
+                            ?: kotlin.run {
+                                subTitle?.gone()
+                            }
+                    }
             }
 
             launch {
@@ -230,37 +237,4 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
             )
         }
     }
-}
-
-
-
-open class SimpleTransitionListener: MotionLayout.TransitionListener {
-    override fun onTransitionStarted(motionLayout: MotionLayout?, startId: Int, endId: Int) {
-        Log.d(TAG, "onTransitionStarted: $startId $endId")
-    }
-
-    override fun onTransitionChange(
-        motionLayout: MotionLayout?,
-        startId: Int,
-        endId: Int,
-        progress: Float
-    ) {
-        Log.d(TAG, "onTransitionChange: $startId $endId")
-    }
-
-    override fun onTransitionCompleted(motionLayout: MotionLayout?, currentId: Int) {
-        Log.d(TAG, "onTransitionCompleted: $currentId")
-    }
-
-    override fun onTransitionTrigger(
-        motionLayout: MotionLayout?,
-        triggerId: Int,
-        positive: Boolean,
-        progress: Float
-    ) {
-        Log.d(TAG, "onTransitionTrigger: $triggerId $positive $progress")
-    }
-
-
-
 }

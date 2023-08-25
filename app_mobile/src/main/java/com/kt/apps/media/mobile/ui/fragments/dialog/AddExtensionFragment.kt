@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.ui.fragments.dialog
 
 import android.content.DialogInterface
 import android.graphics.Point
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -114,7 +115,8 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
         lifecycleScope.launch {
             combine(flow = sourceNameEditText.textChanges(), flow2 = sourceLinkEditText.textChanges(), transform = {
                     name, link ->
-                return@combine validateInfo(name.toString(), link.toString())
+                val link = "${sourceLinkLayout.prefixText ?: ""}${link}"
+                return@combine validateInfo(name.toString(), link)
             }).collect {
                 processState.tryEmit(State.EDITING)
                 saveButton.isEnabled = it
@@ -128,7 +130,7 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
                     sourceLinkEditText.error = "Đường dẫn không hợp lệ! Đường dẫn phải phải bắt đầu bằng: \"http\""
                 }
                 if (!isUserEditName && sourceLinkEditText.isFocused) {
-                    sourceNameEditText.setText(text)
+                    sourceNameEditText.setText(Uri.parse(text).pathSegments.filter { t -> t.trim().isNotEmpty() }.lastOrNull() ?: "")
                 }
             }
         }

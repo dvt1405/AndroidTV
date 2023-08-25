@@ -5,12 +5,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.extensions.model.TVScheduler
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
-import com.kt.apps.media.mobile.utils.asFlow
-import com.kt.apps.media.mobile.utils.asSuccessFlow
-import com.kt.apps.media.mobile.utils.await
-import com.kt.apps.media.mobile.utils.groupAndSort
+import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.features.IFetchIPTVControl
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
@@ -42,8 +40,8 @@ class IPTVPlaybackInteractor(provider: ViewModelProvider, private val coroutineS
             }
     }
 
-    suspend fun loadProgramForChanel(channel: ExtensionsChannel): TVScheduler.Programme {
+    fun loadProgramForChanel(channel: ExtensionsChannel): Flow<TVScheduler.Programme> {
         extensionViewModel.loadProgramForChannel(channel, ExtensionsConfig.Type.TV_CHANNEL)
-        return extensionViewModel.programmeForChannelLiveData.await()
+        return extensionViewModel.programmeForChannelLiveData.asUpdateFlow(TAG)
     }
 }
