@@ -14,6 +14,7 @@ import com.kt.apps.core.Constants
 import com.kt.apps.core.utils.dpToPx
 
 import com.kt.apps.core.extensions.ExtensionsChannel
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.getKeyForLocalLogo
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
@@ -74,6 +75,33 @@ class DashboardTVChannelPresenter : Presenter() {
             (_defaultImageWidthDimensions / IMAGE_DIMENSION).toInt()
         )
         when (item) {
+            is VideoFavoriteDTO -> {
+                cardView.titleText = item.title
+                cardView.contentText = null
+
+                if (item.type == VideoFavoriteDTO.Type.IPTV) {
+                    cardView.let { imgView ->
+                        val name = Constants.mapChannel[
+                                (item.id.takeIf {
+                                    it.trim().isNotBlank()
+                                } ?: item.logoUrl).getKeyForLocalLogo()
+                        ]
+                        imgView.mainImageView.scaleType = ImageView.ScaleType.FIT_CENTER
+                        name?.let {
+                            imgView.mainImageView
+                                .loadImgByDrawableIdResName(it, item.logoUrl.trim())
+                        } ?: imgView.mainImageView.loadImgByUrl(item.logoUrl.trim())
+                    }
+                } else {
+                    cardView.let { imgView ->
+                        imgView.mainImageView.scaleType = ImageView.ScaleType.FIT_CENTER
+                        imgView.mainImageView
+                            .loadImgByDrawableIdResName(item.logoUrl, item.logoUrl)
+                    }
+                }
+                updateCardBackgroundColor(cardView, false)
+            }
+
             is TVChannel -> {
                 cardView.titleText = item.tvChannelName
                 cardView.contentText = null

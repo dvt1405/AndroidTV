@@ -5,6 +5,8 @@ import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.autoupdate.di.DaggerAppUpdateComponent
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
@@ -12,6 +14,7 @@ import com.kt.apps.core.di.DaggerCoreComponents
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVComponents
 import com.kt.apps.core.workers.AutoRefreshExtensionsChannelWorker
+import com.kt.apps.core.workers.TVEpgWorkers
 import com.kt.apps.football.di.DaggerFootballComponents
 import com.kt.apps.football.di.FootballComponents
 import com.kt.apps.media.xemtv.di.AppComponents
@@ -86,6 +89,25 @@ class App : CoreApp() {
                         .build()
                 )
                 .build()
+        )
+
+        workManager.enqueueUniquePeriodicWork(
+            "RefreshEpgData",
+            ExistingPeriodicWorkPolicy.KEEP,
+            PeriodicWorkRequestBuilder<TVEpgWorkers>(
+                if (BuildConfig.DEBUG) {
+                    Duration.ofMinutes(15L)
+                } else {
+                    Duration.ofHours(1L)
+                }
+            ).setInputData(
+                Data.Builder()
+                    .putString(TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig
+                        .getString("epg_url").ifEmpty {
+                            "http://lichphatsong.xyz/schedule/vthanhtivi_epg.xml"
+                        })
+                    .build()
+            ).build()
         )
     }
 

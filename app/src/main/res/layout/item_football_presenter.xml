@@ -36,6 +36,7 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="start"
                 android:src="@drawable/app_icon"
+                android:theme="@style/Theme.AppCompat"
                 app:imageHeight="100dp"
                 app:imageWidth="100dp"
                 app:rounded="left" />
@@ -48,6 +49,7 @@
                 android:src="@drawable/app_icon"
                 app:imageHeight="100dp"
                 app:imageWidth="100dp"
+                android:theme="@style/Theme.AppCompat"
                 app:rounded="right" />
 
             <TextView

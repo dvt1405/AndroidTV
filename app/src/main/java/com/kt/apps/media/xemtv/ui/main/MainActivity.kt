@@ -12,6 +12,7 @@ import com.kt.apps.media.xemtv.R
 import com.kt.apps.media.xemtv.databinding.ActivityMainBinding
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.extensions.ExtensionsViewModel
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import com.kt.apps.media.xemtv.ui.search.SearchViewModels
 import javax.inject.Inject
 
@@ -30,6 +31,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         ViewModelProvider(this, factory)[TVChannelViewModel::class.java]
     }
 
+    private val favoriteViewModel by lazy {
+        ViewModelProvider(this, factory)[FavoriteViewModel::class.java]
+    }
 
     private val extensionsViewModel by lazy {
         ViewModelProvider(this, factory)[ExtensionsViewModel::class.java]

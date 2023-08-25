@@ -15,6 +15,7 @@ import com.kt.apps.core.tv.di.TVScope
 import com.kt.apps.core.tv.model.*
 import com.kt.apps.core.tv.storage.TVStorage
 import com.kt.apps.core.utils.removeAllSpecialChars
+import com.kt.apps.core.utils.trustEveryone
 import io.reactivex.rxjava3.core.Observable
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -107,6 +108,7 @@ class SCTVDataSourceImpl @Inject constructor(
                     totalChannel.addAll(keyValueStorage.getTvByGroup(group))
                     count++
                     if (count == listGroup.size) {
+                        if (emitter.isDisposed) return@create
                         emitter.onNext(totalChannel)
                         emitter.onComplete()
                     }
@@ -117,6 +119,7 @@ class SCTVDataSourceImpl @Inject constructor(
                         totalChannel.addAll(it)
                         count++
                         if (count == listGroup.size) {
+                            if (emitter.isDisposed) return@fetchTvList
                             emitter.onNext(totalChannel)
                             if (needRefresh) {
                                 keyValueStorage.saveRefreshInVersion(
@@ -128,6 +131,7 @@ class SCTVDataSourceImpl @Inject constructor(
                         }
                     }.addOnFailureListener {
                         count++
+                        if (emitter.isDisposed) return@addOnFailureListener
                         emitter.onError(it)
                     }
                 }
@@ -158,6 +162,7 @@ class SCTVDataSourceImpl @Inject constructor(
 
         return Observable.create {
             val response = try {
+                trustEveryone()
                 okHttpClient.newCall(
                     Request.Builder()
                         .header("origin", "https://sctvonline.vn")
@@ -173,6 +178,8 @@ class SCTVDataSourceImpl @Inject constructor(
                         .build()
                 ).execute()
             } catch (e: Exception) {
+                if (it.isDisposed) return@create
+                it.onError(e)
                 return@create
             }
 
@@ -223,7 +230,7 @@ class SCTVDataSourceImpl @Inject constructor(
                     it.onComplete()
                 }
             }
-        }
+        }.retry(3)
     }
 
     private fun getTVChannelPageForMenu(menuId: String = "truyen-hinh-ecb1ec92"): Observable<List<SCTVPages.Ribbon>> {

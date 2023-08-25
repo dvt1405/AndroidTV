@@ -108,11 +108,13 @@ class ParserExtensionsSource @Inject constructor(
                     tag = "OnlineSource",
                     message = "Pending source: $status"
                 )
-                if (status == Status.SUCCESS) {
-                    it.onComplete()
-                } else if (status == Status.ERROR) {
-                    pendingObservableSourceStatus.remove(extension.sourceUrl)
-                    it.onError(Throwable("Retry"))
+                if (!it.isDisposed) {
+                    if (status == Status.SUCCESS) {
+                        it.onComplete()
+                    } else if (status == Status.ERROR) {
+                        pendingObservableSourceStatus.remove(extension.sourceUrl)
+                        it.onError(Throwable("Retry"))
+                    }
                 }
             }.andThen(getListIptvFromLocalDB(extension))
                 .onErrorResumeNext {
@@ -266,6 +268,7 @@ class ParserExtensionsSource @Inject constructor(
         var line = reader.readLine()?.trimStart()
         var extensionsChannel: ExtensionsChannel?
         var listChannel = mutableListOf<ExtensionsChannel>()
+        var totalChannel = 0
         var channelId = ""
         var channelLogo = ""
         var channelGroup = ""
@@ -301,6 +304,7 @@ class ParserExtensionsSource @Inject constructor(
                 if (extensionsChannel.isValidChannel) {
                     synchronized(listChannel) {
                         listChannel.add(extensionsChannel)
+                        totalChannel++
                         if (listChannel.size > MINIMUM_ITEM_COUNT_TO_SAVE) {
                             Logger.d(this@ParserExtensionsSource, "execute", "Insert to db: ${listChannel.size}")
                             if (!emitter.isDisposed) {
@@ -409,7 +413,11 @@ class ParserExtensionsSource @Inject constructor(
             emitter.onNext(listChannel)
         }
         if (!emitter.isDisposed) {
-            emitter.onComplete()
+            if (totalChannel == 0) {
+                emitter.onError(Throwable("Empty channel found"))
+            } else {
+                emitter.onComplete()
+            }
         }
     }.subscribeOn(Schedulers.io()).flatMap { list ->
         val listCategory = list.groupBy {
@@ -429,6 +437,8 @@ class ParserExtensionsSource @Inject constructor(
             }
     }.also {
         pendingObservableSourceStatus[config.sourceUrl] = Status.RUNNING
+    }.filter {
+        it.isNotEmpty()
     }
 
     private fun getByRegex(pattern: Pattern, finder: String): String {
@@ -471,7 +481,9 @@ class ParserExtensionsSource @Inject constructor(
                             val jsonArray: JSONArray = try {
                                 JSONArray(remoteConfig.getString("default_iptv_channel"))
                             } catch (e: Exception) {
-                                emitter.onError(e)
+                                if (!emitter.isDisposed) {
+                                    emitter.onError(e)
+                                }
                                 return@addOnSuccessListener
                             }
 

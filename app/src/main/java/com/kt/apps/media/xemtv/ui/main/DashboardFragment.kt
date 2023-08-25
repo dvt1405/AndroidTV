@@ -13,12 +13,14 @@ import androidx.core.os.bundleOf
 import androidx.leanback.app.*
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.tabs.TabLayout
+import com.kt.apps.autoupdate.ui.FragmentQrCode
 import com.kt.apps.core.Constants
 import com.kt.apps.core.R
 import com.kt.apps.core.base.IKeyCodeHandler
 import com.kt.apps.core.base.leanback.*
 import com.kt.apps.core.base.leanback.BrowseSupportFragment
 import com.kt.apps.core.base.leanback.NavDrawerView.INavDrawerItemSelected
+import com.kt.apps.core.base.viewmodels.BaseExtensionsViewModel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.RoomDataBase
@@ -28,8 +30,10 @@ import com.kt.apps.core.utils.leanback.findCurrentSelectedPosition
 import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
+import com.kt.apps.media.xemtv.ui.extensions.ExtensionsViewModel
 import com.kt.apps.media.xemtv.ui.extensions.FragmentAddExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import com.kt.apps.media.xemtv.ui.search.SearchViewModels
 import com.kt.apps.media.xemtv.ui.tv.BaseTabLayoutFragment
 import com.kt.apps.media.xemtv.ui.tv.FragmentTVDashboardNew
@@ -65,6 +69,12 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
     }
     private val tvChannelViewModel by lazy {
         ViewModelProvider(requireActivity(), viewModelFactory)[TVChannelViewModel::class.java]
+    }
+    private val extensionsViewModel by lazy {
+        ViewModelProvider(requireActivity(), viewModelFactory)[ExtensionsViewModel::class.java]
+    }
+    private val favoriteViewModel by lazy {
+        ViewModelProvider(requireActivity(), viewModelFactory)[FavoriteViewModel::class.java]
     }
     val disableFocusSearch: Boolean
         get() = if (mMainFragment is FragmentTVDashboardNew) {
@@ -188,9 +198,13 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 } else {
                     searchViewModels.clearLastSelectedItem()
                 }
+                if (position != defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_FAVORITE)) {
+                    favoriteViewModel.clearLastSelectedStreamingTask()
+                }
 
                 if (position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_TV)
                     || position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_RADIO)
+                    || position == defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_FAVORITE)
                 ) {
                     if (lastSelectedItem != position) {
                         tvChannelViewModel.cancelCurrentGetStreamLinkTask()
@@ -235,12 +249,33 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 Logger.d(this, message = uri.toString())
                 when (uri.host) {
                     Constants.HOST_FOOTBALL -> {
+                        try {
+                            if (requireActivity().supportFragmentManager.findFragmentById(android.R.id.content) is FragmentQrCode) {
+                                requireActivity().supportFragmentManager.popBackStackImmediate()
+                            }
+                        } catch (_: Exception) {
+                        }
+
                         onRowSelected(defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_FOOTBALL))
                     }
                     Constants.HOST_TV -> {
+                        try {
+                            if (requireActivity().supportFragmentManager.findFragmentById(android.R.id.content) is FragmentQrCode) {
+                                requireActivity().supportFragmentManager.popBackStackImmediate()
+                            }
+                        } catch (_: Exception) {
+                        }
+
                         onRowSelected(defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_TV))
                     }
                     Constants.HOST_RADIO -> {
+                        try {
+                            if (requireActivity().supportFragmentManager.findFragmentById(android.R.id.content) is FragmentQrCode) {
+                                requireActivity().supportFragmentManager.popBackStackImmediate()
+                            }
+                        } catch (_: Exception) {
+                        }
+
                         onRowSelected(defaultPages.keys.indexOf(DashboardPageRowFactory.ROW_RADIO))
                     }
                 }
@@ -411,6 +446,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
             if (BuildConfig.isBeta) {
                 mapOf(
                     DashboardPageRowFactory.ROW_SEARCH to "Tìm kiếm",
+                    DashboardPageRowFactory.ROW_FAVORITE to "Yêu thích",
                     DashboardPageRowFactory.ROW_TV to "Truyền hình",
                     DashboardPageRowFactory.ROW_RADIO to "Phát thanh",
                     DashboardPageRowFactory.ROW_FOOTBALL to "Bóng đá",
@@ -420,6 +456,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
             } else {
                 mapOf(
                     DashboardPageRowFactory.ROW_SEARCH to "Tìm kiếm",
+                    DashboardPageRowFactory.ROW_FAVORITE to "Yêu thích",
                     DashboardPageRowFactory.ROW_TV to "Truyền hình",
                     DashboardPageRowFactory.ROW_RADIO to "Phát thanh",
                     DashboardPageRowFactory.ROW_IPTV to "IPTV",
@@ -430,6 +467,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         private val defaultPagesIcon by lazy {
             mapOf(
                 DashboardPageRowFactory.ROW_SEARCH to R.drawable.ic_search_24p,
+                DashboardPageRowFactory.ROW_FAVORITE to com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24,
                 DashboardPageRowFactory.ROW_TV to R.drawable.ic_tv,
                 DashboardPageRowFactory.ROW_FOOTBALL to R.drawable.ic_soccer_ball,
                 DashboardPageRowFactory.ROW_RADIO to R.drawable.ic_radio,

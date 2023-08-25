@@ -40,9 +40,23 @@ class FragmentTVGrid : BaseGridViewFragment<FragmentTvGridBinding>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        filterGroup =
-            requireArguments().getString(FragmentTVDashboard.EXTRA_FILTER_GROUP) ?: FragmentTVDashboard.FILTER_TOTAL
-        filterType = requireArguments().getParcelable(FragmentTVDashboard.EXTRA_FILTER_TYPE) ?: PlaybackActivity.Type.TV
+        if (arguments != null) {
+            filterGroup =
+                arguments?.getString(FragmentTVDashboard.EXTRA_FILTER_GROUP) ?: FragmentTVDashboard.FILTER_TOTAL
+            filterType =
+                arguments?.getParcelable(FragmentTVDashboard.EXTRA_FILTER_TYPE) ?: PlaybackActivity.Type.TV
+        } else if (savedInstanceState != null) {
+            filterGroup =
+                savedInstanceState.getString(FragmentTVDashboard.EXTRA_FILTER_GROUP) ?: FragmentTVDashboard.FILTER_TOTAL
+            filterType =
+                savedInstanceState.getParcelable(FragmentTVDashboard.EXTRA_FILTER_TYPE) ?: PlaybackActivity.Type.TV
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(FragmentTVDashboard.EXTRA_FILTER_GROUP, filterGroup)
+        outState.putParcelable(FragmentTVDashboard.EXTRA_FILTER_TYPE, filterType)
     }
 
     override fun onCreatePresenter(): VerticalGridPresenter {
@@ -63,7 +77,7 @@ class FragmentTVGrid : BaseGridViewFragment<FragmentTvGridBinding>() {
             if (item !is TVChannel) {
                 return@OnItemViewClickedListener
             }
-            if (!item.isFreeContent) {
+            if (!item.isFreeContent && !this.isDetached && !this.isHidden) {
                 showErrorDialog(content = "Đây là nội dung tính phí\r\nLiên hệ đội phát triển để có thêm thông tin")
                 return@OnItemViewClickedListener
             }
@@ -86,6 +100,9 @@ class FragmentTVGrid : BaseGridViewFragment<FragmentTvGridBinding>() {
         tvChannelViewModel.tvChannelLiveData.observe(viewLifecycleOwner) {
             when (it) {
                 is DataState.Success -> {
+                    if (mAdapter == null) {
+                        onCreateAdapter()
+                    }
                     (mAdapter as ArrayObjectAdapter).clear()
                     binding.title.text = filterGroup
                     val channelWithCategory = it.data

@@ -47,21 +47,19 @@ class FragmentInfo : BaseFragment<FragmentInfoBinding>(), BrowseSupportFragment.
         }
 
         binding.fbGroupLink.setOnClickListener {
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(binding.fbGroupLink.text.trim().toString())
-                )
-            )
+            requireActivity().supportFragmentManager
+                .beginTransaction()
+                .add(android.R.id.content, FragmentQrCode.newInstance(binding.fbGroupLink.text.trim().toString()))
+                .addToBackStack(null)
+                .commit()
         }
 
         binding.zaloGroupLink.setOnClickListener {
-            startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse(binding.zaloGroupLink.text.trim().toString())
-                )
-            )
+            requireActivity().supportFragmentManager
+                .beginTransaction()
+                .add(android.R.id.content, FragmentQrCode.newInstance(binding.zaloGroupLink.text.trim().toString()))
+                .addToBackStack(null)
+                .commit()
         }
 
         (binding.root as BrowseFrameLayout).setOnFocusSearchListener { focused, direction ->

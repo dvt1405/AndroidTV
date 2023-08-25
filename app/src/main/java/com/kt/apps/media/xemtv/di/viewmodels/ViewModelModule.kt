@@ -6,6 +6,7 @@ import com.kt.apps.autoupdate.ui.AppUpdateViewModel
 import com.kt.apps.core.base.BaseViewModelFactory
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.extensions.ExtensionsViewModel
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import com.kt.apps.media.xemtv.ui.football.FootballViewModel
 import com.kt.apps.media.xemtv.ui.search.SearchViewModels
 import dagger.Binds
@@ -39,6 +40,11 @@ abstract class ViewModelModule {
     @IntoMap
     @ViewModelKey(AppUpdateViewModel::class)
     abstract fun bindAppUpdateViewModels(appUpdateViewModels: AppUpdateViewModel): ViewModel
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(FavoriteViewModel::class)
+    abstract fun bindFavoriteViewModel(appUpdateViewModels: FavoriteViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(

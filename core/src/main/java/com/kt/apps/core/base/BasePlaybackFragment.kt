@@ -15,6 +15,7 @@ import android.view.*
 import android.view.ViewTreeObserver.OnGlobalLayoutListener
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -36,6 +37,7 @@ import com.kt.apps.core.base.leanback.media.SurfaceHolderGlueHost
 import com.kt.apps.core.base.player.AbstractExoPlayerManager
 import com.kt.apps.core.base.player.ExoPlayerManager
 import com.kt.apps.core.base.player.LinkStream
+import com.kt.apps.core.base.viewmodels.BaseFavoriteViewModel
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.*
@@ -93,8 +95,8 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private var contentDurationView: TextView? = null
     private var centerContainerView: View? = null
     private var videoInfoCodecContainerView: ViewGroup? = null
-    private var btnVideoCodecInfo: ImageButton? = null
-    private var btnFavoutiteVideo: ImageButton? = null
+    private var btnVideoCodecInfo: ImageView? = null
+    private var btnFavouriteVideo: ImageView? = null
     protected var onItemClickedListener: OnItemViewClickedListener? = null
     private val mChildLaidOutListener = OnChildLaidOutListener { _, _, _, _ ->
     }
@@ -106,25 +108,11 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private val mainLooper by lazy {
         Handler(Looper.getMainLooper())
     }
+    protected var favoriteViewModel: BaseFavoriteViewModel? = null
 
     private var durationSet = false
     private val mPlayerListener by lazy {
         object : Player.Listener {
-            override fun onTimelineChanged(timeline: Timeline, reason: Int) {
-                super.onTimelineChanged(timeline, reason)
-            }
-
-            override fun onSeekBackIncrementChanged(seekBackIncrementMs: Long) {
-                super.onSeekBackIncrementChanged(seekBackIncrementMs)
-            }
-
-            override fun onSeekForwardIncrementChanged(seekForwardIncrementMs: Long) {
-                super.onSeekForwardIncrementChanged(seekForwardIncrementMs)
-            }
-
-            override fun onMetadata(metadata: Metadata) {
-                super.onMetadata(metadata)
-            }
 
             override fun onVideoSizeChanged(videoSize: VideoSize) {
                 super.onVideoSizeChanged(videoSize)
@@ -142,10 +130,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 super.onIsPlayingChanged(isPlaying)
                 if (isPlaying) {
                     playPauseBtn?.setImageDrawable(
-                        ContextCompat.getDrawable(
-                            requireContext(),
-                            R.drawable.round_pause_24
-                        )
+                        context?.let {
+                            ContextCompat.getDrawable(
+                                it,
+                                R.drawable.round_pause_24
+                            )
+                        }
                     )
                     if (overlaysUIState != OverlayUIState.STATE_HIDDEN
                         && overlaysUIState != OverlayUIState.STATE_ONLY_GRID_CONTENT
@@ -157,10 +147,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     }
                 } else {
                     playPauseBtn?.setImageDrawable(
-                        ContextCompat.getDrawable(
-                            requireContext(),
-                            R.drawable.round_play_arrow_24
-                        )
+                        context?.let {
+                            ContextCompat.getDrawable(
+                                it,
+                                R.drawable.round_play_arrow_24
+                            )
+                        }
                     )
                 }
             }
@@ -176,7 +168,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     )
                 ) {
                     if (player.playbackState == Player.STATE_BUFFERING) {
-                        progressManager.show()
+                        if (!progressManager.isShowing) {
+                            progressManager.show()
+                        }
                     } else {
                         if (player.playbackState != Player.STATE_IDLE) {
                             progressManager.hide()
@@ -240,7 +234,6 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         seekBar?.max = realDurationMillis.toInt()
         contentPosition = player.contentPosition
         seekBar?.setSecondaryProgress(player.bufferedPosition.toInt())
-        player.contentBufferedPosition
         seekBar?.progress = player.contentPosition.toInt()
         val contentPosition = "${Util.getStringForTime(formatBuilder, formatter, player.contentPosition)} /"
         val contentDuration = " ${Util.getStringForTime(formatBuilder, formatter, player.contentDuration)}"
@@ -250,7 +243,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     private fun setCodecInfo(player: ExoPlayer) {
         view?.findViewById<TextView>(R.id.video_title)?.text = player.mediaMetadata.title
-        if (player.contentPosition < 120_000) {
+        if (player.contentDuration < 120_000) {
             view?.findViewById<TextView>(R.id.video_duration)?.gone()
             view?.findViewById<TextView>(R.id.video_duration_title)?.gone()
         } else {
@@ -261,7 +254,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     it.text = Util.getStringForTime(
                         formatBuilder,
                         formatter,
-                        player.contentPosition
+                        player.contentDuration
                     )
                 }
         }
@@ -270,7 +263,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         view?.findViewById<TextView>(R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
         view?.findViewById<TextView>(R.id.video_codec)?.text = player.videoFormat?.codecs
         view?.findViewById<TextView>(R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
-        view?.findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs
+        view?.findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
+            !it?.trim().isNullOrEmpty()
+        } ?: "NoValue"
     }
 
     open fun onPlayerPlaybackStateChanged(playbackState: Int) {
@@ -367,7 +362,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         contentDurationView = root.findViewById(R.id.content_duration)
         btnVideoCodecInfo = root.findViewById(R.id.btn_video_codec_info)
         centerContainerView = root.findViewById(R.id.center_controls_container)
-        btnFavoutiteVideo = root.findViewById(R.id.btn_favourite)
+        btnFavouriteVideo = root.findViewById(R.id.btn_favourite)
         hideControlsOverlay(false)
         val controlBackground = root.findViewById<View>(androidx.leanback.R.id.playback_controls_dock)
         controlBackground.makeGone()
@@ -385,6 +380,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 if (overlaysUIState == OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY
                     || overlaysUIState == OverlayUIState.STATE_INIT
                 ) {
+                    btnFavouriteVideo?.fadeIn {}
                     playPauseBtn?.fadeIn {
                         focusedPlayBtnIfNotSeeking()
                         overlaysUIState = OverlayUIState.STATE_INIT
@@ -397,13 +393,16 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             mHandler.removeCallbacks(autoHideOverlayRunnable)
             videoInfoCodecContainerView?.fadeIn {}
         }
-        btnFavoutiteVideo?.setOnClickListener {
-            onFavoriteVideoClicked()
+        btnFavouriteVideo?.setOnClickListener {
+            it.isSelected = !it.isSelected
+            onFavoriteVideoClicked(it.isSelected)
+            mHandler.removeCallbacks(autoHideOverlayRunnable)
+            mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
         }
         return root
     }
 
-    protected fun onFavoriteVideoClicked() {
+    protected open fun onFavoriteVideoClicked(isFavorite: Boolean) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -435,6 +434,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private fun onPlayPauseIconClicked() {
         mHandler.removeCallbacks(autoHideOverlayRunnable)
         try {
+            if (overlaysUIState == OverlayUIState.STATE_HIDDEN) {
+                handleUI(OverlayUIState.STATE_INIT, true)
+            }
             if (true == exoPlayerManager.playerAdapter?.isPlaying) {
                 exoPlayerManager.playerAdapter?.pause()
             } else {
@@ -544,6 +546,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         isLive: Boolean,
         showProgressManager: Boolean = true
     ) {
+        Logger.d(this@BasePlaybackFragment, "ShowVideoInfo", "$title - $subTitle - $isLive")
         mHandler.removeCallbacks(autoHideOverlayRunnable)
         setVideoInfo(title, subTitle, isLive)
 
@@ -671,7 +674,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     }
                 }
                 if (currentState == OverlayUIState.STATE_HIDDEN) {
-                    mGridViewOverlays?.fadeIn {
+                    playbackOverlaysContainerView?.fadeIn {
                         onlyShowGridView()
                     }
                 } else if ((currentState == OverlayUIState.STATE_INIT
@@ -752,6 +755,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 fadeInAnimator.addUpdateListener(btnPlayPauseAnimationUpdateListener)
                 fadeInAnimator.resume()
             } else {
+                centerContainerView?.fadeIn {}
                 playPauseBtn?.fadeIn {
                     focusedPlayBtnIfNotSeeking()
                 }
@@ -894,6 +898,18 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         }
     }
 
+    protected fun updateVideoInfo(title: String?, description: String?, isLive: Boolean = false) {
+        if (!playbackTitleTxtView?.text.toString().equals(title, ignoreCase = true)) {
+            playbackTitleTxtView?.text = title
+        }
+        if (!playbackInfoTxtView?.text.toString().equals(description, ignoreCase = true)) {
+            playbackInfoTxtView?.text = description?.trim()
+        }
+        if (playbackTitleTxtView?.isSelected != true) {
+            playbackTitleTxtView?.isSelected = true
+        }
+    }
+
     private fun setVideoInfo(title: String?, description: String?, isLive: Boolean = false) {
         if (!playbackTitleTxtView?.text.toString().equals(title, ignoreCase = true)) {
             playbackTitleTxtView?.text = title
@@ -953,9 +969,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     fun hideOverlay() {
         if (videoInfoCodecContainerView?.isVisible == true) {
-            videoInfoCodecContainerView?.fadeOut { }
+            videoInfoCodecContainerView?.fadeOut {
+                videoInfoCodecContainerView?.gone()
+            }
             mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
         } else {
+            videoInfoCodecContainerView?.gone()
             autoHideOverlayRunnable.run()
         }
     }
@@ -967,7 +986,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     override fun onDpadCenter() {
-        showGridMenu()
+        if (overlaysUIState == OverlayUIState.STATE_HIDDEN) {
+            handleUI(OverlayUIState.STATE_INIT, true)
+        }
     }
 
     fun isMenuShowed(): Boolean {
@@ -1002,6 +1023,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     override fun onDpadDown() {
+        if (true == videoInfoCodecContainerView?.isVisible) {
+            return
+        }
         if (overlaysUIState == OverlayUIState.STATE_HIDDEN) {
             if (progressManager.isShowing) {
                 handleUI(OverlayUIState.STATE_INIT_WITHOUT_BTN_PLAY, true)
@@ -1037,6 +1061,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onDpadUp() {
         when {
+            true == videoInfoCodecContainerView?.isVisible -> {
+
+            }
             !isMenuShowed() -> {
                 showGridMenu()
             }
@@ -1091,8 +1118,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onDpadLeft() {
         if (seekBar?.isFocused == true) {
-            exoPlayerManager.exoPlayer?.seekTo(contentPosition - MIN_SEEK_DURATION)
             exoPlayerManager.exoPlayer?.let {
+                if (contentPosition - MIN_SEEK_DURATION >= 0) {
+                    it.seekTo(contentPosition - MIN_SEEK_DURATION)
+                } else if (contentPosition >= 0) {
+                    it.seekTo(0L)
+                }
                 updateProgress(it)
             }
         }
@@ -1110,8 +1141,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onDpadRight() {
         if (seekBar?.isFocused == true) {
-            exoPlayerManager.exoPlayer?.seekTo(contentPosition + MIN_SEEK_DURATION)
             exoPlayerManager.exoPlayer?.let {
+                if (contentPosition + MIN_SEEK_DURATION <= it.duration) {
+                    it.seekTo(contentPosition + MIN_SEEK_DURATION)
+                } else if (contentPosition < it.duration) {
+                    it.seekTo(it.duration - contentPosition)
+                }
                 updateProgress(it)
             }
         }
@@ -1153,7 +1188,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     fun showErrorDialogWithErrorCode(errorCode: Int, errorMessage: String? = null, onDismiss: () -> Unit = {}) {
-        if (this.isDetached || this.isHidden) {
+        if (this.isDetached || this.isHidden || !this.isAdded || context == null) {
             return
         }
         showErrorDialog(
@@ -1190,11 +1225,27 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onResume() {
         super.onResume()
+        favoriteViewModel?.getListFavorite()
+        favoriteViewModel?.listFavoriteLiveData?.observe(viewLifecycleOwner) {
+            if (it is DataState.Success) {
+                btnFavouriteVideo?.isSelected = it.data.any {
+                    it.id == exoPlayerManager.exoPlayer?.currentMediaItem?.mediaId &&
+                            it.title == exoPlayerManager.exoPlayer?.currentMediaItem?.mediaMetadata?.title
+                }
+            }
+        }
         if (mGridViewPickHeight == mGridViewOverlays?.translationY) {
             playPauseBtn?.requestFocus()
         } else {
             mGridViewOverlays?.requestFocus()
         }
+    }
+    fun isPlaying(): Boolean {
+        return exoPlayerManager.exoPlayer?.isPlaying == true
+    }
+
+    open fun onRefreshProgram() {
+
     }
 
     class BasePlaybackSupportFragmentGlueHost(

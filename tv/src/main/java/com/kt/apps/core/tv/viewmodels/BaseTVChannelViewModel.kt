@@ -101,6 +101,31 @@ open class BaseTVChannelViewModel constructor(
         }
     }
 
+    fun getLinkStreamById(channelId: String) {
+        if (lastTVStreamLinkTask?.isDisposed != true) {
+            lastTVStreamLinkTask?.dispose()
+        }
+
+        lastTVStreamLinkTask = interactors.getChannelLinkStreamById(channelId)
+            .subscribe({
+                markLastWatchedChannel(it)
+                loadProgramForChannel(it.channel)
+                enqueueInsertWatchNextTVChannel(it.channel)
+                _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
+                Logger.d(
+                    this, message = "play by deeplink result: {" +
+                            "channelId: $channelId, " +
+                            "channel: $it" +
+                            "}"
+                )
+                actionLogger.logStreamingTV(it.channel.tvChannelName)
+            }, {
+                _tvWithLinkStreamLiveData.postValue(DataState.Error(it))
+                Logger.e(this, exception = it)
+            })
+        add(lastTVStreamLinkTask!!)
+    }
+
     fun playTvByDeepLinks(uri: Uri) {
         val lastPath = uri.pathSegments.last() ?: return
         Logger.d(
@@ -112,7 +137,7 @@ open class BaseTVChannelViewModel constructor(
         if (lastTVStreamLinkTask?.isDisposed != true) {
             lastTVStreamLinkTask?.dispose()
         }
-
+        _tvWithLinkStreamLiveData.postValue(DataState.Loading())
         lastTVStreamLinkTask = interactors.getChannelLinkStreamById(lastPath)
             .subscribe({
                 markLastWatchedChannel(it)
@@ -176,53 +201,56 @@ open class BaseTVChannelViewModel constructor(
     val programmeForChannelLiveData: LiveData<DataState<TVScheduler.Programme>>
         get() = _programmeForChannelLiveData
 
-    fun loadProgramForChannel(channel: TVChannel) {
+    var lastGetProgramme: Long = 0L
+        private set
+
+    fun loadProgramForChannel(channel: TVChannel, silentUpdate: Boolean = false) {
         add(
             interactors.getCurrentProgrammeForChannel.invoke(channel.channelId)
+                .filter {
+                    it.channel.removeAllSpecialChars()
+                        .removePrefix("viechannel")
+                        .removeSuffix("hd") == lastWatchedChannel
+                        ?.channel
+                        ?.channelId
+                        ?.removeAllSpecialChars()
+                        ?.removePrefix("viechannel")
+                        ?.removeSuffix("hd")
+                }
                 .subscribe({
-                    if (it.channel == lastWatchedChannel
-                            ?.channel
-                            ?.channelId
-                            ?.removeAllSpecialChars()
-                            ?.removePrefix("viechannel")
-                    ) {
-                        _programmeForChannelLiveData.postValue(DataState.Success(it))
+                    lastGetProgramme = System.currentTimeMillis()
+
+                    if (silentUpdate) {
+                        _programmeForChannelLiveData.postValue(DataState.Update(it))
                     } else {
-                        _programmeForChannelLiveData.postValue(
-                            DataState.Success(
-                                TVScheduler.Programme(
-                                    channel = channel.channelId
-                                        .removeAllSpecialChars()
-                                        .removePrefix("viechannel"),
-                                    title = "",
-                                    description = try {
-                                        TVChannelGroup.valueOf(channel.tvGroup).value
-                                    } catch (e: Exception) {
-                                        channel.tvGroup
-                                    },
-                                )
-                            )
-                        )
+                        _programmeForChannelLiveData.postValue(DataState.Success(it))
                     }
                 }, {
-                    _programmeForChannelLiveData.postValue(
-                        DataState.Success(
-                            TVScheduler.Programme(
-                                channel = channel.channelId
-                                    .removeAllSpecialChars()
-                                    .removePrefix("viechannel"),
-                                title = "",
-                                description = try {
-                                    TVChannelGroup.valueOf(channel.tvGroup).value
-                                } catch (e: Exception) {
-                                    channel.tvGroup
-                                },
-                            )
+                    if (silentUpdate) {
+                        _programmeForChannelLiveData.postValue(
+                            DataState.Update(channel.toDefaultProgramme())
                         )
-                    )
+                    } else {
+                        _programmeForChannelLiveData.postValue(
+                            DataState.Success(channel.toDefaultProgramme())
+                        )
+                    }
+
                 })
         )
     }
+
+    private fun TVChannel.toDefaultProgramme() = TVScheduler.Programme(
+        channel = this.channelId
+            .removeAllSpecialChars()
+            .removePrefix("viechannel"),
+        title = "",
+        description = try {
+            TVChannelGroup.valueOf(this.tvGroup).value
+        } catch (e: Exception) {
+            this.tvGroup
+        },
+    )
 
 
     fun clearCurrentPlayingChannelState() {
@@ -238,7 +266,6 @@ open class BaseTVChannelViewModel constructor(
 
     init {
         instance++
-        Logger.d(this, message = "TVChannelViewModel instance count: $instance")
     }
 
     companion object {

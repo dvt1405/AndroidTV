@@ -12,6 +12,7 @@ import com.kt.apps.core.R
 import com.kt.apps.core.base.leanback.BrowseSupportFragment
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteFragment
 import com.kt.apps.media.xemtv.ui.football.FootballFragment
 import com.kt.apps.media.xemtv.ui.playback.PlaybackActivity
 import com.kt.apps.media.xemtv.ui.search.TVSearchFragment
@@ -63,6 +64,11 @@ class DashboardPageRowFactory(
                 FragmentDashboardExtensions()
             }
 
+            ROW_FAVORITE -> {
+                backgroundManager.drawable = ContextCompat.getDrawable(CoreApp.getInstance(), R.drawable.tv_bg)
+                FavoriteFragment()
+            }
+
             else -> {
                 try {
                     backgroundManager.drawable = ContextCompat.getDrawable(CoreApp.getInstance(), R.drawable.tv_bg)
@@ -82,5 +88,6 @@ class DashboardPageRowFactory(
         const val ROW_IPTV = 10995L
         const val ROW_SEARCH = 10994L
         const val ROW_INFO = 10993L
+        const val ROW_FAVORITE =  10992L
     }
 }

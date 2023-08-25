@@ -9,20 +9,21 @@
 
     <com.kt.apps.core.base.leanback.BrowseFrameLayout
         android:layout_width="match_parent"
+        android:id="@+id/container"
         android:layout_height="match_parent">
 
-        <androidx.appcompat.widget.LinearLayoutCompat
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
             android:orientation="vertical">
 
-            <androidx.appcompat.widget.AppCompatImageView
+            <ImageView
                 android:layout_width="160dp"
                 android:layout_height="105dp"
-                app:srcCompat="@drawable/app_icon_large" />
+                android:src="@drawable/app_icon_large" />
 
-            <androidx.appcompat.widget.AppCompatTextView
+            <TextView
                 android:id="@+id/version_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -57,8 +58,8 @@
                 android:id="@+id/fb_group_link"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@color/background_tint_color"
-                android:focusable="true"
+                android:background="@drawable/background_corners_4dp"
+                android:backgroundTint="@color/background_tint_color"                android:focusable="true"
                 android:minWidth="200dp"
                 android:nextFocusUp="@id/btn_check_update"
                 android:nextFocusDown="@id/zalo_group_link"
@@ -72,7 +73,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/common_padding"
-                android:background="@color/background_tint_color"
+                android:background="@drawable/background_corners_4dp"
+                android:backgroundTint="@color/background_tint_color"
                 android:focusable="true"
                 android:minWidth="200dp"
                 android:nextFocusUp="@id/fb_group_link"
@@ -81,6 +83,6 @@
                 android:textColor="@color/white"
                 android:textSize="16sp" />
 
-        </androidx.appcompat.widget.LinearLayoutCompat>
+        </LinearLayout>
     </com.kt.apps.core.base.leanback.BrowseFrameLayout>
 </layout>

@@ -336,14 +336,18 @@ class MainTVDataSource @Inject constructor(
                         vDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
                             .onErrorResumeNext {
                                 Logger.e(this@MainTVDataSource, "VDataSource", it)
-                                Observable.just(
-                                    TVChannelLinkStream(
-                                        tvChannel,
-                                        streamingUrl.map {
-                                            it.url
-                                        }
+                                if (streamingUrl.isNotEmpty()) {
+                                    Observable.just(
+                                        TVChannelLinkStream(
+                                            tvChannel,
+                                            streamingUrl.map {
+                                                it.url
+                                            }
+                                        )
                                     )
-                                )
+                                } else {
+                                    Observable.error(it)
+                                }
                             }
                     }
 

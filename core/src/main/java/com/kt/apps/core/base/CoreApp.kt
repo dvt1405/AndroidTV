@@ -5,6 +5,7 @@ import android.app.Application.ActivityLifecycleCallbacks
 import android.content.Context
 import android.os.Bundle
 import androidx.multidex.MultiDex
+import androidx.work.Configuration
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.initialize
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -13,7 +14,7 @@ import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.logging.Logger
 import dagger.android.DaggerApplication
 
-abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks {
+abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks, Configuration.Provider {
     abstract val coreComponents: CoreComponents
 
     override fun attachBaseContext(base: Context?) {
@@ -92,6 +93,12 @@ abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks {
     }
     private val backStack by lazy {
         ArrayDeque<String>()
+    }
+
+    override fun getWorkManagerConfiguration(): Configuration {
+        return Configuration.Builder()
+            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .build()
     }
 
 

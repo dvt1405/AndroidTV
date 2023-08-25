@@ -1,5 +1,6 @@
 package com.kt.apps.core.extensions
 
+import android.text.format.DateUtils
 import com.kt.apps.core.di.CoreScope
 import com.kt.apps.core.di.NetworkModule
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -128,26 +129,44 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                 } else {
                     DATE_TIME_FORMAT
                 }
-                val start: Long = it.start.toDate(
-                    pattern,
-                    Locale.getDefault(),
-                    false
-                )?.time ?: return@filter false
+                val start: Long = if (it.start.trim() == "+0700") {
+                    val calendar = Calendar.getInstance()
+                    calendar.set(Calendar.HOUR, 0)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.timeInMillis
+                } else {
+                    it.start.toDate(
+                        pattern,
+                        Locale.getDefault(),
+                        false
+                    )?.time ?: return@filter false
+                }
 
                 val patternStop = if (it.stop.contains("+0700")) {
                     DATE_TIME_FORMAT_0700
                 } else {
                     DATE_TIME_FORMAT
                 }
-                val stop: Long = it.stop.toDate(
-                    patternStop,
-                    Locale.getDefault(),
-                    false
-                )?.time ?: return@filter false
-                (start <= currentTime) && stop >= currentTime
+                val stop: Long = if (it.stop.trim() == "+0700") {
+                    val calendar = Calendar.getInstance()
+                    calendar.add(Calendar.DATE, 1)
+                    calendar.set(Calendar.HOUR, 0)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.timeInMillis
+                } else {
+                    it.stop.toDate(
+                        patternStop,
+                        Locale.getDefault(),
+                        false
+                    )?.time ?: return@filter false
+                }
+                if (!DateUtils.isToday(start) && !DateUtils.isToday(stop)) return@filter false
+                ((start <= currentTime) && stop >= currentTime)
             } else {
                 true
             }
+        }.doOnNext {
+            Logger.d(this@ParserExtensionsProgramSchedule, tag = "Epg" ,message = "$it")
         }
     }
 
@@ -290,6 +309,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
         val node: InputNode = try {
             NodeBuilder.read(stream)
         } catch (e: Exception) {
+            if (emitter.isDisposed) return@create
             emitter.onNext(InvalidFormatThrowable("Cannot retry"))
             return@create
         }
@@ -311,6 +331,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                     } catch (_: Exception) {
                     }
 
+                    if (emitter.isDisposed) return@create
                     emitter.onNext(tvScheduler)
                 }
 
@@ -382,6 +403,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                         }
                     }
                     listProgram.add(programme)
+                    if (emitter.isDisposed) return@create
                     if (listProgram.size > 50) {
                         emitter.onNext(listProgram)
                         listProgram = mutableListOf()
@@ -394,6 +416,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
             readNode = node.next
         }
 
+        if (emitter.isDisposed) return@create
         if (listProgram.isNotEmpty()) {
             emitter.onNext(listProgram)
         }

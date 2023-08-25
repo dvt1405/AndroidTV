@@ -14,7 +14,6 @@ import com.google.android.exoplayer2.PlaybackException
 import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.R
 import com.kt.apps.core.base.BasePlaybackFragment
-import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -29,6 +28,7 @@ import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import dagger.android.AndroidInjector
 import javax.inject.Inject
 import kotlin.math.max
@@ -41,8 +41,27 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     private val tvChannelViewModel: TVChannelViewModel by lazy {
         ViewModelProvider(requireActivity(), factory)[TVChannelViewModel::class.java]
     }
+    private val _favoriteViewModel by lazy {
+        ViewModelProvider(requireActivity(), factory)[FavoriteViewModel::class.java]
+    }
     private val retryTimes by lazy {
         mutableMapOf<String, Int>()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        favoriteViewModel = _favoriteViewModel
+    }
+
+    override fun onFavoriteVideoClicked(isFavorite: Boolean) {
+        super.onFavoriteVideoClicked(isFavorite)
+        tvChannelViewModel.lastWatchedChannel?.channel?.let {
+            if (isFavorite) {
+                _favoriteViewModel.saveTVChannel(it)
+            } else {
+                _favoriteViewModel.deleteFavoriteTvChannel(it)
+            }
+        }
     }
 
     override fun getSearchFilter(): String {
@@ -171,19 +190,20 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
         tvChannelViewModel.programmeForChannelLiveData.observe(viewLifecycleOwner) {
             if (it is DataState.Success) {
-                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel
-                if (
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel ?: return@observe
+                showInfo(
+                    programme = it.data,
                     lastWatchedChannel
-                        ?.channelId
-                        ?.removeAllSpecialChars()
-                        ?.removePrefix("viechannel")
-                    == it.data.channel
-                ) {
-                    showInfo(
-                        it.data,
-                        lastWatchedChannel
-                    )
-                }
+                )
+                lastWatchedChannel.currentProgramme = it.data
+            } else if (it is DataState.Update) {
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel ?: return@observe
+                updateVideoInfo(
+                    lastWatchedChannel.tvChannelName,
+                    buildVideoDescription(it.data),
+                    true
+                )
+                lastWatchedChannel.currentProgramme = it.data
             }
         }
     }
@@ -244,7 +264,9 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             }
 
             is DataState.Loading -> {
-                progressBarManager.show()
+                if (!progressManager.isShowing) {
+                    progressBarManager.show()
+                }
             }
 
             is DataState.Error -> {
@@ -274,23 +296,34 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
     }
 
-    private fun showInfo(tvChannel: TVScheduler.Programme, channel: TVChannel) {
-        Logger.d(this@TVPlaybackVideoFragment, "ChannelInfo", message = "$tvChannel")
-        val channelTitle = tvChannel.title.takeIf {
-            it.trim().isNotBlank()
-        }?.trim() ?: ""
+    private fun showInfo(programme: TVScheduler.Programme, channel: TVChannel) {
         prepare(
-            channel.tvChannelName + if (channelTitle.isNotBlank()) {
-                " - $channelTitle"
-            } else {
-                ""
-            },
-            tvChannel.description.takeIf {
-                it.isNotBlank()
-            }?.trim(),
+            channel.tvChannelName,
+            buildVideoDescription(programme),
             isLive = true,
             showProgressManager = false
         )
+    }
+
+    private fun buildVideoDescription(programme: TVScheduler.Programme): String {
+        val description = programme.getProgramDescription()
+        Logger.d(this@TVPlaybackVideoFragment, "ChannelInfo", message = "$programme,\n" +
+                "description: $description" +
+                "")
+
+        val channelTitle = programme.title.takeIf {
+            it.trim().isNotBlank()
+        }?.trim() ?: ""
+
+        return if (channelTitle.isEmpty()) {
+            description
+        } else {
+            channelTitle + if (description.isEmpty()) {
+                ""
+            } else {
+                " • $description"
+            }
+        }
     }
 
     private fun playVideo(tvChannelLinkStream: TVChannelLinkStream, showVideoInfo: Boolean = true) {
@@ -316,12 +349,21 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         if (tvChannelViewModel.tvChannelLiveData.value is DataState.Success) {
             val listChannel = (tvChannelViewModel.tvChannelLiveData.value as DataState.Success<List<TVChannel>>).data
             mPlayingPosition = listChannel.indexOfLast {
-                it.channelId == mCurrentSelectedChannel!!.channelId
+                it.channelId == mCurrentSelectedChannel?.channelId
             }.takeIf {
                 it >= 0
             } ?: 0
         }
 
+    }
+
+    override fun onRefreshProgram() {
+        super.onRefreshProgram()
+        tvChannelViewModel.lastWatchedChannel?.let {
+            if (System.currentTimeMillis() - tvChannelViewModel.lastGetProgramme >= 1 * 60 * 1000) {
+                tvChannelViewModel.loadProgramForChannel(it.channel, true)
+            }
+        }
     }
 
     override fun onDetach() {
@@ -335,9 +377,12 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         mPlayingPosition = max(0, mPlayingPosition) - 1
         setSelectedPosition(mPlayingPosition)
         Logger.d(this, message = "onKeyCodeChannelDown: $mPlayingPosition")
-        if (mPlayingPosition > 0) {
+        val maxItemCount = mGridViewHolder?.gridView?.adapter?.itemCount ?: 0
+        if (mPlayingPosition <= maxItemCount - 1) {
             val item = mAdapter?.get(mPlayingPosition)
             tvChannelViewModel.getLinkStreamForChannel(item as TVChannel)
+        } else {
+            mPlayingPosition = maxItemCount - 1
         }
     }
 

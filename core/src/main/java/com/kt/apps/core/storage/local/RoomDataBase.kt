@@ -1,6 +1,5 @@
 package com.kt.apps.core.storage.local
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.database.AbstractWindowedCursor
 import android.database.Cursor
@@ -12,7 +11,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
-import androidx.room.util.CursorUtil
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteQuery
@@ -20,6 +18,7 @@ import androidx.sqlite.db.SupportSQLiteStatement
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.extensions.model.TVScheduler
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.converters.RoomDBTypeConverters
 import com.kt.apps.core.storage.local.dao.*
 import com.kt.apps.core.storage.local.databaseviews.ExtensionChannelDatabaseViews
@@ -28,6 +27,7 @@ import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelFts4
 import com.kt.apps.core.storage.local.dto.*
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
+import java.util.Arrays
 
 @TypeConverters(
     RoomDBTypeConverters::class
@@ -47,9 +47,10 @@ import com.kt.apps.core.utils.replaceVNCharsToLatinChars
         TVScheduler::class,
         ExtensionsChannelFts4::class,
         HistoryMediaItemDTO::class,
-        TVChannelFts4::class
+        TVChannelFts4::class,
+        VideoFavoriteDTO::class
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
     views = [
         ExtensionChannelDatabaseViews::class,
@@ -69,6 +70,7 @@ abstract class RoomDataBase : RoomDatabase() {
     abstract fun extensionsTVChannelProgramDao(): TVProgramScheduleDao
     abstract fun tvSchedulerDao(): TVSchedulerDAO
     abstract fun historyItemDao(): HistoryMediaDAO
+    abstract fun videoFavoriteDao(): VideoFavoriteDAO
 
     companion object {
         private val MIGRATE_1_2 by lazy {
@@ -221,6 +223,13 @@ abstract class RoomDataBase : RoomDatabase() {
             }
         }
 
+        private val MIGRATE_12_13 by lazy {
+            object : Migration(12, 13) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("CREATE TABLE IF NOT EXISTS `VideoFavoriteDTO` (`id` TEXT NOT NULL, `url` TEXT NOT NULL, `title` TEXT NOT NULL, `category` TEXT NOT NULL, `logoUrl` TEXT NOT NULL, `sourceFrom` TEXT NOT NULL, `type` TEXT NOT NULL, PRIMARY KEY(`id`, `url`))")
+                }
+            }
+        }
         fun query(
             db: SupportSQLiteDatabase, sqLiteQuery: SupportSQLiteQuery,
             maybeCopy: Boolean, signal: CancellationSignal?
@@ -260,7 +269,62 @@ abstract class RoomDataBase : RoomDatabase() {
             }
             return matrixCursor
         }
-        @SuppressLint("RestrictedApi")
+        fun findColumnIndexBySuffix(columnNames: Array<String>, name: String): Int {
+            val dotSuffix = ".$name"
+            val backtickSuffix = ".$name`"
+            for (index in columnNames.indices) {
+                val columnName = columnNames[index]
+                // do not check if column name is not long enough. 1 char for table name, 1 char for '.'
+                if (columnName.length >= name.length + 2) {
+                    if (columnName.endsWith(dotSuffix)) {
+                        return index
+                    } else if (columnName[0] == '`'
+                        && columnName.endsWith(backtickSuffix)
+                    ) {
+                        return index
+                    }
+                }
+            }
+            return -1
+        }
+        private fun findColumnIndexBySuffix(cursor: Cursor, name: String): Int {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
+                // we need this workaround only on APIs < 26. So just return not found on newer APIs
+                return -1
+            }
+            if (name.isEmpty()) {
+                return -1
+            }
+            val columnNames = cursor.columnNames
+            return findColumnIndexBySuffix(columnNames, name)
+        }
+        fun getColumnIndex(c: Cursor, name: String): Int {
+            var index = c.getColumnIndex(name)
+            if (index >= 0) {
+                return index
+            }
+            index = c.getColumnIndex("`$name`")
+            return if (index >= 0) {
+                index
+            } else findColumnIndexBySuffix(c, name)
+        }
+        fun getColumnIndexOrThrow(c: Cursor, name: String): Int {
+            val index = getColumnIndex(c, name)
+            if (index >= 0) {
+                return index
+            }
+            var availableColumns = ""
+            try {
+                availableColumns = Arrays.toString(c.columnNames)
+            } catch (e: Exception) {
+                Logger.e("RoomCursorUtil", message = "Cannot collect column names for debug purposes")
+                Logger.e("RoomCursorUtil", exception = e)
+            }
+            throw IllegalArgumentException(
+                "column '" + name
+                        + "' does not exist. Available columns: " + availableColumns
+            )
+        }
         private fun migrateCopyData11to12(sqLiteDatabase: SupportSQLiteDatabase) {
             sqLiteDatabase.beginTransaction()
             val tvChannelDTOS = ArrayList<TVChannelDTO>()
@@ -269,11 +333,11 @@ abstract class RoomDataBase : RoomDatabase() {
                     true,
                     null)
                 cursor.use { c ->
-                    val indexOfTvGroup = CursorUtil.getColumnIndexOrThrow(c, "tvGroup")
-                    val indexOfLogoChannel = CursorUtil.getColumnIndexOrThrow(c, "logoChannel")
-                    val indexOfTvChannelName = CursorUtil.getColumnIndexOrThrow(c, "tvChannelName")
-                    val indexOfSourceFrom = CursorUtil.getColumnIndexOrThrow(c, "sourceFrom")
-                    val indexOfChannelId = CursorUtil.getColumnIndexOrThrow(c, "channelId")
+                    val indexOfTvGroup = getColumnIndexOrThrow(c, "tvGroup")
+                    val indexOfLogoChannel = getColumnIndexOrThrow(c, "logoChannel")
+                    val indexOfTvChannelName = getColumnIndexOrThrow(c, "tvChannelName")
+                    val indexOfSourceFrom = getColumnIndexOrThrow(c, "sourceFrom")
+                    val indexOfChannelId = getColumnIndexOrThrow(c, "channelId")
                     while (c.moveToNext()) {
                         val channelId = c.getString(indexOfChannelId)
                         val tvGroup = c.getString(indexOfTvGroup)
@@ -330,7 +394,7 @@ abstract class RoomDataBase : RoomDatabase() {
                     MIGRATE_1_2, MIGRATE_2_3, MIGRATE_3_4,
                     MIGRATE_4_5, MIGRATE_5_6, MIGRATE_6_7,
                     MIGRATE_7_8, MIGRATE_8_9, MIGRATE_9_10,
-                    MIGRATE_10_11, MIGRATE_11_12
+                    MIGRATE_10_11, MIGRATE_11_12, MIGRATE_12_13
                 )
                 .build()
                 .also {

@@ -6,10 +6,12 @@ import android.content.Context
 import android.content.res.Resources
 import android.database.Cursor
 import android.net.Uri
+import android.util.Log
 import androidx.tvprovider.media.tv.*
 import androidx.work.ListenableWorker
 import androidx.work.Worker
 import androidx.work.WorkerParameters
+import androidx.work.rxjava3.RxWorker
 import com.kt.apps.core.Constants
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.RoomDataBase
@@ -19,6 +21,7 @@ import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.media.xemtv.App
 import com.kt.apps.media.xemtv.workers.factory.ChildWorkerFactory
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.util.*
@@ -27,7 +30,7 @@ import javax.inject.Inject
 class TVRecommendationWorkers(
     private val context: Context,
     private val params: WorkerParameters
-) : Worker(context, params) {
+) : RxWorker(context, params) {
 
     private val disposable by lazy {
         CompositeDisposable()
@@ -37,22 +40,23 @@ class TVRecommendationWorkers(
             .tvChannelRecommendationDao()
     }
 
-    override fun doWork(): Result {
+    override fun createWork(): Single<Result> {
         return try {
             when (params.inputData.getInt(EXTRA_TYPE, Type.ALL.value)) {
                 Type.WATCH_NEXT.value -> {
                     insertOrUpdateWatchNextChannel(
                         params.inputData.getString(EXTRA_TV_PROGRAM_ID)!!
                     )
+                        .toSingleDefault(Result.success())
                 }
 
                 else -> {
                     insertOrUpdatePreviewChannel()
+                        .toSingleDefault(Result.success())
                 }
             }
-            Result.success()
         } catch (e: Exception) {
-            Result.failure()
+            Single.just(Result.failure())
         }
     }
 
@@ -64,8 +68,8 @@ class TVRecommendationWorkers(
         .build()
 
     @SuppressLint("RestrictedApi")
-    fun insertOrUpdateWatchNextChannel(programId: String) {
-        val watchNextTask = tvChannelDAO.getChannelByID(programId)
+    fun insertOrUpdateWatchNextChannel(programId: String): Completable {
+        return tvChannelDAO.getChannelByID(programId)
             .flatMapCompletable { tvChannelEntity ->
                 val allWatchNext = getWatchNextPrograms(context)
                 allWatchNext.forEach {
@@ -113,164 +117,160 @@ class TVRecommendationWorkers(
                 Logger.d(this@TVRecommendationWorkers, "WatchNextChannel", "Insert id: $id")
                 Completable.complete()
             }
-            .subscribe({
+            .doOnComplete {
                 Logger.d(this@TVRecommendationWorkers, message = "Update success")
-            }, {
-                Logger.e(this@TVRecommendationWorkers, exception = it)
-            })
-
-        disposable.add(watchNextTask)
+            }
     }
 
     @SuppressLint("RestrictedApi")
     @Synchronized
-    fun insertOrUpdatePreviewChannel() {
+    fun insertOrUpdatePreviewChannel(): Completable {
         val tvChannelUseCase = (context.applicationContext as App)
             .tvComponents
             .getListTVChannel()
 
-        disposable.add(
-            tvChannelUseCase.invoke(false)
-                .observeOn(Schedulers.computation())
-                .flatMap {
-                    io.reactivex.rxjava3.core.Observable.just(
-                        it.filter { !it.isRadio },
-                        it.filter { it.isRadio },
-                    )
+        return tvChannelUseCase.invoke(false)
+            .observeOn(Schedulers.computation())
+            .flatMap {
+                io.reactivex.rxjava3.core.Observable.just(
+                    it.filter { !it.isRadio },
+                    it.filter { it.isRadio },
+                )
+            }
+            .filter {
+                it.isNotEmpty()
+            }
+            .flatMapCompletable { channelList ->
+                Logger.d(this@TVRecommendationWorkers, message = "Size: ${channelList.size}")
+                val isRadio = channelList.first().isRadio
+                val allChannels: List<PreviewChannel> = try {
+                    getAllChannels(context)
+                } catch (exc: IllegalArgumentException) {
+                    listOf()
                 }
-                .filter {
-                    it.isNotEmpty()
+                if (DEBUG) {
+                    allChannels.forEach {
+                        Logger.d(this, message = "$it")
+                    }
                 }
-                .flatMapCompletable { channelList ->
-                    Logger.d(this@TVRecommendationWorkers, message = "Size: ${channelList.size}")
-                    val isRadio = channelList.first().isRadio
-                    val allChannels: List<PreviewChannel> = try {
-                        getAllChannels(context)
-                    } catch (exc: IllegalArgumentException) {
-                        listOf()
-                    }
-                    if (DEBUG) {
-                        allChannels.forEach {
-                            Logger.d(this, message = "$it")
-                        }
-                    }
 
-                    val tvChannelProviderId: String = if (isRadio) {
-                        "radioChannelIMedia"
+                val tvChannelProviderId: String = if (isRadio) {
+                    "radioChannelIMedia"
+                } else {
+                    "tvChannelIMedia"
+                }
+
+                val displayName: String = if (isRadio) {
+                    RADIO_PREVIEW_CHANNEL_DISPLAY_NAME
+                } else {
+                    TV_PREVIEW_CHANNEL_DISPLAY_NAME
+                }
+
+                val channelUri = if (isRadio) {
+                    Uri.parse("xemtv://radio/dashboard")
+                } else {
+                    Uri.parse("xemtv://tv/dashboard")
+                }
+
+                val existingChannel = allChannels.find { it.internalProviderId == tvChannelProviderId }
+
+                if (DEBUG) {
+                    Logger.d(this, message = "existingChannel: $existingChannel")
+                }
+
+                val channelBuilder = if (existingChannel == null) {
+                    PreviewChannel.Builder()
+                } else {
+                    PreviewChannel.Builder(existingChannel)
+                }
+
+                Logger.e(
+                    this@TVRecommendationWorkers,
+                    message = resourceUri(App.get().resources, com.kt.apps.core.R.drawable.app_icon_fg).toString()
+                )
+                val id = com.kt.apps.core.R.drawable.app_icon_fg
+                val logoUri = if (id == -1) {
+                    Uri.parse("android.resource://com.kt.apps.media.xemtv/drawable/app_icon_fg")
+                } else {
+                    resourceUri(App.get().resources, com.kt.apps.core.R.drawable.app_icon_fg)
+                }
+                val channelUpdate = channelBuilder.setDisplayName(displayName)
+                    .setLogo(Uri.parse("android.resource://com.kt.apps.media.xemtv/drawable/app_icon_fg"))
+                    .setDescription("iMedia")
+                    .setInternalProviderId(tvChannelProviderId)
+                    .setAppLinkIntentUri(channelUri)
+                    .build()
+
+                val channelProviderId = if (existingChannel == null) {
+                    PreviewChannelHelper(context)
+                        .publishChannel(channelUpdate)
+                } else {
+                    PreviewChannelHelper(context)
+                        .updatePreviewChannel(
+                            existingChannel.id,
+                            channelUpdate
+                        )
+                    existingChannel.id
+                }
+
+                val channelEntity = channelList.map(mapToEntity(channelProviderId))
+
+                if (allChannels.none { it.isBrowsable }) {
+                    TvContractCompat.requestChannelBrowsable(context, channelProviderId)
+                }
+
+                val existingProgramList = getPreviewPrograms(context, channelProviderId)
+
+                channelEntity.forEach { tvChannel ->
+
+                    val existingProgram = existingProgramList.find { it.contentId == tvChannel.channelId }
+
+                    val programBuilder = if (existingProgram == null) {
+                        PreviewProgram.Builder()
                     } else {
-                        "tvChannelIMedia"
+                        PreviewProgram.Builder(existingProgram)
                     }
 
-                    val displayName: String = if (isRadio) {
-                        RADIO_PREVIEW_CHANNEL_DISPLAY_NAME
-                    } else {
-                        TV_PREVIEW_CHANNEL_DISPLAY_NAME
-                    }
-
-                    val channelUri = if (isRadio) {
-                        Uri.parse("xemtv://radio/dashboard")
-                    } else {
-                        Uri.parse("xemtv://tv/dashboard")
-                    }
-
-                    val existingChannel = allChannels.find { it.internalProviderId == tvChannelProviderId }
-
-                    if (DEBUG) {
-                        Logger.d(this, message = "existingChannel: $existingChannel")
-                    }
-
-                    val channelBuilder = if (existingChannel == null) {
-                        PreviewChannel.Builder()
-                    } else {
-                        PreviewChannel.Builder(existingChannel)
-                    }
-
-                    Logger.e(
-                        this@TVRecommendationWorkers,
-                        message = resourceUri(App.get().resources, com.kt.apps.core.R.drawable.app_icon_fg).toString()
-                    )
-                    val id = com.kt.apps.core.R.drawable.app_icon_fg
-                    val logoUri = if (id == -1) {
-                        Uri.parse("android.resource://com.kt.apps.media.xemtv/drawable/app_icon_fg")
-                    } else {
-                        resourceUri(App.get().resources, com.kt.apps.core.R.drawable.app_icon_fg)
-                    }
-                    val channelUpdate = channelBuilder.setDisplayName(displayName)
-                        .setLogo(Uri.parse("android.resource://com.kt.apps.media.xemtv/drawable/app_icon_fg"))
-                        .setDescription("iMedia")
-                        .setInternalProviderId(tvChannelProviderId)
-                        .setAppLinkIntentUri(channelUri)
+                    val updatedProgram = programBuilder.setContentId(tvChannel.channelId)
+                        .setLogoUri(tvChannel.logoChannel)
+                        .setTitle(tvChannel.tvChannelName)
+                        .setType(TvContractCompat.PreviewProgramColumns.TYPE_MOVIE)
+                        .setChannelId(channelProviderId)
+                        .setThumbnailUri(tvChannel.logoChannel)
+                        .setBrowsable(true)
+                        .setDurationMillis(0)
+                        .setPosterArtUri(tvChannel.logoChannel)
+                        .setReleaseDate(Calendar.getInstance(Locale.TAIWAN).time)
+                        .setSearchable(true)
+                        .setPosterArtUri(tvChannel.logoChannel)
+                        .setIntentUri(Uri.parse("xemtv://tv/channel/${tvChannel.channelId}"))
                         .build()
 
-                    val channelProviderId = if (existingChannel == null) {
-                        PreviewChannelHelper(context)
-                            .publishChannel(channelUpdate)
-                    } else {
-                        PreviewChannelHelper(context)
-                            .updatePreviewChannel(
-                                existingChannel.id,
-                                channelUpdate
-                            )
-                        existingChannel.id
-                    }
-
-                    val channelEntity = channelList.map(mapToEntity(channelProviderId))
-
-                    if (allChannels.none { it.isBrowsable }) {
-                        TvContractCompat.requestChannelBrowsable(context, channelProviderId)
-                    }
-
-                    val existingProgramList = getPreviewPrograms(context, channelProviderId)
-
-                    channelEntity.forEach { tvChannel ->
-
-                        val existingProgram = existingProgramList.find { it.contentId == tvChannel.channelId }
-
-                        val programBuilder = if (existingProgram == null) {
-                            PreviewProgram.Builder()
+                    try {
+                        if (existingProgram == null) {
+                            PreviewChannelHelper(context)
+                                .publishPreviewProgram(updatedProgram)
                         } else {
-                            PreviewProgram.Builder(existingProgram)
+                            PreviewChannelHelper(context)
+                                .updatePreviewProgram(existingProgram.id, updatedProgram)
                         }
-
-                        val updatedProgram = programBuilder.setContentId(tvChannel.channelId)
-                            .setLogoUri(tvChannel.logoChannel)
-                            .setTitle(tvChannel.tvChannelName)
-                            .setType(TvContractCompat.PreviewProgramColumns.TYPE_MOVIE)
-                            .setChannelId(channelProviderId)
-                            .setThumbnailUri(tvChannel.logoChannel)
-                            .setBrowsable(true)
-                            .setDurationMillis(0)
-                            .setPosterArtUri(tvChannel.logoChannel)
-                            .setReleaseDate(Calendar.getInstance(Locale.TAIWAN).time)
-                            .setSearchable(true)
-                            .setPosterArtUri(tvChannel.logoChannel)
-                            .setIntentUri(Uri.parse("xemtv://tv/channel/${tvChannel.channelId}"))
-                            .build()
-
-                        try {
-                            if (existingProgram == null) {
-                                PreviewChannelHelper(context)
-                                    .publishPreviewProgram(updatedProgram)
-                            } else {
-                                PreviewChannelHelper(context)
-                                    .updatePreviewProgram(existingProgram.id, updatedProgram)
-                            }
-                        } catch (e: IllegalArgumentException) {
-                            if (DEBUG) {
-                                Logger.e(this@TVRecommendationWorkers, exception = e)
-                            }
+                    } catch (e: IllegalArgumentException) {
+                        if (DEBUG) {
+                            Logger.e(this@TVRecommendationWorkers, exception = e)
                         }
-
                     }
-                    tvChannelDAO.insert(channelEntity)
-                }
-                .subscribe({
-                    Logger.d(this@TVRecommendationWorkers, message = "Insert preview channel success")
-                }, {
-                    insertOrUpdatePreviewChannel()
-                })
 
-        )
+                }
+                tvChannelDAO.insert(channelEntity)
+            }
+            .retry { t1, _ ->
+                Log.e("TAG", "ThreadName: ${Thread.currentThread().name}")
+                Thread.sleep(t1 * 2000L)
+                return@retry t1 < 3
+            }
+            .doOnComplete {
+                Logger.d(this@TVRecommendationWorkers, message = "Insert preview channel success")
+            }
     }
 
     private fun mapToEntity(providerId: Long) = { channel: TVChannel ->

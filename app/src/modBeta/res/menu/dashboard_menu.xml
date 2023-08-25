@@ -8,6 +8,12 @@
         android:visible="true" />
 
     <item
+        android:id="@+id/favotire"
+        android:enabled="true"
+        android:icon="@drawable/ic_round_bookmark_border_24"
+        android:title="@string/nav_favorite_title" />
+
+    <item
         android:id="@+id/tv"
         android:enabled="true"
         android:icon="@drawable/ic_tv"

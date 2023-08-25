@@ -19,12 +19,12 @@ import cn.pedant.SweetAlert.SweetAlertDialog
 import com.kt.apps.core.logging.Logger
 import java.util.*
 
-fun Context.updateLocale(language: String = "vi") {
+fun Context.updateLocale(language: String = "vi"): Context {
     val config = Configuration()
     val locale = Locale(language)
     config.setLocale(locale)
     Locale.setDefault(locale)
-    createConfigurationContext(config)
+    return createConfigurationContext(config)
 }
 
 fun Fragment.hideKeyboard() {
@@ -58,7 +58,7 @@ fun Fragment.showErrorDialog(
     onDismissListener: (() -> Unit)? = null,
     onShowListener: (() -> Unit)? = null,
 ) {
-    if (this.isDetached || this.isHidden) {
+    if (this.isDetached || this.isHidden || this.context == null) {
         return
     }
     val successAlert = SweetAlertDialog(requireContext(), SweetAlertDialog.NORMAL_TYPE)
@@ -115,6 +115,9 @@ fun Activity.showSuccessDialog(
     autoDismiss: Boolean = true
 ) {
     try {
+        if (this.isDestroyed || this.isFinishing) {
+            return
+        }
         showSweetDialog(SweetAlertDialog.SUCCESS_TYPE, onSuccessListener, content, delayMillis, autoDismiss)
     } catch (_: Exception) {
     }
@@ -129,6 +132,9 @@ fun Activity.showErrorDialog(
     autoDismiss: Boolean = false
 ) {
     try {
+        if (this.isDestroyed || this.isFinishing) {
+            return
+        }
         showSweetDialog(
             SweetAlertDialog.ERROR_TYPE,
             onSuccessListener,

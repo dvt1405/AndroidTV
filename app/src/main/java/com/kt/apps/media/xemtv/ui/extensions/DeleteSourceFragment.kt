@@ -47,7 +47,9 @@ class DeleteSourceFragment(
                         roomDataBase.extensionsChannelDao()
                             .deleteBySourceId(extensions.sourceUrl),
                         roomDataBase.extensionsConfig()
-                            .delete(extensions)
+                            .delete(extensions),
+                        roomDataBase.videoFavoriteDao()
+                            .deleteBySourceId(extensions.sourceUrl)
                     )
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())

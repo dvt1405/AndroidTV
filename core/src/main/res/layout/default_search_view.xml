@@ -18,6 +18,7 @@
         android:focusedByDefault="false"
         android:padding="15dp"
         android:visibility="gone"
+        android:theme="@style/Theme.AppCompat"
         app:srcCompat="@drawable/record_icon"
         app:tint="@color/color_record_selector"
         tools:ignore="UnusedAttribute"

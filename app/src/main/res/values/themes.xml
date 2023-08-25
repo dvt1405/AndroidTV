@@ -2,7 +2,7 @@
 
     <style name="Theme.XemTv" parent="@style/Theme.SplashScreen.Common">
         <item name="navMenu">@menu/dashboard_menu</item>
-        <item name="defaultSelectedPosition">1</item>
+        <item name="defaultSelectedPosition">2</item>
         <item name="imageCardViewTitleStyle">@style/ImageCardViewStyleTitleDefault</item>
         <item name="android:progressBarStyleLarge">@style/ThemeProgressLarge</item>
     </style>

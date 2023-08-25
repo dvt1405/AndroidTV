@@ -28,22 +28,25 @@
             android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-            <androidx.appcompat.widget.AppCompatImageButton
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/btn_favourite"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_gravity="center"
+                android:nextFocusLeft="@id/btn_favourite"
+                android:theme="@style/Theme.AppCompat"
                 android:layout_marginEnd="36dp"
                 android:background="@drawable/base_background_btn_circle_focused"
                 android:backgroundTint="@color/color_background_selector"
                 android:padding="16dp"
-                app:tint="@color/color_ic_tint_w_state"
-                android:src="@drawable/ic_round_bookmark_border_24" />
+                app:tint="@color/color_favorite_selector"
+                android:src="@drawable/ic_bookmark_selector" />
 
             <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/ic_play_pause"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
+                android:theme="@style/Theme.AppCompat"
                 android:layout_gravity="center"
                 android:background="@drawable/base_background_btn_circle"
                 android:focusable="true"
@@ -60,9 +63,10 @@
                 tools:ignore="UseAppTint"
                 tools:targetApi="o" />
 
-            <androidx.appcompat.widget.AppCompatImageButton
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/btn_video_codec_info"
                 android:layout_width="60dp"
+                android:theme="@style/Theme.AppCompat"
                 android:layout_height="60dp"
                 android:layout_gravity="center"
                 android:layout_marginStart="36dp"
