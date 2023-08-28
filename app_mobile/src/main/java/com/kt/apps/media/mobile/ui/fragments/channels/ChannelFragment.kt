@@ -27,6 +27,7 @@ import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
@@ -116,14 +117,10 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
 
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
-            launch(CoroutineExceptionHandler { _, _ ->
-                showErrorDialog(content = getString(R.string.error_happen))
-            }) {
+            launch {
                 merge(flowOf(Unit), binding.swipeRefreshLayout.onRefresh())
                     .collectLatest {
-                        launch {
-                            viewModel.getListTVChannelAsync(true)
-                        }.trackActivity(loadingChannel)
+                        performLoadTVChannel()
                     }
             }
 
@@ -163,6 +160,14 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
                 }
             }
         }
+    }
+
+   private fun performLoadTVChannel() {
+       lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
+           showErrorDialog(content = getString(R.string.error_happen))
+       }) {
+           viewModel.getListTVChannelAsync(true)
+       }.trackActivity(loadingChannel)
     }
 
     override fun onStop() {

@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
@@ -51,7 +52,6 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
     suspend fun getListTVChannelAsync(forceRefresh: Boolean) {
         tvChannelViewModel.getListTVChannel(forceRefresh)
         tvChannelViewModel.tvChannelLiveData.await()
-        return
     }
 }
 

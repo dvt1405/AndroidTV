@@ -7,6 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
 import com.kt.apps.media.mobile.utils.ActivityIndicator
@@ -15,6 +16,7 @@ import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.FootballListInteractor
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -67,10 +69,12 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
     override fun initAction(savedInstanceState: Bundle?) {
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
-                merge(flowOf(Unit), swipeRefreshLayout?.onRefresh() ?: emptyFlow()).collectLatest {
-                    interactor.getAllMatchesAsync()
-                        .trackActivity(loadingMatches)
-                        .await()
+                merge(flowOf(Unit), swipeRefreshLayout.onRefresh()).collectLatest {
+                    lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
+                        showErrorDialog(content = getString(R.string.error_happen))
+                    }) {
+                        interactor.getAllMatchesAsync()
+                    }.trackActivity(loadingMatches)
                 }
             }
         }

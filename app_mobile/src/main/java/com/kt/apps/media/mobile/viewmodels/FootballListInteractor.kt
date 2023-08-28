@@ -7,6 +7,7 @@ import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.utils.asSuccessFlow
+import com.kt.apps.media.mobile.utils.await
 import com.kt.apps.media.mobile.utils.isLiveMatch
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
@@ -74,11 +75,9 @@ class FootballListInteractor(
         uiControlViewModel.openPlayback(PrepareStreamLinkData.Football(match))
     }
 
-    fun getAllMatchesAsync(): Deferred<Unit> {
-        return CoroutineScope(Dispatchers.Main).async {
-            footballViewModel.getAllMatches()
-            groupedMatches.first()
-        }
+    suspend fun getAllMatchesAsync() {
+        footballViewModel.getAllMatches()
+        footballViewModel.listFootMatchDataState.await()
     }
 
 

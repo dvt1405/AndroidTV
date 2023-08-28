@@ -4,22 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <androidx.core.widget.NestedScrollView
+    <com.kt.apps.media.mobile.utils.FadingEdgeRecyclerView
+        android:id="@+id/main_channel_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:nestedScrollingEnabled="true"
+        android:orientation="vertical"
+        android:clipToPadding="false"
         android:fadingEdge="vertical"
         android:requiresFadingEdge="vertical"
         android:fadingEdgeLength="@dimen/fading_edge_size"
-        >
-        <com.kt.apps.media.mobile.utils.FadingEdgeRecyclerView
-            android:id="@+id/main_channel_recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="true"
-            android:orientation="vertical"
-            android:clipToPadding="false"
-
-            />
-    </androidx.core.widget.NestedScrollView>
+        />
 
 </FrameLayout>
