@@ -24,6 +24,7 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
 
     private var fbLink = "https://fb.com/groups/imediaapp/"
     private var zlLink = "https://zalo.me/g/bcdftf650"
+    private val playstoreLink = "https://play.google.com/store/apps/details?id=com.kt.apps.media.mobile.xemtv"
 
     @Inject
     lateinit var factory: ViewModelProvider.Factory
@@ -36,26 +37,16 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
         binding.zaloBtn.setOnClickListener {
             openURL(zlLink)
         }
-//        binding.zaloTv.text = "http://zalo.me/imediaapp"
-//
-//        binding.faceBookTv.setOnClickListener {
-//            openURL(binding.faceBookTv.text.toString())
-//        }
-//
-//        binding.zaloTv.setOnClickListener {
-//            openURL(binding.zaloTv.text.toString())
-//        }
-//
-//        binding.updateCheck.setOnClickListener {
-//            openURL("https://play.google.com/store/apps/details?id=com.kt.apps.media.mobile.xemtv")
-//        }
+        binding.updateCheck.setOnClickListener {
+            openURL(playstoreLink)
+        }
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
         getFbZlGroupsLink()
     }
 
-    fun openURL(url: String) {
+    private fun openURL(url: String) {
         var url = url
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             url = "http://$url"

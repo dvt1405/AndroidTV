@@ -10,7 +10,8 @@ import com.kt.apps.media.mobile.ui.fragments.iptv.IptvDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
 import com.kt.apps.media.mobile.ui.info.InfoFragment
 
-class DashboardPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity) {
+class DashboardPagerAdapter(fragment: Fragment) :
+    FragmentStateAdapter(fragment) {
     private val _listItem by lazy {
         mutableListOf<Int>()
     }
@@ -36,6 +37,10 @@ class DashboardPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateA
 
     fun getPositionForItem(itemId: Int): Int {
         return _listItem.indexOf(itemId)
+    }
+
+    fun getItemOrNull(position: Int): Int? {
+        return _listItem.getOrNull(position)
     }
 
     companion object {

@@ -35,6 +35,7 @@
             android:background="@color/black"
             app:layout_constraintBottom_toBottomOf="parent"
             style="@style/NavigationView"
+            app:itemActiveIndicatorStyle="@style/NavigationActiveIndicator"
             />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

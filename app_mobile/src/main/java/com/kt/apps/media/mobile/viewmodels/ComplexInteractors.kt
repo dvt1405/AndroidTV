@@ -62,9 +62,8 @@ class ComplexInteractors(private val provider: ViewModelProvider, private val sc
         uiControlViewModel.playerState
             .map {
                 when(it) {
-                    PlaybackState.Fullscreen -> true
                     PlaybackState.Invisible -> false
-                    PlaybackState.Minimal -> true
+                    else -> true
                 }
             }
             .stateIn(scope, SharingStarted.Eagerly, false)

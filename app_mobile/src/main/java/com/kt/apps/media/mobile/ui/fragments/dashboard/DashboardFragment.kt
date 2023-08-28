@@ -50,7 +50,7 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
     override val screenName: String
         get() = "DashboardFragment"
     private val _adapter by lazy {
-        DashboardPagerAdapter(requireActivity())
+        DashboardPagerAdapter(this)
     }
 
     private val uiControlViewModel by lazy {
@@ -72,6 +72,8 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         }
     }
 
+    private var currentSelectedId: Int? = null
+
     override fun initView(savedInstanceState: Bundle?) {
         with(binding.viewpager) {
             adapter = _adapter
@@ -87,7 +89,7 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         if (!isLandscape) {
             val popupMenu = popupMenu.menu
             val navigationMenu = (binding.bottomNavigation as NavigationBarView).menu
-            _adapter.onRefresh((popupMenu.children.toList() + navigationMenu.children.toList()).map {
+            _adapter.onRefresh((navigationMenu.children.toList() + popupMenu.children.toList()).map {
                 it.itemId
             }.asSequence())
 
@@ -97,11 +99,9 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
                     return@setOnItemSelectedListener  true
                 }
                 if (it.itemId == R.id.search) {
-//                    this.binding.searchFragmentContainer?.fadeIn {  }
                     showSearchPopup()
                     return@setOnItemSelectedListener true
                 }
-//                binding.searchFragmentContainer?.fadeOut {  }
                 binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
                 return@setOnItemSelectedListener true
             }
@@ -127,6 +127,36 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         (binding.bottomNavigation as NavigationBarView).selectedItemId = R.id.tv
     }
 
+
+    override fun onDetach() {
+        super.onDetach()
+        (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener(null)
+        binding.viewpager.adapter = null
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        binding.viewpager.currentItem.let { _adapter.getItemOrNull(it) }
+            ?.run {
+                outState.putInt(SELECTED_ID, this)
+            }
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+        savedInstanceState?.getInt(SELECTED_ID, -1)
+            ?.takeIf { it != -1 }
+            ?.run {
+                if (isLandscape) {
+                    (binding.bottomNavigation as NavigationBarView).selectedItemId = this.toInt()
+                } else {
+                    val popupMenu = popupMenu.menu.children.toList()
+                    (binding.bottomNavigation as NavigationBarView).selectedItemId = popupMenu.firstOrNull { it.itemId == this }?.let {
+                        R.id.more
+                    } ?: this
+                }
+            }
+    }
     private fun showSearchPopup() {
         val searchFragment = SearchDashboardFragment()
 
@@ -134,6 +164,13 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
             ?.add(android.R.id.content, searchFragment)
             ?.addToBackStack(searchFragment.screenName)
             ?.commit()
+    }
 
+    companion object {
+        private val SELECTED_ID = "selected_id"
+        fun newInstance(): DashboardFragment {
+            val fragment = DashboardFragment()
+            return fragment
+        }
     }
 }

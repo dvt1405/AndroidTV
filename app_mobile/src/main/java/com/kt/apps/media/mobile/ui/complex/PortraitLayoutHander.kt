@@ -92,6 +92,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
                 PlaybackState.Invisible -> transitionIDLE()
                 PlaybackState.Fullscreen -> transitionFullscreen()
                 PlaybackState.Minimal -> transitionMinimal()
+                PlaybackState.PIP -> transitionPIP()
             }
         }
     }
@@ -168,6 +169,10 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
             Log.d(TAG, "onSwipeBottom: ")
             transitionFullscreen()
         }
+    }
+
+    private fun transitionPIP() {
+
     }
 
     private fun transitionFullscreen() {

@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.app.PictureInPictureParams
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -90,7 +91,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
     override fun initView(savedInstanceState: Bundle?) {
-
         val metrics = resources.displayMetrics
         layoutHandler = if (metrics.widthPixels <= metrics.heightPixels) {
             PortraitLayoutHandler(WeakReference(this))
@@ -190,6 +190,20 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         //Deeplink handle
         handleIntent(intent)
     }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode)) {
+            val shouldRecreate = when(newConfig.orientation) {
+                Configuration.ORIENTATION_PORTRAIT -> layoutHandler is LandscapeLayoutHandler
+                Configuration.ORIENTATION_LANDSCAPE -> layoutHandler is PortraitLayoutHandler
+                else -> false
+            }
+            if (shouldRecreate) {
+                recreate()
+            }
+        }
+    }
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (!viewModel.isShowingPlayback.value) {
@@ -203,17 +217,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             } else {
                 this@ComplexActivity.enterPictureInPictureMode()
             }
-//            lifecycleScope.launch {
-//                viewModel.changePiPMode(true)
-//                layoutHandler?.forceFullScreen()
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                    val params = PictureInPictureParams.Builder()
-//                    this@ComplexActivity.enterPictureInPictureMode(params.build())
-//                } else {
-//                    this@ComplexActivity.enterPictureInPictureMode()
-//                }
-//            }
-
         }
     }
 

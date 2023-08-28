@@ -6,6 +6,8 @@ import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballDashboardBinding
 import com.kt.apps.media.mobile.ui.fragments.football.list.FootballListFragment
 import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 
 class FootballDashboardFragment: BaseFragment<FragmentFootballDashboardBinding>() {
     override val layoutResId: Int
@@ -13,15 +15,8 @@ class FootballDashboardFragment: BaseFragment<FragmentFootballDashboardBinding>(
     override val screenName: String
         get() = "FootballDashboard"
 
-    private val footbalListFragment by lazy {
-        FootballListFragment()
-    }
-
     override fun initView(savedInstanceState: Bundle?) {
-        requireActivity().supportFragmentManager
-            .beginTransaction()
-            .add(R.id.fragment_container, footbalListFragment)
-            .commit()
+
     }
 
     override fun initAction(savedInstanceState: Bundle?) {

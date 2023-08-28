@@ -85,6 +85,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 PlaybackState.Fullscreen -> transitionFullscreen()
                 PlaybackState.Minimal -> transitionMinimal()
                 PlaybackState.Invisible -> transitionIDLE()
+                PlaybackState.PIP -> transitionPIP()
             }
         }
     }
@@ -145,6 +146,10 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 transitionFullscreen()
             }
         }
+    }
+
+    private fun transitionPIP() {
+
     }
 
     private fun transitionFullscreen() {
