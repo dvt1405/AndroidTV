@@ -24,4 +24,11 @@ class RadioChannelsFragment: ChannelFragment() {
             _interactor.openPlayback(PrepareStreamLinkData.Radio(channel))
         }
     }
+
+    companion object {
+        fun newInstance(): RadioChannelsFragment {
+            val fragment = RadioChannelsFragment()
+            return fragment
+        }
+    }
 }

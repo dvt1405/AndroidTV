@@ -33,6 +33,10 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
         provider[PlaybackViewModel::class.java]
     }
 
+    val networkState: NetworkStateViewModel by lazy {
+        provider[NetworkStateViewModel::class.java]
+    }
+
     override val uiControlViewModel: UIControlViewModel by lazy {
         provider[UIControlViewModel::class.java]
     }
@@ -44,6 +48,12 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
         uiControlViewModel.playerState
             .map { it == PlaybackState.Minimal }
             .stateIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed(), false)
+    }
+
+    val onConnectedNetwork: SharedFlow<Unit> by lazy {
+        networkState.networkStatus
+            .mapNotNull { if(it == NetworkState.Connected) Unit else null }
+            .shareIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed())
     }
     fun getListTVChannel(forceRefresh: Boolean) {
         tvChannelViewModel.getListTVChannel(forceRefresh)
@@ -59,7 +69,7 @@ class TVChannelFragmentInteractors(private val provider: ViewModelProvider, priv
     : ChannelFragmentInteractors(provider, coroutineContext) {
     @OptIn(ExperimentalCoroutinesApi::class)
     override val listChannels: Flow<List<TVChannel>> by lazy {
-        tvChannelViewModel.tvChannelLiveData.asSuccessFlow(tag = "tvchannel - listchannels")
+        tvChannelViewModel.tvChannelLiveData.asUpdateFlow(tag = "tvchannel - listchannels")
             .mapLatest {
                 it.filter { channel -> !channel.isRadio }
             }
@@ -79,7 +89,7 @@ class RadioChannelFragmentInteractors(private val provider: ViewModelProvider, p
     : ChannelFragmentInteractors(provider, coroutineContext) {
     @OptIn(ExperimentalCoroutinesApi::class)
     override val listChannels: Flow<List<TVChannel>> by lazy {
-        tvChannelViewModel.tvChannelLiveData.asSuccessFlow(tag = "radioChannel - listchannels").mapLatest {
+        tvChannelViewModel.tvChannelLiveData.asUpdateFlow(tag = "radioChannel - listchannels").mapLatest {
             it.filter { channel -> channel.isRadio }
         }
     }

@@ -286,7 +286,18 @@ fun <T> LiveData<DataState<T>>.asUpdateFlow(tag: String = ""): Flow<T> {
 
 //emit data only success
 fun <T> LiveData<DataState<T>>.asSuccessFlow(tag: String): Flow<T> {
-    return asFlow(tag).catch { Log.d(TAG, "asSuccessFlow $tag: $it") }
+    return callbackFlow {
+        val observer = Observer<DataState<T>> {value ->
+            when (value) {
+                is DataState.Success -> trySend(value.data)
+                else -> { }
+            }
+        }
+        observeForever(observer)
+        awaitClose {
+            removeObserver(observer)
+        }
+    }
 }
 
 fun <T> LiveData<DataState<T>>.asDataStateFlow(tag: String): Flow<DataState<T>> {

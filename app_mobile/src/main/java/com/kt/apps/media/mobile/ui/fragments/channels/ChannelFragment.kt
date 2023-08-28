@@ -85,14 +85,6 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
             ViewModelProvider(this, factory)[PlaybackViewModel::class.java]
         }
     }
-
-    private val networkStateViewModel: NetworkStateViewModel? by lazy {
-        activity?.run {
-            ViewModelProvider(this, factory)[NetworkStateViewModel::class.java]
-        }
-    }
-
-    private var _cacheMenuItem: MutableMap<String, Int> = mutableMapOf<String, Int>()
     override fun initView(savedInstanceState: Bundle?) {
 
         with(binding.mainChannelRecyclerView) {
@@ -115,24 +107,16 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
     override fun initAction(savedInstanceState: Bundle?) {
         playbackViewModel
 
-
-        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
-                merge(flowOf(Unit), binding.swipeRefreshLayout.onRefresh())
+                merge(
+                    flowOf(Unit),
+                    binding.swipeRefreshLayout.onRefresh(),
+                    viewModel.onConnectedNetwork
+                )
                     .collectLatest {
                         performLoadTVChannel()
                     }
-            }
-
-            launch {
-                loadingChannel.isLoading.collectLatest {
-                    swipeRefreshLayout.isRefreshing = it
-                    if (it) {
-                        skeletonScreen.run {  }
-                    } else {
-                        skeletonScreen.hide()
-                    }
-                }
             }
 
             launch(CoroutineExceptionHandler { context, throwable ->
@@ -142,6 +126,20 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
                     delay(500)
                     if (tvChannel.isNotEmpty())
                         reloadOriginalSource(tvChannel)
+                }
+            }
+        }
+
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+
+            launch {
+                loadingChannel.isLoading.collectLatest {
+                    swipeRefreshLayout.isRefreshing = it
+                    if (it) {
+                        skeletonScreen.run {  }
+                    } else {
+                        skeletonScreen.hide()
+                    }
                 }
             }
 
@@ -195,4 +193,8 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
     }
 
     abstract fun onClickItemChannel(channel: TVChannel)
+
+    companion object {
+        const val TAG: String = "ChannelFragment"
+    }
 }

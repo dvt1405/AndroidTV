@@ -20,7 +20,7 @@ interface IDashboardHelper {
 
 class TVDashboardHelper: IDashboardHelper {
     override fun totalFragment(): ChannelFragment {
-        return TVChannelsFragment()
+        return TVChannelsFragment.newInstance()
     }
 
     override fun perChannelFragment(filterCategory: String): PerChannelListFragment {
@@ -35,7 +35,7 @@ class TVDashboardHelper: IDashboardHelper {
 
 class RadioDashboardHelper: IDashboardHelper {
     override fun totalFragment(): ChannelFragment {
-        return RadioChannelsFragment()
+        return RadioChannelsFragment.newInstance()
     }
 
     override fun perChannelFragment(filterCategory: String): PerChannelListFragment {

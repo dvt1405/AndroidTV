@@ -7,6 +7,7 @@ import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.utils.asSuccessFlow
+import com.kt.apps.media.mobile.utils.asUpdateFlow
 import com.kt.apps.media.mobile.utils.await
 import com.kt.apps.media.mobile.utils.isLiveMatch
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
@@ -38,7 +39,7 @@ class FootballListInteractor(
         provider[UIControlViewModel::class.java]
     }
     private val listMatches: Flow<List<FootballMatch>> by lazy {
-        footballViewModel.listFootMatchDataState.asSuccessFlow(tag = "football_live_matches")
+        footballViewModel.listFootMatchDataState.asUpdateFlow(tag = "football_live_matches")
     }
 
     val playbackPadding by lazy {

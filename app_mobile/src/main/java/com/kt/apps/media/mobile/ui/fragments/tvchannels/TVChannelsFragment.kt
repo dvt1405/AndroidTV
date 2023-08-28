@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 
 class TVChannelsFragment: ChannelFragment() {
     private val _viewModel by lazy {
-        TVChannelFragmentInteractors(ViewModelProvider(requireActivity(),factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
+        TVChannelFragmentInteractors(ViewModelProvider(requireActivity(),factory), lifecycleScope.coroutineContext)
     }
     override val viewModel: ChannelFragmentInteractors
         get() = _viewModel
@@ -22,6 +22,13 @@ class TVChannelsFragment: ChannelFragment() {
     override fun onClickItemChannel(channel: TVChannel) {
         lifecycleScope.launch {
             _viewModel.openPlayback(PrepareStreamLinkData.TV(channel))
+        }
+    }
+
+    companion object {
+        fun newInstance(): TVChannelsFragment {
+            val fragment = TVChannelsFragment()
+            return fragment
         }
     }
 }
