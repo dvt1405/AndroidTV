@@ -102,11 +102,13 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
             try {
                 viewSwitcher.showContentView()
                 val list = loadDataAsync().trackActivity(activityIndicator).await()
-                val grouped = groupAndSort(list).map {
-                    ChannelListData(it.first, it.second.map {channel ->
-                        ChannelElement.ExtensionChannelElement(channel)
-                    })
-                }
+                val grouped = CoroutineScope(Dispatchers.Default).async {
+                    groupAndSort(list).map {
+                        ChannelListData(it.first, it.second.map {channel ->
+                            ChannelElement.ExtensionChannelElement(channel)
+                        })
+                    }
+                }.await()
                 binding.listChannelRecyclerview.reloadAllData(grouped)
             } catch (e: Throwable) {
                 Log.d(TAG, "loadData: $e ")

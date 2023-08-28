@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.ui.view
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import androidx.recyclerview.widget.GridLayoutManager
@@ -44,7 +45,6 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     }
     private val linearLayoutManager by lazy {
         LinearLayoutManager(context)
-
     }
     private val singleAdapter by lazy { ChannelListAdapter.ChildChannelAdapter().apply {
         onItemRecyclerViewCLickListener = { item, position ->
@@ -78,17 +78,33 @@ class ChannelListRecyclerView @JvmOverloads constructor(
         super.onFinishInflate()
         recyclerView.apply {
             adapter = this@ChannelListRecyclerView.adapter
-            layoutManager = LinearLayoutManager(context).apply {
-                isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 9
-            }
+            layoutManager = LinearLayoutManager(context)
+            setItemViewCacheSize(3)
             setHasFixedSize(true)
-            setItemViewCacheSize(9)
-            isNestedScrollingEnabled = true
+//            setHasFixedSize(true)
+//            isNestedScrollingEnabled = true
         }
     }
 
     fun reloadAllData(list: List<ChannelListData>) {
+        val joinned = list.map { it.items }.flatten()
+        if (true) {
+            Log.d("CHANNELLIST", "reloadAllData: $list")
+            if (
+                recyclerView.layoutManager !is GridLayoutManager
+                || recyclerView.adapter != singleAdapter
+            ) {
+                recyclerView.adapter = singleAdapter
+                recyclerView.layoutManager = singleLayoutManager
+                recyclerView.addItemDecoration(channelItemDecoration)
+            }
+            singleAdapter.onRefresh(emptyList())
+            joinned.chunked(100).firstOrNull()?.run {
+                singleAdapter.onAdd(this)
+            }
+            mode = Mode.FLEX
+        return
+        }
         if (list.size == 1) {
             if (
                 recyclerView.layoutManager !is GridLayoutManager
@@ -116,20 +132,20 @@ class ChannelListRecyclerView @JvmOverloads constructor(
 
     override fun setPadding(left: Int, top: Int, right: Int, bottom: Int) = recyclerView.setPadding(left, top, right, bottom)
     fun showHideSkeleton(isShow: Boolean) {
-        if (isShow) {
-            skeletonScreen.run {  }
-        } else {
-            skeletonScreen.hide {
-                recyclerView.adapter = when(mode) {
-                    Mode.FLEX -> singleAdapter
-                    Mode.LINEAR -> adapter
-                }
-                recyclerView.layoutManager = when(mode) {
-                    Mode.FLEX -> singleLayoutManager
-                    Mode.LINEAR -> linearLayoutManager
-                }
-            }
-        }
+//        if (isShow) {
+//            skeletonScreen.run {  }
+//        } else {
+//            skeletonScreen.hide {
+//                recyclerView.adapter = when(mode) {
+//                    Mode.FLEX -> singleAdapter
+//                    Mode.LINEAR -> adapter
+//                }
+//                recyclerView.layoutManager = when(mode) {
+//                    Mode.FLEX -> singleLayoutManager
+//                    Mode.LINEAR -> linearLayoutManager
+//                }
+//            }
+//        }
     }
 }
 
@@ -184,13 +200,15 @@ class ChannelListAdapter: BaseAdapter<ChannelListData, ItemRowChannelBinding>() 
         ) {
             binding.item = item
             binding.title.isSelected = true
-            binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)
+//            binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)
         }
 
         override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {
             super.onViewRecycled(holder)
             holder.viewBinding.logo.setImageBitmap(null)
         }
+
+        onView
     }
 
 }
