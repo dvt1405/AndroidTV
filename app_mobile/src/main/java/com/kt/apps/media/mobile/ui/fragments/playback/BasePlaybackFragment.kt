@@ -154,7 +154,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     private val currentLayout = MutableStateFlow<LayoutState>(LayoutState.FULLSCREEN(true))
     protected val title = MutableStateFlow("")
-    private val isProgressing = MutableStateFlow(true)
+    protected val isProgressing = MutableStateFlow(true)
     protected val isPlayingState = MutableStateFlow(false)
 
     protected var retryTimes: Int = 3
@@ -165,11 +165,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         ( resources.getDimensionPixelSize(R.dimen.item_channel_height) + resources.getDimensionPixelSize(R.dimen.item_channel_decoration)) * 2 / 3
     }
 
+    protected var lastPlayerControllerConfig: PlayerControllerConfig = PlayerControllerConfig(true, 3000)
+
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
         liveLabel?.visibility = View.GONE
         exoPlayer?.apply {
             player = exoPlayerManager.exoPlayer
+            lastPlayerControllerConfig = PlayerControllerConfig(controllerHideOnTouch, controllerShowTimeoutMs)
             showController()
             player?.stop()
 
@@ -240,7 +243,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
-        Log.d(TAG, "initAction:")
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
@@ -262,8 +264,16 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
             launch {
                 isProgressing.collectLatest {
-                    Log.d(TAG, "initAction: isProgressing $it")
+                    Log.d(TAG, "Playback: isProgressing $it")
                     toggleProgressingUI(it)
+                }
+            }
+
+            launch {
+                isPlayingState.collectLatest {
+                    if (it) {
+                        isProgressing.value = false
+                    }
                 }
             }
         }
@@ -298,11 +308,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                         when(state.playbackState) {
                             PlaybackState.Fullscreen -> {
                                 currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
-//                                when(state.channelListState) {
-//                                    ChannelListState.SHOW -> currentLayout.emit(LayoutState.SHOW_CHANNEL)
-//                                    ChannelListState.MOVING -> currentLayout.emit(LayoutState.MOVE_CHANNEL)
-//                                    ChannelListState.HIDE -> currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
-//                                }
                             }
                             PlaybackState.Minimal -> currentLayout.emit(LayoutState.MINIMAL)
                             else -> {
@@ -372,6 +377,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
+        Log.d(TAG, "Playback onIsPlayingChanged: $isPlaying")
         isPlayingState.value = isPlaying
     }
     override fun onPlaybackStateChanged(playbackState: Int) {
@@ -385,6 +391,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         if (playbackState == ExoPlayer.STATE_ENDED) {
             exoPlayer?.keepScreenOn = false
         }
+    }
+
+    override fun onIsLoadingChanged(isLoading: Boolean) {
+        super.onIsLoadingChanged(isLoading)
+        isProgressing.value = isLoading
     }
 
     override fun onPlayerError(error: PlaybackException) {
@@ -433,18 +444,26 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             progressWheel?.visibility = View.VISIBLE
             minimalProgress?.visibility = View.VISIBLE
             minimalPlayPause?.visibility = View.GONE
+            exoPlayer?.apply {
+                this.controllerHideOnTouch = false
+                this.controllerShowTimeoutMs = -1
+            }
         } else {
             playPauseButton?.visibility = View.VISIBLE
             progressWheel?.visibility = View.GONE
             minimalProgress?.visibility = View.GONE
             minimalPlayPause?.visibility = View.VISIBLE
+            exoPlayer?.apply {
+                this.controllerHideOnTouch = lastPlayerControllerConfig.hideOnTouch
+                this.controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
+            }
         }
     }
     private fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
         exoPlayer?.apply {
             useController = true
-            controllerShowTimeoutMs = 1000
-            controllerHideOnTouch = true
+            controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
+            controllerHideOnTouch = lastPlayerControllerConfig.hideOnTouch
             channelListRecyclerView?.visibility = View.VISIBLE
         }
         safeLet(motionLayout, provideFullScreenLayout()) {
@@ -468,8 +487,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             exoPlayer?.apply {
                 useController = true
                 showController()
-                controllerHideOnTouch = true
-                controllerShowTimeoutMs = 1000
+                controllerHideOnTouch = lastPlayerControllerConfig.hideOnTouch
+                controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
             }
         }
 
@@ -590,4 +609,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
     }
+
+    data class PlayerControllerConfig(val hideOnTouch: Boolean, val showTimeout: Int)
 }

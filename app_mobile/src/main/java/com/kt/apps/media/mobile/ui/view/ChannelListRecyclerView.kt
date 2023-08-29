@@ -94,22 +94,18 @@ class ChannelListRecyclerView @JvmOverloads constructor(
                 recyclerView.layoutManager !is GridLayoutManager
                 || recyclerView.adapter != singleAdapter
                     ) {
-                recyclerView.adapter = singleAdapter
-                recyclerView.layoutManager = singleLayoutManager
                 recyclerView.addItemDecoration(channelItemDecoration)
             }
-            singleAdapter.onRefresh(list[0].items)
+            singleAdapter.onRefresh(list[0].items, false)
             mode = Mode.FLEX
         } else {
             if (
                 recyclerView.layoutManager !is LinearLayoutManager
                 || recyclerView.adapter != adapter
             ) {
-                recyclerView.adapter = adapter
-                recyclerView.layoutManager = linearLayoutManager
                 recyclerView.removeItemDecoration(channelItemDecoration)
             }
-            adapter.onRefresh(list)
+            adapter.onRefresh(list, false)
             mode = Mode.LINEAR
         }
     }

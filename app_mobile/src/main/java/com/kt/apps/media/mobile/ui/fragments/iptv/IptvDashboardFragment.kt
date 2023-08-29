@@ -115,17 +115,20 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
                 } else {
                     motionLayout?.transitionToState(R.id.start)
                 }
+                val lastSize = list.size
                 list.clear()
                 list.addAll(it)
-                _adapter.notifyDataSetChanged()
-                val lastSelectedIndex = tabLayout.selectedTabPosition
-                binding.viewpager.adapter = null
-                binding.viewpager.adapter = _adapter
-                MainScope().launch {
-                    tabLayout.getTabAt(lastSelectedIndex)?.run {
-                        tabLayout.selectTab(this)
+                if (lastSize != it.size) {
+                    val lastSelectedIndex = tabLayout.selectedTabPosition
+                    binding.viewpager.adapter = null
+                    binding.viewpager.adapter = _adapter
+                    MainScope().launch {
+                        tabLayout.getTabAt(lastSelectedIndex)?.run {
+                            tabLayout.selectTab(this)
+                        }
                     }
                 }
+                _adapter.notifyDataSetChanged()
             }
         }
     }
@@ -143,7 +146,7 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
     private fun showAlertRemoveExtension(config: ExtensionsConfig) {
         AlertDialog.Builder(context, R.style.AlertDialogTheme).apply {
             setMessage("Bạn có muốn xóa nguồn ${config.sourceName}?")
-            setCancelable(false)
+            setCancelable(true)
             setPositiveButton("Có") { dialog, which ->
 //                deleteExtension(sourceName = sourceName)
                 lifecycleScope.launch {

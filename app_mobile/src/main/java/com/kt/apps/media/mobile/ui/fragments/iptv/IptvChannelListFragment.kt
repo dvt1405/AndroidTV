@@ -126,20 +126,3 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
         }
     }
 }
-
-class SingleJobQueue(private val scope: CoroutineScope) {
-    private var lastJob: Job? = null
-
-    fun submit(
-        context: CoroutineContext,
-        block: suspend CoroutineScope.() -> Unit
-    ) {
-        val job = scope.launch(context, CoroutineStart.LAZY, block)
-        scope.launch(Dispatchers.Default) {
-            lastJob?.cancel()
-            Log.d(TAG, "onStartLoading submit: job.start()")
-            job.start()
-            lastJob = job
-        }
-    }
-}

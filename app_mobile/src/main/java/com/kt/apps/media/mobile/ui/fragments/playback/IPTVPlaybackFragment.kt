@@ -90,6 +90,7 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                     exoPlayer?.player?.run {
                         durationTV?.text = "${Util.getStringForTime(stringBuilder, formatter, progress.toLong())}/${Util.getStringForTime(stringBuilder, formatter, contentDuration)}"
                     }
+                    p0?.progress = progress
                 }
             }
 
@@ -99,9 +100,10 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
             }
 
             override fun onStopTrackingTouch(p0: SeekBar?) {
+                isProgressing.value = true
                 exoPlayer?.player?.seekTo(p0?.progress?.toLong() ?: 0)
                 isSeeking.set(false)
-                exoPlayer?.controllerShowTimeoutMs = 1000
+                exoPlayer?.controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
             }
         })
     }
@@ -121,23 +123,6 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                     _playbackViewModel.loadIPTVJob(it)
                 }
             }
-
-//            launch(CoroutineExceptionHandler { coroutineContext, throwable ->
-//                subTitle?.gone()
-//            }) {
-//                loadChannelFlow.collectLatest {
-//                    _playbackViewModel.loadProgramForChanel(it).collectLatest { infor ->
-//                        infor.description.takeIf { t -> t.isNotBlank() }
-//                            ?.run {
-//                                subTitle?.visible()
-//                                subTitle?.text = this
-//                            }
-//                            ?: kotlin.run {
-//                                subTitle?.inVisible()
-//                            }
-//                    }
-//                }
-//            }
 
             launch {
                 combine(

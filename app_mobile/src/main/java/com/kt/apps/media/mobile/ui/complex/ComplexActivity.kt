@@ -311,14 +311,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun onResume() {
         Log.d(TAG, "onResume: ")
         super.onResume()
-
-//        MainScope().launch {
-//            val last = viewModel.isInPIPMode.value
-//            if (last) {
-//                viewModel.changePiPMode(false)
-//                layoutHandler?.onStartLoading()
-//            }
-//        }
     }
 
 

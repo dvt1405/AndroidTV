@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.kt.apps.core.base.BaseFragment
+import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentSearchListBinding
@@ -72,7 +73,8 @@ class SearchListFragment : BaseFragment<FragmentSearchListBinding>() {
                     is SearchForText.SearchResult.TV -> ChannelElement.SearchTV(value)
                 }
             }
-            ChannelListData(it.first, value)
+            val name = TVChannelGroup.values().firstOrNull { group -> group.name == it.first }?.value ?: it.first
+            ChannelListData(name, value)
         }
     }
 
