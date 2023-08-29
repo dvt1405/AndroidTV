@@ -29,6 +29,7 @@ import com.kt.apps.media.mobile.ui.view.ChannelListView
 import com.kt.apps.media.mobile.ui.view.RowItemChannelAdapter
 import com.kt.apps.media.mobile.ui.view.childClicks
 import com.kt.apps.media.mobile.utils.alignParent
+import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.matchParentWidth
@@ -124,7 +125,7 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                 }
             }
 
-            launch {
+            avoidExceptionLaunch {
                 combine(
                     (((arguments?.get(EXTRA_EXTENSION_ID) as? String)?.let { flowOf(it) }) ?: flowOf("")),
                     (((arguments?.get(EXTRA_EXTENSION_GROUP) as? String)?.let { flowOf(it) }) ?: flowOf(""))

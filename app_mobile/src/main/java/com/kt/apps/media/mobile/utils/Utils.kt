@@ -38,6 +38,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import java.util.Calendar
 import java.util.Locale
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -367,6 +368,11 @@ fun LifecycleOwner.repeatLaunchesOnLifeCycle(
     }
 }
 
+fun CoroutineScope.avoidExceptionLaunch(block: suspend CoroutineScope.() -> Unit) = launch(exceptionHandler { _, _ ->  }, block = block)
+
+inline fun exceptionHandler(crossinline handler: (CoroutineContext, Throwable) -> Unit): CoroutineContext {
+    return  NonCancellable + CoroutineExceptionHandler(handler)
+}
 fun TVChannel.loadImgDrawable(context: Context): Drawable? {
     val context = context.applicationContext
     val id = context.resources.getIdentifier(

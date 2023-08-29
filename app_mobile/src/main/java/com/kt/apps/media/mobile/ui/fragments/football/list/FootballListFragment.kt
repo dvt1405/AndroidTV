@@ -11,6 +11,7 @@ import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentFootballListBinding
 import com.kt.apps.media.mobile.utils.ActivityIndicator
+import com.kt.apps.media.mobile.utils.exceptionHandler
 import com.kt.apps.media.mobile.utils.onRefresh
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
@@ -70,7 +71,7 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
                 merge(flowOf(Unit), swipeRefreshLayout.onRefresh()).collectLatest {
-                    lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
+                    lifecycleScope.launch(exceptionHandler { _, _ ->
                         showErrorDialog(content = getString(R.string.error_happen))
                     }) {
                         interactor.getAllMatchesAsync()

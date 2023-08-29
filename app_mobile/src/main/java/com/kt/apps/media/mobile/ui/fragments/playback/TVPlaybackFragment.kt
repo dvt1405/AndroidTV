@@ -33,6 +33,7 @@ import com.kt.apps.media.mobile.viewmodels.TVPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -72,35 +73,38 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
 
         val itemToPlay = arguments?.get(EXTRA_TV_CHANNEL) as? TVChannel
 
-        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
+
+        lifecycleScope.launch {
             val loadItemFlow: Flow<ChannelElement.TVChannelElement> = merge(
                 itemAdapter.childClicks().mapNotNull { it as? ChannelElement.TVChannelElement },
                 itemToPlay?.let { flowOf(it) }?.map {  ChannelElement.TVChannelElement(it)} ?: emptyFlow()
             ).stateIn(lifecycleScope)
 
-            launch(coroutineError()) {
-                loadItemFlow.collectLatest {
-                    title.emit(it.model.tvChannelName)
-                    _playbackInteractor.loadProgramForChannel(it)
-                    _playbackInteractor.loadLinkStreamChannel(it)
-                }
-            }
-
-            launch(CoroutineExceptionHandler { _, throwable ->
-                subTitle?.gone()
-            }) {
-                _playbackInteractor.currentProgrammeForChannel
-                    .mapNotNull { it }
-                    .collectLatest { infor ->
-                        infor.description.takeIf { t -> t.isNotBlank() }
-                            ?.run {
-                                subTitle?.visible()
-                                subTitle?.text = this
-                            }
-                            ?: kotlin.run {
-                                subTitle?.gone()
-                            }
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                launch(coroutineError()) {
+                    loadItemFlow.collectLatest {
+                        title.emit(it.model.tvChannelName)
+                        _playbackInteractor.loadProgramForChannel(it)
+                        _playbackInteractor.loadLinkStreamChannel(it)
                     }
+                }
+
+                launch(exceptionHandler { _, _ ->
+                    subTitle?.gone()
+                }) {
+                    _playbackInteractor.currentProgrammeForChannel
+                        .mapNotNull { it }
+                        .collectLatest { infor ->
+                            infor.description.takeIf { t -> t.isNotBlank() }
+                                ?.run {
+                                    subTitle?.visible()
+                                    subTitle?.text = this
+                                }
+                                ?: kotlin.run {
+                                    subTitle?.gone()
+                                }
+                        }
+                }
             }
         }
 
@@ -179,7 +183,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
                 }
             }
 
-            launch(CoroutineExceptionHandler { _, throwable ->
+            launch(NonCancellable + CoroutineExceptionHandler { _, throwable ->
                 subTitle?.gone()
             }) {
                 _playbackInteractor.currentProgrammeForChannel

@@ -108,7 +108,7 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         playbackViewModel
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launch {
+            avoidExceptionLaunch {
                 merge(
                     flowOf(Unit),
                     binding.swipeRefreshLayout.onRefresh(),
@@ -119,7 +119,7 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
                     }
             }
 
-            launch(CoroutineExceptionHandler { context, throwable ->
+            launch(exceptionHandler { context, throwable ->
                 swipeRefreshLayout.isRefreshing = false
             }) {
                 viewModel.listChannels.collectLatest { tvChannel ->
@@ -161,7 +161,7 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
     }
 
    private fun performLoadTVChannel() {
-       lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
+       lifecycleScope.launch(exceptionHandler { _, _ ->
            showErrorDialog(content = getString(R.string.error_happen))
        }) {
            viewModel.getListTVChannelAsync(true)

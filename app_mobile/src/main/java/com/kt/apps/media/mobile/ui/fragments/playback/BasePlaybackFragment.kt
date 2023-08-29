@@ -54,6 +54,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 import kotlin.math.abs
 import kotlin.math.log
 
@@ -356,8 +357,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.keepScreenOn = true
     }
 
-    protected fun coroutineError(): CoroutineExceptionHandler {
-        return CoroutineExceptionHandler { _, throwable ->
+    protected fun coroutineError(): CoroutineContext {
+        return exceptionHandler { _, throwable ->
             onError(throwable)
         }
     }

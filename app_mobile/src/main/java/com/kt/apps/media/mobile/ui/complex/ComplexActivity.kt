@@ -39,6 +39,7 @@ import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
+import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
 import kotlinx.coroutines.CoroutineScope
@@ -345,11 +346,11 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
 
         if (arrayListOf(Constants.HOST_TV, Constants.HOST_RADIO).contains(deeplink.host)) {
-            lifecycleScope.launch {
+            lifecycleScope.avoidExceptionLaunch {
                 viewModel.loadChannelDeepLinkJob(deeplink)
             }
         } else if (deeplink.host == Constants.HOST_IPTV && deeplink.lastPathSegment == "search") {
-            lifecycleScope.launch {
+            lifecycleScope.avoidExceptionLaunch {
                 layoutHandler?.onCloseMinimal()
                 viewModel.openSearch(deeplink)
             }

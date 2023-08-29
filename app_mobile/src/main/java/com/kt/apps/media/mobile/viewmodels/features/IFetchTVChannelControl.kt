@@ -1,9 +1,11 @@
 package com.kt.apps.media.mobile.viewmodels.features
 
 import android.net.Uri
+import android.util.Log
 import com.google.firebase.inject.Deferred
 import com.kt.apps.core.extensions.model.TVScheduler
 import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData

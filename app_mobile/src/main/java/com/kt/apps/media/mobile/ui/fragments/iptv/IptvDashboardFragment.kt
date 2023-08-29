@@ -102,7 +102,7 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
-                binding.addExtension?.clicks()?.collectLatest {
+                binding.addExtension.clicks().collectLatest {
                     showAddIPTVDialog()
                 }
             }
