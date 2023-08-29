@@ -16,6 +16,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import cn.pedant.SweetAlert.SweetAlertDialog
+import com.kt.apps.core.R
 import com.kt.apps.core.logging.Logger
 import java.util.*
 
@@ -87,6 +88,7 @@ fun Fragment.showErrorDialog(
                 ContextCompat.getDrawable(ctx, com.kt.apps.resources.R.drawable.base_background_player_container_error)
             }
         }
+        successAlert.getButton(cn.pedant.Sweetalert.R.id.confirm_button).requestFocus()
         onShowListener?.invoke()
     }
     successAlert.show()
@@ -129,23 +131,55 @@ fun Activity.showErrorDialog(
     titleText: String? = null,
     confirmText: String? = null,
     delayMillis: Int? = 1900,
-    autoDismiss: Boolean = false
+    autoDismiss: Boolean = false,
+    cancellable: Boolean = true,
+    onDismissListener: (() -> Unit)? = null,
+    onShowListener: (() -> Unit)? = null,
 ) {
-    try {
         if (this.isDestroyed || this.isFinishing) {
             return
         }
-        showSweetDialog(
-            SweetAlertDialog.ERROR_TYPE,
-            onSuccessListener,
-            content,
-            delayMillis,
-            autoDismiss,
-            titleText,
-            confirmText
+        val successAlert = SweetAlertDialog(this, SweetAlertDialog.NORMAL_TYPE)
+            .showCancelButton(false)
+
+        successAlert.showContentText(content != null)
+        successAlert.setCancelable(cancellable)
+        successAlert.contentText = content
+        successAlert.titleText = titleText
+        successAlert.confirmText = confirmText
+        successAlert.setBackground(ColorDrawable(Color.TRANSPARENT))
+
+        successAlert.setOnDismissListener {
+            onDismissListener?.invoke()
+        }
+        successAlert.setOnShowListener {
+            onShowListener?.invoke()
+            successAlert.getButton(cn.pedant.Sweetalert.R.id.confirm_button)
+                .requestFocus()
+        }
+        successAlert.show()
+        (this as? FragmentActivity)?.let {
+            lifecycle.addObserver(object : LifecycleEventObserver {
+                override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                    when (event) {
+                        Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
+                            Logger.d(this, message = "OnPauseCalled")
+                            successAlert.dismissWithAnimation()
+                            lifecycle.removeObserver(this)
+                        }
+
+                        else -> {
+
+                        }
+                    }
+                }
+            })
+        }
+
+        Handler(Looper.getMainLooper()).postDelayed(
+            { onSuccessListener?.let { it() } },
+            (delayMillis ?: 1900).toLong()
         )
-    } catch (_: Exception) {
-    }
 }
 @JvmOverloads
 fun Activity.showSweetDialog(

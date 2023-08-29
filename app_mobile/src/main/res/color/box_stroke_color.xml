@@ -11,5 +11,5 @@
 
     <item android:color="#ffffff" android:state_enabled="true" />
     <!-- Normal -->
-    <item android:color="@color/edittext_border" />
+    <item android:color="@color/white" />
 </selector>

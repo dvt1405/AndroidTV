@@ -26,6 +26,7 @@ import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.fadeIn
 import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.visible
+import com.kt.apps.media.mobile.BuildConfig
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentDashboardBinding
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
@@ -72,8 +73,6 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         }
     }
 
-    private var currentSelectedId: Int? = null
-
     override fun initView(savedInstanceState: Bundle?) {
         with(binding.viewpager) {
             adapter = _adapter
@@ -88,6 +87,9 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
     override fun initAction(savedInstanceState: Bundle?) {
         if (!isLandscape) {
             val popupMenu = popupMenu.menu
+            if (BuildConfig.isBeta) {
+                popupMenu.findItem(R.id.football).isVisible = true
+            }
             val navigationMenu = (binding.bottomNavigation as NavigationBarView).menu
             _adapter.onRefresh((navigationMenu.children.toList() + popupMenu.children.toList()).map {
                 it.itemId
@@ -106,6 +108,10 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
                 return@setOnItemSelectedListener true
             }
         } else {
+            if (BuildConfig.isBeta) {
+                (binding.bottomNavigation as NavigationBarView).menu.findItem(R.id.football).isVisible =
+                    true
+            }
             _adapter.onRefresh((binding.bottomNavigation as NavigationBarView).menu.children.map {
                 it.itemId
             })

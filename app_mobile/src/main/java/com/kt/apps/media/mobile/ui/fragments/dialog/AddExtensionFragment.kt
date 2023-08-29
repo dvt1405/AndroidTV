@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.ui.fragments.dialog
 
+import android.app.Dialog
 import android.content.DialogInterface
 import android.graphics.Point
 import android.net.Uri
@@ -8,6 +9,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.view.WindowManager
 import androidx.core.view.updateLayoutParams
 import androidx.core.widget.doAfterTextChanged
@@ -100,12 +102,22 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
     }
 
     private var isUserEditName: Boolean = false
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+
+        val dialog = super.onCreateDialog(savedInstanceState)
+        dialog.window?.setBackgroundDrawableResource(com.kt.apps.resources.R.color.transparent)
+        dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        return dialog
+    }
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView: ")
         sourceLinkLayout.prefixTextView.updateLayoutParams<ViewGroup.LayoutParams> {
             height = ViewGroup.LayoutParams.MATCH_PARENT
         }
         sourceLinkLayout.prefixTextView.gravity = Gravity.CENTER
+
+        this.view?.setBackgroundColor(resources.getColor(R.color.purple_700))
     }
 
     @OptIn(FlowPreview::class)
@@ -115,8 +127,7 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
         lifecycleScope.launch {
             combine(flow = sourceNameEditText.textChanges(), flow2 = sourceLinkEditText.textChanges(), transform = {
                     name, link ->
-                val link = "${sourceLinkLayout.prefixText ?: ""}${link}"
-                return@combine validateInfo(name.toString(), link)
+                return@combine validateInfo(name.toString(), link.toString())
             }).collect {
                 processState.tryEmit(State.EDITING)
                 saveButton.isEnabled = it
@@ -168,15 +179,7 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
                     }
                     is State.ERROR -> {
                         animationQueue.submit(coroutineContext) {
-                            saveButton.visibility = View.GONE
-                            val fadeOut = async { progressDialog.ktFadeOut() }
-                            errorText.text = state.errorText
-                            val fadeIn = async { errorLayout.ktFadeIn() }
-                            errorText.text = state.errorText
-                            fadeOut.await()
-                            progressHelper.stopSpinning()
-                            progressDialog.visibility = View.GONE
-                            fadeIn.await()
+                            this@AddExtensionFragment.dismiss()
                         }
                     }
                     else -> { }
@@ -213,8 +216,8 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
         }
     }
     private fun validateInfo(name: String?, source: String?): Boolean {
-        return (name?.isNotEmpty() == true
-                && source?.isNotEmpty() == true) && source.startsWith("http")
+        return (name?.trim()?.isNotEmpty() == true
+                && source?.trim()?.isNotEmpty() == true)
     }
 
     override fun onResume() {

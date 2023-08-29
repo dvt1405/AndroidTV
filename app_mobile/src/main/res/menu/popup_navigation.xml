@@ -5,7 +5,7 @@
         android:enabled="true"
         android:icon="@drawable/ic_soccer_ball"
         android:title="Bóng đá"
-        android:visible="true" />
+        android:visible="false" />
 
     <item
         android:id="@+id/extension"

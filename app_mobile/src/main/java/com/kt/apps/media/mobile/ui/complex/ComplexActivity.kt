@@ -24,6 +24,7 @@ import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.fadeIn
 import com.kt.apps.core.utils.fadeOut
+import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
@@ -147,7 +148,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 viewModel.addSourceState.filter { it is AddSourceState.Error }
                     .collectLatest {
                         delay(500)
-                        showErrorAlert("Đã xảy ra lỗi vui lòng thử lại sau")
+                        showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau")
                     }
             }
 
@@ -224,9 +225,8 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         Log.d(TAG, "handleAddSourceState: $state")
         when(state) {
             is AddSourceState.StartLoad -> {
-                binding.parseSourceLoadingContainer?.fadeIn {
-                    binding.parseSourceLoadingContainer?.invalidate()
-                }
+                binding.parseSourceLoadingContainer?.visibility = View.VISIBLE
+                binding.parseSourceLoadingContainer?.invalidate()
                 binding.statusView?.startLoading()
                 binding.loadingDescription?.text = "Đang thêm nguồn: ${state.source.sourceUrl}..."
             }
