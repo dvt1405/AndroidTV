@@ -31,7 +31,8 @@ class TVEpgWorkers(
 
     override fun createWork(): Single<Result> {
         val lastUpdate = keyValueStorage.get(EXTRA_LAST_UPDATE_EPG, Long::class.java)
-        if (DateUtils.isToday(lastUpdate)) {
+        val forceUpdate = inputData.getBoolean(EXTRA_FORCE_UPDATE, false)
+        if (DateUtils.isToday(lastUpdate) && !forceUpdate) {
             if (System.currentTimeMillis() - lastUpdate < HOUR_MILLIS) {
                 return Single.just(Result.success())
             }
@@ -55,5 +56,6 @@ class TVEpgWorkers(
     companion object {
         const val EXTRA_LAST_UPDATE_EPG = "extra:last_update_epg"
         const val EXTRA_DEFAULT_URL = "extra:default_url"
+        const val EXTRA_FORCE_UPDATE = "extra:force_update"
     }
 }

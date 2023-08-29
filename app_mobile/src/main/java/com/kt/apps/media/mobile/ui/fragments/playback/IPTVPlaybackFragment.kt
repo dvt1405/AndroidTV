@@ -72,6 +72,7 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
     private var isSeeking = AtomicBoolean(false)
     override fun initView(savedInstanceState: Bundle?) {
         super.initView(savedInstanceState)
+        subTitle?.gone()
         channelListRecyclerView?.apply {
             adapter = itemAdapter
             addItemDecoration(channelItemDecoration)
@@ -121,22 +122,22 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                 }
             }
 
-            launch(CoroutineExceptionHandler { coroutineContext, throwable ->
-                subTitle?.gone()
-            }) {
-                loadChannelFlow.collectLatest {
-                    _playbackViewModel.loadProgramForChanel(it).collectLatest { infor ->
-                        infor.description.takeIf { t -> t.isNotBlank() }
-                            ?.run {
-                                subTitle?.visible()
-                                subTitle?.text = this
-                            }
-                            ?: kotlin.run {
-                                subTitle?.inVisible()
-                            }
-                    }
-                }
-            }
+//            launch(CoroutineExceptionHandler { coroutineContext, throwable ->
+//                subTitle?.gone()
+//            }) {
+//                loadChannelFlow.collectLatest {
+//                    _playbackViewModel.loadProgramForChanel(it).collectLatest { infor ->
+//                        infor.description.takeIf { t -> t.isNotBlank() }
+//                            ?.run {
+//                                subTitle?.visible()
+//                                subTitle?.text = this
+//                            }
+//                            ?: kotlin.run {
+//                                subTitle?.inVisible()
+//                            }
+//                    }
+//                }
+//            }
 
             launch {
                 combine(

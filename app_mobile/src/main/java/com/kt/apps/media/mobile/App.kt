@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile
 
+import android.app.Activity
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -89,7 +90,25 @@ class App : CoreApp(), Configuration.Provider {
                     .build()
             ).build()
         )
+    }
 
+    override fun onActivityStarted(activity: Activity) {
+        super.onActivityStarted(activity)
+
+        workManager.enqueue(
+            OneTimeWorkRequestBuilder<TVEpgWorkers>()
+                .setInputData(
+                    Data.Builder()
+                        .putString(
+                            TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig
+                                .getString("epg_url").ifEmpty {
+                                    "http://lichphatsong.xyz/schedule/vthanhtivi_epg.xml"
+                                })
+                        .putBoolean(TVEpgWorkers.EXTRA_FORCE_UPDATE, true)
+                        .build()
+                )
+                .build()
+        )
     }
 
     override fun applicationInjector(): AndroidInjector<out DaggerApplication> {
