@@ -72,7 +72,7 @@ class App : CoreApp(), Configuration.Provider {
 
     override fun onRemoteConfigReady() {
         if (BuildConfig.isBeta) enqueuePreloadData()
-
+        enqueuePreloadData()
         workManager.enqueueUniquePeriodicWork(
             "RefreshEpgData",
             ExistingPeriodicWorkPolicy.KEEP,
@@ -94,7 +94,7 @@ class App : CoreApp(), Configuration.Provider {
 
     override fun onActivityStarted(activity: Activity) {
         super.onActivityStarted(activity)
-
+//        enqueuePreloadData()
         workManager.enqueue(
             OneTimeWorkRequestBuilder<TVEpgWorkers>()
                 .setInputData(

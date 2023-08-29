@@ -28,6 +28,7 @@ import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.IPTVViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.last
@@ -117,6 +118,14 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
                 list.clear()
                 list.addAll(it)
                 _adapter.notifyDataSetChanged()
+                val lastSelectedIndex = tabLayout.selectedTabPosition
+                binding.viewpager.adapter = null
+                binding.viewpager.adapter = _adapter
+                MainScope().launch {
+                    tabLayout.getTabAt(lastSelectedIndex)?.run {
+                        tabLayout.selectTab(this)
+                    }
+                }
             }
         }
     }
