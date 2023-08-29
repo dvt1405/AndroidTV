@@ -22,4 +22,10 @@ class FootballDashboardFragment: BaseFragment<FragmentFootballDashboardBinding>(
     override fun initAction(savedInstanceState: Bundle?) {
 
     }
+
+    companion object {
+        fun newInstance(): FootballDashboardFragment {
+            return FootballDashboardFragment()
+        }
+    }
 }

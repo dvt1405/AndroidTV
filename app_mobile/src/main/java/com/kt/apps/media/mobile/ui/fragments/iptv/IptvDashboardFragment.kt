@@ -151,4 +151,14 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
             .show()
 
     }
+
+    companion object {
+        fun newInstance(): IptvDashboardFragment {
+            val args = Bundle()
+
+            val fragment = IptvDashboardFragment()
+            fragment.arguments = args
+            return fragment
+        }
+    }
 }

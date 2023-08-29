@@ -12,7 +12,9 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -177,6 +179,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         addOnPictureInPictureModeChangedListener {
             if (it.isInPictureInPictureMode) {
+                dismissAllDialog()
                 viewModel.changePiPMode(true)
                 layoutHandler?.forceFullScreen()
             } else {
@@ -219,6 +222,19 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 this@ComplexActivity.enterPictureInPictureMode()
             }
         }
+    }
+
+    private fun dismissAllDialog() {
+        fun dismissDialog(manager: FragmentManager) {
+            manager.fragments.forEach {
+                (it as? DialogFragment)?.run {
+                    this.dismissAllowingStateLoss()
+                } ?: kotlin.run {
+                    dismissDialog(it.childFragmentManager)
+                }
+            }
+        }
+        dismissDialog(supportFragmentManager)
     }
 
     private suspend fun handleAddSourceState(state: AddSourceState) {

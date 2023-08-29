@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
@@ -21,6 +22,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationBarView
+import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.fadeIn
@@ -73,6 +75,24 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         }
     }
 
+    private val onItemSelectedListener: OnItemSelectedListener = OnItemSelectedListener {
+        if (!isLandscape) {
+            if (it.itemId == R.id.more) {
+                this@DashboardFragment.popupMenu.show()
+                return@OnItemSelectedListener true
+            }
+            if (it.itemId == R.id.search) {
+                showSearchPopup()
+                return@OnItemSelectedListener true
+            }
+            binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
+            return@OnItemSelectedListener true
+        } else {
+            binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
+            return@OnItemSelectedListener true
+        }
+    }
+
     override fun initView(savedInstanceState: Bundle?) {
         with(binding.viewpager) {
             adapter = _adapter
@@ -91,36 +111,24 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
                 popupMenu.findItem(R.id.football).isVisible = true
             }
             val navigationMenu = (binding.bottomNavigation as NavigationBarView).menu
-            _adapter.onRefresh((navigationMenu.children.toList() + popupMenu.children.toList()).map {
+            _adapter.onRefresh((navigationMenu.children.toList() + popupMenu.children.toList())
+                .filter { it.isVisible }
+                .map {
                 it.itemId
             }.asSequence())
-
-            (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener {
-                if (it.itemId == R.id.more) {
-                    this@DashboardFragment.popupMenu.show()
-                    return@setOnItemSelectedListener  true
-                }
-                if (it.itemId == R.id.search) {
-                    showSearchPopup()
-                    return@setOnItemSelectedListener true
-                }
-                binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
-                return@setOnItemSelectedListener true
-            }
         } else {
             if (BuildConfig.isBeta) {
                 (binding.bottomNavigation as NavigationBarView).menu.findItem(R.id.football).isVisible =
                     true
             }
-            _adapter.onRefresh((binding.bottomNavigation as NavigationBarView).menu.children.map {
+            _adapter.onRefresh((binding.bottomNavigation as NavigationBarView).menu.children
+                .filter { it.isVisible }
+                .map {
                 it.itemId
             })
-
-            (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener {
-                binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
-                return@setOnItemSelectedListener true
-            }
         }
+
+        (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener(onItemSelectedListener)
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
@@ -139,29 +147,30 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener(null)
         binding.viewpager.adapter = null
     }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        binding.viewpager.currentItem.let { _adapter.getItemOrNull(it) }
-            ?.run {
-                outState.putInt(SELECTED_ID, this)
-            }
-        super.onSaveInstanceState(outState)
-    }
-
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
-        savedInstanceState?.getInt(SELECTED_ID, -1)
-            ?.takeIf { it != -1 }
+        binding.viewpager.currentItem.let { _adapter.getItemOrNull(it) }
             ?.run {
-                if (isLandscape) {
-                    (binding.bottomNavigation as NavigationBarView).selectedItemId = this.toInt()
-                } else {
-                    val popupMenu = popupMenu.menu.children.toList()
-                    (binding.bottomNavigation as NavigationBarView).selectedItemId = popupMenu.firstOrNull { it.itemId == this }?.let {
-                        R.id.more
-                    } ?: this
-                }
+                silentSelectNavigationBar(
+                    if (isLandscape) {
+                        this
+                    } else {
+                        val popupMenu = popupMenu.menu.children.toList()
+                        popupMenu.firstOrNull { it.itemId == this }?.let {
+                            R.id.more
+                        } ?: this
+                    }
+                )
+
             }
+    }
+
+    private fun silentSelectNavigationBar(item: Int) {
+        (binding.bottomNavigation as NavigationBarView).run {
+            this.setOnItemSelectedListener(null)
+            selectedItemId = item
+            this.setOnItemSelectedListener(onItemSelectedListener)
+        }
     }
     private fun showSearchPopup() {
         val searchFragment = SearchDashboardFragment()
@@ -173,7 +182,7 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
     }
 
     companion object {
-        private val SELECTED_ID = "selected_id"
+        private const val SELECTED_ID = "selected_id"
         fun newInstance(): DashboardFragment {
             val fragment = DashboardFragment()
             return fragment

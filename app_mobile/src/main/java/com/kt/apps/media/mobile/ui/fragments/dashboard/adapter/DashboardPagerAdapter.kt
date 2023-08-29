@@ -3,6 +3,7 @@ package com.kt.apps.media.mobile.ui.fragments.dashboard.adapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.kt.apps.media.mobile.BuildConfig
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.football.dashboard.FootballDashboardFragment
@@ -27,9 +28,9 @@ class DashboardPagerAdapter(fragment: Fragment) :
         return when (_listItem[position]) {
             R.id.tv -> FragmentTVDashboard.newInstance(false)
             R.id.radio -> FragmentTVDashboard.newInstance(true)
-            R.id.extension -> IptvDashboardFragment() //FragmentIptvDashboard()
+            R.id.extension -> IptvDashboardFragment.newInstance() //FragmentIptvDashboard()
             R.id.search -> SearchDashboardFragment.newInstance() //FragmentSearch()
-            R.id.football -> FootballDashboardFragment()
+            R.id.football -> FootballDashboardFragment.newInstance()
             R.id.info -> InfoFragment()
             else -> throw IllegalStateException("Not support for item: ${_listItem[position]}")
         }
