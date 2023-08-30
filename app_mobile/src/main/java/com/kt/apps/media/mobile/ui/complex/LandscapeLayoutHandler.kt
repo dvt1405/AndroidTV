@@ -32,6 +32,10 @@ import com.kt.apps.media.mobile.utils.CustomTransition
 import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.safeLet
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import kotlin.properties.Delegates
 

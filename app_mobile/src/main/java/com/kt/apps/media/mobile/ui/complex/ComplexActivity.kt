@@ -124,14 +124,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
      }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launch {
-                viewModel.networkStatus.collectLatest {state ->
-                    if (state == NetworkState.Unavailable)
-                        showNoNetworkAlert(autoHide = true)
-                }
-            }
-        }
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
                 viewModel.openPlaybackEvent.collectLatest {

@@ -193,39 +193,49 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
         fullScreenButton?.visibility = View.VISIBLE
         fullScreenButton?.setOnClickListener {
-            callback?.onOpenFullScreen()
+            exoPlayer?.hideController()
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(250)
+                callback?.onOpenFullScreen()
+            }
         }
 
         channelListRecyclerView?.visibility = View.VISIBLE
         channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
             var isChanged: Boolean = false
-            var showTimeout: Int = 1000
-            var hideOnTouch: Boolean = true
+            var baseConfig = lastPlayerControllerConfig
+
+            fun avoidChangeHide() {
+                val exoPlayer = exoPlayer ?: return
+                val shouldConfig = exoPlayer.controllerHideOnTouch && exoPlayer.controllerShowTimeoutMs > 0
+                if (!shouldConfig) { return }
+                exoPlayer.apply {
+                    baseConfig = PlayerControllerConfig(hideOnTouch = controllerHideOnTouch, controllerShowTimeoutMs)
+
+                    controllerShowTimeoutMs = -1
+                    controllerHideOnTouch = false
+                }
+                isChanged = true
+            }
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                 when(newState) {
                     SCROLL_STATE_IDLE -> {
                         Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_IDLE")
                         if (isChanged) {
                             exoPlayer?.apply {
-                                controllerShowTimeoutMs = showTimeout
-                                controllerHideOnTouch = hideOnTouch
+                                controllerShowTimeoutMs = baseConfig.showTimeout
+                                controllerHideOnTouch = baseConfig.hideOnTouch
                             }
                             isChanged = false
                         }
                     }
-                    SCROLL_STATE_SETTLING -> { Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_SETTLING") }
+                    SCROLL_STATE_SETTLING -> {
+                        Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_SETTLING")
+                        avoidChangeHide()
+                    }
                     SCROLL_STATE_DRAGGING -> {
                         Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_DRAGGING")
-                        if (!isChanged) {
-                            exoPlayer?.apply {
-                                showTimeout = controllerShowTimeoutMs
-                                hideOnTouch = controllerHideOnTouch
-
-                                controllerShowTimeoutMs = -1
-                                controllerHideOnTouch = false
-                            }
-                            isChanged = true
-                        }
+                        avoidChangeHide()
                     }
                 }
             }
