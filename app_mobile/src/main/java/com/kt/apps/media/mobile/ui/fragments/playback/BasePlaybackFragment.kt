@@ -466,6 +466,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
             controllerHideOnTouch = lastPlayerControllerConfig.hideOnTouch
             channelListRecyclerView?.visibility = View.VISIBLE
+            MainScope().launch {
+                delay(250)
+                showController()
+            }
         }
         safeLet(motionLayout, provideFullScreenLayout()) {
             layout, constrainSet ->
@@ -500,6 +504,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
     protected open suspend fun preparePlayView(data: PrepareStreamLinkData) {
         exoPlayerManager.exoPlayer?.stop()
+        exoPlayerManager.detach()
         isProgressing.emit(true)
         title.emit(data.title)
     }
