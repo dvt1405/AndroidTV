@@ -102,7 +102,7 @@ class ChannelListRecyclerView @JvmOverloads constructor(
                     reloadRecyclerView(Mode.FLEX)
                 }
             }
-            singleAdapter.onRefresh(list[0].items, false)
+            singleAdapter.onRefresh(list[0].items, shouldUpdate)
             mode = Mode.FLEX
         } else {
             if (
@@ -114,7 +114,7 @@ class ChannelListRecyclerView @JvmOverloads constructor(
                     reloadRecyclerView(Mode.LINEAR)
                 }
             }
-            adapter.onRefresh(list, false)
+            adapter.onRefresh(list, shouldUpdate)
             mode = Mode.LINEAR
         }
     }
