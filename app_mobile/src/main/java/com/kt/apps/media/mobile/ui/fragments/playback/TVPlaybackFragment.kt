@@ -95,7 +95,7 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
                     _playbackInteractor.currentProgrammeForChannel
                         .mapNotNull { it }
                         .collectLatest { infor ->
-                            infor.description.takeIf { t -> t.isNotBlank() }
+                            infor.title.takeIf { t -> t.isNotBlank() }
                                 ?.run {
                                     subTitle?.visible()
                                     subTitle?.text = this

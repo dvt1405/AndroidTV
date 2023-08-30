@@ -42,6 +42,7 @@
             app:layout_constraintEnd_toStartOf="@id/remove_extension"
             app:layout_constraintStart_toEndOf="@+id/add_extension"
             android:layout_marginTop="@dimen/common_spacing_32dp"
+            android:layout_marginStart="8dp"
             />
         <Constraint android:id="@+id/viewpager"
             android:layout_width="0dp"

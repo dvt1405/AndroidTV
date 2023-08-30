@@ -54,7 +54,7 @@ class MainTVDataSource @Inject constructor(
 
     override fun getTvList(): Observable<List<TVChannel>> {
         val onlineSource = if (context.packageName.contains("mobile")) {
-            getFireStoreSource()
+            getFireStoreSource().onErrorResumeNext { getFirebaseSource() }
         } else {
             getFirebaseSource()
         }.reduce { t1, t2 ->

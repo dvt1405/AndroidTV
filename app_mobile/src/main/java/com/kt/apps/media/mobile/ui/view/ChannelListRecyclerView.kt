@@ -22,6 +22,7 @@ import com.kt.apps.media.mobile.ui.fragments.football.list.FootballAdapterType
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.GridAutoFitLayoutManager
 import com.kt.apps.media.mobile.utils.channelItemDecoration
+import com.kt.apps.media.mobile.utils.removeAllItemDecoration
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -89,12 +90,17 @@ class ChannelListRecyclerView @JvmOverloads constructor(
     }
 
     fun reloadAllData(list: List<ChannelListData>) {
+        val shouldUpdate = !skeletonScreen.isRunning
         if (list.size == 1) {
             if (
                 recyclerView.layoutManager !is GridLayoutManager
                 || recyclerView.adapter != singleAdapter
                     ) {
+                recyclerView.removeAllItemDecoration()
                 recyclerView.addItemDecoration(channelItemDecoration)
+                if (shouldUpdate) {
+                    reloadRecyclerView(Mode.FLEX)
+                }
             }
             singleAdapter.onRefresh(list[0].items, false)
             mode = Mode.FLEX
@@ -103,7 +109,10 @@ class ChannelListRecyclerView @JvmOverloads constructor(
                 recyclerView.layoutManager !is LinearLayoutManager
                 || recyclerView.adapter != adapter
             ) {
-                recyclerView.removeItemDecoration(channelItemDecoration)
+                recyclerView.removeAllItemDecoration()
+                if (shouldUpdate) {
+                    reloadRecyclerView(Mode.LINEAR)
+                }
             }
             adapter.onRefresh(list, false)
             mode = Mode.LINEAR
@@ -116,15 +125,19 @@ class ChannelListRecyclerView @JvmOverloads constructor(
             skeletonScreen.run {  }
         } else {
             skeletonScreen.hide {
-                recyclerView.adapter = when(mode) {
-                    Mode.FLEX -> singleAdapter
-                    Mode.LINEAR -> adapter
-                }
-                recyclerView.layoutManager = when(mode) {
-                    Mode.FLEX -> singleLayoutManager
-                    Mode.LINEAR -> linearLayoutManager
-                }
+                reloadRecyclerView(mode)
             }
+        }
+    }
+
+    private fun reloadRecyclerView(mode: Mode) {
+        recyclerView.adapter = when(mode) {
+            Mode.FLEX -> singleAdapter
+            Mode.LINEAR -> adapter
+        }
+        recyclerView.layoutManager = when(mode) {
+            Mode.FLEX -> singleLayoutManager
+            Mode.LINEAR -> linearLayoutManager
         }
     }
 }

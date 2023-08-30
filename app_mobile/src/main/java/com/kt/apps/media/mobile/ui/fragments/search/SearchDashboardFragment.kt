@@ -1,36 +1,27 @@
 package com.kt.apps.media.mobile.ui.fragments.search
 
-import android.graphics.Rect
 import android.os.Bundle
-import android.text.Editable
+import android.text.InputFilter
 import android.util.Log
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.AdapterView.OnItemClickListener
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ItemDecoration
-import com.google.android.material.textview.MaterialTextView
-import com.kt.apps.core.base.BaseFragment
+import com.google.android.material.textfield.TextInputLayout
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentSearchDashboardBinding
-import com.kt.apps.media.mobile.databinding.LightItemChannelBinding
 import com.kt.apps.media.mobile.databinding.TextviewItemBinding
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.PaddingItemDecoration
-import com.kt.apps.media.mobile.utils.onSubmit
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
-import com.kt.apps.media.mobile.utils.submits
+import com.kt.apps.media.mobile.utils.showKeyboard
 import com.kt.apps.media.mobile.utils.textChanges
 import com.kt.apps.media.mobile.viewmodels.SearchDashboardViewModel
 import kotlinx.coroutines.*
@@ -53,7 +44,9 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
         HistoryAdapter().apply {
             onItemRecyclerViewCLickListener = object: OnItemRecyclerViewCLickListener<String> {
                 override fun invoke(item: String, position: Int) {
-                    binding.searchInputText?.setText(item)
+                    binding.searchInputText.apply {
+                        setText(item)
+                    }
                 }
             }
         }
@@ -66,6 +59,8 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
             layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
             addItemDecoration(PaddingItemDecoration(PaddingItemDecoration.Edge(0, 12, 0, 0)))
         }
+
+        binding.searchInputText.filterEmoji()
     }
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
@@ -99,17 +94,30 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
 
         }
 
-        binding.searchInputText?.textChanges()
-            ?.debounce(2000)
-            ?.map { it.toString() }
-            ?.filter { it.isNotEmpty() }
-            ?.distinctUntilChanged()
-            ?.onEach { viewModel.saveHistorySearch(it) }
-            ?.launchIn(viewLifecycleOwner.lifecycleScope)
+        binding.searchInputText?.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                v.text.toString().takeIf { it.trim().isNotEmpty() }
+                    ?.run {
+                        viewModel.saveHistorySearch(this)
+                        viewModel.performSearch(this)
+                    }
+            }
+            false
+        }
+
+        binding.searchInputText?.setOnFocusChangeListener { v, hasFocus ->
+            if (!hasFocus ) {
+                binding.searchInputText.text.toString().takeIf { it.trim().isNotEmpty() }
+                    ?.run {
+                        viewModel.saveHistorySearch(this)
+                        viewModel.performSearch(this)
+                    }
+            }
+        }
 
         binding.searchInputText?.textChanges()
             ?.debounce(250)
-            ?.map { it.toString() ?: "" }
+            ?.map { it.toString().trim() }
             ?.distinctUntilChanged()
             ?.onEach(performSearchChange)
             ?.launchIn(viewLifecycleOwner.lifecycleScope)
@@ -130,6 +138,12 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
             val fragment = SearchDashboardFragment()
             return fragment
         }
+    }
+
+    fun EditText.filterEmoji() {
+        filters = arrayOf(InputFilter { source, _, _, _, _, _ ->
+            source.filter { Character.getType(it) != Character.SURROGATE.toInt() }
+        })
     }
 
 }

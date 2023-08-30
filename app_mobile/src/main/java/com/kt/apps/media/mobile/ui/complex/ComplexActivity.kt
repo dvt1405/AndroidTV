@@ -180,6 +180,8 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 if (last) {
                     viewModel.changePiPMode(false)
                     layoutHandler?.onStartLoading()
+
+
                 }
             }
         }
@@ -229,6 +231,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         }
         dismissDialog(supportFragmentManager)
     }
+
 
     private suspend fun handleAddSourceState(state: AddSourceState) {
         Log.d(TAG, "handleAddSourceState: $state")
@@ -369,7 +372,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     private fun onAddedExtension() {
         Log.d(TAG, "onAddedExtension: success")
         showSuccessDialog(
-            content = "Thêm nguồn kênh thành công!\r\nKhởi động lại ứng dụng để kiểm tra nguồn kênh"
+            content = "Thêm nguồn kênh thành công!\r\nVui lòng chờ trong giây lát!"
         )
     }
     private fun showNoNetworkAlert(autoHide: Boolean = false) {

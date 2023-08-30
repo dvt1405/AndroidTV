@@ -75,4 +75,12 @@ abstract class ChannelPlaybackFragment : BasePlaybackFragment<FragmentPlaybackBi
 
         }
     }
+
+    override fun onRedraw() {
+        super.onRedraw()
+        val cacheAdapter = channelListRecyclerView?.adapter
+        channelListRecyclerView?.adapter = null
+        channelListRecyclerView?.adapter = cacheAdapter
+
+    }
 }

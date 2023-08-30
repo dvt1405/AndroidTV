@@ -48,6 +48,9 @@
             app:tabRippleColor="@color/transparent"
             app:tabTextAppearance="@style/TextAppearance.Label"
             app:tabGravity="start"
+            android:fadingEdge="horizontal"
+            android:fadingEdgeLength="20dp"
+            android:requiresFadingEdge="horizontal"
             />
 
         <ImageButton

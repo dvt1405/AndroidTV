@@ -208,7 +208,7 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
                             progressManager.hide()
                             showSuccessDialog(
                                 content = "Thêm nguồn IPTV thành công!" +
-                                        "\r\nKhởi động lại ứng dụng để kiểm tra nguồn IPTV",
+                                        "\r\nVui lòng chờ trong giây lát",
                                 onSuccessListener = {
                                     if (!this@FragmentAddExtensions.isDetached) {
                                         requireActivity().supportFragmentManager

@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.View
 import android.view.View.OnFocusChangeListener
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
@@ -80,6 +81,7 @@ fun EditText.textChanges(): Flow<CharSequence?> {
         awaitClose { removeTextChangedListener(listener) }
     }.onStart { emit(text) }
 }
+
 
 fun EditText.onFocus(): Flow<Unit> {
     return callbackFlow {
@@ -192,6 +194,16 @@ suspend fun Animator.awaitEnd() = suspendCancellableCoroutine<Unit> { cont ->
     })
 }
 
+fun Fragment.showKeyboard() {
+    (context?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)?.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0)
+}
+
+fun RecyclerView.removeAllItemDecoration() {
+    while (itemDecorationCount > 0) {
+        removeItemDecorationAt(0)
+    }
+}
+
 inline fun <reified T> groupAndSort(list: List<T>): List<Pair<String, List<T>>> {
     return when (T::class) {
         TVChannel::class -> list.groupBy { (it as TVChannel).tvGroup }
@@ -213,6 +225,21 @@ inline fun <reified T> groupAndSort(list: List<T>): List<Pair<String, List<T>>> 
             .toList()
             .sortedBy { it.first }
         else -> emptyList()
+    }
+}
+
+fun <T> LiveData<DataState<T>>.asProgressFlow(): Flow<Boolean> {
+    return callbackFlow {
+        val observer = Observer<DataState<*>> {value ->
+            when (value) {
+                is DataState.Loading -> trySend(true)
+                else -> trySend(false)
+            }
+        }
+        observeForever(observer)
+        awaitClose {
+            removeObserver(observer)
+        }
     }
 }
 

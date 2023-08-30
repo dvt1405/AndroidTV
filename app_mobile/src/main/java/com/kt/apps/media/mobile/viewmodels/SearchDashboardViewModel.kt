@@ -46,6 +46,9 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
     }
 
     fun saveHistorySearch(text: String) {
+        if (text.trim().isEmpty()) {
+            return
+        }
         sharedPreferences.edit(true) {
             val current = sharedPreferences.getString(HISTORY_LIST_KEY, "")
             val list = current?.topOf(MAX_ITEM_HISTORY) ?: emptyList()

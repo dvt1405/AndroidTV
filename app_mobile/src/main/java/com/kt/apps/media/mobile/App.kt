@@ -72,7 +72,7 @@ class App : CoreApp(), Configuration.Provider {
 
     override fun onRemoteConfigReady() {
         if (BuildConfig.isBeta) enqueuePreloadData()
-        enqueuePreloadData()
+//        enqueuePreloadData()
         workManager.enqueueUniquePeriodicWork(
             "RefreshEpgData",
             ExistingPeriodicWorkPolicy.KEEP,

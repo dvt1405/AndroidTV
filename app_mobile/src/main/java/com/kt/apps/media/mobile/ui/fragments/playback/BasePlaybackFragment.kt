@@ -192,13 +192,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         progressBar?.isEnabled = false
 
         fullScreenButton?.visibility = View.VISIBLE
-        fullScreenButton?.setOnClickListener {
-            exoPlayer?.hideController()
-            CoroutineScope(Dispatchers.Main).launch {
-                delay(250)
-                callback?.onOpenFullScreen()
-            }
-        }
+
 
         channelListRecyclerView?.visibility = View.VISIBLE
         channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
@@ -257,11 +251,28 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
-                merge(backButton?.clicks() ?: emptyFlow(), exitButton?.clicks() ?: emptyFlow())
+                merge(
+                    if (!isLandscape)
+                        backButton?.clicks()  ?: emptyFlow()
+                    else emptyFlow(),
+                    exitButton?.clicks() ?: emptyFlow())
                     .collectLatest {
                         delay(250)
                         exoPlayerManager.exoPlayer?.stop()
                         callback?.onExitMinimal()
+                    }
+            }
+
+            launch {
+                merge(
+                    if (isLandscape)
+                        backButton?.clicks()  ?: emptyFlow()
+                    else emptyFlow(),
+                    fullScreenButton?.clicks() ?: emptyFlow())
+                    .collectLatest {
+                        exoPlayer?.hideController()
+                        delay(250)
+                        callback?.onOpenFullScreen()
                     }
             }
 
@@ -375,7 +386,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected fun onError(throwable: Throwable?) {
         val errorCode = (throwable as? PlaybackThrowable)?.code ?: -1
-        showErrorDialog(
+        activity?.showErrorDialog(
             titleText = "Lỗi phát video",
             content = "Xin lỗi, mở nội dung không thành công. Vui lòng thử lại sau.\nMã lỗi: $errorCode",
             cancellable = false,
@@ -489,6 +500,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 }
             })
         }
+
+        if (exoPlayer?.player?.isPlaying == false) {
+            exoPlayer?.player?.play()
+        }
     }
 
 
@@ -531,6 +546,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, transition: Transition = Fade(), onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {
         Log.d(TAG, "performTransition: ${set.TAG}")
         set.applyTo(layout)
+        MainScope().launch {
+            delay(250)
+            onEnd?.invoke()
+        }
     }
 
     open fun provideMinimalLayout(): ConstraintSet? {

@@ -110,15 +110,16 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             viewModel.extensionConfigs.collectLatest {
-                if (it.isNotEmpty()) {
-                    motionLayout?.jumpToState(R.id.end)
-                } else {
-                    motionLayout?.transitionToState(R.id.start)
-                }
                 val lastSize = list.size
                 list.clear()
                 list.addAll(it)
                 if (lastSize != it.size) {
+                    if (list.isNotEmpty()) {
+                        motionLayout?.transitionToState(R.id.end)
+                    } else {
+                        motionLayout?.transitionToState(R.id.start)
+                    }
+
                     val lastSelectedIndex = tabLayout.selectedTabPosition
                     binding.viewpager.adapter = null
                     binding.viewpager.adapter = _adapter
@@ -148,7 +149,6 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
             setMessage("Bạn có muốn xóa nguồn ${config.sourceName}?")
             setCancelable(true)
             setPositiveButton("Có") { dialog, which ->
-//                deleteExtension(sourceName = sourceName)
                 lifecycleScope.launch {
                     viewModel.remove(config)
                 }

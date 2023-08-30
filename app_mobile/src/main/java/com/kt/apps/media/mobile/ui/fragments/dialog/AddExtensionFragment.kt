@@ -25,8 +25,11 @@ import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.hideKeyboard
+import com.kt.apps.core.utils.showErrorDialog
+import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.AddExtensionDialogBinding
+import com.kt.apps.media.mobile.isNetworkAvailable
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.AddIptvViewModels
 import com.pnikosis.materialishprogress.ProgressWheel
@@ -195,6 +198,13 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
 
 
     private suspend fun addExtensionsSource() {
+        if (!App.get().isNetworkAvailable()) {
+            activity?.run {
+                showErrorDialog(content = resources.getString(R.string.no_internet))
+            }
+            return
+        }
+
         val name = sourceNameEditText.text.toString()
         val link = sourceLinkEditText.text.toString().let {
             "${sourceLinkLayout.prefixText ?: ""}${it}"

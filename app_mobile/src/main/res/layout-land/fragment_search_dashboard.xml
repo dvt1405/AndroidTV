@@ -22,6 +22,9 @@
             android:textColorHint="@color/edittext_border"
             app:startIconDrawable="@drawable/ic_search_24p"
             app:startIconTint="@color/white"
+            app:endIconMode="clear_text"
+            app:endIconDrawable="@drawable/ic_clear_24"
+            app:endIconTint="@color/white"
             app:boxStrokeColor="@color/box_stroke_color"
             app:boxBackgroundColor="#36FFFFFF"
             app:boxBackgroundMode="outline"
@@ -33,7 +36,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-
             >
 
             <com.google.android.material.textfield.TextInputEditText
