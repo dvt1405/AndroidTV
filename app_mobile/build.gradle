@@ -16,7 +16,7 @@ android {
         minSdk 21
         targetSdk 33
         versionCode 23081401
-        versionName "Mobile.230801"
+        versionName "iMedia version 23.08.01"
         setProperty("archivesBaseName", "iMedia.$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

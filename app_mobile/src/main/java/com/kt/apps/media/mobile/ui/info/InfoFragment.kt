@@ -30,7 +30,7 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
     lateinit var factory: ViewModelProvider.Factory
 
     override fun initView(savedInstanceState: Bundle?) {
-        binding.appName.text = "iMedia version ${BuildConfig.VERSION_CODE}"
+        binding.appName.text = "${BuildConfig.VERSION_NAME}"
         binding.facebookBtn.setOnClickListener {
             openURL(fbLink)
         }

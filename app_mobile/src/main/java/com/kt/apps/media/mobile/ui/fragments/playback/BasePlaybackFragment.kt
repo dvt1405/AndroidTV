@@ -258,8 +258,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     exitButton?.clicks() ?: emptyFlow())
                     .collectLatest {
                         delay(250)
-                        exoPlayerManager.exoPlayer?.stop()
-                        callback?.onExitMinimal()
+                        exit()
                     }
             }
 
@@ -354,6 +353,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
 
+
+    private fun exit() {
+        exoPlayerManager.exoPlayer?.stop()
+        callback?.onExitMinimal()
+    }
     override fun onStop() {
         super.onStop()
         Log.d(TAG, "onStop: ")
@@ -386,13 +390,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected fun onError(throwable: Throwable?) {
         val errorCode = (throwable as? PlaybackThrowable)?.code ?: -1
-        activity?.showErrorDialog(
-            titleText = "Lỗi phát video",
+        showErrorDialog(
             content = "Xin lỗi, mở nội dung không thành công. Vui lòng thử lại sau.\nMã lỗi: $errorCode",
-            cancellable = false,
-            onDismissListener = {
-                backButton?.performClick()
-            })
+            cancellable = false)
     }
 
     protected open fun onRedraw() { }

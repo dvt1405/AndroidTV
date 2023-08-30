@@ -96,7 +96,8 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
 
         binding.searchInputText?.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                v.text.toString().takeIf { it.trim().isNotEmpty() }
+                v.text.toString().trim()
+                    .takeIf { it.isNotEmpty() }
                     ?.run {
                         viewModel.saveHistorySearch(this)
                         viewModel.performSearch(this)
@@ -107,7 +108,7 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
 
         binding.searchInputText?.setOnFocusChangeListener { v, hasFocus ->
             if (!hasFocus ) {
-                binding.searchInputText.text.toString().takeIf { it.trim().isNotEmpty() }
+                binding.searchInputText.text.toString().trim().takeIf { it.isNotEmpty() }
                     ?.run {
                         viewModel.saveHistorySearch(this)
                         viewModel.performSearch(this)
