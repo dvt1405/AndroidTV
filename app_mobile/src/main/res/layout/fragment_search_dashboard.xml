@@ -40,11 +40,10 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/search_input_text"
                 android:layout_width="match_parent"
-                android:layout_height="60dp"
+                android:layout_height="wrap_content"
                 android:imeOptions="actionDone"
                 android:inputType="textWebEmailAddress"
                 android:textColor="@color/white"
-                android:paddingTop="10dp"
                 android:hint="@string/search_input_placeholder"
                 android:textColorHint="@color/edittext_border"
                 android:textAppearance="@style/TextAppearance.Body"

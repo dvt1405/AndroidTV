@@ -16,6 +16,7 @@
             android:layout_height="wrap_content"
             android:text="@string/add_source_description"
             android:textColor="@color/white"
+            android:gravity="center_horizontal"
             android:textSize="22sp"
             />
         <com.google.android.material.button.MaterialButton
