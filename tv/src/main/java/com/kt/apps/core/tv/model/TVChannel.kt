@@ -10,6 +10,8 @@ import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.storage.local.dto.TVChannelEntity
 import com.kt.apps.core.storage.local.dto.TVChannelWithUrls
 import com.kt.apps.core.tv.datasource.impl.MainTVDataSource
+import com.kt.apps.core.utils.removeAllSpecialChars
+import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -59,6 +61,21 @@ class TVChannel(
         AbstractExoPlayerManager.EXTRA_MEDIA_THUMB to logoChannel,
         AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_ARTIST to sourceFrom
     )
+    fun toChannelDto() = TVChannelDTO(
+        tvGroup = tvGroup,
+        logoChannel = logoChannel,
+        tvChannelName = tvChannelName,
+        sourceFrom = sourceFrom,
+        channelId = channelId,
+        searchKey = tvChannelName.lowercase()
+            .replaceVNCharsToLatinChars()
+            .removeAllSpecialChars()
+    )
+
+    val channelIdWithoutSpecialChars: String
+        get() = channelId.removeAllSpecialChars()
+            .removePrefix("viechannel")
+            .removeSuffix("hd")
 
     override fun toString(): String {
         return "{" +

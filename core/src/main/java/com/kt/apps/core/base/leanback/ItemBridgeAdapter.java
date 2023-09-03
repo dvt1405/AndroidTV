@@ -258,7 +258,7 @@ public class ItemBridgeAdapter extends RecyclerView.Adapter implements FacetProv
         return mWrapper;
     }
 
-    void setFocusHighlight(FocusHighlightHandler listener) {
+    public void setFocusHighlight(FocusHighlightHandler listener) {
         mFocusHighlight = listener;
         if (DEBUG) Log.v(TAG, "setFocusHighlight " + mFocusHighlight);
     }

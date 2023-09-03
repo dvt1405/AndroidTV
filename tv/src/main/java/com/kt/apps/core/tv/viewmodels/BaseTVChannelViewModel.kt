@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
-import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseViewModel
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -163,9 +162,33 @@ open class BaseTVChannelViewModel constructor(
         add(lastTVStreamLinkTask!!)
     }
 
+    private val _listProgramForChannel by lazy {
+        MutableLiveData<DataState<List<TVScheduler.Programme>>>()
+    }
+    val listProgramForChannel: LiveData<DataState<List<TVScheduler.Programme>>>
+        get() = _listProgramForChannel
+
+    fun getListProgramForChannel(tvChannel: TVChannel) {
+        add(
+            interactors.getListProgrammeForChannel(tvChannel.toChannelDto())
+                .map {
+                    it.filter {
+                        it.channel.remoAllSpecialCharsAndPrefix() == tvChannel.channelIdWithoutSpecialChars
+                                && it.isToday()
+                    }
+                }
+                .subscribe({
+                    _listProgramForChannel.postValue(DataState.Success(it))
+                }, {
+                    _listProgramForChannel.postValue(DataState.Error(it))
+                })
+        )
+    }
+
     fun markLastWatchedChannel(tvChannel: TVChannelLinkStream?) {
         _lastWatchedChannel = tvChannel
     }
+
     fun markLastWatchedChannel(tvChannel: TVChannel) {
         _lastWatchedChannel = TVChannelLinkStream(
             tvChannel,
@@ -208,14 +231,9 @@ open class BaseTVChannelViewModel constructor(
         add(
             interactors.getCurrentProgrammeForChannel.invoke(channel.channelId)
                 .filter {
-                    it.channel.removeAllSpecialChars()
-                        .removePrefix("viechannel")
-                        .removeSuffix("hd") == lastWatchedChannel
+                    it.channel.remoAllSpecialCharsAndPrefix() == lastWatchedChannel
                         ?.channel
-                        ?.channelId
-                        ?.removeAllSpecialChars()
-                        ?.removePrefix("viechannel")
-                        ?.removeSuffix("hd")
+                        ?.channelIdWithoutSpecialChars
                 }
                 .subscribe({
                     lastGetProgramme = System.currentTimeMillis()
@@ -252,6 +270,10 @@ open class BaseTVChannelViewModel constructor(
         },
     )
 
+    fun String.remoAllSpecialCharsAndPrefix() = removeAllSpecialChars()
+        .removePrefix("viechannel")
+        .removeSuffix("hd")
+
 
     fun clearCurrentPlayingChannelState() {
         _lastWatchedChannel = null
@@ -260,7 +282,7 @@ open class BaseTVChannelViewModel constructor(
 
     open fun enqueueInsertWatchNextTVChannel(tvChannel: TVChannel) {}
 
-    open fun  onFetchTVListSuccess(listChannel: List<TVChannel>) {
+    open fun onFetchTVListSuccess(listChannel: List<TVChannel>) {
 
     }
 

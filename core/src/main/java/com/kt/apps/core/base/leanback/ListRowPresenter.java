@@ -230,7 +230,7 @@ public class ListRowPresenter extends RowPresenter {
         }
     }
 
-    class ListRowPresenterItemBridgeAdapter extends ItemBridgeAdapter {
+    public class ListRowPresenterItemBridgeAdapter extends ItemBridgeAdapter {
         ListRowPresenter.ViewHolder mRowViewHolder;
 
         ListRowPresenterItemBridgeAdapter(ListRowPresenter.ViewHolder rowViewHolder) {

@@ -1,6 +1,8 @@
 package com.kt.apps.core.extensions.model
 
+import android.text.format.DateUtils
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.kt.apps.core.utils.DATE_TIME_FORMAT
 import com.kt.apps.core.utils.DATE_TIME_FORMAT_0700
@@ -66,8 +68,20 @@ class TVScheduler @JvmOverloads constructor(
             }
         }
 
-        fun getStartTimeInMilli(): Long {
-            return if (start.trim() == "+0700") {
+        fun getTime(): String {
+            val start = Calendar.getInstance()
+            start.timeInMillis = startTimeMilli
+            val end = Calendar.getInstance()
+            end.timeInMillis = endTimeMilli
+            val startTime = String.format("%02d:%02d", start.get(Calendar.HOUR_OF_DAY), start.get(Calendar.MINUTE))
+            val endTime = String.format("%02d:%02d", end.get(Calendar.HOUR_OF_DAY), end.get(Calendar.MINUTE))
+            return "$startTime - $endTime"
+        }
+
+        @get:Ignore
+        @delegate:Ignore
+        val startTimeMilli by lazy {
+            if (start.trim() == "+0700") {
                 val calendar = Calendar.getInstance()
                 calendar.set(Calendar.HOUR, 0)
                 calendar.set(Calendar.MINUTE, 0)
@@ -81,8 +95,10 @@ class TVScheduler @JvmOverloads constructor(
             }
         }
 
-        fun getEndTimeMilli(): Long {
-            return if (stop.trim() == "+0700") {
+        @get:Ignore
+        @delegate:Ignore
+        val endTimeMilli by lazy {
+            if (stop.trim() == "+0700") {
                 val calendar = Calendar.getInstance()
                 calendar.set(Calendar.HOUR, 23)
                 calendar.set(Calendar.MINUTE, 59)
@@ -105,6 +121,10 @@ class TVScheduler @JvmOverloads constructor(
                     "title: $title,\n" +
                     "description: $description,\n" +
                     "}"
+        }
+
+        fun isToday(): Boolean {
+            return DateUtils.isToday(startTimeMilli)
         }
     }
 

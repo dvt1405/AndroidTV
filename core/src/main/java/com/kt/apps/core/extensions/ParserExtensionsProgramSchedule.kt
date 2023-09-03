@@ -1,6 +1,8 @@
 package com.kt.apps.core.extensions
 
 import android.text.format.DateUtils
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.kt.apps.core.Constants
 import com.kt.apps.core.di.CoreScope
 import com.kt.apps.core.di.NetworkModule
 import com.kt.apps.core.extensions.model.TVScheduler
@@ -18,6 +20,7 @@ import io.reactivex.rxjava3.disposables.DisposableContainer
 import io.reactivex.rxjava3.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONArray
 import org.simpleframework.xml.stream.InputNode
 import org.simpleframework.xml.stream.NodeBuilder
 import java.lang.Exception
@@ -32,6 +35,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
     private val client: OkHttpClient,
     private val storage: IKeyValueStorage,
     private val roomDataBase: RoomDataBase,
+    private val firebaseRemoteConfig: FirebaseRemoteConfig,
     @Named(NetworkModule.EXTRA_NETWORK_DISPOSABLE)
     private val disposable: DisposableContainer
 ) {
@@ -49,6 +53,47 @@ class ParserExtensionsProgramSchedule @Inject constructor(
 
     private val pendingSourceStatus by lazy {
         mutableMapOf<String, PendingSourceStatus>()
+    }
+    private val mappingEpgId by lazy {
+        mutableMapOf<String, String>()
+    }
+    fun getRelatedProgram(channel: TVChannelDTO) = getMappingEpgChannelId()[channel.channelId]?.split("|")?.map { newId ->
+        getListProgramForTVChannel(channel)
+            .map {
+                it.map {
+                    TVScheduler.Programme(
+                        channel = channel.channelId,
+                        channelNumber = it.channelNumber,
+                        start = it.start,
+                        stop = it.stop,
+                        title = it.title,
+                        description = it.description,
+                        extensionsConfigId = it.extensionsConfigId,
+                        extensionEpgUrl = it.extensionEpgUrl
+                    )
+                }
+            }
+    }?.reduce { acc, observable ->
+        acc.mergeWith(observable)
+    }
+
+    fun getMappingEpgChannelId(): Map<String, String> {
+        try {
+            if (mappingEpgId.isNotEmpty()) return mappingEpgId
+            val remoteMapping = firebaseRemoteConfig.getString("tv_epg_mapping")
+            val jsonArr = JSONArray(remoteMapping)
+            Logger.d(this@ParserExtensionsProgramSchedule, message = "{\"RemoteMapping\": $remoteMapping}")
+            for (i in 0 until jsonArr.length()) {
+                val key = jsonArr.optJSONObject(i)?.optString("key") ?: continue
+                val value = jsonArr.optJSONObject(i)?.optString("value") ?: continue
+                mappingEpgId[key] = value
+            }
+            if (mappingEpgId.isNotEmpty()) {
+                return mappingEpgId
+            }
+        } catch (_: Exception) {
+        }
+        return Constants.mapping
     }
 
     private enum class PendingSourceStatus {

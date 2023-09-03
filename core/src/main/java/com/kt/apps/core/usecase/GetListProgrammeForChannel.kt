@@ -14,7 +14,20 @@ class GetListProgrammeForChannel @Inject constructor(
     override fun prepareExecute(params: Map<String, Any>): Observable<List<TVScheduler.Programme>> {
         return when (val channel = params[EXTRA_CHANNEL]) {
             is TVChannelDTO -> {
-                parser.getListProgramForTVChannel(channel)
+                val related = parser.getRelatedProgram(channel)
+                if (related == null) {
+                    parser.getListProgramForTVChannel(channel)
+                } else {
+                    parser.getListProgramForTVChannel(channel)
+                        .mergeWith(related)
+                        .reduce { t1, t2 ->
+                            val t = t1.toMutableList()
+                            t.addAll(t2)
+                            t.distinctBy {
+                                it.title
+                            }
+                        }.toObservable()
+                }
             }
 
             is ExtensionsChannel -> {
