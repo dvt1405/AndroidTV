@@ -65,6 +65,11 @@ abstract class PerChannelListFragment : BaseMobileFragment<FragmentTvChannelList
         }
     }
 
+    override fun onDestroyView() {
+        binding.verticalRecyclerView.clearAdapter()
+        super.onDestroyView()
+    }
+
     companion object {
         internal const val EXTRA_TV_CHANNEL_CATEGORY = "extra:tv_channel_category"
     }

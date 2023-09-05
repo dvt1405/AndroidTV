@@ -13,10 +13,15 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
 import com.google.android.flexbox.FlexDirection
 import com.google.android.flexbox.FlexWrap
 import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
+import com.kt.apps.core.GlideApp
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.utils.TAG
@@ -64,6 +69,11 @@ class ChannelListView @JvmOverloads constructor(
         recyclerView?.addOnScrollListener(l)
     }
 
+    fun clearAdapter() {
+        recyclerView.adapter = null
+        _adapter.onRefresh(emptyList())
+    }
+
 
     override fun onFinishInflate() {
         super.onFinishInflate()
@@ -75,6 +85,19 @@ class ChannelListView @JvmOverloads constructor(
             isNestedScrollingEnabled = false
             addItemDecoration(channelItemDecoration)
             setHasFixedSize(false)
+//            addOnScrollListener(object : OnScrollListener() {
+//                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+//                    super.onScrollStateChanged(recyclerView, newState)
+//                    when(newState) {
+//                        SCROLL_STATE_DRAGGING, SCROLL_STATE_SETTLING -> {
+//                            GlideApp.with(this@ChannelListView.context).pauseRequests()
+//                        }
+//                        SCROLL_STATE_IDLE -> {
+//                            GlideApp.with(this@ChannelListView.context).resumeRequests()
+//                        }
+//                    }
+//                }
+//            })
         }
     }
     fun changeDisplayStyle(style: DisplayStyle) {

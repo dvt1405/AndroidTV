@@ -1,40 +1,42 @@
 package com.kt.apps.media.mobile.ui.fragments.channels
 
-import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
-import android.view.View
-import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.kt.apps.core.base.BaseFragment
-import com.kt.apps.core.extensions.ExtensionsConfig
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.OnScrollListener
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
+import com.kt.apps.core.GlideApp
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityMainBinding
-import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
-import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.TVDashboardAdapter
-import com.kt.apps.media.mobile.utils.*
+import com.kt.apps.media.mobile.utils.ActivityIndicator
+import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
+import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
+import com.kt.apps.media.mobile.utils.groupAndSort
+import com.kt.apps.media.mobile.utils.launchExceptionHandler
+import com.kt.apps.media.mobile.utils.onRefresh
+import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
+import com.kt.apps.media.mobile.utils.screenHeight
+import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.skeleton.KunSkeleton
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.collections.set
 
 abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
 
@@ -95,6 +97,21 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
             }
             setHasFixedSize(true)
             setItemViewCacheSize(9)
+//            addOnScrollListener(object: OnScrollListener() {
+//                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+//                    super.onScrollStateChanged(recyclerView, newState)
+//                    when(newState) {
+//                        SCROLL_STATE_DRAGGING, SCROLL_STATE_SETTLING -> {
+//                            GlideApp.with(this@ChannelFragment.requireContext())
+//                                .pauseRequests()
+//                        }
+//                        SCROLL_STATE_IDLE -> {
+//                            GlideApp.with(this@ChannelFragment.requireContext())
+//                                .resumeRequests()
+//                        }
+//                    }
+//                }
+//            })
         }
 
         with(binding.swipeRefreshLayout) {
@@ -119,15 +136,24 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
                     }
             }
 
-            launch(exceptionHandler { context, throwable ->
+            launchExceptionHandler({ _, _ ->
                 swipeRefreshLayout.isRefreshing = false
             }) {
                 viewModel.listChannels.collectLatest { tvChannel ->
-                    delay(500)
                     if (tvChannel.isNotEmpty())
                         reloadOriginalSource(tvChannel)
                 }
             }
+
+//            launch(exceptionHandler { context, throwable ->
+//                swipeRefreshLayout.isRefreshing = false
+//            }) {
+//                viewModel.listChannels.collectLatest { tvChannel ->
+//                    delay(500)
+//                    if (tvChannel.isNotEmpty())
+//                        reloadOriginalSource(tvChannel)
+//                }
+//            }
         }
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -160,8 +186,14 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         }
     }
 
+    override fun onDestroyView() {
+        binding.mainChannelRecyclerView.adapter = null
+        adapter.onRefresh(emptyList())
+        super.onDestroyView()
+    }
+
    private fun performLoadTVChannel() {
-       lifecycleScope.launch(exceptionHandler { _, _ ->
+       lifecycleScope.launchExceptionHandler({ _, _ ->
            showErrorDialog(content = getString(R.string.error_happen))
        }) {
            viewModel.getListTVChannelAsync(true)
@@ -181,10 +213,6 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         }
         swipeRefreshLayout.isRefreshing = false
         adapter.onRefresh(grouped)
-
-//        skeletonScreen.hide {
-//            scrollToPosition(0)
-//        }
     }
 
     private fun scrollToPosition(index: Int) {

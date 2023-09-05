@@ -3,6 +3,7 @@ package com.kt.apps.media.mobile.di
 import com.kt.apps.core.base.player.ExoPlayerManager
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.di.CoreComponents
+import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.media.mobile.di.viewmodels.ViewModelModule
 import com.kt.apps.core.tv.di.TVComponents
 import com.kt.apps.football.di.FootballComponents
@@ -32,6 +33,8 @@ import dagger.android.support.AndroidSupportInjectionModule
 interface AppComponents : AndroidInjector<App> {
 
     fun exoPlayerManager(): ExoPlayerManagerMobile
+
+    fun actionLogger(): IActionLogger
 
     @Component.Builder
     interface Builder {

@@ -304,6 +304,7 @@ fun <T> LiveData<DataState<T>>.asUpdateFlow(tag: String = ""): Flow<T> {
                 else -> { }
             }
         }
+        Log.d(TAG, "asUpdateFlow register with $tag")
         observeForever(observer)
         awaitClose {
             Log.d(TAG, "asUpdateFlow awaitClose with $tag")
@@ -395,11 +396,13 @@ fun LifecycleOwner.repeatLaunchesOnLifeCycle(
     }
 }
 
-fun CoroutineScope.avoidExceptionLaunch(block: suspend CoroutineScope.() -> Unit) = launch(exceptionHandler { _, _ ->  }, block = block)
+fun CoroutineScope.avoidExceptionLaunch(block: suspend CoroutineScope.() -> Unit) = launchExceptionHandler({_, _ -> }, block = block)
 
-inline fun exceptionHandler(crossinline handler: (CoroutineContext, Throwable) -> Unit): CoroutineContext {
-    return  NonCancellable + CoroutineExceptionHandler(handler)
-}
+fun CoroutineScope.launchExceptionHandler(
+    handler: (CoroutineContext, Throwable) -> Unit,
+    block: suspend CoroutineScope.() -> Unit
+) =  launch(this.coroutineContext + CoroutineExceptionHandler(handler), block = block)
+
 fun TVChannel.loadImgDrawable(context: Context): Drawable? {
     val context = context.applicationContext
     val id = context.resources.getIdentifier(

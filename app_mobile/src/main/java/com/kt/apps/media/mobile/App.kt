@@ -5,12 +5,14 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import androidx.core.os.bundleOf
 import androidx.work.*
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVChannelModule
 import com.kt.apps.core.tv.di.TVComponents
@@ -28,6 +30,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class App : CoreApp(), Configuration.Provider {
+    var logLowMemory = false
+    var startTimeTracker = System.currentTimeMillis()
 
     private val _coreComponents by lazy {
         DaggerCoreComponents.builder()
@@ -72,7 +76,6 @@ class App : CoreApp(), Configuration.Provider {
 
     override fun onRemoteConfigReady() {
         if (BuildConfig.isBeta) enqueuePreloadData()
-//        enqueuePreloadData()
         workManager.enqueueUniquePeriodicWork(
             "RefreshEpgData",
             ExistingPeriodicWorkPolicy.KEEP,
@@ -92,9 +95,29 @@ class App : CoreApp(), Configuration.Provider {
         )
     }
 
+    override fun onLowMemory() {
+        super.onLowMemory()
+        try {
+            if (!logLowMemory) {
+                (applicationInjector() as AppComponents).actionLogger()
+                    .log(
+                        "LowMemory", bundleOf(
+                            "LiveTimeBeforeLowMemory" to "${System.currentTimeMillis() - startTimeTracker}"
+                        )
+                    )
+                logLowMemory = true
+            }
+            clearCacheMemory()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun clearCacheMemory() {
+
+    }
+
     override fun onActivityStarted(activity: Activity) {
         super.onActivityStarted(activity)
-//        enqueuePreloadData()
         workManager.enqueue(
             OneTimeWorkRequestBuilder<TVEpgWorkers>()
                 .setInputData(

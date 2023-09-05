@@ -50,6 +50,7 @@ class FragmentTVDashboard : BaseFragment<FragmentTvDashboardBinding>() {
         with(binding.viewpager) {
             adapter = _adapter
             isUserInputEnabled = false
+            offscreenPageLimit = 1
             setPageTransformer   { page, position ->
                 page.alpha = 0f
                 page.visibility = View.VISIBLE
@@ -64,6 +65,11 @@ class FragmentTVDashboard : BaseFragment<FragmentTvDashboardBinding>() {
         ) { tab, position ->
             tab.text = _adapter.getTitleForPage(position)
         }.attach()
+    }
+
+    override fun onDestroyView() {
+        binding.viewpager.adapter = null
+        super.onDestroyView()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

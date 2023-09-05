@@ -32,6 +32,7 @@ import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 import com.kt.apps.media.mobile.utils.fillParent
+import com.kt.apps.media.mobile.utils.launchExceptionHandler
 import com.kt.apps.media.mobile.utils.matchParentWidth
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.safeLet
@@ -119,7 +120,7 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                     (it as? ChannelElement.ExtensionChannelElement)?.model
                 }
             ).stateIn(lifecycleScope)
-            launch(coroutineError()) {
+            launchExceptionHandler(coroutineError()) {
                 loadChannelFlow.collectLatest {
                     _playbackViewModel.loadIPTVJob(it)
                 }
