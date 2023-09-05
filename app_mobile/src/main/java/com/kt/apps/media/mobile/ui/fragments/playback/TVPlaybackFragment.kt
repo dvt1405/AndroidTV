@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
 import android.os.Bundle
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.os.bundleOf
@@ -24,6 +25,7 @@ import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.RadioPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.TVPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -71,8 +73,8 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
                 itemToPlay?.let { flowOf(it) }?.map {  ChannelElement.TVChannelElement(it)} ?: emptyFlow()
             ).stateIn(lifecycleScope)
 
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
-                launchExceptionHandler(coroutineError()) {
+            repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED)  {
+                lifecycleScope.launch(CoroutineExceptionHandler(coroutineError())) {
                     loadItemFlow.collectLatest {
                         title.emit(it.model.tvChannelName)
                         _playbackInteractor.loadProgramForChannel(it)
@@ -80,9 +82,9 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
                     }
                 }
 
-                launchExceptionHandler ({ _, _ ->
+                lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
                     subTitle?.gone()
-                }) {
+                })  {
                     _playbackInteractor.currentProgrammeForChannel
                         .mapNotNull { it }
                         .collectLatest { infor ->
@@ -166,7 +168,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
                     .mapNotNull { it as? ChannelElement.TVChannelElement }
             ).stateIn(lifecycleScope)
 
-            launchExceptionHandler(coroutineError()) {
+            lifecycleScope.launch(CoroutineExceptionHandler(coroutineError())) {
                 loadItemFlow.collectLatest {
                     title.emit(it.model.tvChannelName)
                     _playbackInteractor.loadProgramForChannel(it)
@@ -174,7 +176,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
                 }
             }
 
-            launchExceptionHandler({ _, _ ->
+            lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
                 subTitle?.gone()
             }) {
                 _playbackInteractor.currentProgrammeForChannel

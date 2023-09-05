@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.viewmodels
 
 
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.Constants
 import com.kt.apps.media.mobile.models.NetworkState
@@ -88,9 +89,7 @@ class ComplexInteractors(private val provider: ViewModelProvider, private val sc
     }
 
     suspend fun loadChannelDeepLinkJob(deepLink: Uri) {
-        scope.launch {
-            loadByDeepLink(deepLink)
-        }.trackActivity(loadingDeepLink)
+        loadByDeepLink(deepLink)
     }
 
     suspend fun openSearch(deepLink: Uri) {

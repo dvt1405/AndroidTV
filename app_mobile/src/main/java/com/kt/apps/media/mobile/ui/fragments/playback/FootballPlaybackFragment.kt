@@ -11,10 +11,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.ui.fragments.football.list.SubFootballListAdapter
 import com.kt.apps.media.mobile.utils.channelItemDecoration
-import com.kt.apps.media.mobile.utils.launchExceptionHandler
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.FootballPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadFootballMatchLinkStream
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -50,7 +50,7 @@ class FootballPlaybackFragment: ChannelPlaybackFragment() {
         super.initAction(savedInstanceState)
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launchExceptionHandler(coroutineError()) {
+            lifecycleScope.launch(CoroutineExceptionHandler(coroutineError())) {
                 ((arguments?.get(EXTRA_FOOTBALL_MATCH) as? FootballMatch)?.let { flowOf(it) }
                     ?: emptyFlow())
                     .collectLatest {

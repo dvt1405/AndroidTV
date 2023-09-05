@@ -6,12 +6,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.OnScrollListener
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
-import com.kt.apps.core.GlideApp
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.showErrorDialog
@@ -25,13 +19,13 @@ import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.apps.media.mobile.utils.groupAndSort
-import com.kt.apps.media.mobile.utils.launchExceptionHandler
 import com.kt.apps.media.mobile.utils.onRefresh
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.skeleton.KunSkeleton
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.merge
@@ -125,7 +119,7 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         playbackViewModel
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            avoidExceptionLaunch {
+            lifecycleScope.avoidExceptionLaunch {
                 merge(
                     flowOf(Unit),
                     binding.swipeRefreshLayout.onRefresh(),
@@ -136,7 +130,7 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
                     }
             }
 
-            launchExceptionHandler({ _, _ ->
+            lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
                 swipeRefreshLayout.isRefreshing = false
             }) {
                 viewModel.listChannels.collectLatest { tvChannel ->
@@ -144,16 +138,6 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
                         reloadOriginalSource(tvChannel)
                 }
             }
-
-//            launch(exceptionHandler { context, throwable ->
-//                swipeRefreshLayout.isRefreshing = false
-//            }) {
-//                viewModel.listChannels.collectLatest { tvChannel ->
-//                    delay(500)
-//                    if (tvChannel.isNotEmpty())
-//                        reloadOriginalSource(tvChannel)
-//                }
-//            }
         }
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -193,7 +177,7 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
     }
 
    private fun performLoadTVChannel() {
-       lifecycleScope.launchExceptionHandler({ _, _ ->
+       lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
            showErrorDialog(content = getString(R.string.error_happen))
        }) {
            viewModel.getListTVChannelAsync(true)

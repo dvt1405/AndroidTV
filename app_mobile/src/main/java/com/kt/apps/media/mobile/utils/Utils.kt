@@ -41,6 +41,7 @@ import java.util.Calendar
 import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 val Fragment.screenWidth: Int
@@ -243,35 +244,33 @@ fun <T> LiveData<DataState<T>>.asProgressFlow(): Flow<Boolean> {
     }
 }
 
-suspend fun <T> LiveData<DataState<T>>.await() : T {
-    return withContext(Dispatchers.Main.immediate) {
-        suspendCancellableCoroutine { continuation ->
-            val oldData = value
-            val observer = object : Observer<DataState<T>> {
-                override fun onChanged(value: DataState<T>) {
-                    if (value == oldData) {
-                        return
-                    }
-                    when (value) {
-                        is DataState.Success -> {
-                            removeObserver(this)
-                            continuation.resume(value.data)
-                        }
-                        is DataState.Error -> {
-                            removeObserver(this)
-                            continuation.cancel(value.throwable)
-                        }
-                        else -> { }
-                    }
-
+suspend fun <T> LiveData<DataState<T>>.await(tag: String = "TAG") : T {
+    return suspendCancellableCoroutine { continuation ->
+        val oldData = value
+        val observer = object : Observer<DataState<T>> {
+            override fun onChanged(value: DataState<T>) {
+                if (value == oldData) {
+                    return
                 }
-            }
+                when (value) {
+                    is DataState.Success -> {
+                        removeObserver(this)
+                        continuation.resume(value.data)
+                    }
+                    is DataState.Error -> {
+                        removeObserver(this)
+                        continuation.resumeWithException(value.throwable)
+                    }
+                    else -> { }
+                }
 
-            observeForever(observer)
-
-            continuation.invokeOnCancellation {
-                removeObserver(observer)
             }
+        }
+
+        observeForever(observer)
+
+        continuation.invokeOnCancellation {
+            removeObserver(observer)
         }
     }
 }
@@ -396,12 +395,8 @@ fun LifecycleOwner.repeatLaunchesOnLifeCycle(
     }
 }
 
-fun CoroutineScope.avoidExceptionLaunch(block: suspend CoroutineScope.() -> Unit) = launchExceptionHandler({_, _ -> }, block = block)
-
-fun CoroutineScope.launchExceptionHandler(
-    handler: (CoroutineContext, Throwable) -> Unit,
-    block: suspend CoroutineScope.() -> Unit
-) =  launch(this.coroutineContext + CoroutineExceptionHandler(handler), block = block)
+fun CoroutineScope.avoidExceptionLaunch(block: suspend CoroutineScope.() -> Unit) = launch (
+    CoroutineExceptionHandler { coroutineContext, throwable ->  }, block = block)
 
 fun TVChannel.loadImgDrawable(context: Context): Drawable? {
     val context = context.applicationContext

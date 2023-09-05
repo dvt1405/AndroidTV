@@ -41,7 +41,9 @@ import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
 import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
+import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
@@ -341,11 +343,11 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
 
         if (arrayListOf(Constants.HOST_TV, Constants.HOST_RADIO).contains(deeplink.host)) {
-            lifecycleScope.avoidExceptionLaunch {
+            lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->  showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
                 viewModel.loadChannelDeepLinkJob(deeplink)
-            }
+            }.trackActivity(viewModel.loadingDeepLink)
         } else if (deeplink.host == Constants.HOST_IPTV && deeplink.lastPathSegment == "search") {
-            lifecycleScope.avoidExceptionLaunch {
+            lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->  showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
                 layoutHandler?.onCloseMinimal()
                 viewModel.openSearch(deeplink)
             }
