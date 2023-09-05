@@ -15,8 +15,8 @@ android {
         applicationId "com.kt.apps.media.mobile.xemtv"
         minSdk 21
         targetSdk 33
-        versionCode 23081401
-        versionName "iMedia version 23.08.01"
+        versionCode 23090301
+        versionName "23.09.01"
         setProperty("archivesBaseName", "iMedia.$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -101,6 +101,7 @@ dependencies {
     implementation project(":tv")
     implementation project(":football")
     implementation project(":resources")
+    implementation project(":autoupdate")
     implementation 'com.pnikosis:materialish-progress:1.7'
     implementation otherLibs.values()
     implementation media.values()

@@ -30,7 +30,7 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
     lateinit var factory: ViewModelProvider.Factory
 
     override fun initView(savedInstanceState: Bundle?) {
-        binding.appName.text = "${BuildConfig.VERSION_NAME}"
+        binding.appName.text = getString(com.kt.apps.autoupdate.R.string.version_title, BuildConfig.VERSION_NAME)
         binding.facebookBtn.setOnClickListener {
             openURL(fbLink)
         }
