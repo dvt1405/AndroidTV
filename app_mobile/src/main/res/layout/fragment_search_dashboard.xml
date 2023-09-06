@@ -56,7 +56,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:imeOptions="actionDone"
-                android:inputType="textWebEmailAddress"
+                android:inputType="text"
                 android:textColor="@color/white"
                 android:hint="@string/search_input_placeholder"
                 android:textColorHint="@color/edittext_border"

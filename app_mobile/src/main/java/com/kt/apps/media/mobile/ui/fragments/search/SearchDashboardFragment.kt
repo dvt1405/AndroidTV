@@ -60,7 +60,6 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
             addItemDecoration(PaddingItemDecoration(PaddingItemDecoration.Edge(0, 12, 0, 0)))
         }
 
-        binding.searchInputText.filterEmoji()
         binding.backButton?.setOnClickListener {
             activity?.onBackPressedDispatcher?.onBackPressed()
 //            activity?.onBackPressed()
