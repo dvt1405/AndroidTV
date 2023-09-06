@@ -144,7 +144,7 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
                     sourceLinkEditText.error = "Đường dẫn không hợp lệ! Đường dẫn phải phải bắt đầu bằng: \"http\""
                 }
                 if (!isUserEditName && sourceLinkEditText.isFocused) {
-                    sourceNameEditText.setText(Uri.parse(text).pathSegments.filter { t -> t.trim().isNotEmpty() }.lastOrNull() ?: "")
+                    sourceNameEditText.setText(Uri.parse(sourceLinkEditText.text.toString()).pathSegments.filter { t -> t.trim().isNotEmpty() }.lastOrNull() ?: "")
                 }
             }
         }
