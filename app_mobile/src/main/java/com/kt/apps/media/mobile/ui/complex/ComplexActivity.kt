@@ -113,10 +113,14 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         onBackPressedDispatcher.addCallback(this, object: OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (layoutHandler?.onBackEvent() == true) {
-                    return
+                if (supportFragmentManager.backStackEntryCount > 0) {
+                    supportFragmentManager.popBackStack()
+                } else {
+                    if (layoutHandler?.onBackEvent() == true) {
+                        return
+                    }
+                    finish()
                 }
-                finish()
             }
         })
 
@@ -309,20 +313,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun onResume() {
         Log.d(TAG, "onResume: ")
         super.onResume()
-    }
-
-
-    override fun onBackPressed() {
-        if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
-        } else {
-            if (layoutHandler?.onBackEvent() == true) {
-                return
-            }
-            super.onBackPressed()
-        }
-
-
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {

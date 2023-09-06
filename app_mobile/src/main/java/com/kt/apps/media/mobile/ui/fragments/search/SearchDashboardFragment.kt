@@ -61,6 +61,10 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
         }
 
         binding.searchInputText.filterEmoji()
+        binding.backButton?.setOnClickListener {
+            activity?.onBackPressedDispatcher?.onBackPressed()
+//            activity?.onBackPressed()
+        }
     }
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
@@ -80,8 +84,6 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
                     historyAdapter.onRefresh(it)
                 }
             }
-
-
 
             if (!isLandscape) {
                 launch {

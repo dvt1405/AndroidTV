@@ -10,12 +10,26 @@
         tools:background="@color/black"
         android:background="@color/black"
         >
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/back_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/transparent"
+            app:icon="@drawable/ic_arrow_back"
+            app:iconSize="@dimen/base_icon_size"
+            app:iconTint="@color/white"
+            style="@style/Widget.Material3.Button.IconButton"
+            app:layout_constraintTop_toTopOf="@id/textInputLayout1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/textInputLayout1"
+            android:layout_marginStart="40dp"
+            />
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout1"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:layout_marginStart="40dp"
+            android:layout_marginStart="8dp"
             android:layout_marginEnd="40dp"
             app:hintEnabled="false"
             android:theme="@style/TextInputLayout"
@@ -32,7 +46,7 @@
             app:boxCornerRadiusTopEnd="@dimen/search_box_corner_radius"
             app:boxCornerRadiusTopStart="@dimen/search_box_corner_radius"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/back_button"
             app:layout_constraintEnd_toEndOf="parent"
 
             >
@@ -56,7 +70,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toBottomOf="@id/textInputLayout1"
-            app:layout_constraintStart_toStartOf="@id/textInputLayout1"
+            app:layout_constraintStart_toStartOf="@id/back_button"
             app:layout_constraintEnd_toEndOf="@id/textInputLayout1"
             android:layout_marginTop="24dp"
             android:orientation="horizontal"
