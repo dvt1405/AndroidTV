@@ -19,7 +19,9 @@ import com.kt.apps.media.mobile.viewmodels.features.IUIControl
 import com.kt.apps.media.mobile.viewmodels.features.SearchViewModels
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import com.kt.apps.media.mobile.viewmodels.features.openPlayback
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +29,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class SearchListViewModel(private val provider: ViewModelProvider): IUIControl {
@@ -65,11 +68,16 @@ class SearchListViewModel(private val provider: ViewModelProvider): IUIControl {
         } ?: return
 
         _isProgressing.emit(true)
-        searchViewModel.getResultForItem(searchData, "")
-        val result = searchViewModel.selectedItemLiveData
-            .await()
-        delay(5000)
-        _isProgressing.emit(false)
+        val job = CoroutineScope(Dispatchers.Main.immediate).async {
+            searchViewModel.getResultForItem(searchData, "")
+            searchViewModel.selectedItemLiveData
+                .await()
+        }
+        job.invokeOnCompletion {
+            _isProgressing.value = false
+        }
+
+        val result = job.await()
 
         when(result) {
             is TVChannelLinkStream -> {

@@ -10,12 +10,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.usecase.search.SearchForText
+import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentSearchListBinding
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListData
 import com.kt.apps.media.mobile.ui.view.childItemClicks
 import com.kt.apps.media.mobile.viewmodels.SearchListViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
@@ -54,10 +56,14 @@ class SearchListFragment : BaseFragment<FragmentSearchListBinding>() {
                         .collectLatest { binding.progressBarContainer.visibility = it }
                 }
 
-                launch {
+                lifecycleScope.launch {
                     binding.channelList.childItemClicks()
                         .collectLatest {
-                            viewModel.openPlayback(it.data)
+                            lifecycleScope.launch(CoroutineExceptionHandler { _, throwable ->
+                                showErrorDialog(content = throwable.message)
+                            }) {
+                                viewModel.openPlayback(it.data)
+                            }
                         }
                 }
             }

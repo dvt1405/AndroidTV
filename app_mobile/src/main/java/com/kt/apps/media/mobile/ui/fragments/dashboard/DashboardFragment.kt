@@ -96,7 +96,6 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
     override fun initView(savedInstanceState: Bundle?) {
         with(binding.viewpager) {
             adapter = _adapter
-
             isUserInputEnabled = false
         }
         (binding.bottomNavigation as NavigationBarView).apply {
@@ -141,7 +140,10 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         (binding.bottomNavigation as NavigationBarView).selectedItemId = R.id.tv
     }
 
-
+    override fun onDestroyView() {
+        binding.viewpager.adapter = null
+        super.onDestroyView()
+    }
     override fun onDetach() {
         super.onDetach()
         (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener(null)

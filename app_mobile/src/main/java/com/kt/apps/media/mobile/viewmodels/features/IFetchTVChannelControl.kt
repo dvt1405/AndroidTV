@@ -34,7 +34,7 @@ interface IFetchTVChannelControl: IFetchDataControl {
             PlaybackViewModel.State.LOADING(mapPrepareValue(element))
         )
         tvChannelViewModel.loadLinkStreamForChannel(element.model)
-        val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await()
+        val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await(tag = "TV")
         val data = mapSuccessValue(linkStream)
         playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
     }

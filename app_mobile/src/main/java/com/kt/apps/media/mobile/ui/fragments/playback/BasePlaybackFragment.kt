@@ -382,8 +382,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.keepScreenOn = true
     }
 
-    protected fun coroutineError(): CoroutineContext {
-        return exceptionHandler { _, throwable ->
+    protected fun coroutineError(): (CoroutineContext, Throwable) -> Unit {
+        return { _, throwable ->
             onError(throwable)
         }
     }

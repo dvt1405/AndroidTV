@@ -2,31 +2,19 @@ package com.kt.apps.media.mobile.ui.fragments.playback
 
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.exoplayer2.ui.StyledPlayerView
-import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.football.model.FootballMatch
-import com.kt.apps.media.mobile.R
-import com.kt.apps.media.mobile.databinding.FragmentFootballPlaybackBinding
 import com.kt.apps.media.mobile.ui.fragments.football.list.SubFootballListAdapter
-import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.channelItemDecoration
-import com.kt.apps.media.mobile.utils.exceptionHandler
-import com.kt.apps.media.mobile.utils.matchParentWidth
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
-import com.kt.apps.media.mobile.utils.safeLet
-import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.FootballPlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadFootballMatchLinkStream
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
@@ -62,7 +50,7 @@ class FootballPlaybackFragment: ChannelPlaybackFragment() {
         super.initAction(savedInstanceState)
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launch(coroutineError()) {
+            lifecycleScope.launch(CoroutineExceptionHandler(coroutineError())) {
                 ((arguments?.get(EXTRA_FOOTBALL_MATCH) as? FootballMatch)?.let { flowOf(it) }
                     ?: emptyFlow())
                     .collectLatest {

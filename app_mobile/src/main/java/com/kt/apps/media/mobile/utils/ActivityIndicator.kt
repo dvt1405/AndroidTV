@@ -32,7 +32,7 @@ class ActivityIndicator {
     }
 
     fun <T> trackActivityAsync(job: Deferred<T>): Deferred<T> {
-        return CoroutineScope(Dispatchers.Main).async {
+        return CoroutineScope(Dispatchers.Main.immediate).async {
             increment()
             job.invokeOnCompletion {
                 launch {
@@ -44,7 +44,7 @@ class ActivityIndicator {
     }
 
     fun trackActivityAsync(job: Job): Job {
-        return MainScope().async {
+        return CoroutineScope(Dispatchers.Main.immediate).async {
             increment()
             job.invokeOnCompletion {
                 this.launch {
@@ -63,4 +63,3 @@ fun <T>Deferred<T>.trackActivity(indicator: ActivityIndicator) : Deferred<T> {
 fun Job.trackActivity(indicator: ActivityIndicator): Job {
     return indicator.trackActivityAsync(this)
 }
-
