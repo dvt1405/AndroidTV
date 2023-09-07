@@ -7,7 +7,7 @@
         android:id="@+id/motion_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layoutDescription="@xml/fragment_iptv_dashboard_scene"
+        app:layoutDescription="@xml/fragment_iptv_dashboard_scene_land"
         tools:background="@color/black"
         >
         <com.google.android.material.textview.MaterialTextView
