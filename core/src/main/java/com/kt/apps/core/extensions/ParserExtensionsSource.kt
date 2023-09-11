@@ -1,6 +1,8 @@
 package com.kt.apps.core.extensions
 
+import android.net.Uri
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.kt.apps.core.Constants
 import com.kt.apps.core.di.CoreScope
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.IKeyValueStorage
@@ -16,6 +18,12 @@ import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.internal.http.HTTP_MOVED_PERM
+import okhttp3.internal.http.HTTP_MOVED_TEMP
+import okhttp3.internal.http.HTTP_MULT_CHOICE
+import okhttp3.internal.http.HTTP_PERM_REDIRECT
+import okhttp3.internal.http.HTTP_SEE_OTHER
+import okhttp3.internal.http.HTTP_TEMP_REDIRECT
 import org.json.JSONArray
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
@@ -197,31 +205,7 @@ class ParserExtensionsSource @Inject constructor(
     fun parseFromRemoteRxStream(extension: ExtensionsConfig): Observable<List<ExtensionsChannel>> {
         val parserSource = Observable.fromCallable {
             trustEveryone()
-            val response = client
-                .newBuilder()
-                .callTimeout(600, TimeUnit.SECONDS)
-                .readTimeout(600, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .build()
-                .newCall(
-                    Request.Builder()
-                        .url(extension.sourceUrl)
-                        .build()
-
-                ).execute()
-
-            if (response.code in 200..299) {
-                val stream = response.body.byteStream()
-                Logger.d(
-                    this@ParserExtensionsSource,
-                    message = "${extension.sourceUrl} - Streaming - Content Length: $${response.body.contentLength()}"
-                )
-                return@fromCallable stream
-            }
-            if (response.code >= 500 || response.code == 404 || response.code == 403) {
-                throw ParserIPTVThrowable(false)
-            }
-            throw Throwable("Retry")
+            return@fromCallable executeHttpCall(extension)
         }.flatMap {
             this@ParserExtensionsSource.parseInputStreamToListIPTVChannel(extension, it)
         }.retry { time, throwable ->
@@ -248,6 +232,47 @@ class ParserExtensionsSource @Inject constructor(
         return parserSource
     }
 
+    private fun executeHttpCall(extension: ExtensionsConfig): InputStream {
+        val response = client
+            .newBuilder()
+            .callTimeout(600, TimeUnit.SECONDS)
+            .readTimeout(600, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .build()
+            .newCall(
+                Request.Builder()
+                    .url(extension.sourceUrl)
+                    .addHeader("User-agent", Constants.USER_AGENT)
+                    .addHeader("Host", Uri.parse(extension.sourceUrl).host!!)
+                    .build()
+            ).execute()
+
+        if (response.code in 200..299) {
+            val stream = response.body.byteStream()
+            Logger.d(
+                this@ParserExtensionsSource,
+                message = "${extension.sourceUrl} - Streaming - Content Length: $${response.body.contentLength()}"
+            )
+            return stream
+        }
+        if (response.code in followUpResCode) {
+            val location = response.header("Location")!!
+            return executeHttpCall(
+                ExtensionsConfig(
+                    sourceUrl = location,
+                    sourceName = extension.sourceName,
+                    type = extension.type
+                )
+            )
+        }
+        if (response.code >= 500 || response.code == 404 || response.code == 403) {
+            throw ParserIPTVThrowable(false)
+        }
+        throw Throwable("Retry")
+    }
+
     private fun getKeyValueByRegex(regex: Pattern, finder: String): Pair<String, String> {
         val key = getByRegex(regex, finder)
         val startIndex = finder.indexOf("=")
@@ -257,6 +282,7 @@ class ParserExtensionsSource @Inject constructor(
             .removeSuffix("\r")
             .removeSuffix("\"")
         val realHttpKey = realKeys[key] ?: key
+        Logger.d(this@ParserExtensionsSource, "Extract", "key: $key, value: $value")
         return Pair(realHttpKey, value)
     }
 
@@ -277,7 +303,7 @@ class ParserExtensionsSource @Inject constructor(
         var userAgent = ""
         var referer = ""
         var channelLink = ""
-        val props = mutableMapOf<String, String>()
+        var props = mutableMapOf<String, String>()
         val sourceFrom = config.sourceName
         while (line != null) {
             if (line.trim().isBlank()) {
@@ -322,7 +348,7 @@ class ParserExtensionsSource @Inject constructor(
                 userAgent = ""
                 referer = ""
                 channelLink = ""
-                props.clear()
+                props = mutableMapOf()
             }
 
             if (line.contains(URL_TVG_PREFIX)) {
@@ -402,6 +428,7 @@ class ParserExtensionsSource @Inject constructor(
                 }
 
                 line.contains(TAG_KODIPROP) -> {
+                    Logger.d(this@ParserExtensionsSource, TAG_KODIPROP, message = line)
                     val keyValue = getKeyValueByRegex(REGEX_KODI_PROP_KEY, line)
                     props[keyValue.first] = keyValue.second
                 }
@@ -633,6 +660,17 @@ class ParserExtensionsSource @Inject constructor(
             mapOf(
                 "K+" to "https://s.id/nhamng",
                 "VThanhTV" to "http://vthanhtivi.pw",
+            )
+        }
+
+        val followUpResCode by lazy {
+            listOf(
+                HTTP_PERM_REDIRECT,
+                HTTP_TEMP_REDIRECT,
+                HTTP_MULT_CHOICE,
+                HTTP_MOVED_PERM,
+                HTTP_MOVED_TEMP,
+                HTTP_SEE_OTHER
             )
         }
 
