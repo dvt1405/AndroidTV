@@ -25,6 +25,7 @@ import com.kt.apps.core.storage.local.databaseviews.ExtensionChannelDatabaseView
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelFts4
 import com.kt.apps.core.storage.local.dto.*
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 import java.util.Arrays
@@ -326,9 +327,9 @@ abstract class RoomDataBase : RoomDatabase() {
             )
         }
         private fun migrateCopyData11to12(sqLiteDatabase: SupportSQLiteDatabase) {
-            sqLiteDatabase.beginTransaction()
             val tvChannelDTOS = ArrayList<TVChannelDTO>()
             try {
+                sqLiteDatabase.beginTransaction()
                 val cursor = query(sqLiteDatabase, SimpleSQLiteQuery("SELECT * FROM TVChannelDTO"),
                     true,
                     null)
@@ -339,11 +340,11 @@ abstract class RoomDataBase : RoomDatabase() {
                     val indexOfSourceFrom = getColumnIndexOrThrow(c, "sourceFrom")
                     val indexOfChannelId = getColumnIndexOrThrow(c, "channelId")
                     while (c.moveToNext()) {
-                        val channelId = c.getString(indexOfChannelId)
-                        val tvGroup = c.getString(indexOfTvGroup)
-                        val logoChannel = c.getString(indexOfLogoChannel)
-                        val tvChannelName = c.getString(indexOfTvChannelName)
-                        val tvSourceFrom = c.getString(indexOfSourceFrom)
+                        val channelId = c.getString(indexOfChannelId) ?: ""
+                        val tvGroup = c.getString(indexOfTvGroup) ?: ""
+                        val logoChannel = c.getString(indexOfLogoChannel) ?: ""
+                        val tvChannelName = c.getString(indexOfTvChannelName) ?: ""
+                        val tvSourceFrom = c.getString(indexOfSourceFrom) ?: ""
                         tvChannelDTOS.add(
                             TVChannelDTO(
                                 channelId = channelId,
@@ -360,6 +361,8 @@ abstract class RoomDataBase : RoomDatabase() {
                     c.moveToPosition(-1)
                     sqLiteDatabase.setTransactionSuccessful()
                 }
+            } catch (e: Exception) {
+                Logger.e("RoomDatabase", exception = e)
             } finally {
                 sqLiteDatabase.endTransaction()
             }
