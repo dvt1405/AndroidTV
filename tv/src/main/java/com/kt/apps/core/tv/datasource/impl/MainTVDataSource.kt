@@ -31,6 +31,8 @@ import javax.inject.Provider
 class MainTVDataSource @Inject constructor(
     private val sctvDataSource: SCTVDataSourceImpl,
     private val vDataSourceImpl: VDataSourceImpl,
+    private val hyDataSourceImpl: HYDataSourceImpl,
+    private val vtvDataSourceImpl: VTVBackupDataSourceImpl,
     private val firebaseDatabase: FirebaseDatabase,
     private val firebaseRemoteConfig: FirebaseRemoteConfig,
     private val fireStoreDataBase: FirebaseFirestore,
@@ -327,6 +329,14 @@ class MainTVDataSource @Inject constructor(
             }?.let {
                 return when (it.dataSource) {
 
+                    TVChannelURLSrc.VTV.value -> {
+                        vtvDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                    }
+
+                    TVChannelURLSrc.HY.value -> {
+                        hyDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                    }
+
                     TVChannelURLSrc.SCTV.value -> {
                         sctvDataSource.getTvLinkFromDetail(tvChannel, isBackup)
                     }
@@ -395,7 +405,7 @@ class MainTVDataSource @Inject constructor(
     }
 
     enum class TVChannelURLSrc(val value: String) {
-        V("vieon"), SCTV("sctv")
+        V("vieon"), SCTV("sctv"), HY("hy"), VTV("vtv")
     }
 
     companion object {

@@ -22,6 +22,12 @@ open class TVChannelModule {
 
     @Provides
     @IntoMap
+    @TVDataSourceMapKey(TVDataSourceFrom.HY)
+    @TVScope
+    fun providesHYTVDataSource(hyDataSourceImpl: HYDataSourceImpl): ITVDataSource = hyDataSourceImpl
+
+    @Provides
+    @IntoMap
     @TVDataSourceMapKey(TVDataSourceFrom.VTV_BACKUP)
     @TVScope
     fun providesVTVBackupDataSource(vDataSourceImpl: VTVBackupDataSourceImpl): ITVDataSource = vDataSourceImpl
