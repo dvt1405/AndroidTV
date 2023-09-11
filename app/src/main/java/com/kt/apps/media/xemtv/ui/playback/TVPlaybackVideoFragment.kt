@@ -374,7 +374,9 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
 
     override fun onKeyCodeChannelDown() {
         super.onKeyCodeChannelDown()
-        mPlayingPosition = max(0, mPlayingPosition) - 1
+        val nextPosition = max(0, mPlayingPosition) - 1
+        if (nextPosition <= -1) return
+        mPlayingPosition = nextPosition
         setSelectedPosition(mPlayingPosition)
         Logger.d(this, message = "onKeyCodeChannelDown: $mPlayingPosition")
         val maxItemCount = mGridViewHolder?.gridView?.adapter?.itemCount ?: 0
@@ -396,6 +398,8 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         if (mPlayingPosition <= maxItemCount - 1) {
             val item = mAdapter?.get(mPlayingPosition)
             tvChannelViewModel.getLinkStreamForChannel(item as TVChannel)
+        } else {
+            mPlayingPosition = mGridViewHolder?.gridView?.selectedPosition ?: 0
         }
     }
 
