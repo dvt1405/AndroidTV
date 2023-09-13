@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <capability android:name="actions.intent.OPEN_APP_FEATURE">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="com.kt.apps.media.xemtv.ui.main.MainActivity"
+            android:targetPackage="com.kt.apps.media.xemtv">
+            <url-template android:value="xemtv://{appFeature}/dashboard" />
+            <parameter
+                android:name="feature"
+                android:key="appFeature" />
+        </intent>
+    </capability>
+
+    <shortcut
+        android:shortcutDisabledMessage="@string/shortcut_disabled_message1"
+        android:shortcutId="shortcut_dashboard"
+        android:shortcutLongLabel="@string/shortcut_long_label1"
+        android:shortcutShortLabel="@string/shortcut_short_label1">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="xemtv://tv/dashboard"
+            android:targetClass="com.kt.apps.media.xemtv.ui.main.MainActivity"
+            android:targetPackage="com.kt.apps.media.xemtv" />
+
+        <capability-binding android:key="actions.intent.OPEN_APP_FEATURE">
+            <parameter-binding
+                android:key="feature"
+                android:value="tv" />
+        </capability-binding>
+    </shortcut>
+
+</shortcuts>

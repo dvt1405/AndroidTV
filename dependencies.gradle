@@ -2,6 +2,8 @@ ext {
     firebaseBomVersion = '32.2.2'
     appDependencies = [
             coreKt            : 'androidx.core:core-ktx:1.10.1',
+            shortcuts         : "androidx.core:core-google-shortcuts:1.0.0",
+            assistantSuggest  : "com.google.assistant.appactions:suggestions:1.0.0",
             appCompat         : 'androidx.appcompat:appcompat:1.6.1',
             material          : 'com.google.android.material:material:1.6.1',
             constrainlayout   : 'androidx.constraintlayout:constraintlayout:2.1.4',
@@ -123,7 +125,7 @@ ext {
     ]
 
     otherLibs = [
-            palette: 'androidx.palette:palette:1.0.0',
+            palette    : 'androidx.palette:palette:1.0.0',
             zxingQrCode: 'com.google.zxing:core:3.3.3'
 //            checkApi: "com.kt:api:1.1.15"
     ]

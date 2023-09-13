@@ -22,4 +22,19 @@
     <string name="search_football_hint_title">Tìm kiếm trận đấu bóng đá</string>
     <string name="search_iptv_hint_title">Tìm kiếm nội dung trong IPTV</string>
     <string name="search_all_query_hint_title">Tìm kiếm nội dung trên iMedia</string>
+    <string name="shortcut_short_label1">iMedia</string>
+    <string name="shortcut_long_label1">iMedia - Xem TV HD</string>
+    <string name="shortcut_disabled_message1">Xem TV</string>
+    <string name="query_patterns_sample" translatable="false">Ai Media</string>
+    <string-array name="query_patterns">
+        <item name="appFeature">Xem TV</item>
+        <item>appFeature</item>
+        <item>Mở iMedia</item>
+        <item>Mở Ai Media</item>
+        <item>Mở eMedia</item>
+    </string-array>
+    <string-array name="app_features">
+        <item>tv</item>
+        <item>radio</item>
+    </string-array>
 </resources>
