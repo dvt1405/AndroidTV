@@ -5,16 +5,25 @@ import android.app.Application
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.core.os.bundleOf
-import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.MediaMetadata
+import com.google.android.exoplayer2.PlaybackException
+import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
+import com.google.android.exoplayer2.drm.DefaultDrmSessionManager
+import com.google.android.exoplayer2.drm.ExoMediaDrm
+import com.google.android.exoplayer2.drm.FrameworkMediaDrm
+import com.google.android.exoplayer2.drm.MediaDrmCallback
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
+import com.kt.apps.core.Constants
 import com.kt.apps.core.R
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.logging.Logger
@@ -23,6 +32,7 @@ import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.utils.getBaseUrl
 import com.kt.apps.core.utils.trustEveryone
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import java.util.UUID
 
 abstract class AbstractExoPlayerManager(
     private val _application: CoreApp,
@@ -59,7 +69,8 @@ abstract class AbstractExoPlayerManager(
                         Player.EVENT_IS_PLAYING_CHANGED,
                         Player.EVENT_POSITION_DISCONTINUITY,
                         Player.EVENT_PLAY_WHEN_READY_CHANGED
-                )) {
+                    )
+                ) {
                     val mediaItem = player.currentMediaItem ?: return
                     if (player.contentDuration > 2 * 60_000 && player.contentPosition > 60_000) {
                         val historyMediaItemDTO = HistoryMediaItemDTO.mapFromMediaItem(
@@ -170,20 +181,66 @@ abstract class AbstractExoPlayerManager(
                     )
             } else if (it.m3u8Link.contains(".mpd")) {
                 Logger.d(this, "MediaSource", "DashMediaSource: $it")
-                DashMediaSource.Factory(dfSource)
-                    .createMediaSource(
-                        MediaItem.Builder()
-                            .setDrmConfiguration(
-                                MediaItem.DrmConfiguration.Builder(C.WIDEVINE_UUID)
-                                    .setLicenseUri(headers?.get("referer")?.ifEmpty {
-                                        it.m3u8Link
-                                    } ?: it.m3u8Link)
-                                    .setLicenseRequestHeaders(headers ?: mapOf())
-                                    .build()
-                            )
-                            .setUri(it.m3u8Link)
-                            .build()
+                val licenseUriStr = headers?.get("inputstream.adaptive.license_key")?.ifEmpty {
+                    it.m3u8Link
+                }.also {
+                    Logger.d(this@AbstractExoPlayerManager, message = "license_key: $it")
+                } ?: it.m3u8Link
+                val licenseUri = Uri.parse(licenseUriStr)
+                val mediaDrmCallback = object : MediaDrmCallback {
+                    override fun executeProvisionRequest(
+                        uuid: UUID,
+                        request: ExoMediaDrm.ProvisionRequest
+                    ): ByteArray {
+                        return byteArrayOf()
+                    }
+
+                    override fun executeKeyRequest(
+                        uuid: UUID,
+                        request: ExoMediaDrm.KeyRequest
+                    ): ByteArray {
+                        return byteArrayOf()
+                    }
+                }
+
+                val drmSessionManager = DefaultDrmSessionManager.Builder()
+                    .setUuidAndExoMediaDrmProvider(
+                        C.WIDEVINE_UUID,
+                        FrameworkMediaDrm.DEFAULT_PROVIDER
                     )
+                    .build(mediaDrmCallback)
+
+                val mediaSourceFactory: DashMediaSource.Factory = DashMediaSource.Factory(dfSource)
+                mediaSourceFactory.setDrmSessionManagerProvider {
+                    drmSessionManager
+                }
+                mediaSourceFactory.createMediaSource(
+                    MediaItem.Builder()
+                        .setDrmConfiguration(
+                            MediaItem.DrmConfiguration.Builder(C.CLEARKEY_UUID)
+                                .setForceDefaultLicenseUri(true)
+                                .setScheme(C.CLEARKEY_UUID)
+                                .setLicenseUri(licenseUri)
+                                .setLicenseRequestHeaders(
+                                    mapOf(
+                                        "user-agent" to (defaultHeader["user-agent"] ?: Constants.USER_AGENT),
+                                        "Host" to "${licenseUri.host}",
+                                        "Origin" to "${licenseUri.scheme}://${licenseUri.host}",
+                                        "Referer" to "${licenseUri.scheme}://${licenseUri.host}/",
+                                        "Sec-Fetch-Dest" to "empty",
+                                        "Sec-Fetch-Mode" to "cors",
+                                        "Sec-Fetch-Site" to "cross-site",
+                                        "Accept" to "*/*",
+                                        "Accept-Encoding" to "gzip, deflate, br",
+                                        "Accept-Language" to "en-US,en;q=0.9,vi;q=0.8",
+                                        "Connection" to "keep-alive"
+                                    )
+                                )
+                                .build()
+                        )
+                        .setUri(it.m3u8Link)
+                        .build()
+                )
             } else if (it.m3u8Link.contains(".mp4")) {
                 DefaultMediaSourceFactory(dfSource)
                     .createMediaSource(
