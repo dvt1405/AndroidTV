@@ -15,8 +15,8 @@ android {
         applicationId "com.kt.apps.media.mobile.xemtv"
         minSdk 21
         targetSdk 33
-        versionCode 23090301
-        versionName "23.09.01"
+        versionCode 23091401
+        versionName "Mobile.23.09.01"
         setProperty("archivesBaseName", "iMedia.$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
