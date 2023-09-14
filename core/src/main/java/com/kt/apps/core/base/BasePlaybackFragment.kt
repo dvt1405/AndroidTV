@@ -386,6 +386,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                         overlaysUIState = OverlayUIState.STATE_INIT
                     }
                 }
+                mHandler.postDelayed({
+                    autoHideOverlayRunnable.run()
+                }, 5000L)
             }
         }
         videoInfoCodecContainerView?.gone()
@@ -550,7 +553,6 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         mHandler.removeCallbacks(autoHideOverlayRunnable)
         setVideoInfo(title, subTitle, isLive)
 
-        showAllOverlayElements(false)
         if (showProgressManager) {
             progressManager.show()
         }
