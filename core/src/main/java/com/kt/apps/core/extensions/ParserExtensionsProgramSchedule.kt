@@ -360,7 +360,6 @@ class ParserExtensionsProgramSchedule @Inject constructor(
         }
         var readNode: InputNode? = node.next
         var channel: TVScheduler.Channel
-        var listChannel = mutableListOf<TVScheduler.Channel>()
         var programme: TVScheduler.Programme
         var listProgram = mutableListOf<TVScheduler.Programme>()
         var tvScheduler: TVScheduler
@@ -408,11 +407,6 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                         }
                         readNode = node.next
                     }
-                    listChannel.add(channel)
-                    if (listChannel.size > 50) {
-                        listChannel = mutableListOf()
-                    }
-
                     if (readNode != null) {
                         continue
                     }
@@ -449,7 +443,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                     }
                     listProgram.add(programme)
                     if (emitter.isDisposed) return@create
-                    if (listProgram.size > 50) {
+                    if (listProgram.size > 150) {
                         emitter.onNext(listProgram)
                         listProgram = mutableListOf()
                     }
