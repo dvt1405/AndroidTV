@@ -61,7 +61,7 @@ class NavDrawerView @JvmOverloads constructor(
                 }
             }
             this.addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
                     var childSelected: View? = null
                     forEachIndexed { _, childView ->
@@ -93,12 +93,12 @@ class NavDrawerView @JvmOverloads constructor(
                 }
             }
             this.addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationCancel(animation: Animator?) {
+                override fun onAnimationCancel(animation: Animator) {
                     super.onAnimationCancel(animation)
                     onAnimationEnd(animation)
                 }
 
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
                     forEachIndexed { index, childView ->
                         childView.isSelected = false

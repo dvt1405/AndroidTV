@@ -1,5 +1,6 @@
 package com.kt.apps.core.storage.local
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.database.AbstractWindowedCursor
 import android.database.Cursor
@@ -28,7 +29,6 @@ import com.kt.apps.core.storage.local.dto.*
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
-import java.util.Arrays
 
 @TypeConverters(
     RoomDBTypeConverters::class
@@ -270,81 +270,30 @@ abstract class RoomDataBase : RoomDatabase() {
             }
             return matrixCursor
         }
-        fun findColumnIndexBySuffix(columnNames: Array<String>, name: String): Int {
-            val dotSuffix = ".$name"
-            val backtickSuffix = ".$name`"
-            for (index in columnNames.indices) {
-                val columnName = columnNames[index]
-                // do not check if column name is not long enough. 1 char for table name, 1 char for '.'
-                if (columnName.length >= name.length + 2) {
-                    if (columnName.endsWith(dotSuffix)) {
-                        return index
-                    } else if (columnName[0] == '`'
-                        && columnName.endsWith(backtickSuffix)
-                    ) {
-                        return index
-                    }
-                }
-            }
-            return -1
-        }
-        private fun findColumnIndexBySuffix(cursor: Cursor, name: String): Int {
-            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.N_MR1) {
-                // we need this workaround only on APIs < 26. So just return not found on newer APIs
-                return -1
-            }
-            if (name.isEmpty()) {
-                return -1
-            }
-            val columnNames = cursor.columnNames
-            return findColumnIndexBySuffix(columnNames, name)
-        }
-        fun getColumnIndex(c: Cursor, name: String): Int {
-            var index = c.getColumnIndex(name)
-            if (index >= 0) {
-                return index
-            }
-            index = c.getColumnIndex("`$name`")
-            return if (index >= 0) {
-                index
-            } else findColumnIndexBySuffix(c, name)
-        }
-        fun getColumnIndexOrThrow(c: Cursor, name: String): Int {
-            val index = getColumnIndex(c, name)
-            if (index >= 0) {
-                return index
-            }
-            var availableColumns = ""
-            try {
-                availableColumns = Arrays.toString(c.columnNames)
-            } catch (e: Exception) {
-                Logger.e("RoomCursorUtil", message = "Cannot collect column names for debug purposes")
-                Logger.e("RoomCursorUtil", exception = e)
-            }
-            throw IllegalArgumentException(
-                "column '" + name
-                        + "' does not exist. Available columns: " + availableColumns
-            )
-        }
+        @SuppressLint("RestrictedApi")
         private fun migrateCopyData11to12(sqLiteDatabase: SupportSQLiteDatabase) {
+            sqLiteDatabase.beginTransaction()
             val tvChannelDTOS = ArrayList<TVChannelDTO>()
             try {
-                sqLiteDatabase.beginTransaction()
-                val cursor = query(sqLiteDatabase, SimpleSQLiteQuery("SELECT * FROM TVChannelDTO"),
-                    true,
-                    null)
+                val cursor = CursorUtil.copyAndClose(
+                    query(
+                        sqLiteDatabase, SimpleSQLiteQuery("SELECT * FROM TVChannelDTO"),
+                        true,
+                        null
+                    )
+                )
                 cursor.use { c ->
-                    val indexOfTvGroup = getColumnIndexOrThrow(c, "tvGroup")
-                    val indexOfLogoChannel = getColumnIndexOrThrow(c, "logoChannel")
-                    val indexOfTvChannelName = getColumnIndexOrThrow(c, "tvChannelName")
-                    val indexOfSourceFrom = getColumnIndexOrThrow(c, "sourceFrom")
-                    val indexOfChannelId = getColumnIndexOrThrow(c, "channelId")
+                    val indexOfTvGroup = CursorUtil.getColumnIndexOrThrow(c, "tvGroup")
+                    val indexOfLogoChannel = CursorUtil.getColumnIndexOrThrow(c, "logoChannel")
+                    val indexOfTvChannelName = CursorUtil.getColumnIndexOrThrow(c, "tvChannelName")
+                    val indexOfSourceFrom = CursorUtil.getColumnIndexOrThrow(c, "sourceFrom")
+                    val indexOfChannelId = CursorUtil.getColumnIndexOrThrow(c, "channelId")
                     while (c.moveToNext()) {
-                        val channelId = c.getString(indexOfChannelId) ?: ""
-                        val tvGroup = c.getString(indexOfTvGroup) ?: ""
-                        val logoChannel = c.getString(indexOfLogoChannel) ?: ""
-                        val tvChannelName = c.getString(indexOfTvChannelName) ?: ""
-                        val tvSourceFrom = c.getString(indexOfSourceFrom) ?: ""
+                        val channelId = c.getString(indexOfChannelId)
+                        val tvGroup = c.getString(indexOfTvGroup)
+                        val logoChannel = c.getString(indexOfLogoChannel)
+                        val tvChannelName = c.getString(indexOfTvChannelName)
+                        val tvSourceFrom = c.getString(indexOfSourceFrom)
                         tvChannelDTOS.add(
                             TVChannelDTO(
                                 channelId = channelId,

@@ -576,12 +576,12 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             .apply {
                 this.duration = 300L
                 this.addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator?) {
+                    override fun onAnimationEnd(animation: Animator) {
                         super.onAnimationEnd(animation)
                         ensureUIByState(overlaysUIState)
                     }
 
-                    override fun onAnimationCancel(animation: Animator?) {
+                    override fun onAnimationCancel(animation: Animator) {
                         super.onAnimationCancel(animation)
                         onAnimationEnd(animation)
                     }
@@ -685,7 +685,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 ) {
                     fadeInAnimator.pause()
                     fadeInAnimator.addListener(object : AnimatorListenerAdapter() {
-                        override fun onAnimationEnd(animation: Animator?) {
+                        override fun onAnimationEnd(animation: Animator) {
                             super.onAnimationEnd(animation)
                             fadeInAnimator.setupEndValues()
                             overlayRootContainerAnimationUpdateListener.onAnimationUpdate(fadeInAnimator)
@@ -693,7 +693,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                             fadeInAnimator.removeListener(this)
                         }
 
-                        override fun onAnimationCancel(animation: Animator?) {
+                        override fun onAnimationCancel(animation: Animator) {
                             super.onAnimationCancel(animation)
                             onAnimationEnd(animation)
                         }
@@ -703,14 +703,14 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     fadeInAnimator.removeAllUpdateListeners()
                     fadeInAnimator.addUpdateListener(overlayRootContainerAnimationUpdateListener)
                     fadeInAnimator.addListener(object : AnimatorListenerAdapter() {
-                        override fun onAnimationEnd(animation: Animator?) {
+                        override fun onAnimationEnd(animation: Animator) {
                             super.onAnimationEnd(animation)
                             onlyShowGridView()
                             overlayRootContainerAnimationUpdateListener.onAnimationUpdate(ValueAnimator.ofFloat(1f))
                             fadeInAnimator.removeListener(this)
                         }
 
-                        override fun onAnimationCancel(animation: Animator?) {
+                        override fun onAnimationCancel(animation: Animator) {
                             super.onAnimationCancel(animation)
                             onAnimationEnd(animation)
                         }

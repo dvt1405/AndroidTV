@@ -53,12 +53,12 @@ fun View.translateY(
     this.animate()
         .translationY(toValue)
         .setListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator?) {
+            override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
                 onAnimationEnd()
             }
 
-            override fun onAnimationCancel(animation: Animator?) {
+            override fun onAnimationCancel(animation: Animator) {
                 super.onAnimationCancel(animation)
                 onAnimationCancel()
             }
@@ -70,13 +70,13 @@ fun View.fadeOut(executeElse: Boolean = false,  onAnimationEnd: () -> Unit = {})
         this.animate()
             .alpha(0f)
             .setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
                     onAnimationEnd()
                     gone()
                 }
 
-                override fun onAnimationCancel(animation: Animator?) {
+                override fun onAnimationCancel(animation: Animator) {
                     super.onAnimationCancel(animation)
                     onAnimationEnd()
                     gone()
@@ -92,13 +92,13 @@ fun View.fadeIn(executeElse: Boolean = false, onAnimationEnd: () -> Unit = {}) {
         this.animate()
             .alpha(1f)
             .setListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
                     visible()
                     onAnimationEnd()
                 }
 
-                override fun onAnimationCancel(animation: Animator?) {
+                override fun onAnimationCancel(animation: Animator) {
                     super.onAnimationCancel(animation)
                     visible()
                 }
@@ -145,7 +145,7 @@ fun View.startHideOrShowAnimation(
         endRadius
     )
     anim.addListener(object : AnimatorListenerAdapter() {
-        override fun onAnimationEnd(animation: Animator?) {
+        override fun onAnimationEnd(animation: Animator) {
             super.onAnimationEnd(animation)
             gone()
             anim.removeAllListeners()

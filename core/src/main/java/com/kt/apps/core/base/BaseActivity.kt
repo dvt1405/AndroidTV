@@ -142,7 +142,7 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
                     .setStartDelay(300L)
                     .translationY(it.measuredHeight.toFloat())
                     .setListener(object : AnimatorListenerAdapter() {
-                        override fun onAnimationEnd(animation: Animator?) {
+                        override fun onAnimationEnd(animation: Animator) {
                             super.onAnimationEnd(animation)
                             viewGroup.findViewById<LinearLayout?>(R.id.no_network_view)?.let {
                                 viewGroup.removeView(it)
