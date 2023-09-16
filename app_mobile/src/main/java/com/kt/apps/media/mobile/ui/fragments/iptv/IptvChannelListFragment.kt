@@ -99,19 +99,20 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
 
     private val loadData: suspend (Unit) -> Unit = {
         viewModels?.apply {
-            try {
+            lifecycleScope.launch(CoroutineExceptionHandler { _, e ->
+                Log.d(TAG, "loadData: $e ")
+                viewSwitcher.showError()
+            }) {
                 viewSwitcher.showContentView()
-                val list = loadDataAsync().trackActivity(activityIndicator).await()
+                val list = loadDataAsync().await()
                 val grouped = groupAndSort(list).map {
                     ChannelListData(it.first, it.second.map {channel ->
                         ChannelElement.ExtensionChannelElement(channel)
                     })
                 }
                 binding.listChannelRecyclerview.reloadAllData(grouped)
-            } catch (e: Throwable) {
-                Log.d(TAG, "loadData: $e ")
-                viewSwitcher.showError()
             }
+                .trackJob(activityIndicator)
         }
     }
 

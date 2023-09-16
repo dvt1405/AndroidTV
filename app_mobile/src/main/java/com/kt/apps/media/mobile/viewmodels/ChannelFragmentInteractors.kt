@@ -55,9 +55,6 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
             .mapNotNull { if(it == NetworkState.Connected) Unit else null }
             .shareIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed())
     }
-    fun getListTVChannel(forceRefresh: Boolean) {
-        tvChannelViewModel.getListTVChannel(forceRefresh)
-    }
 
     suspend fun getListTVChannelAsync(forceRefresh: Boolean) {
         tvChannelViewModel.getListTVChannel(forceRefresh)

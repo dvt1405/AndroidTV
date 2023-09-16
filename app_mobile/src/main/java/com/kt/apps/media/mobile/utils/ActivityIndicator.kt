@@ -5,6 +5,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 class ActivityIndicator {
     private var _replay: MutableStateFlow<Int> = MutableStateFlow(0)
@@ -31,35 +33,36 @@ class ActivityIndicator {
         }
     }
 
-    fun <T> trackActivityAsync(job: Deferred<T>): Deferred<T> {
-        return CoroutineScope(Dispatchers.Main.immediate).async {
-            increment()
-            job.invokeOnCompletion {
-                launch {
-                    decrement()
-                }
-            }
-            job.await()
+    suspend fun trackBlock(block: suspend () -> Unit) {
+        increment()
+        try {
+            block()
+        } finally {
+            decrement()
         }
     }
 
-    fun trackActivityAsync(job: Job): Job {
-        return CoroutineScope(Dispatchers.Main.immediate).async {
+    fun trackJob(job: Job): Job {
+        return CoroutineScope(Dispatchers.Main.immediate).launch {
             increment()
-            job.invokeOnCompletion {
-                this.launch {
-                    decrement()
-                }
-            }
             job.join()
+            decrement()
         }
     }
+
 }
 
-fun <T>Deferred<T>.trackActivity(indicator: ActivityIndicator) : Deferred<T> {
-    return indicator.trackActivityAsync(this)
+fun Job.trackJob(indicator: ActivityIndicator): Job {
+    return indicator.trackJob(this)
 }
 
-fun Job.trackActivity(indicator: ActivityIndicator): Job {
-    return indicator.trackActivityAsync(this)
+fun CoroutineScope.launchTrack(
+    indicator: ActivityIndicator,
+    context: CoroutineContext = EmptyCoroutineContext,
+    start: CoroutineStart = CoroutineStart.DEFAULT,
+    block: suspend () -> Unit): Job {
+    return launch(context, start) {
+        indicator.trackBlock(block)
+    }
+
 }

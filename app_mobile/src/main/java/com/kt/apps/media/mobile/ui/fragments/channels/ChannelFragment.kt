@@ -19,10 +19,10 @@ import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
 import com.kt.apps.media.mobile.utils.groupAndSort
+import com.kt.apps.media.mobile.utils.launchTrack
 import com.kt.apps.media.mobile.utils.onRefresh
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
-import com.kt.apps.media.mobile.utils.trackActivity
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -177,11 +177,11 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
     }
 
    private fun performLoadTVChannel() {
-       lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->
+       lifecycleScope.launchTrack(loadingChannel, CoroutineExceptionHandler {  _, _ ->
            showErrorDialog(content = getString(R.string.error_happen))
        }) {
            viewModel.getListTVChannelAsync(true)
-       }.trackActivity(loadingChannel)
+       }
     }
 
     override fun onStop() {

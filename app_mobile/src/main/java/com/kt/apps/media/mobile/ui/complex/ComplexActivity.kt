@@ -24,8 +24,6 @@ import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.fadeIn
-import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
@@ -39,14 +37,12 @@ import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
-import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
-import com.kt.apps.media.mobile.utils.trackActivity
+import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -335,7 +331,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         if (arrayListOf(Constants.HOST_TV, Constants.HOST_RADIO).contains(deeplink.host)) {
             lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->  showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
                 viewModel.loadChannelDeepLinkJob(deeplink)
-            }.trackActivity(viewModel.loadingDeepLink)
+            }.trackJob(viewModel.loadingDeepLink)
         } else if (deeplink.host == Constants.HOST_IPTV && deeplink.lastPathSegment == "search") {
             lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->  showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
                 layoutHandler?.onCloseMinimal()
