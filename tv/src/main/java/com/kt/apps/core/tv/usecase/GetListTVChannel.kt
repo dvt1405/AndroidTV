@@ -109,6 +109,7 @@ class GetListTVChannel @Inject constructor(
                 isLoadingData.compareAndSet(true, false)
                 cacheData = null
             }
+            .onErrorResumeNext { Observable.just(emptyList()) }
     }
 
     companion object {
