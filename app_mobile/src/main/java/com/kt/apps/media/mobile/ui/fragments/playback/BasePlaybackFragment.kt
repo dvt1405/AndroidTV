@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.marginBottom
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
