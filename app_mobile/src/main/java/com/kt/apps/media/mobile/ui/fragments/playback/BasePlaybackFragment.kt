@@ -16,6 +16,7 @@ import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.marginBottom
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
@@ -32,6 +33,7 @@ import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.DefaultTimeBar
@@ -42,7 +44,9 @@ import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.core.utils.inVisible
 import com.kt.apps.core.utils.showErrorDialog
+import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
@@ -52,6 +56,8 @@ import com.kt.apps.media.mobile.ui.complex.TransitionCallback
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
+import com.kt.apps.media.mobile.viewmodels.features.loadFavorite
+import com.kt.apps.media.mobile.viewmodels.features.toggleFavoriteCurrent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -123,6 +129,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.back_button)
     }
 
+    private val favoriteButton: MaterialButton? by lazy {
+        exoPlayer?.findViewById(R.id.favorite_button)
+    }
+
     private val titleLabel: MaterialTextView? by lazy {
         exoPlayer?.findViewById(R.id.title)
     }
@@ -159,7 +169,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected val title = MutableStateFlow("")
     protected val isProgressing = MutableStateFlow(true)
     protected val isPlayingState = MutableStateFlow(false)
-
+    protected val currentPlayingMediaItem = MutableStateFlow<MediaItem?>(null)
     protected var retryTimes: Int = 3
 
     protected abstract val playbackViewModel: BasePlaybackInteractor
@@ -188,6 +198,15 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 })
             }
         }
+
+        favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_bookmark_selector, context?.theme)
+        favoriteButton?.setOnClickListener { view ->
+            lifecycleScope.launch {
+                playbackViewModel.toggleFavoriteCurrent(view.isSelected)
+            }
+        }
+        favoriteButton?.visibility = View.INVISIBLE
+
         playPauseButton?.visibility = View.INVISIBLE
         progressWheel?.visibility = View.INVISIBLE
 
@@ -342,6 +361,16 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
 
             launch {
+                combine(playbackViewModel.listFavorite, currentPlayingMediaItem, transform = { listFavorite, currentPlay ->
+                    listFavorite.any { videoFavoriteDTO ->
+                        videoFavoriteDTO.id == currentPlay?.mediaId && videoFavoriteDTO.title == currentPlay.mediaMetadata.title
+                    }
+                }).collectLatest {
+                    favoriteButton?.isSelected = it
+                }
+            }
+
+            launch {
                 currentLayout.collectLatest {
                     when(it) {
                         is LayoutState.FULLSCREEN -> changeFullScreenLayout(it.shouldRedraw)
@@ -353,6 +382,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 }
             }
         }
+
+        playbackViewModel.loadFavorite()
     }
 
 
@@ -409,6 +440,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             isProgressing.value = false
             exoPlayer?.keepScreenOn = true
             progressBar?.isEnabled = true
+            favoriteButton?.visible()
 
             retryTimes = MAX_RETRY_TIME
         } else {
@@ -537,6 +569,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayerManager.detach()
         isProgressing.emit(true)
         title.emit(data.title)
+        favoriteButton?.inVisible()
     }
 
     protected open suspend fun playVideo(data: StreamLinkData) {
@@ -547,6 +580,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , this)
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)
+        currentPlayingMediaItem.emit(exoPlayerManager.exoPlayer?.currentMediaItem)
+    }
+
+    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        super.onMediaItemTransition(mediaItem, reason)
+        currentPlayingMediaItem.value = exoPlayerManager.exoPlayer?.currentMediaItem
     }
 
     private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, transition: Transition = Fade(), onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {

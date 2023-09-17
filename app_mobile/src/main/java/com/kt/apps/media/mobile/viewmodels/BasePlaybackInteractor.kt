@@ -2,13 +2,16 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.ViewModelProvider
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
+import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.utils.asUpdateFlow
+import com.kt.apps.media.mobile.viewmodels.features.IFavoriteControl
 import com.kt.apps.media.mobile.viewmodels.features.IFetchRadioChannel
 import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
@@ -19,9 +22,13 @@ import kotlinx.coroutines.flow.*
 open class BasePlaybackInteractor(
     private val provider: ViewModelProvider,
     private val coroutineScope: LifecycleCoroutineScope
-): IUIControl {
+): IUIControl, IFavoriteControl {
     override val uiControlViewModel: UIControlViewModel by lazy {
         provider[UIControlViewModel::class.java]
+    }
+
+    override val favoriteViewModel: FavoriteViewModel by lazy {
+        provider[FavoriteViewModel::class.java]
     }
 
     val playbackViewModel by lazy {
@@ -38,12 +45,19 @@ open class BasePlaybackInteractor(
     val state
         get() = playbackViewModel.stateEvents
 
+    override val currentPlayingVideo: StateFlow<StreamLinkData?> by lazy {
+        state.mapNotNull { (it as? PlaybackViewModel.State.PLAYING)?.data }
+            .stateIn(coroutineScope, SharingStarted.Eagerly, null)
+    }
+
+    val listFavorite: StateFlow<List<VideoFavoriteDTO>> by lazy {
+        favoriteViewModel.listFavoriteLiveData.asUpdateFlow("IFavoriteControl")
+            .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), emptyList())
+    }
+
     suspend fun playbackError(error: PlaybackThrowable) {
         playbackViewModel.playbackError(error)
     }
-
-
-
 }
 
 class TVPlaybackInteractor(

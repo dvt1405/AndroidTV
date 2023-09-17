@@ -210,15 +210,15 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         if (!viewModel.isShowingPlayback.value) {
             return
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-            && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val params = PictureInPictureParams.Builder()
-                this@ComplexActivity.enterPictureInPictureMode(params.build())
-            } else {
-                this@ComplexActivity.enterPictureInPictureMode()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val params = PictureInPictureParams.Builder()
+                    this@ComplexActivity.enterPictureInPictureMode(params.build())
+                } else {
+                    this@ComplexActivity.enterPictureInPictureMode()
+                }
             }
-        }
     }
 
     private fun dismissAllDialog() {
@@ -280,12 +280,12 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
     private fun stopPlayback() {
-            binding.fragmentContainerPlayback.getFragment<Fragment>().takeIf { it != null }
-                ?.run {
-                supportFragmentManager.beginTransaction()
-                    .remove(this)
-                    .commit()
-            }
+        binding.fragmentContainerPlayback.getFragment<Fragment>().takeIf { it != null }
+            ?.run {
+            supportFragmentManager.beginTransaction()
+                .remove(this)
+                .commit()
+        }
     }
 
     override fun onStop() {
