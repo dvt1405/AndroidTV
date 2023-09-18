@@ -12,6 +12,9 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -122,6 +125,19 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         binding.fragmentContainerPlayback.getFragment<BasePlaybackFragment<*>>()?.apply {
             this.callback = playbackAction
+        }
+
+        if (resources.getBoolean(R.bool.is_landscape)) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowInsetsControllerCompat(window, binding.root).let {
+                it.hide(WindowInsetsCompat.Type.systemBars())
+                it.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            WindowCompat.setDecorFitsSystemWindows(window, true)
+            WindowInsetsControllerCompat(window, binding.root).let {
+                it.show(WindowInsetsCompat.Type.systemBars())
+            }
         }
      }
 
