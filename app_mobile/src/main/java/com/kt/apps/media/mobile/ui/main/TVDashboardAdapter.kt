@@ -21,6 +21,7 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.storage.local.dto.TVChannelDTO
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.TAG
@@ -74,6 +75,14 @@ sealed class ChannelElement {
             get() = model.data.tvChannelName
         override val logoChannel: String
             get() = model.data.logoChannel
+
+    }
+
+    class FavoriteVideo(val model: VideoFavoriteDTO): IChannelElement {
+        override val name: String
+            get() = model.title
+        override val logoChannel: String
+            get() = model.logoUrl
 
     }
 }

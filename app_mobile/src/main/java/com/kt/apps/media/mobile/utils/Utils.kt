@@ -28,6 +28,7 @@ import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.utils.*
@@ -223,6 +224,9 @@ inline fun <reified T> groupAndSort(list: List<T>): List<Pair<String, List<T>>> 
                 return@Comparator o1.first.compareTo(o2.first)
             })
         FootballMatch::class -> list.groupBy { (it as FootballMatch).league }
+            .toList()
+            .sortedBy { it.first }
+        VideoFavoriteDTO::class -> list.groupBy { (it as VideoFavoriteDTO).category }
             .toList()
             .sortedBy { it.first }
         else -> emptyList()

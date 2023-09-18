@@ -100,6 +100,7 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         }
         (binding.bottomNavigation as NavigationBarView).apply {
             labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
+
         }
     }
 
