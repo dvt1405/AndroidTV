@@ -7,23 +7,13 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import android.view.animation.AccelerateInterpolator
-import android.view.animation.LinearInterpolator
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.transition.AutoTransition
-import androidx.transition.ChangeBounds
-import androidx.transition.ChangeScroll
-import androidx.transition.ChangeTransform
-import androidx.transition.Explode
 import androidx.transition.Fade
-import androidx.transition.Slide
 import androidx.transition.Transition
 import androidx.transition.TransitionManager
-import androidx.transition.TransitionSet
-import androidx.transition.Visibility
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
@@ -32,10 +22,6 @@ import com.kt.apps.media.mobile.utils.CustomTransition
 import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.safeLet
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.lang.ref.WeakReference
 import kotlin.properties.Delegates
 
@@ -67,7 +53,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
             this.setOnDoubleTapListener(object: GestureDetector.OnDoubleTapListener {
                 override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
 
-                    this@LandscapeLayoutHandler.onDoubleTap(e)
+                    this@LandscapeLayoutHandler.onSingleTap(e)
                     return true
                 }
 
@@ -124,6 +110,10 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
             transitionMinimal()
             return true
         }
+        if (state == PlaybackState.Minimal) {
+            transitionIDLE()
+            return true
+        }
         return false
     }
 
@@ -141,7 +131,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         }
     }
 
-    private fun onDoubleTap(ev: MotionEvent) {
+    private fun onSingleTap(ev: MotionEvent) {
         val hitRect = Rect()
         if (fragmentContainerPlayback?.visibility == View.VISIBLE) else return
         fragmentContainerPlayback?.getHitRect(hitRect)

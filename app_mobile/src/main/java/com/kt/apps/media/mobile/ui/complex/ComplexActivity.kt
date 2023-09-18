@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -73,6 +74,8 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         ComplexInteractors(ViewModelProvider(this, factory), lifecycleScope)
     }
 
+    private var backPressedTimestamp: Long = 0
+
     private val playbackAction = object: IPlaybackAction {
         override fun onLoadedSuccess(videoSize: VideoSize) {
             layoutHandler?.onLoadedVideoSuccess(videoSize)
@@ -118,7 +121,14 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                     if (layoutHandler?.onBackEvent() == true) {
                         return
                     }
-                    finish()
+                    if (backPressedTimestamp + 2000 > System.currentTimeMillis()) {
+                        finish()
+                    } else {
+                        backPressedTimestamp = System.currentTimeMillis()
+                        Toast.makeText(this@ComplexActivity.baseContext, resources.getString(com.kt.apps.core.R.string.double_back_to_finish_title), Toast.LENGTH_SHORT).show()
+
+                    }
+
                 }
             }
         })
@@ -325,6 +335,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun onResume() {
         Log.d(TAG, "onResume: ")
         super.onResume()
+        backPressedTimestamp = 0
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {

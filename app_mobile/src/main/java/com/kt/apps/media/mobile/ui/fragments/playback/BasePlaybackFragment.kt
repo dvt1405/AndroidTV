@@ -16,6 +16,7 @@ import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.marginBottom
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
@@ -194,6 +195,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         progressBar?.isEnabled = false
 
         fullScreenButton?.visibility = View.VISIBLE
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
 
 
         channelListRecyclerView?.visibility = View.VISIBLE
@@ -352,6 +354,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             }
+
         }
     }
 
@@ -487,6 +490,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
     private fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
         exoPlayer?.apply {
             useController = true
             controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
@@ -513,6 +517,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
 
     private fun changeMinimalLayout() {
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_enter, context?.theme))
         if (isLandscape) {
             exoPlayer?.apply {
                 hideController()
