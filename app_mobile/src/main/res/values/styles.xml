@@ -79,6 +79,12 @@
     <style name="TextAppearance.Body" parent="TextAppearance.Default" >
         <item name="android:textSize">@dimen/font_size_body</item>
     </style>
-
+    <style name="TextViewDescriptionVideoInfo">
+        <item name="android:textSize">16sp</item>
+        <item name="android:color">@color/white</item>
+    </style>
+    <style name="MobileDescriptionViewInfo">
+        <item name="android:textColor">@color/white</item>
+    </style>
 
 </resources>

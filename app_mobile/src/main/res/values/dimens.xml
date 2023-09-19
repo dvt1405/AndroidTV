@@ -35,5 +35,6 @@
     <dimen name="button_fullscreen_size">48dp</dimen>
     <dimen name="image_button_size">32dp</dimen>
     <dimen name="navigation_bar_icon_size">24dp</dimen>
+    <dimen name="player_common_padding36">36dp</dimen>
 
 </resources>

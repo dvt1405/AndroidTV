@@ -64,6 +64,16 @@
             app:iconTint="@color/white"
             style="@style/Widget.Material3.Button.IconButton"
             />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/information_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/transparent"
+            tools:icon="@drawable/ic_round_error_outline_24"
+            app:iconSize="@dimen/base_icon_size"
+            app:iconTint="@color/white"
+            style="@style/Widget.Material3.Button.IconButton"
+            />
     </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -136,7 +146,7 @@
             android:layout_marginEnd="36dp"
             />
 
-        <androidx.recyclerview.widget.RecyclerView
+        <com.kt.apps.media.mobile.utils.FadingEdgeRecyclerView
             android:id="@+id/exo_channel_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -147,11 +157,12 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:orientation="horizontal"
             android:layout_marginTop="24dp"
-            android:paddingStart="36dp"
-            android:paddingEnd="36dp"
-            android:requiresFadingEdge="horizontal"
+            android:paddingStart="@dimen/player_common_padding36"
+            android:paddingEnd="@dimen/player_common_padding36"
             android:fadingEdge="horizontal"
             android:fadingEdgeLength="24dp"
+            android:requiresFadingEdge="horizontal"
+            android:clipToPadding="false"
             />
 
         <androidx.constraintlayout.widget.Guideline
