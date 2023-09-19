@@ -227,9 +227,10 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                     parseForConfigRx(config, it.epgUrl)
                 }
                 .subscribe({
-
+                    Logger.d(this@ParserExtensionsProgramSchedule, message = "Complete epg: {" +
+                            "config: ${config.sourceUrl}, }")
                 }, {
-
+                    Logger.e(this@ParserExtensionsProgramSchedule, exception = it)
                 })
         )
     }
@@ -295,7 +296,10 @@ class ParserExtensionsProgramSchedule @Inject constructor(
     }
 
     private fun getListTvProgramRx(config: ExtensionsConfig, programScheduleUrl: String) =
-        getListTvProgram(config, programScheduleUrl).observeOn(pool)
+        roomDataBase.extensionsTVChannelProgramDao()
+            .deleteProgramByConfig(config.sourceUrl, programScheduleUrl)
+            .onErrorComplete()
+            .andThen(getListTvProgram(config, programScheduleUrl).observeOn(pool))
             .subscribeOn(pool)
             .retry { times, throwable ->
                 Logger.e(this@ParserExtensionsProgramSchedule, message = "retry - $programScheduleUrl")
@@ -470,9 +474,14 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                 )
                 roomDataBase.tvSchedulerDao()
                     .insert(it)
+                    .onErrorComplete()
             }
 
             is List<*> -> {
+                if (it.isEmpty()) {
+                    return@concatMapCompletable Completable.complete()
+                }
+
                 when (it.first()) {
                     is TVScheduler.Programme -> {
                         Logger.d(
