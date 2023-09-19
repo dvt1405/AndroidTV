@@ -6,8 +6,8 @@ import androidx.work.WorkerParameters
 import androidx.work.rxjava3.RxWorker
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.extensions.ExtensionsConfig
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.HOUR_MILLIS
-import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
 
@@ -40,14 +40,18 @@ class TVEpgWorkers(
         return Single.create<Result> {
             parserEpgRepo.appendParseForConfigTask(
                 ExtensionsConfig(
-                    "",
-                    "",
+                    "DEFAULT",
+                    "DEFAULT",
                     ExtensionsConfig.Type.TV_CHANNEL
                 ),
                 inputData.getString(EXTRA_DEFAULT_URL)!!
             )
             parserEpgRepo.runPendingSource()
         }.subscribeOn(Schedulers.io())
+            .onErrorReturn {
+                Logger.e(this@TVEpgWorkers, "EpgWorker", exception = it)
+                Result.failure()
+            }
             .doOnSuccess {
                 keyValueStorage.save(EXTRA_LAST_UPDATE_EPG, System.currentTimeMillis())
             }
