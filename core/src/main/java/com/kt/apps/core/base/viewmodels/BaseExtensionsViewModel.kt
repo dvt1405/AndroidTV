@@ -22,9 +22,11 @@ import com.kt.apps.core.usecase.history.GetHistoryForMediaItem
 import com.kt.apps.core.usecase.history.GetListHistory
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.lang.ref.WeakReference
 import java.net.UnknownHostException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 

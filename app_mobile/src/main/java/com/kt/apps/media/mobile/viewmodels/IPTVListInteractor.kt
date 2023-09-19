@@ -2,18 +2,18 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.extensions.ExtensionsChannel
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
-import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
-import com.kt.apps.media.mobile.utils.asFlow
+import com.kt.apps.media.mobile.utils.await
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlin.coroutines.CoroutineContext
@@ -27,10 +27,6 @@ class IPTVListInteractor(
         provider[ExtensionsViewModel::class.java]
     }
 
-    private val playbackViewModel: PlaybackViewModel by lazy {
-        provider[PlaybackViewModel::class.java]
-    }
-
 
 
     override val uiControlViewModel: UIControlViewModel by lazy {
@@ -42,9 +38,8 @@ class IPTVListInteractor(
             .stateIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed(), false)
     }
     fun loadDataAsync(): Deferred<List<ExtensionsChannel>> {
-        return CoroutineScope(Dispatchers.Main).async{
-            extensionViewModel.loadChannelForConfig(category).asFlow()
-                .first()
+        return CoroutineScope(Dispatchers.Main).async {
+            extensionViewModel.loadChannelForConfig(category).await(TAG)
         }
     }
 

@@ -8,7 +8,6 @@ import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
-import com.kt.apps.media.mobile.utils.asFlow
 import com.kt.apps.media.mobile.utils.asUpdateFlow
 import com.kt.apps.media.mobile.viewmodels.features.IFetchRadioChannel
 import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
@@ -58,7 +57,7 @@ class TVPlaybackInteractor(
 
     val tvChannelList by lazy {
         tvChannelViewModel.tvChannelLiveData
-            .asFlow(TAG)
+            .asUpdateFlow(TAG)
             .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), emptyList())
     }
 
@@ -89,7 +88,7 @@ class RadioPlaybackInteractor(
 
     val radioChannelList by lazy {
         tvChannelViewModel.tvChannelLiveData
-            .asFlow("tvplayback")
+            .asUpdateFlow("tvplayback")
             .map {
                 it.filter { channel -> channel.isRadio } .map { channel ->
                     ChannelElement.TVChannelElement(channel)

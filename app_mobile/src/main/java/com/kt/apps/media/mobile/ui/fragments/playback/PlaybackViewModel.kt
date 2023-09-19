@@ -14,15 +14,13 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
         object IDLE: State()
         data class LOADING(val data: PrepareStreamLinkData): State()
         data class  PLAYING(val data: StreamLinkData): State()
-
-//        data class PAUSE(val data: StreamLinkData, val currentPosition: Long): State()
         data class ERROR(val error: Throwable?): State()
     }
 
     @Inject
     lateinit var actionLogger: IActionLogger
 
-    private var _stateEvents = MutableSharedFlow<State>()
+    private var _stateEvents = MutableStateFlow<State>(State.IDLE)
 
     val stateEvents
         get() = _stateEvents

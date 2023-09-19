@@ -4,16 +4,19 @@ import android.graphics.PointF
 import android.os.Bundle
 import android.util.Log
 import android.view.Display
+import android.view.GestureDetector
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.AccelerateInterpolator
+import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.marginBottom
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
@@ -192,6 +195,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         progressBar?.isEnabled = false
 
         fullScreenButton?.visibility = View.VISIBLE
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
 
 
         channelListRecyclerView?.visibility = View.VISIBLE
@@ -297,17 +301,15 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             }
-        }
 
-        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
-                playbackViewModel.state
+                playbackViewModel.state.asSharedFlow()
                     .collectLatest { state ->
                         Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
                         when(state) {
                             is PlaybackViewModel.State.LOADING -> preparePlayView(state.data)
                             is PlaybackViewModel.State.PLAYING -> {
-                                retryTimes = 3
+                                retryTimes = MAX_RETRY_TIME
                                 playVideo(state.data)
                             }
                             is PlaybackViewModel.State.ERROR -> onError(state.error)
@@ -315,7 +317,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                         }
                     }
             }
+        }
 
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
                 combine(
                     playbackViewModel.playbackState,
@@ -350,6 +354,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             }
+
         }
     }
 
@@ -407,6 +412,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             isProgressing.value = false
             exoPlayer?.keepScreenOn = true
             progressBar?.isEnabled = true
+
+            retryTimes = MAX_RETRY_TIME
         } else {
             progressBar?.isEnabled = false
         }
@@ -422,10 +429,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     override fun onPlayerError(error: PlaybackException) {
         super.onPlayerError(error)
-        Log.d(TAG, "onPlayerError: $error")
+//        Log.d(TAG, "onPlayerError: $error $retryTimes ${playbackViewModel.state.replayCache}")
         if (retryTimes > 0) {
-            playbackViewModel.state.replayCache.lastOrNull()
-                ?.let { it as? PlaybackViewModel.State.PLAYING }
+            playbackViewModel.state.value
+                .let { it as? PlaybackViewModel.State.PLAYING }
                 ?.run {
                     retryTimes -= 1
                     lifecycleScope.launch {
@@ -440,6 +447,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             lifecycleScope.launch {
                 playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
             }
+            retryTimes = MAX_RETRY_TIME
         }
     }
 
@@ -482,6 +490,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
     private fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
         exoPlayer?.apply {
             useController = true
             controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
@@ -508,6 +517,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
 
     private fun changeMinimalLayout() {
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_enter, context?.theme))
         if (isLandscape) {
             exoPlayer?.apply {
                 hideController()
@@ -538,6 +548,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         if (exoPlayerManager.exoPlayer?.isPlaying == true) {
             return
         }
+        Log.d(TAG, "playVideo: - retry time ${retryTimes}")
         exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , this)
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)
@@ -646,4 +657,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     data class PlayerControllerConfig(val hideOnTouch: Boolean, val showTimeout: Int)
+
+    companion object {
+        private const val MAX_RETRY_TIME = 3
+    }
 }

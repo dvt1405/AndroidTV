@@ -68,7 +68,7 @@ class VOVDataSourceImpl @Inject constructor(
         tvChannel: TVChannel,
         isBackup: Boolean
     ): Observable<TVChannelLinkStream> {
-        if (cookie.isEmpty() || isBackup) {
+        if (true) {
             return getTvList().flatMap {
                 mapToBackupKenhDetail(it, tvChannel)?.let { it1 ->
                     getTvLinkFromDetail(

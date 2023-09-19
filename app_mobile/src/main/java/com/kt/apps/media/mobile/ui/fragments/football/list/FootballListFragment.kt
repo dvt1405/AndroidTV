@@ -14,7 +14,7 @@ import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.onRefresh
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
-import com.kt.apps.media.mobile.utils.trackActivity
+import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.FootballListInteractor
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.*
@@ -74,7 +74,7 @@ class FootballListFragment : BaseFragment<FragmentFootballListBinding>() {
                         showErrorDialog(content = getString(R.string.error_happen))
                     }) {
                         interactor.getAllMatchesAsync()
-                    }.trackActivity(loadingMatches)
+                    }.trackJob(loadingMatches)
                 }
             }
         }

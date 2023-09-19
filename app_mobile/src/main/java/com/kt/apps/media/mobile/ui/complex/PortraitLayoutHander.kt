@@ -6,18 +6,12 @@ import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
-import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
-import androidx.transition.Transition
+import androidx.transition.AutoTransition
 import androidx.transition.TransitionManager
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
-import com.kt.apps.media.mobile.utils.CustomTransition
-import com.kt.apps.media.mobile.utils.alignParent
-import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.safeLet
 import java.lang.ref.WeakReference
 import kotlin.math.abs
@@ -55,6 +49,10 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
         weakActivity.get()?.binding?.guidelineComplex
     }
 
+    private val surfaceView: ConstraintLayout? by lazy {
+        weakActivity.get()?.binding?.surfaceView as? ConstraintLayout
+    }
+
     override var onPlaybackStateChange: (PlaybackState) -> Unit = { }
     private var state: PlaybackState by Delegates.observable(PlaybackState.Invisible) { _, oldValue, newValue ->
         if (oldValue !== newValue) {
@@ -89,10 +87,8 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     override fun confirmState(state: PlaybackState) {
         if (state != this.state) {
             when(state) {
-                PlaybackState.Invisible -> transitionIDLE()
-                PlaybackState.Fullscreen -> transitionFullscreen()
-                PlaybackState.Minimal -> transitionMinimal()
                 PlaybackState.PIP -> transitionPIP()
+                else -> transitionToState(state)
             }
         }
     }
@@ -102,9 +98,9 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
 
     override fun onOpenFullScreen() {
         if (state != PlaybackState.Fullscreen) {
-            transitionFullscreen()
+            transitionToState(PlaybackState.Fullscreen)
         } else {
-            transitionMinimal()
+            transitionToState(PlaybackState.Minimal)
         }
 
     }
@@ -117,7 +113,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     }
 
     override fun onCloseMinimal() {
-        transitionIDLE()
+        transitionToState(PlaybackState.Invisible)
     }
 
     override fun onBackEvent() : Boolean {
@@ -125,12 +121,16 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
             onOpenFullScreen()
             return true
         }
+        if (state == PlaybackState.Minimal) {
+            transitionToState(PlaybackState.Invisible)
+            return true
+        }
         return false
     }
 
     override fun onStartLoading() {
         if (state != PlaybackState.Minimal) {
-            transitionMinimal()
+            transitionToState(PlaybackState.Minimal)
         }
     }
 
@@ -139,9 +139,9 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
 
     override fun onReset(isPlaying: Boolean) {
         if (isPlaying) {
-            transitionMinimal()
+            transitionToState(PlaybackState.Minimal)
         } else {
-            transitionIDLE()
+            transitionToState(PlaybackState.Invisible)
         }
     }
 
@@ -154,7 +154,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
             if (hitRect.contains(e1.x.toInt(), e1.y.toInt())) {
                 Log.d(TAG, "onSwipeUp: ")
                 if (state == PlaybackState.Fullscreen) {
-                    transitionMinimal()
+                    transitionToState(PlaybackState.Minimal)
                 }
             }
         }
@@ -167,7 +167,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
 
         if (hitRect.contains(e1.x.toInt(), e1.y.toInt())) {
             Log.d(TAG, "onSwipeBottom: ")
-            transitionFullscreen()
+            transitionToState(PlaybackState.Fullscreen)
         }
     }
 
@@ -175,24 +175,15 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
 
     }
 
-    private fun transitionFullscreen() {
-        guideline?.run {
-            setGuidelinePercent(0.6f)
-            this@PortraitLayoutHandler.state = PlaybackState.Fullscreen
-        }
-    }
-
-    private fun transitionMinimal() {
-        guideline?.run {
-            setGuidelinePercent(0.3f)
-            this@PortraitLayoutHandler.state = PlaybackState.Minimal
-        }
-    }
-
-    private fun transitionIDLE() {
-        guideline?.run {
-            setGuidelinePercent(0f)
-            this@PortraitLayoutHandler.state = PlaybackState.Invisible
+    private fun transitionToState(state: PlaybackState) {
+        this.state = state
+        safeLet(surfaceView, guideline) { root, guideline ->
+            guideline.setGuidelinePercent(when(state) {
+                PlaybackState.Fullscreen -> 0.6f
+                PlaybackState.Invisible, PlaybackState.PIP -> 0f
+                PlaybackState.Minimal -> 0.3f
+            })
+            TransitionManager.beginDelayedTransition(root, AutoTransition())
         }
     }
 }

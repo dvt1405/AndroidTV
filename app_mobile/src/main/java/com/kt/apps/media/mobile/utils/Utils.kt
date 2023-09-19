@@ -275,25 +275,6 @@ suspend fun <T> LiveData<DataState<T>>.await(tag: String = "TAG") : T {
     }
 }
 
-fun <T> LiveData<DataState<T>>.asFlow(tag: String = ""): Flow<T> {
-    return callbackFlow {
-        val observer = Observer<DataState<T>> {value ->
-            when (value) {
-                is DataState.Success -> trySend(value.data)
-                is DataState.Error -> {
-                    Log.d(TAG, "asFlow close with $tag: ${value.throwable}")
-                    close(value.throwable)
-                }
-                else -> { }
-            }
-        }
-        observeForever(observer)
-        awaitClose {
-            removeObserver(observer)
-        }
-    }
-}
-
 fun <T> LiveData<DataState<T>>.asUpdateFlow(tag: String = ""): Flow<T> {
     return callbackFlow {
         val observer = Observer<DataState<T>> {value ->

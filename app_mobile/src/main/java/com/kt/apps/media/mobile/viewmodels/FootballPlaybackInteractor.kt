@@ -2,14 +2,13 @@ package com.kt.apps.media.mobile.viewmodels
 
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.ViewModelProvider
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.football.model.FootballMatch
-import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
-import com.kt.apps.media.mobile.utils.asFlow
+import com.kt.apps.media.mobile.utils.asUpdateFlow
 import com.kt.apps.media.mobile.utils.isLiveMatch
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
 import com.kt.apps.media.mobile.viewmodels.features.IFetchFootballMatchControl
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapLatest
@@ -24,7 +23,7 @@ class FootballPlaybackInteractor(
     }
 
     private val listMatches: StateFlow<List<FootballMatch>> by lazy {
-        footballViewModel.listFootMatchDataState.asFlow()
+        footballViewModel.listFootMatchDataState.asUpdateFlow(TAG)
             .stateIn(coroutineScope, SharingStarted.WhileSubscribed(), emptyList())
     }
 

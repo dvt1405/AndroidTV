@@ -16,7 +16,9 @@ import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.utils.removeAllSpecialChars
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 open class BaseTVChannelViewModel constructor(
@@ -43,7 +45,6 @@ open class BaseTVChannelViewModel constructor(
     }
 
     open fun getListTVChannel(forceRefresh: Boolean, sourceFrom: TVDataSourceFrom = TVDataSourceFrom.MAIN_SOURCE) {
-        //Todo: Remove this
         if (!forceRefresh && interactors.getListChannel.cacheData != null) {
             Logger.d(this, "ListChannel", "Get from cache")
             _listTvChannelLiveData.postValue(DataState.Success(interactors.getListChannel.cacheData!!))

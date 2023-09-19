@@ -11,7 +11,11 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -24,8 +28,6 @@ import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.fadeIn
-import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
@@ -39,14 +41,12 @@ import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
-import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
-import com.kt.apps.media.mobile.utils.trackActivity
+import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -73,6 +73,8 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     private val viewModel: ComplexInteractors by lazy {
         ComplexInteractors(ViewModelProvider(this, factory), lifecycleScope)
     }
+
+    private var backPressedTimestamp: Long = 0
 
     private val playbackAction = object: IPlaybackAction {
         override fun onLoadedSuccess(videoSize: VideoSize) {
@@ -119,13 +121,33 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                     if (layoutHandler?.onBackEvent() == true) {
                         return
                     }
-                    finish()
+                    if (backPressedTimestamp + 2000 > System.currentTimeMillis()) {
+                        finish()
+                    } else {
+                        backPressedTimestamp = System.currentTimeMillis()
+                        Toast.makeText(this@ComplexActivity.baseContext, resources.getString(com.kt.apps.core.R.string.double_back_to_finish_title), Toast.LENGTH_SHORT).show()
+
+                    }
+
                 }
             }
         })
 
         binding.fragmentContainerPlayback.getFragment<BasePlaybackFragment<*>>()?.apply {
             this.callback = playbackAction
+        }
+
+        if (resources.getBoolean(R.bool.is_landscape)) {
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            WindowInsetsControllerCompat(window, binding.root).let {
+                it.hide(WindowInsetsCompat.Type.systemBars())
+                it.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } else {
+            WindowCompat.setDecorFitsSystemWindows(window, true)
+            WindowInsetsControllerCompat(window, binding.root).let {
+                it.show(WindowInsetsCompat.Type.systemBars())
+            }
         }
      }
 
@@ -313,6 +335,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun onResume() {
         Log.d(TAG, "onResume: ")
         super.onResume()
+        backPressedTimestamp = 0
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -335,7 +358,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         if (arrayListOf(Constants.HOST_TV, Constants.HOST_RADIO).contains(deeplink.host)) {
             lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->  showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
                 viewModel.loadChannelDeepLinkJob(deeplink)
-            }.trackActivity(viewModel.loadingDeepLink)
+            }.trackJob(viewModel.loadingDeepLink)
         } else if (deeplink.host == Constants.HOST_IPTV && deeplink.lastPathSegment == "search") {
             lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->  showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
                 layoutHandler?.onCloseMinimal()
