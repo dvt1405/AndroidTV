@@ -575,9 +575,13 @@ class ParserExtensionsSource @Inject constructor(
         return roomDataBase.extensionsConfig()
             .checkExtensionById(configId)
             .subscribeOn(Schedulers.io())
+            .onErrorResumeNext {
+                Maybe.just(0)
+            }
             .map { count ->
                 count > 0
             }
+            .toSingle()
     }
 
     fun updateIPTVSource(extensionsConfig: ExtensionsConfig): Completable {
