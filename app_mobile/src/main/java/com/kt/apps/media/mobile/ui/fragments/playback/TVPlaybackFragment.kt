@@ -40,7 +40,7 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
         TVPlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }
 
-    override val playbackViewModel: BasePlaybackInteractor
+    override val interactor: BasePlaybackInteractor
         get() = _playbackInteractor
 
     private val itemAdapter by lazy {
@@ -132,7 +132,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
     private val _playbackInteractor by lazy {
         RadioPlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }
-    override val playbackViewModel: BasePlaybackInteractor
+    override val interactor: BasePlaybackInteractor
         get() = _playbackInteractor
 
     private val itemAdapter by lazy {

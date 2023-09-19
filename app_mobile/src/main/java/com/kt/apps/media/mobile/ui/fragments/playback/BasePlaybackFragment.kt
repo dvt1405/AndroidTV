@@ -12,7 +12,7 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.marginBottom
+import androidx.core.view.allViews
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
@@ -29,9 +29,12 @@ import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.StyledPlayerView
+import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
+import com.kt.apps.core.base.player.ExoPlayerManager
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.gone
@@ -51,6 +54,9 @@ import com.kt.apps.media.mobile.viewmodels.features.loadFavorite
 import com.kt.apps.media.mobile.viewmodels.features.toggleFavoriteCurrent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import org.w3c.dom.Text
+import java.util.Formatter
+import java.util.Locale
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -121,6 +127,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.favorite_button)
     }
 
+    private val informationButton: MaterialButton? by lazy {
+        exoPlayer?.findViewById(R.id.information_button)
+    }
+
     private val titleLabel: MaterialTextView? by lazy {
         exoPlayer?.findViewById(R.id.title)
     }
@@ -162,7 +172,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected val currentPlayingMediaItem = MutableStateFlow<MediaItem?>(null)
     protected var retryTimes: Int = 3
 
-    protected abstract val playbackViewModel: BasePlaybackInteractor
+    protected abstract val interactor: BasePlaybackInteractor
 
     private val marginBottomSize by lazy {
         ( resources.getDimensionPixelSize(R.dimen.item_channel_height) + resources.getDimensionPixelSize(R.dimen.item_channel_decoration)) * 2 / 3
@@ -200,10 +210,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_bookmark_selector, context?.theme)
         favoriteButton?.setOnClickListener { view ->
             lifecycleScope.launch {
-                playbackViewModel.toggleFavoriteCurrent(view.isSelected)
+                interactor.toggleFavoriteCurrent(view.isSelected)
             }
         }
         favoriteButton?.visibility = View.INVISIBLE
+
+        informationButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.core.R.drawable.ic_round_error_outline_24, context?.theme)
+        informationButton?.setOnClickListener { showInformationDialog() }
+        informationButton?.inVisible()
 
         playPauseButton?.visibility = View.INVISIBLE
         progressWheel?.visibility = View.INVISIBLE
@@ -330,7 +344,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
 
             launch {
-                playbackViewModel.state.asSharedFlow()
+                interactor.state.asSharedFlow()
                     .collectLatest { state ->
                         Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
                         when(state) {
@@ -349,8 +363,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
                 combine(
-                    playbackViewModel.playbackState,
-                    playbackViewModel.isInPipMode,
+                    interactor.playbackState,
+                    interactor.isInPipMode,
                 ) { playbackState, isInPipMode ->
                     ScreenState(playbackState, isInPipMode)
                 }.collectLatest { state ->
@@ -371,7 +385,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
 
             launch {
-                combine(playbackViewModel.listFavorite, currentPlayingMediaItem, transform = { listFavorite, currentPlay ->
+                combine(interactor.listFavorite, currentPlayingMediaItem, transform = { listFavorite, currentPlay ->
                     listFavorite.any { videoFavoriteDTO ->
                         videoFavoriteDTO.id == currentPlay?.mediaId && videoFavoriteDTO.title == currentPlay.mediaMetadata.title
                     }
@@ -393,7 +407,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
 
-        playbackViewModel.loadFavorite()
+        interactor.loadFavorite()
     }
 
     private fun changeNextResizeMode() {
@@ -413,6 +427,44 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.hideController()
         delay(250)
         callback?.onOpenFullScreen()
+    }
+    
+    private fun showInformationDialog() {
+        val player = exoPlayerManager.exoPlayer ?: return
+        MaterialAlertDialogBuilder(requireContext())
+            .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
+                findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
+                    text = player.mediaMetadata.title
+                }
+                if (player.contentDuration < 120_000) {
+                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.gone()
+                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.gone()
+                } else {
+                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.visible()
+                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.apply {
+                        visible()
+                        val builder = StringBuilder()
+                        val formatter = Formatter(builder, Locale.getDefault())
+                        text = Util.getStringForTime(builder, formatter, player.contentDuration)
+                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
+                    }
+                }
+                findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
+                    "${player.videoSize.width}x${player.videoSize.height}"
+                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
+                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
+                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
+                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
+                    !it?.trim().isNullOrEmpty()
+                } ?: "NoValue"
+
+                this.findTextViewsInView().forEach {
+                    it.apply {
+                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
+                    }
+                }
+            })
+            .show()
     }
 
     private fun exit() {
@@ -469,6 +521,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             exoPlayer?.keepScreenOn = true
             progressBar?.isEnabled = true
             favoriteButton?.visible()
+            informationButton?.visible()
 
             retryTimes = MAX_RETRY_TIME
         } else {
@@ -488,7 +541,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         super.onPlayerError(error)
 //        Log.d(TAG, "onPlayerError: $error $retryTimes ${playbackViewModel.state.replayCache}")
         if (retryTimes > 0) {
-            playbackViewModel.state.value
+            interactor.state.value
                 .let { it as? PlaybackViewModel.State.PLAYING }
                 ?.run {
                     retryTimes -= 1
@@ -497,12 +550,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 } ?: kotlin.run {
                 lifecycleScope.launch {
-                    playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
+                    interactor.playbackError(PlaybackThrowable(error.errorCode, error))
                 }
             }
         } else {
             lifecycleScope.launch {
-                playbackViewModel.playbackError(PlaybackThrowable(error.errorCode, error))
+                interactor.playbackError(PlaybackThrowable(error.errorCode, error))
             }
             retryTimes = MAX_RETRY_TIME
         }
@@ -608,6 +661,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         isProgressing.emit(true)
         title.emit(data.title)
         favoriteButton?.inVisible()
+        informationButton?.inVisible()
     }
 
     protected open suspend fun playVideo(data: StreamLinkData) {

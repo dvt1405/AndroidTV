@@ -8,11 +8,13 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
 import android.view.View.OnFocusChangeListener
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.annotation.CheckResult
 import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintSet
@@ -419,4 +421,24 @@ fun ExtensionsChannelDBWithCategoryViews.toExtensionChannel() : ExtensionsChanne
         isHls = tvStreamLink.contains("m3u8"),
         extensionSourceId = ""
     )
+}
+
+fun View.findTextViewsInView(): ArrayList<TextView> {
+    val textViews = ArrayList<TextView>()
+
+    if (this is TextView) {
+        // If the current view is a TextView, add it to the list
+        textViews.add(this)
+    } else if (this is ViewGroup) {
+        // If the current view is a ViewGroup (e.g., a layout), recursively search its children
+        val viewGroup = this as ViewGroup
+        val childCount = viewGroup.childCount
+
+        for (i in 0 until childCount) {
+            val childView = viewGroup.getChildAt(i)
+            textViews.addAll(childView.findTextViewsInView()) // Recursive call
+        }
+    }
+
+    return textViews
 }

@@ -51,7 +51,7 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
             viewLifecycleOwner.lifecycleScope
         )
     }
-    override val playbackViewModel: BasePlaybackInteractor
+    override val interactor: BasePlaybackInteractor
         get() = _playbackViewModel
 
     private val itemAdapter by lazy {

@@ -26,7 +26,7 @@ class FootballPlaybackFragment: ChannelPlaybackFragment() {
     override val exitButton: View? by lazy {
         binding.exitButton
     }
-    override val playbackViewModel: FootballPlaybackInteractor by lazy {
+    override val interactor: FootballPlaybackInteractor by lazy {
         FootballPlaybackInteractor(
             ViewModelProvider(requireActivity(), factory),
             viewLifecycleOwner.lifecycleScope
@@ -54,14 +54,14 @@ class FootballPlaybackFragment: ChannelPlaybackFragment() {
                 ((arguments?.get(EXTRA_FOOTBALL_MATCH) as? FootballMatch)?.let { flowOf(it) }
                     ?: emptyFlow())
                     .collectLatest {
-                        playbackViewModel.loadFootballMatchLinkStream(it)
+                        interactor.loadFootballMatchLinkStream(it)
                     }
             }
         }
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
-                playbackViewModel.liveMatches
+                interactor.liveMatches
                     .collectLatest {
                         _adapter.onRefresh(it)
                     }

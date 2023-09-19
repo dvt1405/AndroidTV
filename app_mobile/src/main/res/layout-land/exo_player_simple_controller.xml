@@ -111,6 +111,8 @@
             android:requiresFadingEdge="horizontal"
             android:fadingEdge="horizontal"
             android:fadingEdgeLength="24dp"
+            android:requiresFadingEdge="horizontal"
+            android:clipToPadding="false"
             />
 
         <androidx.constraintlayout.widget.Guideline
