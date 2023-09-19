@@ -1,15 +1,10 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
-import android.graphics.PointF
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
-import android.view.Display
-import android.view.GestureDetector
 import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.View
-import android.view.animation.AccelerateInterpolator
-import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.SeekBar
@@ -17,49 +12,39 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.marginBottom
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.OnScrollListener
-import androidx.recyclerview.widget.RecyclerView.Recycler
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
 import androidx.transition.AutoTransition
-import androidx.transition.ChangeBounds
 import androidx.transition.Fade
 import androidx.transition.Transition
-import androidx.transition.TransitionManager
-import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.ui.DefaultTimeBar
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
-import com.kt.apps.media.mobile.ui.complex.TransitionCallback
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.abs
-import kotlin.math.log
 
 interface IPlaybackAction {
     fun onLoadedSuccess(videoSize: VideoSize)
@@ -140,6 +125,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.category_tv)
     }
 
+    protected val aspectRatioButton: ImageButton? by lazy {
+        exoPlayer?.findViewById(R.id.exo_ratio)
+    }
+
+    protected val rotateButton: ImageButton? by lazy {
+        exoPlayer?.findViewById(R.id.exo_rotate)
+    }
+
     protected abstract val exoPlayer: StyledPlayerView?
 
     protected abstract val motionLayout: ConstraintLayout?
@@ -160,7 +153,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected val title = MutableStateFlow("")
     protected val isProgressing = MutableStateFlow(true)
     protected val isPlayingState = MutableStateFlow(false)
-
     protected var retryTimes: Int = 3
 
     protected abstract val playbackViewModel: BasePlaybackInteractor
@@ -170,15 +162,19 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     protected var lastPlayerControllerConfig: PlayerControllerConfig = PlayerControllerConfig(true, 3000)
+    private var isRequestRotate: Boolean = false
 
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
+        isRequestRotate = savedInstanceState?.getBoolean(IS_REQUEST_ROTATE) ?: false
         liveLabel?.visibility = View.GONE
         exoPlayer?.apply {
             player = exoPlayerManager.exoPlayer
             lastPlayerControllerConfig = PlayerControllerConfig(controllerHideOnTouch, controllerShowTimeoutMs)
             showController()
             player?.stop()
+
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
 
             if (isLandscape) {
                 setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener {
@@ -197,6 +193,19 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         fullScreenButton?.visibility = View.VISIBLE
         fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
 
+        aspectRatioButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_aspect_ratio, context?.theme))
+        aspectRatioButton?.setOnClickListener { changeNextResizeMode() }
+
+        rotateButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_screen_rotate, context?.theme))
+        rotateButton?.setOnClickListener {
+            if (!isLandscape) {
+                lifecycleScope.launch {
+                    changeToFullscreen()
+                    isRequestRotate = true
+                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+            }
+        }
 
         channelListRecyclerView?.visibility = View.VISIBLE
         channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
@@ -273,9 +282,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     else emptyFlow(),
                     fullScreenButton?.clicks() ?: emptyFlow())
                     .collectLatest {
-                        exoPlayer?.hideController()
-                        delay(250)
-                        callback?.onOpenFullScreen()
+                        changeToFullscreen()
                     }
             }
 
@@ -358,6 +365,28 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
 
+    private fun changeNextResizeMode() {
+        val player = exoPlayer ?: return
+
+        val currentResizeMode = player.resizeMode
+        val next = RATIO_VALUES.indexOf(currentResizeMode)
+            .takeIf { it != -1 }
+            ?.let { RATIO_VALUES.getOrNull(it + 1) }
+            ?: kotlin.run { RATIO_VALUES.first() }
+
+        player.resizeMode = next
+//        Toast.makeText(requireContext(), RATIO_VALUES_MAP[next] ?: "", Toast.LENGTH_SHORT).show()
+
+    }
+
+    private suspend fun changeToFullscreen() {
+        exoPlayer?.hideController()
+        delay(250)
+        callback?.onOpenFullScreen()
+        if (isRequestRotate) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
 
     private fun exit() {
         exoPlayerManager.exoPlayer?.stop()
@@ -385,6 +414,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             false
         } else false
         exoPlayer?.keepScreenOn = true
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(IS_REQUEST_ROTATE, isRequestRotate)
+        super.onSaveInstanceState(outState)
     }
 
     protected fun coroutineError(): (CoroutineContext, Throwable) -> Unit {
@@ -660,5 +694,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     companion object {
         private const val MAX_RETRY_TIME = 3
+        private val RATIO_VALUES_MAP = mapOf(
+            Pair(AspectRatioFrameLayout.RESIZE_MODE_FIT, "RESIZE_MODE_FIT"),
+            Pair(AspectRatioFrameLayout.RESIZE_MODE_ZOOM, "RESIZE_MODE_ZOOM"),
+        )
+        private val RATIO_VALUES = RATIO_VALUES_MAP.keys.toIntArray()
+        private const val IS_REQUEST_ROTATE = "IS_REQUEST_ROTATE"
     }
 }
