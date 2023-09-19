@@ -50,8 +50,7 @@ ext {
             kapDaggerCompiler        : "com.google.dagger:dagger-compiler:2.44",
             kapDaggerAndroidProcessor: "com.google.dagger:dagger-android-processor:2.44",
             glide                    : "com.github.bumptech.glide:compiler:4.14.2",
-            roomCompiler             : "androidx.room:room-compiler:2.5.2",
-            roomArch                 : "android.arch.persistence.room:compiler:1.1.1"
+            roomCompiler             : "androidx.room:room-compiler:2.5.2"
     ]
 
     roomDatabase = [
