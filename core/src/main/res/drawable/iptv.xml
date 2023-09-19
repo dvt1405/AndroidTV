@@ -2,6 +2,7 @@
     android:width="48dp"
     android:height="48dp"
     android:viewportWidth="48"
+    android:tint="@color/color_item_header_selector"
     android:viewportHeight="48">
   <path
       android:pathData="M9.136,18V30.797H7V18H9.136Z"
