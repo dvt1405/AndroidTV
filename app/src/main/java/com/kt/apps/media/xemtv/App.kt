@@ -1,10 +1,16 @@
 package com.kt.apps.media.xemtv
 
+import android.content.Intent
+import androidx.core.content.pm.ShortcutInfoCompat
+import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.os.bundleOf
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.assistant.appactions.suggestions.client.AppShortcutIntent
+import com.google.assistant.appactions.suggestions.client.AppShortcutSuggestion
+import com.google.assistant.appactions.suggestions.client.AssistantShortcutSuggestionsClient
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.autoupdate.di.DaggerAppUpdateComponent
@@ -19,6 +25,7 @@ import com.kt.apps.football.di.DaggerFootballComponents
 import com.kt.apps.football.di.FootballComponents
 import com.kt.apps.media.xemtv.di.AppComponents
 import com.kt.apps.media.xemtv.di.DaggerAppComponents
+import com.kt.apps.media.xemtv.ui.main.MainActivity
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
 import java.time.Duration
@@ -70,6 +77,27 @@ class App : CoreApp() {
         super.onCreate()
         app = this
         (applicationInjector() as AppComponents).inject(this)
+        try {
+            addShortcuts()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun addShortcuts() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.setPackage("com.kt.apps.media.xemtv")
+        intent.action = Intent.ACTION_VIEW
+
+        val shortcutInfo: ShortcutInfoCompat = ShortcutInfoCompat.Builder(this, "com.kt.apps.media.xemtv.2")
+            .setShortLabel(getString(R.string.shortcut_short_label1))
+            .setLongLabel(getString(R.string.shortcut_long_label1))
+            .setAlwaysBadged()
+            .addCapabilityBinding("actions.intent.OPEN_APP_FEATURE")
+            .setIntent(intent)
+            .build()
+
+
+        ShortcutManagerCompat.pushDynamicShortcut(this, shortcutInfo)
     }
 
     override fun onRemoteConfigReady() {
