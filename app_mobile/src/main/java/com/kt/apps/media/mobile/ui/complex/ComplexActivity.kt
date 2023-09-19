@@ -3,6 +3,7 @@ package com.kt.apps.media.mobile.ui.complex
 import android.app.AlertDialog
 import android.app.PictureInPictureParams
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
@@ -100,12 +101,12 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     override fun initView(savedInstanceState: Bundle?) {
         val metrics = resources.displayMetrics
+
         layoutHandler = if (metrics.widthPixels <= metrics.heightPixels) {
             PortraitLayoutHandler(WeakReference(this))
         } else {
             LandscapeLayoutHandler(WeakReference(this))
         }
-
         layoutHandler?.onPlaybackStateChange = {
             lifecycleScope.launch {
                 viewModel.onChangePlayerState(it)
@@ -149,7 +150,15 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 it.show(WindowInsetsCompat.Type.systemBars())
             }
         }
-     }
+
+//        orientationEventListener = object: RotateOrientationEventListener(baseContext) {
+//            override fun onChanged(lastOrientation: Int, orientation: Int) {
+//                if (lastOrientation != orientation) {
+//                    handleRotationChange(orientation)
+//                }
+//            }
+//        }
+      }
 
     override fun initAction(savedInstanceState: Bundle?) {
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -186,6 +195,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                     layoutHandler?.confirmState(state)
                     if (state == PlaybackState.Invisible) {
                         stopPlayback()
+                        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                     }
                 }
             }
@@ -220,11 +230,17 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        Log.d(TAG, "onConfigurationChanged: $newConfig")
+        handleRotationChange(newConfig.orientation)
+    }
+
+    private fun handleRotationChange(newOrientation: Int) {
+        Log.d(TAG, "handleRotationChange: $newOrientation")
         if (!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode)) {
-            val shouldRecreate = when(newConfig.orientation) {
+            val shouldRecreate = when(newOrientation) {
                 Configuration.ORIENTATION_PORTRAIT -> layoutHandler is LandscapeLayoutHandler
                 Configuration.ORIENTATION_LANDSCAPE -> layoutHandler is PortraitLayoutHandler
-                else -> false
+                else -> true
             }
             if (shouldRecreate) {
                 recreate()
@@ -261,6 +277,12 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
 
+    override fun onSaveInstanceState(outState: Bundle) {
+//        orientationEventListener?.currentOrientation?.run {
+//            outState.putInt(LAST_ORIENTATION, this)
+//        }
+        super.onSaveInstanceState(outState)
+    }
     private suspend fun handleAddSourceState(state: AddSourceState) {
         Log.d(TAG, "handleAddSourceState: $state")
         when(state) {
@@ -336,6 +358,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         Log.d(TAG, "onResume: ")
         super.onResume()
         backPressedTimestamp = 0
+//        if (orientationEventListener?.canDetectOrientation() == true) {
+//            orientationEventListener?.enable()
+//        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -420,4 +445,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     }
 
+    companion object {
+        const val LAST_ORIENTATION = "LAST_ORIENTATION"
+    }
 }
