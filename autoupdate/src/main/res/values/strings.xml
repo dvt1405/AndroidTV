@@ -1,3 +1,4 @@
 <resources>
     <string name="version_title">iMedia version %s</string>
+    <string name="app_version_title">%s version %s</string>
 </resources>

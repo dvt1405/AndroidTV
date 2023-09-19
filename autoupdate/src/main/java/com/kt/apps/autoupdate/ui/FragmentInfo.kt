@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -23,6 +24,8 @@ class FragmentInfo : BaseFragment<FragmentInfoBinding>(), BrowseSupportFragment.
         get() = R.layout.fragment_info
     override val screenName: String
         get() = "FragmentInfo"
+    private var _appName: String? = null
+    private var _appVersion: String? = null
 
     @Inject
     lateinit var factory: ViewModelProvider.Factory
@@ -31,8 +34,23 @@ class FragmentInfo : BaseFragment<FragmentInfoBinding>(), BrowseSupportFragment.
         ViewModelProvider(requireActivity(), factory)[AppUpdateViewModel::class.java]
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) {
+            _appName = arguments?.getString(EXTRA_APP_NAME)
+            _appVersion = arguments?.getString(EXTRA_VERSION_NAME) ?: appVersion
+        } else {
+            _appName = savedInstanceState.getString(EXTRA_APP_NAME)
+            _appVersion = savedInstanceState.getString(EXTRA_VERSION_NAME) ?: appVersion
+        }
+    }
+
     override fun initView(savedInstanceState: Bundle?) {
-        binding.versionTitle.text = getString(R.string.version_title, appVersion)
+        _appName?.let {
+            binding.versionTitle.text = getString(R.string.app_version_title, _appName, _appVersion)
+        } ?: kotlin.run {
+            binding.versionTitle.text = getString(R.string.version_title, appVersion)
+        }
 
     }
 
@@ -122,11 +140,33 @@ class FragmentInfo : BaseFragment<FragmentInfoBinding>(), BrowseSupportFragment.
             }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        _appName?.let {
+            outState.putString(EXTRA_APP_NAME, it)
+        }
+        _appVersion?.let {
+            outState.putString(EXTRA_VERSION_NAME, it)
+        }
+        super.onSaveInstanceState(outState)
+
+    }
+
     override fun getMainFragmentAdapter(): BrowseSupportFragment.MainFragmentAdapter<*> {
         return BrowseSupportFragment.MainFragmentAdapter(this)
     }
 
     companion object {
+        private const val EXTRA_VERSION_NAME = "extra:version_name"
+        private const val EXTRA_APP_NAME = "extra:app_name"
         var appVersion: String = "23.06.01"
+        fun newInstance(
+            appName: String,
+            versionName: String
+        ) = FragmentInfo().apply {
+            arguments = bundleOf().apply {
+                putString(EXTRA_APP_NAME, appName)
+                putString(EXTRA_VERSION_NAME, versionName)
+            }
+        }
     }
 }
