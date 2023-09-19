@@ -27,23 +27,31 @@ class RoomDBTypeConverters {
     )
 
     @TypeConverter
-    fun mapToString(map: Map<String, String>?): String = try {
-        Gson().toJson(
-            map,
-            typeToken
-        )
-    } catch (e: Exception) {
+    fun mapToString(map: Map<String, String>?): String = if (map.isNullOrEmpty()) {
         ""
+    } else {
+        try {
+            Gson().toJson(
+                map,
+                typeToken
+            )
+        } catch (e: Exception) {
+            ""
+        }
     }
 
     @TypeConverter
-    fun stringToMap(map: String): Map<String, String>? = try {
-        Gson().fromJson(
-            map,
-            typeToken
-        )
-    } catch (e: Exception) {
+    fun stringToMap(map: String): Map<String, String>? = if (map.isEmpty()) {
         null
+    } else {
+        try {
+            Gson().fromJson(
+                map,
+                typeToken
+            )
+        } catch (e: Exception) {
+            null
+        }
     }
 
 

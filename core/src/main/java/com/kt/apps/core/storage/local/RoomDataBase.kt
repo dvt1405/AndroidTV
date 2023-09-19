@@ -26,7 +26,6 @@ import com.kt.apps.core.storage.local.databaseviews.ExtensionChannelDatabaseView
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelFts4
 import com.kt.apps.core.storage.local.dto.*
-import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 
@@ -275,13 +274,9 @@ abstract class RoomDataBase : RoomDatabase() {
             sqLiteDatabase.beginTransaction()
             val tvChannelDTOS = ArrayList<TVChannelDTO>()
             try {
-                val cursor = CursorUtil.copyAndClose(
-                    query(
-                        sqLiteDatabase, SimpleSQLiteQuery("SELECT * FROM TVChannelDTO"),
-                        true,
-                        null
-                    )
-                )
+                val cursor = query(sqLiteDatabase, SimpleSQLiteQuery("SELECT * FROM TVChannelDTO"),
+                    true,
+                    null)
                 cursor.use { c ->
                     val indexOfTvGroup = CursorUtil.getColumnIndexOrThrow(c, "tvGroup")
                     val indexOfLogoChannel = CursorUtil.getColumnIndexOrThrow(c, "logoChannel")
@@ -348,6 +343,23 @@ abstract class RoomDataBase : RoomDatabase() {
                     MIGRATE_7_8, MIGRATE_8_9, MIGRATE_9_10,
                     MIGRATE_10_11, MIGRATE_11_12, MIGRATE_12_13
                 )
+                .addCallback(object : Callback() {
+                    override fun onOpen(db: SupportSQLiteDatabase) {
+                        super.onOpen(db)
+                        Logger.d("RoomDatabase", "Callback", "onOpen")
+                    }
+
+                    override fun onCreate(db: SupportSQLiteDatabase) {
+                        super.onCreate(db)
+                        Logger.d("RoomDatabase", "Callback", "onCreate")
+                    }
+
+                    override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
+                        super.onDestructiveMigration(db)
+                        Logger.d("RoomDatabase", "Callback", "onDestructiveMigration")
+                    }
+                })
+                .fallbackToDestructiveMigration()
                 .build()
                 .also {
                     INSTANCE = it
