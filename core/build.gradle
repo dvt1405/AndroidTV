@@ -43,6 +43,8 @@ dependencies {
     implementation("androidx.multidex:multidex:2.0.1")
     implementation appDependencies.values()
     implementation 'com.google.android.play:app-update-ktx:2.0.1'
+    implementation "androidx.leanback:leanback-paging:1.1.0-alpha07"
+    implementation "androidx.leanback:leanback-tab:1.1.0-beta01"
     implementation workManager.values()
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
