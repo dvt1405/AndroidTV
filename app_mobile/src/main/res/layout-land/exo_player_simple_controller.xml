@@ -117,9 +117,10 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/controller_layout"
-        android:layout_marginBottom="-24dp"
-        android:layout_height="80dp"
-        android:layout_width="80dp"
+        android:layout_height="@dimen/play_pause_button"
+        android:layout_width="@dimen/play_pause_button"
+        app:layout_constraintHeight_min="@dimen/play_pause_button"
+        app:layout_constraintHeight_default="spread"
         android:visibility="gone"
         tools:visibility="visible"
         />

@@ -35,5 +35,6 @@
     <dimen name="button_fullscreen_size">48dp</dimen>
     <dimen name="image_button_size">32dp</dimen>
     <dimen name="player_basic_padding">12dp</dimen>
+    <dimen name="play_pause_button">80dp</dimen>
 
 </resources>

@@ -76,23 +76,23 @@ class App : CoreApp(), Configuration.Provider {
 
     override fun onRemoteConfigReady() {
         if (BuildConfig.isBeta) enqueuePreloadData()
-        workManager.enqueueUniquePeriodicWork(
-            "RefreshEpgData",
-            ExistingPeriodicWorkPolicy.KEEP,
-            if (BuildConfig.DEBUG) {
-                PeriodicWorkRequestBuilder<TVEpgWorkers>(15, TimeUnit.MINUTES)
-            } else {
-                PeriodicWorkRequestBuilder<TVEpgWorkers>(1, TimeUnit.HOURS)
-            }.setInputData(
-                Data.Builder()
-                    .putString(
-                        TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig
-                            .getString("epg_url").ifEmpty {
-                                "http://lichphatsong.xyz/schedule/vthanhtivi_epg.xml"
-                            })
-                    .build()
-            ).build()
-        )
+//        workManager.enqueueUniquePeriodicWork(
+//            "RefreshEpgData",
+//            ExistingPeriodicWorkPolicy.KEEP,
+//            if (BuildConfig.DEBUG) {
+//                PeriodicWorkRequestBuilder<TVEpgWorkers>(15, TimeUnit.MINUTES)
+//            } else {
+//                PeriodicWorkRequestBuilder<TVEpgWorkers>(1, TimeUnit.HOURS)
+//            }.setInputData(
+//                Data.Builder()
+//                    .putString(
+//                        TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig
+//                            .getString("epg_url").ifEmpty {
+//                                "http://lichphatsong.xyz/schedule/vthanhtivi_epg.xml"
+//                            })
+//                    .build()
+//            ).build()
+//        )
     }
 
     override fun onLowMemory() {
@@ -118,20 +118,20 @@ class App : CoreApp(), Configuration.Provider {
 
     override fun onActivityStarted(activity: Activity) {
         super.onActivityStarted(activity)
-        workManager.enqueue(
-            OneTimeWorkRequestBuilder<TVEpgWorkers>()
-                .setInputData(
-                    Data.Builder()
-                        .putString(
-                            TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig
-                                .getString("epg_url").ifEmpty {
-                                    "http://lichphatsong.xyz/schedule/vthanhtivi_epg.xml"
-                                })
-                        .putBoolean(TVEpgWorkers.EXTRA_FORCE_UPDATE, true)
-                        .build()
-                )
-                .build()
-        )
+//        workManager.enqueue(
+//            OneTimeWorkRequestBuilder<TVEpgWorkers>()
+//                .setInputData(
+//                    Data.Builder()
+//                        .putString(
+//                            TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig
+//                                .getString("epg_url").ifEmpty {
+//                                    "http://lichphatsong.xyz/schedule/vthanhtivi_epg.xml"
+//                                })
+//                        .putBoolean(TVEpgWorkers.EXTRA_FORCE_UPDATE, true)
+//                        .build()
+//                )
+//                .build()
+//        )
     }
 
     override fun applicationInjector(): AndroidInjector<out DaggerApplication> {

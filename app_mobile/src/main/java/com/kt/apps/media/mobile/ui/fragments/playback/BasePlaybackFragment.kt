@@ -32,7 +32,9 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.showErrorDialog
+import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
@@ -98,7 +100,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     private val playPauseButton: ImageButton? by lazy {
-        exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
+        exoPlayer?.findViewById(R.id.exo_play_pause)
     }
 
     private val progressWheel: View? by lazy {
@@ -141,8 +143,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected abstract val minimalTitleTv: TextView?
 
-
-
     protected abstract val exitButton: View?
 
     private val currentLayout = MutableStateFlow<LayoutState>(LayoutState.FULLSCREEN(true))
@@ -159,6 +159,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected var lastPlayerControllerConfig: PlayerControllerConfig = PlayerControllerConfig(true, 3000)
 
+    private val channelListVisibility by lazy {
+        if (resources.getBoolean(R.bool.is_small_size)) {
+            View.GONE
+        } else {
+            View.VISIBLE
+        }
+    }
+
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
         liveLabel?.visibility = View.GONE
@@ -172,10 +180,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
             if (isLandscape) {
                 setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener {
-                    when(it) {
-                        View.VISIBLE -> channelListRecyclerView?.visibility = it
-                        View.GONE, View.INVISIBLE -> channelListRecyclerView?.visibility = View.INVISIBLE
-                    }
+                    toggleChannelListVisibility(shouldShow = it == View.VISIBLE)
                 })
             }
         }
@@ -201,7 +206,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             View.GONE
         }
 
-        channelListRecyclerView?.visibility = View.VISIBLE
+        toggleChannelListVisibility(shouldShow = true)
         channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
             var isChanged: Boolean = false
             var baseConfig = lastPlayerControllerConfig
@@ -300,6 +305,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     if (it) {
                         isProgressing.value = false
                     }
+//                    playPauseButton?.icon = if (it) {
+//                        ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_play_circle_filled, context?.theme)
+//                    } else {
+//                        ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_pause_circle_filled, context?.theme)
+//                    }
                 }
             }
 
@@ -508,13 +518,21 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
     }
+
+    private fun toggleChannelListVisibility(shouldShow: Boolean) {
+        channelListRecyclerView?.visibility = if (shouldShow) {
+            channelListVisibility
+        } else {
+            View.GONE
+        }
+    }
     private fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
         fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
         exoPlayer?.apply {
             useController = true
             controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
             controllerHideOnTouch = lastPlayerControllerConfig.hideOnTouch
-            channelListRecyclerView?.visibility = View.VISIBLE
+            toggleChannelListVisibility(true)
             MainScope().launch {
                 delay(250)
                 showController()
