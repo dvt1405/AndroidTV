@@ -386,9 +386,10 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                         overlaysUIState = OverlayUIState.STATE_INIT
                     }
                 }
+                mHandler.removeCallbacks(autoHideOverlayRunnable)
                 mHandler.postDelayed({
                     autoHideOverlayRunnable.run()
-                }, 5000L)
+                }, DELAY_AUTO_HIDE_OVERLAY)
             }
         }
         videoInfoCodecContainerView?.gone()
@@ -555,6 +556,11 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
         if (showProgressManager) {
             progressManager.show()
+        }
+        if (progressManager.isShowing) {
+            showAllOverlayElements(false)
+        } else {
+            showAllOverlayElements(true)
         }
         if (isLive) {
             seekBarContainer?.gone()
