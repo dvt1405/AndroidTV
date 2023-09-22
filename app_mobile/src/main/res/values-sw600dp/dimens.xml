@@ -21,4 +21,5 @@
     <dimen name="base_icon_size">24dp</dimen>
     <dimen name="button_fullscreen_size">60dp</dimen>
     <dimen name="image_button_size">48dp</dimen>
+    <dimen name="player_basic_padding">36dp</dimen>
 </resources>

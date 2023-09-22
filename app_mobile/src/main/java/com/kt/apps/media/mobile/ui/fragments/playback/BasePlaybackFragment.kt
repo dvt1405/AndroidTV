@@ -125,7 +125,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.category_tv)
     }
 
-    protected val aspectRatioButton: ImageButton? by lazy {
+    protected val aspectRatioButton: MaterialButton? by lazy {
         exoPlayer?.findViewById(R.id.exo_ratio)
     }
 
@@ -184,11 +184,22 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
         progressBar?.isEnabled = false
 
+        backButton?.icon = ResourcesCompat.getDrawable(resources, if (isLandscape) {
+            R.drawable.ic_arrow_back
+        } else {
+            R.drawable.ic_clear
+        }, context?.theme)
+
         fullScreenButton?.visibility = View.VISIBLE
         fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
 
-        aspectRatioButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_aspect_ratio, context?.theme))
+        aspectRatioButton?.icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_aspect_ratio, context?.theme)
         aspectRatioButton?.setOnClickListener { changeNextResizeMode() }
+        aspectRatioButton?.visibility = if (isLandscape) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
 
         channelListRecyclerView?.visibility = View.VISIBLE
         channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
