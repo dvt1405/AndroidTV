@@ -143,8 +143,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected abstract val minimalTitleTv: TextView?
 
-
-
     protected abstract val exitButton: View?
 
     private val currentLayout = MutableStateFlow<LayoutState>(LayoutState.FULLSCREEN(true))
@@ -161,6 +159,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected var lastPlayerControllerConfig: PlayerControllerConfig = PlayerControllerConfig(true, 3000)
 
+    private val channelListVisibility by lazy {
+        if (resources.getBoolean(R.bool.is_small_size)) {
+            View.GONE
+        } else {
+            View.VISIBLE
+        }
+    }
+
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
         liveLabel?.visibility = View.GONE
@@ -174,10 +180,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
             if (isLandscape) {
                 setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener {
-                    when(it) {
-                        View.VISIBLE -> channelListRecyclerView?.visibility = it
-                        View.GONE, View.INVISIBLE -> channelListRecyclerView?.visibility = View.INVISIBLE
-                    }
+                    toggleChannelListVisibility(shouldShow = it == View.VISIBLE)
                 })
             }
         }
@@ -203,7 +206,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             View.GONE
         }
 
-        channelListRecyclerView?.visibility = View.VISIBLE
+        toggleChannelListVisibility(shouldShow = true)
         channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
             var isChanged: Boolean = false
             var baseConfig = lastPlayerControllerConfig
@@ -515,13 +518,21 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
     }
+
+    private fun toggleChannelListVisibility(shouldShow: Boolean) {
+        channelListRecyclerView?.visibility = if (shouldShow) {
+            channelListVisibility
+        } else {
+            View.GONE
+        }
+    }
     private fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
         fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
         exoPlayer?.apply {
             useController = true
             controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
             controllerHideOnTouch = lastPlayerControllerConfig.hideOnTouch
-            channelListRecyclerView?.visibility = View.VISIBLE
+            toggleChannelListVisibility(true)
             MainScope().launch {
                 delay(250)
                 showController()
