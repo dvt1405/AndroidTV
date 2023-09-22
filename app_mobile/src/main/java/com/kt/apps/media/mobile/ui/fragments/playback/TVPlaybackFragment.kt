@@ -53,10 +53,7 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
         channelListRecyclerView?.apply {
             adapter = itemAdapter
             addItemDecoration(channelItemDecoration)
-            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
-                isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 9
-            }
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
         }
     }
 
@@ -148,10 +145,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
         channelListRecyclerView?.apply {
             adapter = itemAdapter
             addItemDecoration(channelItemDecoration)
-            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
-                isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 9
-            }
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
         }
 
         binding.exoPlayer.useArtwork = true

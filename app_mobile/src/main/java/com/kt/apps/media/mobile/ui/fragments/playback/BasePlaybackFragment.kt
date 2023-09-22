@@ -32,7 +32,9 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.showErrorDialog
+import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
@@ -98,7 +100,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     private val playPauseButton: ImageButton? by lazy {
-        exoPlayer?.findViewById(com.google.android.exoplayer2.ui.R.id.exo_play_pause)
+        exoPlayer?.findViewById(R.id.exo_play_pause)
     }
 
     private val progressWheel: View? by lazy {
@@ -300,6 +302,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     if (it) {
                         isProgressing.value = false
                     }
+//                    playPauseButton?.icon = if (it) {
+//                        ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_play_circle_filled, context?.theme)
+//                    } else {
+//                        ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_pause_circle_filled, context?.theme)
+//                    }
                 }
             }
 

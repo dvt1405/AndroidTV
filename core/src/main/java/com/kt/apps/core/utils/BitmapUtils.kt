@@ -167,9 +167,11 @@ fun ImageView.loadImgByDrawableIdResName(
         val drawable = ContextCompat.getDrawable(context, id)
         GlideApp.with(this)
             .load(drawable)
+            .override(410, 230)
             .scaleType(scaleType)
             .skipMemoryCache(true)
             .diskCacheStrategy(DiskCacheStrategy.NONE)
+            .error(R.drawable.app_banner)
             .into(this)
     } catch (e: Exception) {
         Logger.e(this, name, e)

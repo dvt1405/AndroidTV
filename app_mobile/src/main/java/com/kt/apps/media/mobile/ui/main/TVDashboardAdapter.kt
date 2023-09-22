@@ -30,7 +30,6 @@ import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
-import com.kt.apps.media.mobile.utils.LinearLayoutPagerManager
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 
 interface IChannelElement {
@@ -132,6 +131,7 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
             while (itemDecorationCount > 0) {
                 removeItemDecorationAt(0)
             }
+            this.adapter = null
         }
         Logger.d(this, message = "OnView recycler")
     }
