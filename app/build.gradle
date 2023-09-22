@@ -10,13 +10,13 @@ plugins {
 android {
     namespace 'com.kt.apps.media.xemtv'
     compileSdk 33
-    def version_name = "23.09.01"
+    def version_name = "23.09.02"
 
     defaultConfig {
         applicationId "com.kt.apps.media.xemtv"
         minSdk 26
         targetSdk 33
-        versionCode 23091402
+        versionCode 23091902
         versionName version_name
         setProperty("archivesBaseName", "iMedia.$versionName")
         kapt {
@@ -75,6 +75,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = '11'
+    }
+    lint {
+        baseline = file("lint-baseline.xml")
     }
 }
 
