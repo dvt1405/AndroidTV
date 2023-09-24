@@ -91,12 +91,12 @@ class ChannelListView @JvmOverloads constructor(
         recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
             isItemPrefetchEnabled = false
         }
-//        recyclerView.layoutManager = when(style) {
-//            DisplayStyle.GRID -> GridAutoFitLayoutManager(context, resources.getDimension(R.dimen.item_channel_width).toInt())
-//            DisplayStyle.HORIZONTAL_LINEAR -> LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
-//                isItemPrefetchEnabled = false
-//            }
-//        }
+        recyclerView.layoutManager = when(style) {
+            DisplayStyle.GRID -> GridAutoFitLayoutManager(context, resources.getDimension(R.dimen.item_channel_width).toInt())
+            DisplayStyle.HORIZONTAL_LINEAR -> LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
+                isItemPrefetchEnabled = false
+            }
+        }
     }
 
     fun reloadAllData(list: List<IChannelElement>) {

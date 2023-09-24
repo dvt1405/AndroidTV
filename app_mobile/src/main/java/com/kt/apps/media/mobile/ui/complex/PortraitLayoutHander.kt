@@ -4,10 +4,14 @@ import android.content.Context
 import android.graphics.Rect
 import android.util.Log
 import android.view.GestureDetector
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.transition.AutoTransition
+import androidx.transition.Fade
+import androidx.transition.Slide
 import androidx.transition.TransitionManager
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
@@ -51,6 +55,10 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
 
     private val surfaceView: ConstraintLayout? by lazy {
         weakActivity.get()?.binding?.surfaceView as? ConstraintLayout
+    }
+
+    private val fragmentChannelContainer by lazy {
+        weakActivity.get()?.binding?.fragmentContainerChannels
     }
 
     override var onPlaybackStateChange: (PlaybackState) -> Unit = { }
@@ -176,14 +184,30 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
     }
 
     private fun transitionToState(state: PlaybackState) {
+        val currentState = this.state
         this.state = state
         safeLet(surfaceView, guideline) { root, guideline ->
-            guideline.setGuidelinePercent(when(state) {
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(root)
+            constraintSet.setGuidelinePercent(guideline.id, when(state) {
                 PlaybackState.Fullscreen -> 0.6f
                 PlaybackState.Invisible, PlaybackState.PIP -> 0f
                 PlaybackState.Minimal -> 0.3f
             })
-            TransitionManager.beginDelayedTransition(root, AutoTransition())
+            val transition = when(Pair(currentState, state)) {
+                Pair(PlaybackState.Invisible, PlaybackState.Minimal), Pair(PlaybackState.Invisible, PlaybackState.Fullscreen) -> Slide().apply {
+                    slideEdge = Gravity.BOTTOM
+                }
+                Pair(PlaybackState.Minimal, PlaybackState.Fullscreen), Pair(PlaybackState.Fullscreen, PlaybackState.Minimal)  -> AutoTransition()
+                else -> Slide().apply {
+                    slideEdge = Gravity.TOP
+                }
+            }
+            fragmentChannelContainer?.run {
+                transition.excludeChildren(this.id, true)
+            }
+            TransitionManager.beginDelayedTransition(root, transition)
+            constraintSet.applyTo(root)
         }
     }
 }
