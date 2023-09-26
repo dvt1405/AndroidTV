@@ -161,9 +161,13 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
     }
 
    private fun performLoadTVChannel() {
-       lifecycleScope.launchTrack(loadingChannel, CoroutineExceptionHandler {  _, _ ->
-           showErrorDialog(content = getString(R.string.error_happen))
-       }) {
+//       lifecycleScope.launchTrack(loadingChannel, CoroutineExceptionHandler {  _, _ ->
+//           showErrorDialog(content = getString(R.string.error_happen))
+//       }) {
+//           viewModel.getListTVChannelAsync(true)
+//       }
+
+       lifecycleScope.launch {
            viewModel.getListTVChannelAsync(true)
        }
     }

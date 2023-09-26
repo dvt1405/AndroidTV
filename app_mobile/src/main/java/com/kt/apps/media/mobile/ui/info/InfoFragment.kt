@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.lifecycle.ViewModelProvider
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -12,6 +13,8 @@ import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.media.mobile.BuildConfig
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentInfoBinding
+import com.kt.apps.media.mobile.ui.fragments.channels.ChannelFragment.Companion.TAG
+import com.kt.apps.media.mobile.utils.GlobalExceptionHandler
 import org.json.JSONObject
 import javax.inject.Inject
 
@@ -38,7 +41,10 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
             openURL(zlLink)
         }
         binding.updateCheck.setOnClickListener {
-            openURL(playstoreLink)
+//            openURL(playstoreLink)
+            val file = GlobalExceptionHandler.crashFile(requireContext())
+            val str = file.readText()
+            Log.d(TAG, "initView: $str")
         }
     }
 

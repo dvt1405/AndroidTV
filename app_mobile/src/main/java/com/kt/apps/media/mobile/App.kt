@@ -23,6 +23,7 @@ import com.kt.apps.media.mobile.di.AppComponents
 import com.kt.apps.media.mobile.di.DaggerAppComponents
 import com.kt.apps.media.mobile.di.MobileTVChannelModule
 import com.kt.apps.media.mobile.di.workers.PreloadDataWorker
+import com.kt.apps.media.mobile.utils.GlobalExceptionHandler
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
 import java.time.Duration
@@ -68,10 +69,14 @@ class App : CoreApp(), Configuration.Provider {
     @Inject
     lateinit var workManager: WorkManager
 
+    @Inject
+    lateinit var globalExceptionHandler: GlobalExceptionHandler
+
     override fun onCreate() {
         super.onCreate()
         app = this
         (applicationInjector() as AppComponents).inject(this)
+        globalExceptionHandler.activate()
     }
 
     override fun onRemoteConfigReady() {

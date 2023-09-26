@@ -265,7 +265,8 @@ suspend fun <T> LiveData<DataState<T>>.await(tag: String = "TAG") : T {
                     }
                     is DataState.Error -> {
                         removeObserver(this)
-                        continuation.resumeWithException(value.throwable)
+//                        continuation.resumeWithException(value.throwable)
+                        continuation.cancel(value.throwable)
                     }
                     else -> { }
                 }
@@ -389,6 +390,7 @@ fun LifecycleOwner.repeatLaunchesOnLifeCycle(
 
 fun CoroutineScope.avoidExceptionLaunch(block: suspend CoroutineScope.() -> Unit) = launch (
     CoroutineExceptionHandler { coroutineContext, throwable ->  }, block = block)
+
 
 fun TVChannel.loadImgDrawable(context: Context): Drawable? {
     val context = context.applicationContext

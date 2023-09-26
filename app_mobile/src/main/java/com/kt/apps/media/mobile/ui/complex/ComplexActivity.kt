@@ -432,4 +432,5 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     companion object {
         const val LAST_ORIENTATION = "LAST_ORIENTATION"
     }
+
 }
