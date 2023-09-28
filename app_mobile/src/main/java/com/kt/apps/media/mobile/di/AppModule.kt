@@ -5,6 +5,7 @@ import androidx.work.WorkManager
 import com.kt.apps.core.logging.ActionLoggerFactory
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.tv.di.TVScope
+import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.logger.MobileActionLoggerImpl
 import com.kt.apps.media.mobile.utils.GlobalExceptionHandler
 import dagger.Module
@@ -27,8 +28,8 @@ class AppModule {
 
     @Provides
     @AppScope
-    fun providesGlobalExceptionHandler(context: Context): Thread.UncaughtExceptionHandler {
-        return GlobalExceptionHandler(context)
+    fun providesGlobalExceptionHandler(context: Context, app: App): Thread.UncaughtExceptionHandler {
+        return GlobalExceptionHandler(context, app)
     }
     @Provides
     @TVScope

@@ -29,4 +29,5 @@
     <string name="tv_page_title">Truyền hình</string>
     <string name="radio_page_title">Phát thanh</string>
     <string name="favorite">Yêu thích</string>
+    <string name="bug_report_description">Ứng dụng đã phát sinh lỗi.\n\n Xin vui lòng nhấn share để chúng tôi có cơ hội khắc phục.</string>
 </resources>

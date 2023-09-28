@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" >
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -17,14 +17,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.XemTv"
         android:usesCleartextTraffic="true"
-        tools:ignore="UnusedAttribute" >
+        tools:ignore="UnusedAttribute">
+        <activity
+            android:name=".ui.crash.ErrorActivity"
+            android:exported="false"
+            android:clearTaskOnLaunch="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=""
+            />
         <activity
             android:name=".ui.complex.ComplexActivity"
-            android:exported="true"
-            android:supportsPictureInPicture="true"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|keyboardHidden"
-            android:windowSoftInputMode="adjustPan"
-            android:launchMode="singleTask" >
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:supportsPictureInPicture="true"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -47,13 +54,12 @@
                 <data android:host="xemtivihd.net/xemtv/" />
                 <data android:host="xemtivihd.net/" />
                 <data android:host="bongda" />
-                <data android:host="iptv"/>
-                <data android:pathPrefix="/search"/>
+                <data android:host="iptv" />
+                <data android:pathPrefix="/search" />
                 <data android:pathPrefix="/dashboard" />
                 <data android:pathPrefix="/match" />
                 <data android:pathPrefix="/channel" />
                 <data android:pathPrefix="/channel" />
-
             </intent-filter>
             <intent-filter>
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
@@ -64,7 +70,7 @@
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
             android:exported="false"
-            tools:node="merge" >
+            tools:node="merge">
             <meta-data
                 android:name="androidx.work.WorkManagerInitializer"
                 android:value="androidx.startup"

@@ -41,10 +41,7 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
             openURL(zlLink)
         }
         binding.updateCheck.setOnClickListener {
-//            openURL(playstoreLink)
-            val file = GlobalExceptionHandler.crashFile(requireContext())
-            val str = file.readText()
-            Log.d(TAG, "initView: $str")
+            openURL(playstoreLink)
         }
     }
 

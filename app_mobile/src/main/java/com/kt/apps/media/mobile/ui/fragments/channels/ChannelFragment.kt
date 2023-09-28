@@ -26,6 +26,8 @@ import com.kt.apps.media.mobile.utils.screenHeight
 import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.merge
@@ -167,7 +169,7 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
 //           viewModel.getListTVChannelAsync(true)
 //       }
 
-       lifecycleScope.launch {
+       CoroutineScope(Dispatchers.Default).launch {
            viewModel.getListTVChannelAsync(true)
        }
     }
