@@ -4,6 +4,8 @@ import android.net.Uri
 import android.util.Log
 import com.google.firebase.inject.Deferred
 import com.kt.apps.core.extensions.model.TVScheduler
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
+import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.football.model.FootballMatch
@@ -55,6 +57,11 @@ interface IFetchDeepLinkControl {
     val tvChannelViewModel: TVChannelViewModel
     val uiControlViewModel: UIControlViewModel
 }
+
+interface IFetchFavoriteControl: IFetchTVChannelControl {
+    val uiControlViewModel: UIControlViewModel
+}
+
 suspend fun IFetchTVChannelControl.loadLinkStreamChannel(element: ChannelElement.TVChannelElement) {
     loadLinkStreamAction(element,
         mapPrepareValue = {
@@ -63,6 +70,30 @@ suspend fun IFetchTVChannelControl.loadLinkStreamChannel(element: ChannelElement
         mapSuccessValue = {
         StreamLinkData.TVStreamLinkData(it)
     })
+}
+
+suspend fun IFetchFavoriteControl.loadFavoriteChannel(element: ChannelElement.FavoriteVideo) {
+    playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
+
+    val linkStream = when(element.model.type) {
+        VideoFavoriteDTO.Type.TV, VideoFavoriteDTO.Type.RADIO -> {
+            tvChannelViewModel.getLinkStreamById(element.model.id)
+            tvChannelViewModel.tvWithLinkStreamLiveData.await(tag = "IFetchTVChannelControl")
+        }
+        VideoFavoriteDTO.Type.IPTV -> TODO()
+    }
+    val prepareStreamLinkData = if (linkStream.channel.isRadio) {
+        PrepareStreamLinkData.Radio(linkStream.channel)
+    } else {
+        PrepareStreamLinkData.TV(linkStream.channel)
+    }
+    uiControlViewModel.openPlayback(prepareStreamLinkData)
+    playbackViewModel.changeProcessState(
+        PlaybackViewModel.State.LOADING(prepareStreamLinkData)
+    )
+    playbackViewModel.changeProcessState(
+        PlaybackViewModel.State.PLAYING(StreamLinkData.TVStreamLinkData(linkStream))
+    )
 }
 
 suspend fun IFetchDeepLinkControl.loadByDeepLink(deeplink: Uri) {

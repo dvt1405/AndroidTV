@@ -52,7 +52,7 @@
     </style>
 
     <style name="NavigationView" parent="Widget.MaterialComponents.NavigationRailView.Colored">
-        <item name="labelVisibilityMode">labeled</item>
+        <item name="labelVisibilityMode">selected</item>
         <item name="colorOnSurface">@color/white</item>
         <item name="colorOnSurfaceVariant">@color/white</item>
     </style>

@@ -26,12 +26,14 @@ import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.safeLet
 import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
 
 class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActivity>) : ComplexLayoutHandler  {
 
     private var state: PlaybackState by Delegates.observable(PlaybackState.Invisible) { _, oldValue, newValue ->
         if (oldValue !== newValue) {
+            Log.d(TAG, "onPlaybackStateChange: $oldValue -> $newValue")
             onPlaybackStateChange(newValue)
         }
     }
@@ -45,6 +47,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     private val surfaceView: ConstraintLayout? by lazy {
         weakActivity.get()?.binding?.surfaceView as? ConstraintLayout
     }
+
 
     override var onPlaybackStateChange: (PlaybackState) -> Unit = { }
 
@@ -151,6 +154,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
     private fun transitionFullscreen() {
         state = PlaybackState.Fullscreen
+        Log.d(TAG, "transitionFullscreen: ${Log.getStackTraceString(Throwable())}")
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -192,6 +196,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
 
     private fun transitionIDLE() {
+        state = PlaybackState.Invisible
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -200,15 +205,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 alignParent(playback.id, ConstraintSet.BOTTOM)
                 alignParent(playback.id, ConstraintSet.END)
             }
-            TransitionManager.beginDelayedTransition(surfaceView, Fade(Fade.IN).apply {
-                addListener(object: TransitionCallback() {
-                    override fun onTransitionStart(transition: Transition) {
-                        super.onTransitionStart(transition)
-                        this@LandscapeLayoutHandler.state = PlaybackState.Invisible
-                    }
-                })
-            })
-//            this.state = PlaybackState.Invisible
+            TransitionManager.beginDelayedTransition(surfaceView, Fade(Fade.IN))
             set.applyTo(surfaceView)
         }
     }

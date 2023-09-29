@@ -23,6 +23,7 @@ import androidx.transition.AutoTransition
 import androidx.transition.Fade
 import androidx.transition.Transition
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
@@ -33,6 +34,8 @@ import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.gone
+import com.kt.apps.core.utils.dpToPx
+import com.kt.apps.core.utils.inVisible
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
@@ -43,6 +46,8 @@ import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
+import com.kt.apps.media.mobile.viewmodels.features.loadFavorite
+import com.kt.apps.media.mobile.viewmodels.features.toggleFavoriteCurrent
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -111,6 +116,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.back_button)
     }
 
+    private val favoriteButton: MaterialButton? by lazy {
+        exoPlayer?.findViewById(R.id.favorite_button)
+    }
+
     private val titleLabel: MaterialTextView? by lazy {
         exoPlayer?.findViewById(R.id.title)
     }
@@ -127,7 +136,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.category_tv)
     }
 
-    protected val aspectRatioButton: MaterialButton? by lazy {
+    protected val aspectRatioButton: ImageButton? by lazy {
         exoPlayer?.findViewById(R.id.exo_ratio)
     }
 
@@ -149,6 +158,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected val title = MutableStateFlow("")
     protected val isProgressing = MutableStateFlow(true)
     protected val isPlayingState = MutableStateFlow(false)
+    protected val currentPlayingMediaItem = MutableStateFlow<MediaItem?>(null)
     protected var retryTimes: Int = 3
 
     protected abstract val playbackViewModel: BasePlaybackInteractor
@@ -185,6 +195,15 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 })
             }
         }
+
+        favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_bookmark_selector, context?.theme)
+        favoriteButton?.setOnClickListener { view ->
+            lifecycleScope.launch {
+                playbackViewModel.toggleFavoriteCurrent(view.isSelected)
+            }
+        }
+        favoriteButton?.visibility = View.INVISIBLE
+
         playPauseButton?.visibility = View.INVISIBLE
         progressWheel?.visibility = View.INVISIBLE
 
@@ -199,7 +218,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         fullScreenButton?.visibility = View.VISIBLE
         fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
 
-        aspectRatioButton?.icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_aspect_ratio, context?.theme)
+        aspectRatioButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_aspect_ratio, context?.theme))
         aspectRatioButton?.setOnClickListener { changeNextResizeMode() }
         aspectRatioButton?.visibility = if (isLandscape) {
             View.VISIBLE
@@ -306,11 +325,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     if (it) {
                         isProgressing.value = false
                     }
-//                    playPauseButton?.icon = if (it) {
-//                        ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_play_circle_filled, context?.theme)
-//                    } else {
-//                        ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_pause_circle_filled, context?.theme)
-//                    }
                 }
             }
 
@@ -356,6 +370,16 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
 
             launch {
+                combine(playbackViewModel.listFavorite, currentPlayingMediaItem, transform = { listFavorite, currentPlay ->
+                    listFavorite.any { videoFavoriteDTO ->
+                        videoFavoriteDTO.id == currentPlay?.mediaId && videoFavoriteDTO.title == currentPlay.mediaMetadata.title
+                    }
+                }).collectLatest {
+                    favoriteButton?.isSelected = it
+                }
+            }
+
+            launch {
                 currentLayout.collectLatest {
                     when(it) {
                         is LayoutState.FULLSCREEN -> changeFullScreenLayout(it.shouldRedraw)
@@ -366,8 +390,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             }
-
         }
+
+        playbackViewModel.loadFavorite()
     }
 
     private fun changeNextResizeMode() {
@@ -442,6 +467,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             isProgressing.value = false
             exoPlayer?.keepScreenOn = true
             progressBar?.isEnabled = true
+            favoriteButton?.visible()
 
             retryTimes = MAX_RETRY_TIME
         } else {
@@ -580,6 +606,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayerManager.detach()
         isProgressing.emit(true)
         title.emit(data.title)
+        favoriteButton?.inVisible()
     }
 
     protected open suspend fun playVideo(data: StreamLinkData) {
@@ -590,6 +617,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , this)
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)
+        currentPlayingMediaItem.emit(exoPlayerManager.exoPlayer?.currentMediaItem)
+    }
+
+    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        super.onMediaItemTransition(mediaItem, reason)
+        currentPlayingMediaItem.value = exoPlayerManager.exoPlayer?.currentMediaItem
     }
 
     private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, transition: Transition = Fade(), onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {

@@ -150,14 +150,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 it.show(WindowInsetsCompat.Type.systemBars())
             }
         }
-
-//        orientationEventListener = object: RotateOrientationEventListener(baseContext) {
-//            override fun onChanged(lastOrientation: Int, orientation: Int) {
-//                if (lastOrientation != orientation) {
-//                    handleRotationChange(orientation)
-//                }
-//            }
-//        }
       }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -252,15 +244,15 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         if (!viewModel.isShowingPlayback.value) {
             return
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-            && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val params = PictureInPictureParams.Builder()
-                this@ComplexActivity.enterPictureInPictureMode(params.build())
-            } else {
-                this@ComplexActivity.enterPictureInPictureMode()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val params = PictureInPictureParams.Builder()
+                    this@ComplexActivity.enterPictureInPictureMode(params.build())
+                } else {
+                    this@ComplexActivity.enterPictureInPictureMode()
+                }
             }
-        }
     }
 
     private fun dismissAllDialog() {
@@ -277,12 +269,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
 
-    override fun onSaveInstanceState(outState: Bundle) {
-//        orientationEventListener?.currentOrientation?.run {
-//            outState.putInt(LAST_ORIENTATION, this)
-//        }
-        super.onSaveInstanceState(outState)
-    }
     private suspend fun handleAddSourceState(state: AddSourceState) {
         Log.d(TAG, "handleAddSourceState: $state")
         when(state) {
@@ -328,12 +314,12 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
     private fun stopPlayback() {
-            binding.fragmentContainerPlayback.getFragment<Fragment>().takeIf { it != null }
-                ?.run {
-                supportFragmentManager.beginTransaction()
-                    .remove(this)
-                    .commit()
-            }
+        binding.fragmentContainerPlayback.getFragment<Fragment>().takeIf { it != null }
+            ?.run {
+            supportFragmentManager.beginTransaction()
+                .remove(this)
+                .commit()
+        }
     }
 
     override fun onStop() {
@@ -358,9 +344,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         Log.d(TAG, "onResume: ")
         super.onResume()
         backPressedTimestamp = 0
-//        if (orientationEventListener?.canDetectOrientation() == true) {
-//            orientationEventListener?.enable()
-//        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {

@@ -39,7 +39,7 @@
     app:layout_constraintLeft_toRightOf="@id/back_button"
     app:layout_constraintTop_toTopOf="@id/back_button"
     app:layout_constraintBottom_toBottomOf="@id/back_button"
-    app:layout_constraintRight_toLeftOf="@id/exo_ratio"
+    app:layout_constraintRight_toLeftOf="@id/favorite_button"
     app:layout_goneMarginRight="@dimen/player_basic_padding"
     />
 <com.google.android.material.textview.MaterialTextView
@@ -54,16 +54,17 @@
     app:layout_constraintTop_toBottomOf="@id/title"
     app:layout_constraintStart_toStartOf="@id/title"
     />
+
+
 <com.google.android.material.button.MaterialButton
-    android:id="@+id/exo_ratio"
-    style="@style/Widget.Material3.Button.IconButton"
+    android:id="@+id/favorite_button"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:visibility="visible"
-    app:layout_constraintDimensionRatio="1"
-    tools:icon="@drawable/ic_aspect_ratio"
+    android:background="@color/transparent"
+    tools:icon="@drawable/ic_bookmark_selector"
     app:iconSize="@dimen/base_icon_size"
     app:iconTint="@color/white"
+    style="@style/Widget.Material3.Button.IconButton"
     app:layout_constraintRight_toRightOf="parent"
     app:layout_constraintTop_toTopOf="parent"
     />

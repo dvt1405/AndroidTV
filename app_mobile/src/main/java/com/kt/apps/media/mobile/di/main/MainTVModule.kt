@@ -5,6 +5,7 @@ import com.kt.apps.media.mobile.di.viewmodels.ViewModelModule
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.dashboard.DashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
+import com.kt.apps.media.mobile.ui.fragments.favorite.FavoriteFragment
 import com.kt.apps.media.mobile.ui.fragments.football.dashboard.FootballDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.football.list.FootballListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvChannelListFragment
@@ -88,4 +89,7 @@ abstract class MainTVModule {
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentInfo(): InfoFragment
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentFavorite(): FavoriteFragment
 }

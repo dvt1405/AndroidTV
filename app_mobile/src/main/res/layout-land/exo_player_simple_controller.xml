@@ -73,6 +73,17 @@
             android:secondaryProgress="60"
             />
         <ImageButton
+            android:id="@+id/exo_ratio"
+            style="@style/ExoStyledControls.Button.Bottom"
+            android:layout_width="@dimen/button_fullscreen_size"
+            android:layout_height="@dimen/button_fullscreen_size"
+            android:visibility="visible"
+            app:layout_constraintTop_toTopOf="@id/exo_fullscreen"
+            app:layout_constraintEnd_toStartOf="@id/exo_fullscreen"
+            android:layout_marginEnd="@dimen/small_padding"
+            android:src="@drawable/ic_aspect_ratio"
+            />
+        <ImageButton
             android:id="@id/exo_fullscreen"
             style="@style/ExoStyledControls.Button.Bottom.FullScreen"
             android:layout_width="@dimen/button_fullscreen_size"

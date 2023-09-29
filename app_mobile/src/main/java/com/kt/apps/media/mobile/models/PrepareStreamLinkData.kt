@@ -1,8 +1,10 @@
 package com.kt.apps.media.mobile.models
 
 import com.kt.apps.core.extensions.ExtensionsChannel
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.football.model.FootballMatch
+import com.kt.apps.media.mobile.ui.main.ChannelElement
 
 sealed class PrepareStreamLinkData(
     val title: String,
