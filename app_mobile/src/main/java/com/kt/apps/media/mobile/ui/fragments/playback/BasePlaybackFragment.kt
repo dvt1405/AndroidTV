@@ -159,13 +159,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected var lastPlayerControllerConfig: PlayerControllerConfig = PlayerControllerConfig(true, 3000)
 
-    private val channelListVisibility by lazy {
-        if (resources.getBoolean(R.bool.is_small_size)) {
-            View.GONE
-        } else {
-            View.VISIBLE
+    private val channelListVisibility: Int
+        get() {
+            return if (resources.getBoolean(R.bool.is_small_size)) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
         }
-    }
 
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
