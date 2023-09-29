@@ -49,7 +49,6 @@ import kotlin.coroutines.CoroutineContext
 interface IPlaybackAction {
     fun onLoadedSuccess(videoSize: VideoSize)
     fun onOpenFullScreen()
-
     fun onPauseAction(userAction: Boolean)
     fun onPlayAction(userAction: Boolean)
 
@@ -200,9 +199,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         rotateButton?.setOnClickListener {
             if (!isLandscape) {
                 lifecycleScope.launch {
-                    changeToFullscreen()
-                    isRequestRotate = true
-                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    forceLandscapeFullscreen()
                 }
             }
         }
@@ -339,7 +336,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     } else {
                         when(state.playbackState) {
                             PlaybackState.Fullscreen -> {
-                                currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
+                                currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = true))
                             }
                             PlaybackState.Minimal -> currentLayout.emit(LayoutState.MINIMAL)
                             else -> {
@@ -375,17 +372,26 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             ?: kotlin.run { RATIO_VALUES.first() }
 
         player.resizeMode = next
-//        Toast.makeText(requireContext(), RATIO_VALUES_MAP[next] ?: "", Toast.LENGTH_SHORT).show()
-
     }
 
     private suspend fun changeToFullscreen() {
         exoPlayer?.hideController()
-        delay(250)
         callback?.onOpenFullScreen()
+        delay(250)
+
         if (isRequestRotate) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
+    }
+
+    private suspend fun forceLandscapeFullscreen() {
+        exoPlayer?.hideController()
+        if (playbackViewModel.playbackState.value != PlaybackState.Fullscreen) {
+            callback?.onOpenFullScreen()
+            delay(250)
+        }
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        isRequestRotate = true
     }
 
     private fun exit() {

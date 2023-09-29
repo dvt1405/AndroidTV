@@ -154,14 +154,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 it.show(WindowInsetsCompat.Type.systemBars())
             }
         }
-
-//        orientationEventListener = object: RotateOrientationEventListener(baseContext) {
-//            override fun onChanged(lastOrientation: Int, orientation: Int) {
-//                if (lastOrientation != orientation) {
-//                    handleRotationChange(orientation)
-//                }
-//            }
-//        }
       }
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -252,6 +244,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
             if (shouldRecreate) {
                 recreate()
+                if (viewModel.playerState.value == PlaybackState.Minimal) {
+                    layoutHandler?.onOpenFullScreen()
+                }
             }
         }
     }
