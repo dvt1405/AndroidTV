@@ -1196,7 +1196,8 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     fun showErrorDialogWithErrorCode(errorCode: Int, errorMessage: String? = null, onDismiss: () -> Unit = {}) {
-        if (this.isDetached || this.isHidden || !this.isAdded || context == null) {
+        if (this.isDetached || this.isHidden || !this.isAdded || context == null
+            || this.isRemoving) {
             return
         }
         showErrorDialog(
