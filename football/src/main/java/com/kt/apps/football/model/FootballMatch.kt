@@ -22,6 +22,18 @@ class FootballMatch(
         return "${homeTeam.name} - ${awayTeam.name}"
     }
 
+    override fun toString(): String {
+        return "FootballMatch(homeTeam=$homeTeam, " +
+                "awayTeam=$awayTeam, " +
+                "kickOffTime='$kickOffTime', " +
+                "kickOffTimeInSecond=$kickOffTimeInSecond, " +
+                "statusStream='$statusStream', " +
+                "detailPage='$detailPage', " +
+                "sourceFrom=$sourceFrom, " +
+                "league='$league', " +
+                "matchId='$matchId')"
+    }
+
     val isLiveMatch: Boolean
         get() {
             val calendar = Calendar.getInstance(Locale.TAIWAN)

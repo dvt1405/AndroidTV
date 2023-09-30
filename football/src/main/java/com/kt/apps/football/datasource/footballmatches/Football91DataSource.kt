@@ -1,6 +1,7 @@
 package com.kt.apps.football.datasource.footballmatches
 
 import com.google.gson.Gson
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.IKeyValueStorage
 import com.kt.apps.core.utils.jsoupParse
 import com.kt.apps.core.utils.trustEveryone
@@ -37,7 +38,9 @@ class Football91DataSource @Inject constructor(
         get() = config.url
 
     private val itemClassName: String by lazy {
-        config.itemClassName ?: "matches__item col-lg-6 col-sm-6"
+        config.itemClassName?.takeIf {
+            it.trim().isNotEmpty()
+        } ?: ".matches__item.col-lg-6.col-sm-6"
     }
 
     override fun getAllMatches(): Observable<List<FootballMatch>> {
@@ -52,13 +55,15 @@ class Football91DataSource @Inject constructor(
                 return@create
             }
             cookie.putAll(response.cookie)
-            val allMatches = response.body.getElementsByClass(itemClassName)
+            val allMatches = response.body.select(itemClassName)
 
             for (match in allMatches) {
                 try {
                     val matchDetail = mapHtmlElementToFootballMatch(match)
+                    Logger.d(this@Football91DataSource, "Match", message = "$matchDetail")
                     listFootballMatch.add(matchDetail)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Logger.e(this@Football91DataSource, exception = e)
                 }
             }
             if (listFootballMatch.isEmpty()) {
