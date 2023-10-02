@@ -20,7 +20,6 @@ import com.kt.apps.core.base.IKeyCodeHandler
 import com.kt.apps.core.base.leanback.*
 import com.kt.apps.core.base.leanback.BrowseSupportFragment
 import com.kt.apps.core.base.leanback.NavDrawerView.INavDrawerItemSelected
-import com.kt.apps.core.base.viewmodels.BaseExtensionsViewModel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.RoomDataBase
@@ -35,6 +34,7 @@ import com.kt.apps.media.xemtv.ui.extensions.FragmentAddExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
 import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import com.kt.apps.media.xemtv.ui.search.SearchViewModels
+import com.kt.apps.media.xemtv.ui.search.TVSearchFragment
 import com.kt.apps.media.xemtv.ui.tv.BaseTabLayoutFragment
 import com.kt.apps.media.xemtv.ui.tv.FragmentTVDashboardNew
 import dagger.android.AndroidInjector
@@ -298,6 +298,13 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 (mMainFragment as BaseTabLayoutFragment)
                     .requestFocusChildContent()
                     ?.requestFocus()
+            } else if (mMainFragment is TVSearchFragment) {
+                (mMainFragment as TVSearchFragment).verticalGridView.requestFocus()
+            }
+            if (mMainFragment !is TVSearchFragment) {
+                searchViewModels.queryDefaultSearch()
+            }
+            if (selectedPosition >= 0) {
                 navDrawerView.setEnableSelectedItem(selectedPosition, true)
             }
         }
@@ -310,7 +317,6 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                 ContextCompat.getDrawable(requireContext(), R.drawable.tv_bg)
             }
         }
-        searchViewModels.queryDefaultSearch()
     }
     override fun onDestroyView() {
         firstInit = true
@@ -439,6 +445,13 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         }
     }
 
+    fun invalidateNavDrawerSelectedPosition() {
+        if (selectedPosition < 0) {
+            return
+        }
+        Logger.d(this, message = "selectedPosition: $selectedPosition")
+        navDrawerView.setItemSelected(selectedPosition, true)
+    }
     companion object {
         var firstInit = true
         private const val EXTRA_EXTERNAL_EXTENSIONS = "extra:external"
