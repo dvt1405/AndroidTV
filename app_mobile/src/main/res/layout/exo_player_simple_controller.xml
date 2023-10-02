@@ -7,34 +7,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <LinearLayout
+    <include
+        layout="@layout/player_header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/header_background"
-        android:paddingBottom="36dp"
         app:layout_constraintTop_toTopOf="parent"
-        >
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/back_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@color/transparent"
-            app:icon="@drawable/ic_clear"
-            app:iconSize="@dimen/base_icon_size"
-            app:iconTint="@color/white"
-            style="@style/Widget.Material3.Button.IconButton"
-            />
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:text="VTV3"
-            android:textColor="@color/white"
-            android:textAppearance="@style/TextAppearance.Title"
-            android:singleLine="true"
-            android:ellipsize="marquee"
-            />
-    </LinearLayout>
+        />
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -42,7 +21,7 @@
         android:background="@drawable/footer_background"
         app:layout_constraintBottom_toBottomOf="parent"
         android:paddingTop="@dimen/player_controller_padding_top"
-        android:paddingBottom="@dimen/player_controller_padding_bottom"
+        android:paddingBottom="0dp"
         android:clipToPadding="false"
         >
 
@@ -54,7 +33,7 @@
             app:layout_constraintTop_toTopOf="@id/exo_fullscreen"
             app:layout_constraintBottom_toBottomOf="@id/exo_fullscreen"
             app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="36dp"
+            android:layout_marginStart="@dimen/player_basic_padding"
             />
 
         <com.google.android.material.textview.MaterialTextView
@@ -65,7 +44,7 @@
             android:textColor="@color/white"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginStart="36dp"
+            android:layout_marginStart="@dimen/player_basic_padding"
             app:layout_constraintTop_toTopOf="@id/exo_fullscreen"
             app:layout_constraintBottom_toBottomOf="@id/exo_fullscreen"
             />
@@ -92,7 +71,7 @@
             android:visibility="visible"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="36dp"
+            android:layout_marginEnd="@dimen/player_basic_padding"
             android:layout_width="@dimen/button_fullscreen_size"
             android:layout_height="@dimen/button_fullscreen_size"
             />
@@ -106,8 +85,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:layout_height="80dp"
-        android:layout_width="80dp"
+        android:layout_height="@dimen/play_pause_button"
+        android:layout_width="@dimen/play_pause_button"
         android:visibility="gone"
         />
     <FrameLayout

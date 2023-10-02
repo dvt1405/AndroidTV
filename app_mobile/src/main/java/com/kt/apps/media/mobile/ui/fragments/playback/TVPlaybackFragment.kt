@@ -40,7 +40,7 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
         TVPlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }
 
-    override val playbackViewModel: BasePlaybackInteractor
+    override val interactor: BasePlaybackInteractor
         get() = _playbackInteractor
 
     private val itemAdapter by lazy {
@@ -53,10 +53,7 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
         channelListRecyclerView?.apply {
             adapter = itemAdapter
             addItemDecoration(channelItemDecoration)
-            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
-                isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 9
-            }
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
         }
     }
 
@@ -135,7 +132,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
     private val _playbackInteractor by lazy {
         RadioPlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }
-    override val playbackViewModel: BasePlaybackInteractor
+    override val interactor: BasePlaybackInteractor
         get() = _playbackInteractor
 
     private val itemAdapter by lazy {
@@ -148,10 +145,7 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
         channelListRecyclerView?.apply {
             adapter = itemAdapter
             addItemDecoration(channelItemDecoration)
-            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
-                isItemPrefetchEnabled = true
-                initialPrefetchItemCount = 9
-            }
+            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
         }
 
         binding.exoPlayer.useArtwork = true

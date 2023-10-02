@@ -43,7 +43,9 @@ class SearchViewModels @Inject constructor(
         get() = _lastSearchQuery
     fun queryDefaultSearch() {
         if (_lastSearchQuery.isNullOrBlank()) {
-            querySearch("")
+            if (_lastSearchQuery == null) {
+                querySearch("")
+            }
         }
     }
 

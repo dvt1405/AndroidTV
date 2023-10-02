@@ -7,6 +7,7 @@ import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
+import com.kt.apps.media.mobile.viewmodels.FavoriteViewModel
 import com.kt.apps.media.mobile.viewmodels.features.FootballViewModel
 import com.kt.apps.media.mobile.viewmodels.features.SearchViewModels
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
@@ -52,6 +53,10 @@ abstract class ViewModelModule {
     @ViewModelKey(UIControlViewModel::class)
     abstract fun bindUIControlViewModel(uiControlViewModel: UIControlViewModel): ViewModel
 
+    @Binds
+    @IntoMap
+    @ViewModelKey(FavoriteViewModel::class)
+    abstract fun bindFavoriteViewModel(uiControlViewModel: FavoriteViewModel): ViewModel
 
     @Binds
     abstract fun bindViewModelFactory(

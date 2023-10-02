@@ -21,6 +21,7 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.storage.local.dto.TVChannelDTO
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.TAG
@@ -30,7 +31,6 @@ import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
-import com.kt.apps.media.mobile.utils.LinearLayoutPagerManager
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 
 interface IChannelElement {
@@ -74,6 +74,14 @@ sealed class ChannelElement {
             get() = model.data.tvChannelName
         override val logoChannel: String
             get() = model.data.logoChannel
+
+    }
+
+    class FavoriteVideo(val model: VideoFavoriteDTO): IChannelElement {
+        override val name: String
+            get() = model.title
+        override val logoChannel: String
+            get() = model.logoUrl
 
     }
 }
@@ -132,6 +140,7 @@ class TVDashboardAdapter : BaseAdapter<Pair<String, List<IChannelElement>>, Item
             while (itemDecorationCount > 0) {
                 removeItemDecorationAt(0)
             }
+            this.adapter = null
         }
         Logger.d(this, message = "OnView recycler")
     }

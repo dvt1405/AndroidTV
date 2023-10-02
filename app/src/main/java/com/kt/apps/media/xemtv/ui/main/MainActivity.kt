@@ -74,6 +74,26 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         return super.onKeyDown(keyCode, event)
     }
 
+    override fun onDialogDismiss() {
+        super.onDialogDismiss()
+        supportFragmentManager
+            .findFragmentById(R.id.main_browse_fragment)
+            .takeIf { it is DashboardFragment }
+            ?.let {
+                it as DashboardFragment
+            }?.invalidateNavDrawerSelectedPosition()
+    }
+
+    override fun onDialogShowing() {
+        super.onDialogShowing()
+        supportFragmentManager
+            .findFragmentById(R.id.main_browse_fragment)
+            .takeIf { it is DashboardFragment }
+            ?.let {
+                it as DashboardFragment
+            }?.invalidateNavDrawerSelectedPosition()
+    }
+
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         intent?.data?.let { uri ->

@@ -7,56 +7,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <LinearLayout
-        android:id="@+id/header_layout"
+    <include
+        layout="@layout/player_header_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/header_background"
-        android:paddingBottom="36dp"
-        android:gravity="center"
         app:layout_constraintTop_toTopOf="parent"
-        >
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/back_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@color/transparent"
-            app:icon="@drawable/ic_arrow_back"
-            app:iconSize="@dimen/base_icon_size"
-            app:iconTint="@color/white"
-            style="@style/Widget.Material3.Button.IconButton"
-            />
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-
-            >
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:text="VTV3"
-                android:textColor="@color/white"
-                android:textAppearance="@style/TextAppearance.Title"
-                android:singleLine="true"
-                android:ellipsize="marquee"
-                />
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/sub_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:text="VTV3"
-                android:textAppearance="@style/TextAppearance.Label.Medium"
-                android:textColor="@color/white"
-                android:visibility="gone"
-                >
-
-            </com.google.android.material.textview.MaterialTextView>
-        </LinearLayout>
-
-    </LinearLayout>
-
+        />
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/controller_layout"
         android:layout_width="match_parent"
@@ -117,6 +73,17 @@
             android:secondaryProgress="60"
             />
         <ImageButton
+            android:id="@+id/exo_ratio"
+            style="@style/ExoStyledControls.Button.Bottom"
+            android:layout_width="@dimen/button_fullscreen_size"
+            android:layout_height="@dimen/button_fullscreen_size"
+            android:visibility="visible"
+            app:layout_constraintTop_toTopOf="@id/exo_fullscreen"
+            app:layout_constraintEnd_toStartOf="@id/exo_fullscreen"
+            android:layout_marginEnd="@dimen/small_padding"
+            android:src="@drawable/ic_aspect_ratio"
+            />
+        <ImageButton
             android:id="@id/exo_fullscreen"
             style="@style/ExoStyledControls.Button.Bottom.FullScreen"
             android:layout_width="@dimen/button_fullscreen_size"
@@ -124,10 +91,10 @@
             android:visibility="visible"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginEnd="36dp"
+            android:layout_marginEnd="@dimen/player_basic_padding"
             />
 
-        <androidx.recyclerview.widget.RecyclerView
+        <com.kt.apps.media.mobile.utils.FadingEdgeRecyclerView
             android:id="@+id/exo_channel_list"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -138,8 +105,9 @@
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             android:orientation="horizontal"
             android:layout_marginTop="24dp"
-            android:paddingStart="36dp"
-            android:paddingEnd="36dp"
+            android:paddingStart="@dimen/player_basic_padding"
+            android:paddingEnd="@dimen/player_basic_padding"
+            android:clipToPadding="false"
             android:requiresFadingEdge="horizontal"
             android:fadingEdge="horizontal"
             android:fadingEdgeLength="24dp"
@@ -150,7 +118,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_begin="36dp" />
+            app:layout_constraintGuide_begin="@dimen/player_basic_padding" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <ImageButton
@@ -160,9 +128,10 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/controller_layout"
-        android:layout_marginBottom="-24dp"
-        android:layout_height="80dp"
-        android:layout_width="80dp"
+        android:layout_height="@dimen/play_pause_button"
+        android:layout_width="@dimen/play_pause_button"
+        app:layout_constraintHeight_min="@dimen/play_pause_button"
+        app:layout_constraintHeight_default="spread"
         android:visibility="gone"
         tools:visibility="visible"
         />

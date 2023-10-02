@@ -8,11 +8,13 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import android.view.View
 import android.view.View.OnFocusChangeListener
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.annotation.CheckResult
 import androidx.annotation.DrawableRes
 import androidx.constraintlayout.widget.ConstraintSet
@@ -28,6 +30,7 @@ import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.utils.*
@@ -225,6 +228,9 @@ inline fun <reified T> groupAndSort(list: List<T>): List<Pair<String, List<T>>> 
         FootballMatch::class -> list.groupBy { (it as FootballMatch).league }
             .toList()
             .sortedBy { it.first }
+        VideoFavoriteDTO::class -> list.groupBy { (it as VideoFavoriteDTO).category }
+            .toList()
+            .sortedBy { it.first }
         else -> emptyList()
     }
 }
@@ -415,4 +421,24 @@ fun ExtensionsChannelDBWithCategoryViews.toExtensionChannel() : ExtensionsChanne
         isHls = tvStreamLink.contains("m3u8"),
         extensionSourceId = ""
     )
+}
+
+fun View.findTextViewsInView(): ArrayList<TextView> {
+    val textViews = ArrayList<TextView>()
+
+    if (this is TextView) {
+        // If the current view is a TextView, add it to the list
+        textViews.add(this)
+    } else if (this is ViewGroup) {
+        // If the current view is a ViewGroup (e.g., a layout), recursively search its children
+        val viewGroup = this as ViewGroup
+        val childCount = viewGroup.childCount
+
+        for (i in 0 until childCount) {
+            val childView = viewGroup.getChildAt(i)
+            textViews.addAll(childView.findTextViewsInView()) // Recursive call
+        }
+    }
+
+    return textViews
 }

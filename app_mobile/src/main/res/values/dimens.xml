@@ -34,5 +34,9 @@
     <dimen name="base_icon_size">20dp</dimen>
     <dimen name="button_fullscreen_size">48dp</dimen>
     <dimen name="image_button_size">32dp</dimen>
+    <dimen name="player_basic_padding">12dp</dimen>
+    <dimen name="play_pause_button">80dp</dimen>
+    <dimen name="navigation_bar_icon_size">24dp</dimen>
+    <dimen name="player_common_padding36">36dp</dimen>
 
 </resources>

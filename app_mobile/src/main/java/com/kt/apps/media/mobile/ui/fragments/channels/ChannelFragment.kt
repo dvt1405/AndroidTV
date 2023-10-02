@@ -91,21 +91,6 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
             }
             setHasFixedSize(true)
             setItemViewCacheSize(9)
-//            addOnScrollListener(object: OnScrollListener() {
-//                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-//                    super.onScrollStateChanged(recyclerView, newState)
-//                    when(newState) {
-//                        SCROLL_STATE_DRAGGING, SCROLL_STATE_SETTLING -> {
-//                            GlideApp.with(this@ChannelFragment.requireContext())
-//                                .pauseRequests()
-//                        }
-//                        SCROLL_STATE_IDLE -> {
-//                            GlideApp.with(this@ChannelFragment.requireContext())
-//                                .resumeRequests()
-//                        }
-//                    }
-//                }
-//            })
         }
 
         with(binding.swipeRefreshLayout) {
@@ -141,7 +126,6 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         }
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
-
             launch {
                 loadingChannel.isLoading.collectLatest {
                     swipeRefreshLayout.isRefreshing = it

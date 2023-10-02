@@ -14,6 +14,9 @@ class GetListFootballMatch @Inject constructor(
         val sourceFrom = params[EXTRA_SOURCE_FROM] as FootballDataSourceFrom
         val repo = sourceIterator[sourceFrom]
         return repo!!.getAllMatches()
+            .doOnNext {
+                cacheData = it
+            }
     }
 
     operator fun invoke(sourceFrom: FootballDataSourceFrom) = execute(

@@ -85,22 +85,12 @@ class ChannelListView @JvmOverloads constructor(
             isNestedScrollingEnabled = false
             addItemDecoration(channelItemDecoration)
             setHasFixedSize(false)
-//            addOnScrollListener(object : OnScrollListener() {
-//                override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-//                    super.onScrollStateChanged(recyclerView, newState)
-//                    when(newState) {
-//                        SCROLL_STATE_DRAGGING, SCROLL_STATE_SETTLING -> {
-//                            GlideApp.with(this@ChannelListView.context).pauseRequests()
-//                        }
-//                        SCROLL_STATE_IDLE -> {
-//                            GlideApp.with(this@ChannelListView.context).resumeRequests()
-//                        }
-//                    }
-//                }
-//            })
         }
     }
     fun changeDisplayStyle(style: DisplayStyle) {
+        recyclerView.layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
+            isItemPrefetchEnabled = false
+        }
         recyclerView.layoutManager = when(style) {
             DisplayStyle.GRID -> GridAutoFitLayoutManager(context, resources.getDimension(R.dimen.item_channel_width).toInt())
             DisplayStyle.HORIZONTAL_LINEAR -> LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
@@ -134,6 +124,7 @@ class RowItemChannelAdapter: BaseAdapter<IChannelElement, ItemChannelBinding>() 
         position: Int,
         holder: BaseViewHolder<IChannelElement, ItemChannelBinding>
     ) {
+        Log.d(TAG, "bindItem: $position ${item.name} ${item.logoChannel}")
         binding.item = item
         binding.title.isSelected = true
         binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)

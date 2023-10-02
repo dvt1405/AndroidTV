@@ -3,6 +3,7 @@ package com.kt.apps.media.mobile.ui.complex
 import android.app.AlertDialog
 import android.app.PictureInPictureParams
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
@@ -100,12 +101,12 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     override fun initView(savedInstanceState: Bundle?) {
         val metrics = resources.displayMetrics
+
         layoutHandler = if (metrics.widthPixels <= metrics.heightPixels) {
             PortraitLayoutHandler(WeakReference(this))
         } else {
             LandscapeLayoutHandler(WeakReference(this))
         }
-
         layoutHandler?.onPlaybackStateChange = {
             lifecycleScope.launch {
                 viewModel.onChangePlayerState(it)
@@ -149,7 +150,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 it.show(WindowInsetsCompat.Type.systemBars())
             }
         }
-     }
+      }
 
     override fun initAction(savedInstanceState: Bundle?) {
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -186,6 +187,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                     layoutHandler?.confirmState(state)
                     if (state == PlaybackState.Invisible) {
                         stopPlayback()
+                        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                     }
                 }
             }
@@ -220,11 +222,17 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        Log.d(TAG, "onConfigurationChanged: $newConfig")
+        handleRotationChange(newConfig.orientation)
+    }
+
+    private fun handleRotationChange(newOrientation: Int) {
+        Log.d(TAG, "handleRotationChange: $newOrientation")
         if (!(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode)) {
-            val shouldRecreate = when(newConfig.orientation) {
+            val shouldRecreate = when(newOrientation) {
                 Configuration.ORIENTATION_PORTRAIT -> layoutHandler is LandscapeLayoutHandler
                 Configuration.ORIENTATION_LANDSCAPE -> layoutHandler is PortraitLayoutHandler
-                else -> false
+                else -> true
             }
             if (shouldRecreate) {
                 recreate()
@@ -236,15 +244,15 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         if (!viewModel.isShowingPlayback.value) {
             return
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-            && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val params = PictureInPictureParams.Builder()
-                this@ComplexActivity.enterPictureInPictureMode(params.build())
-            } else {
-                this@ComplexActivity.enterPictureInPictureMode()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val params = PictureInPictureParams.Builder()
+                    this@ComplexActivity.enterPictureInPictureMode(params.build())
+                } else {
+                    this@ComplexActivity.enterPictureInPictureMode()
+                }
             }
-        }
     }
 
     private fun dismissAllDialog() {
@@ -306,12 +314,12 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
     private fun stopPlayback() {
-            binding.fragmentContainerPlayback.getFragment<Fragment>().takeIf { it != null }
-                ?.run {
-                supportFragmentManager.beginTransaction()
-                    .remove(this)
-                    .commit()
-            }
+        binding.fragmentContainerPlayback.getFragment<Fragment>().takeIf { it != null }
+            ?.run {
+            supportFragmentManager.beginTransaction()
+                .remove(this)
+                .commit()
+        }
     }
 
     override fun onStop() {
@@ -420,4 +428,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     }
 
+    companion object {
+        const val LAST_ORIENTATION = "LAST_ORIENTATION"
+    }
 }

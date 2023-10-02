@@ -8,6 +8,7 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.view.ContextThemeWrapper
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -17,6 +18,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import cn.pedant.SweetAlert.SweetAlertDialog
 import com.kt.apps.core.R
+import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.logging.Logger
 import java.util.*
 
@@ -81,6 +83,11 @@ fun Fragment.showErrorDialog(
             this.view?.foreground = oldForeground
         }
         onDismissListener?.invoke()
+        activity?.takeIf {
+            it is BaseActivity<*>
+        }?.let {
+            it as BaseActivity<*>
+        }?.onDialogDismiss()
     }
     successAlert.setOnShowListener {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -90,13 +97,18 @@ fun Fragment.showErrorDialog(
         }
         successAlert.getButton(cn.pedant.Sweetalert.R.id.confirm_button).requestFocus()
         onShowListener?.invoke()
+        activity?.takeIf {
+            it is BaseActivity<*>
+        }?.let {
+            it as BaseActivity<*>
+        }?.onDialogShowing()
     }
     successAlert.show()
     lifecycle.addObserver(object : LifecycleEventObserver {
         override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
             when(event) {
                 Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                    Logger.d(this, message = "OnPauseCalled")
+                    Logger.d(this@showErrorDialog, message = "OnPauseCalled")
                     successAlert.dismissWithAnimation()
                     lifecycle.removeObserver(this)
                 }
@@ -163,7 +175,7 @@ fun Activity.showErrorDialog(
                 override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
                     when (event) {
                         Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
-                            Logger.d(this, message = "OnPauseCalled")
+                            Logger.d(this@showErrorDialog, message = "OnPauseCalled")
                             successAlert.dismissWithAnimation()
                             lifecycle.removeObserver(this)
                         }
@@ -212,7 +224,7 @@ fun Activity.showSweetDialog(
                     when(event) {
                         Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_STOP -> {
                             try {
-                                Logger.d(this, message = "OnPauseCalled")
+                                Logger.d(this@showSweetDialog , message = "OnPauseCalled")
                                 successAlert.dismissWithAnimation()
                                 lifecycle.removeObserver(this)
                             } catch (_: Exception) {

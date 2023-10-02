@@ -13,6 +13,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.PersistableBundle
 import android.os.StrictMode
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -85,6 +86,8 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
     }
 
     private var networkChangeReceiver: NetworkChangeReceiver? = NetworkChangeReceiver.getInstance()
+
+    private var isCheckedUpdate: Boolean = false
     override fun onCreate(savedInstanceState: Bundle?) {
         if (BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(
@@ -115,8 +118,10 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
         window.decorView.setBackgroundColor(Color.WHITE)
         super.onCreate(savedInstanceState)
         updateLocale()
+        isCheckedUpdate  = savedInstanceState?.getBoolean(IS_CHECK_UPDATE) ?: false
         appUpdateInfoTask.addOnSuccessListener { updateInfo ->
-            if (updateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+            if (updateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE && !isCheckedUpdate) {
+                isCheckedUpdate = true
                 updateManager.registerListener(appUpdateListener)
                 updateManager.startUpdateFlowForResult(
                     updateInfo,
@@ -162,6 +167,11 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
     override fun onResume() {
         showInternetConnected(this.isNetworkAvailable())
         super.onResume()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putBoolean(IS_CHECK_UPDATE, isCheckedUpdate)
+        super.onSaveInstanceState(outState)
     }
 
     override fun applyOverrideConfiguration(overrideConfiguration: Configuration?) {
@@ -377,6 +387,12 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
         }
     }
 
+    open fun onDialogShowing() {
+    }
+
+    open fun onDialogDismiss() {
+    }
+
     override fun onDestroy() {
         networkChangeReceiver?.let {
             unregisterNetworkChangeReceiver(it)
@@ -387,5 +403,6 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
 
     companion object {
         private const val UPDATE_REQUEST_CODE = 102
+        private const val IS_CHECK_UPDATE = "IS_CHECK_UPDATE"
     }
 }

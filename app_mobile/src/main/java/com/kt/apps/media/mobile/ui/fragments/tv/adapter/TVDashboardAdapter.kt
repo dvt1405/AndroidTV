@@ -13,7 +13,9 @@ class TVDashboardAdapter(val fragment: Fragment, private val helper: IDashboardH
 
     override fun getItemCount(): Int {
         return _listItemCategory.size + 1
+//        return 1
     }
+
 
     override fun createFragment(position: Int): Fragment {
         return if (position == 0 ) {

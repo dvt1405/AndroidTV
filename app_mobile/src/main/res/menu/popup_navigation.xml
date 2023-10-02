@@ -14,6 +14,11 @@
         android:title="IPTV"
         android:visible="true" />
     <item
+        android:id="@+id/favorite"
+        android:enabled="true"
+        android:icon="@drawable/ic_bookmark_selector"
+        android:title="@string/favorite" />
+    <item
         android:id="@+id/info"
         android:enabled="true"
         android:icon="@drawable/ic_outline_info_24"

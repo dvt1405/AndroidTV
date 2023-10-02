@@ -28,4 +28,5 @@
     <string name="update_check">Kiểm tra cập nhật</string>
     <string name="tv_page_title">Truyền hình</string>
     <string name="radio_page_title">Phát thanh</string>
+    <string name="favorite">Yêu thích</string>
 </resources>

@@ -2,11 +2,13 @@ package com.kt.apps.media.mobile.ui.complex
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Outline
 import android.graphics.Rect
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewOutlineProvider
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -16,6 +18,7 @@ import androidx.transition.Transition
 import androidx.transition.TransitionManager
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.utils.CustomTransition
@@ -23,12 +26,14 @@ import com.kt.apps.media.mobile.utils.alignParent
 import com.kt.apps.media.mobile.utils.fillParent
 import com.kt.apps.media.mobile.utils.safeLet
 import java.lang.ref.WeakReference
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.properties.Delegates
 
 class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActivity>) : ComplexLayoutHandler  {
 
     private var state: PlaybackState by Delegates.observable(PlaybackState.Invisible) { _, oldValue, newValue ->
         if (oldValue !== newValue) {
+            Log.d(TAG, "onPlaybackStateChange: $oldValue -> $newValue")
             onPlaybackStateChange(newValue)
         }
     }
@@ -42,6 +47,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
     private val surfaceView: ConstraintLayout? by lazy {
         weakActivity.get()?.binding?.surfaceView as? ConstraintLayout
     }
+
 
     override var onPlaybackStateChange: (PlaybackState) -> Unit = { }
 
@@ -148,6 +154,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
     private fun transitionFullscreen() {
         state = PlaybackState.Fullscreen
+        Log.d(TAG, "transitionFullscreen: ${Log.getStackTraceString(Throwable())}")
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -181,7 +188,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
             TransitionManager.beginDelayedTransition(surfaceView, CustomTransition())
             set.applyTo(surfaceView)
-            playback.background = AppCompatResources.getDrawable(playback.context, R.drawable.playback_minimal_bg)
+            playback.outlineProvider = RoundedCornersOutlineProvider((12).dpToPx().toFloat(), (12).dpToPx().toFloat(), (12).dpToPx().toFloat(), 0F, 0F)
             playback.clipToOutline = true
 
         }
@@ -189,6 +196,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
 
     private fun transitionIDLE() {
+        state = PlaybackState.Invisible
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -197,15 +205,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
                 alignParent(playback.id, ConstraintSet.BOTTOM)
                 alignParent(playback.id, ConstraintSet.END)
             }
-            TransitionManager.beginDelayedTransition(surfaceView, Fade(Fade.IN).apply {
-                addListener(object: TransitionCallback() {
-                    override fun onTransitionStart(transition: Transition) {
-                        super.onTransitionStart(transition)
-                        this@LandscapeLayoutHandler.state = PlaybackState.Invisible
-                    }
-                })
-            })
-//            this.state = PlaybackState.Invisible
+            TransitionManager.beginDelayedTransition(surfaceView, Fade(Fade.IN))
             set.applyTo(surfaceView)
         }
     }
@@ -232,4 +232,55 @@ open class TransitionCallback: Transition.TransitionListener {
         Log.d(TAG, "onTransitionResume: $transition")
     }
 
+}
+
+class RoundedCornersOutlineProvider(
+    val radius: Float? = null,
+    val topLeft: Float? = null,
+    val topRight: Float? = null,
+    val bottomLeft: Float? = null,
+    val bottomRight: Float? = null,
+) : ViewOutlineProvider() {
+
+    private val topCorners = topLeft != null && topLeft == topRight
+    private val rightCorners = topRight != null && topRight == bottomRight
+    private val bottomCorners = bottomLeft != null && bottomLeft == bottomRight
+    private val leftCorners = topLeft != null && topLeft == bottomLeft
+    private val topLeftCorner = topLeft != null
+    private val topRightCorner = topRight != null
+    private val bottomRightCorner = bottomRight != null
+    private val bottomLeftCorner = bottomLeft != null
+
+    override fun getOutline(view: View, outline: Outline) {
+        val left = 0
+        val top = 0
+        val right = view.width
+        val bottom = view.height
+
+        if (radius != null) {
+            val cornerRadius = radius //.typedValue(resources).toFloat()
+            outline.setRoundRect(left, top, right, bottom, cornerRadius)
+        } else {
+            val cornerRadius = topLeft ?: topRight ?: bottomLeft ?: bottomRight ?: 0F
+
+            when {
+                topCorners -> outline.setRoundRect(left, top, right, bottom + cornerRadius.toInt(), cornerRadius)
+                bottomCorners -> outline.setRoundRect(left, top - cornerRadius.toInt(), right, bottom, cornerRadius)
+                leftCorners -> outline.setRoundRect(left, top, right + cornerRadius.toInt(), bottom, cornerRadius)
+                rightCorners -> outline.setRoundRect(left - cornerRadius.toInt(), top, right, bottom, cornerRadius)
+                topLeftCorner -> outline.setRoundRect(
+                    left, top, right + cornerRadius.toInt(), bottom + cornerRadius.toInt(), cornerRadius
+                )
+                bottomLeftCorner -> outline.setRoundRect(
+                    left, top - cornerRadius.toInt(), right + cornerRadius.toInt(), bottom, cornerRadius
+                )
+                topRightCorner -> outline.setRoundRect(
+                    left - cornerRadius.toInt(), top, right, bottom + cornerRadius.toInt(), cornerRadius
+                )
+                bottomRightCorner -> outline.setRoundRect(
+                    left - cornerRadius.toInt(), top - cornerRadius.toInt(), right, bottom, cornerRadius
+                )
+            }
+        }
+    }
 }

@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@color/transparent"
+        android:clipToPadding="true"
         tools:background="@color/black">
 
         <TextView
@@ -23,7 +24,7 @@
             android:textAppearance="@style/TextAppearance.Title"
             tools:text="Title" />
 
-        <androidx.recyclerview.widget.RecyclerView
+        <com.kt.apps.media.mobile.utils.FadingEdgeRecyclerView
             android:fadingEdge="horizontal"
             android:id="@+id/tv_channel_child_recycler_view"
             android:layout_width="match_parent"
@@ -33,6 +34,7 @@
             tools:listitem="@layout/item_channel"
             android:requiresFadingEdge="horizontal"
             android:fadingEdgeLength="32dp"
+            android:clipToPadding="true"
             />
 
     </LinearLayout>

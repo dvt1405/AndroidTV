@@ -6,7 +6,11 @@
         android:icon="@drawable/ic_search_24p"
         android:title="Tìm kiếm"
         android:visible="true" />
-
+    <item
+        android:id="@+id/favorite"
+        android:enabled="true"
+        android:icon="@drawable/ic_bookmark_selector"
+        android:title="@string/favorite" />
     <item
         android:id="@+id/tv"
         android:enabled="true"
