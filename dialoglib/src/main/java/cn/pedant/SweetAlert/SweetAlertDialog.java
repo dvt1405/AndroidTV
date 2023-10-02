@@ -205,6 +205,9 @@ public class SweetAlertDialog extends Dialog implements View.OnClickListener {
     }
 
     public void setBackground(Drawable background) {
+        if (getWindow() == null) {
+            return;
+        }
         getWindow().setBackgroundDrawable(background);
         getWindow().setLayout(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT);
     }
