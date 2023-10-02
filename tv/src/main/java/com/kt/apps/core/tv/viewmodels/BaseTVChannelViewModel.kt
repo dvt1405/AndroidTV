@@ -111,8 +111,7 @@ open class BaseTVChannelViewModel constructor(
                 markLastWatchedChannel(it)
                 loadProgramForChannel(it.channel)
                 enqueueInsertWatchNextTVChannel(it.channel)
-//                _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
-                _tvWithLinkStreamLiveData.postValue(DataState.Error(Throwable("Sample")))
+                _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
                 Logger.d(
                     this, message = "play by deeplink result: {" +
                             "channelId: $channelId, " +
