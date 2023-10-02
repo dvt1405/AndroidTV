@@ -387,6 +387,12 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
         }
     }
 
+    open fun onDialogShowing() {
+    }
+
+    open fun onDialogDismiss() {
+    }
+
     override fun onDestroy() {
         networkChangeReceiver?.let {
             unregisterNetworkChangeReceiver(it)
