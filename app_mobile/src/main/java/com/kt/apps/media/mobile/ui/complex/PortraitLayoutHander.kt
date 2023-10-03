@@ -4,15 +4,16 @@ import android.content.Context
 import android.graphics.Rect
 import android.util.Log
 import android.view.GestureDetector
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.LinearInterpolator
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.transition.AutoTransition
+import androidx.transition.ChangeBounds
 import androidx.transition.Fade
 import androidx.transition.Slide
 import androidx.transition.TransitionManager
+import androidx.transition.TransitionSet
 import com.google.android.exoplayer2.video.VideoSize
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PlaybackState
@@ -194,14 +195,29 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
                 PlaybackState.Invisible, PlaybackState.PIP -> 0f
                 PlaybackState.Minimal -> 0.3f
             })
-            val transition = when(Pair(currentState, state)) {
-                Pair(PlaybackState.Invisible, PlaybackState.Minimal), Pair(PlaybackState.Invisible, PlaybackState.Fullscreen) -> Slide().apply {
-                    slideEdge = Gravity.BOTTOM
+//            val transition = when(Pair(currentState, state)) {
+//                Pair(PlaybackState.Invisible, PlaybackState.Minimal), Pair(PlaybackState.Invisible, PlaybackState.Fullscreen) -> Slide().apply {
+//                    slideEdge = Gravity.BOTTOM
+//                }
+//                Pair(PlaybackState.Minimal, PlaybackState.Fullscreen), Pair(PlaybackState.Fullscreen, PlaybackState.Minimal)  -> AutoTransition()
+//                else -> Slide().apply {
+//                    slideEdge = Gravity.TOP
+//                }
+//            }.apply {
+//                duration = 2000L
+//                interpolator = LinearInterpolator()
+//            }
+            val transition = object: TransitionSet() {
+                init {
+                    ordering = ORDERING_SEQUENTIAL
+                    addTransition(Fade(Fade.OUT))
+                        .addTransition(Slide())
+                        .addTransition(ChangeBounds())
+                        .addTransition(Fade(Fade.IN))
                 }
-                Pair(PlaybackState.Minimal, PlaybackState.Fullscreen), Pair(PlaybackState.Fullscreen, PlaybackState.Minimal)  -> AutoTransition()
-                else -> Slide().apply {
-                    slideEdge = Gravity.TOP
-                }
+            }.apply {
+                duration = 250L
+                interpolator = LinearInterpolator()
             }
             fragmentChannelContainer?.run {
                 transition.excludeChildren(this.id, true)
