@@ -218,7 +218,7 @@ inline fun <reified T> groupAndSort(list: List<T>): List<Pair<String, List<T>>> 
                 else 1
             })
             .map {
-                return@map Pair(TVChannelGroup.valueOf(it.first).value, it.second)
+                return@map Pair(safeValueOf<TVChannelGroup>(it.first)?.value ?: it.first, it.second)
             }
         ExtensionsChannel::class -> list.groupBy { (it as ExtensionsChannel).tvGroup }
             .toList()
@@ -442,3 +442,10 @@ fun View.findTextViewsInView(): ArrayList<TextView> {
 
     return textViews
 }
+
+inline fun <reified T : Enum<T>> safeValueOf(name: String): T? =
+    try {
+        java.lang.Enum.valueOf(T::class.java, name)
+    } catch(e: IllegalArgumentException) {
+        null
+    }
