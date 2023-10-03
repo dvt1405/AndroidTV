@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.viewmodels
 
 import com.kt.apps.core.base.viewmodels.BaseFavoriteViewModel
+import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.repository.IFavoriteRepository
 import com.kt.apps.core.storage.local.RoomDataBase
@@ -8,6 +9,7 @@ import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.media.mobile.utils.await
 import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -70,5 +72,15 @@ class FavoriteViewModel@Inject constructor(
                     })
             )
         }
+    }
+
+    suspend fun saveFavoriteKt(channel: ExtensionsChannel) {
+        saveFavorite(channel)
+        saveIptvChannelLiveData.await(tag = TAG)
+    }
+
+    suspend fun unsaveFavoriteKt(channel: ExtensionsChannel) {
+        deleteFavorite(channel)
+        deleteIptvChannelLiveData.await(TAG)
     }
 }
