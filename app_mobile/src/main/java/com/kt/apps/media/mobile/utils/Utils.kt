@@ -449,3 +449,7 @@ inline fun <reified T : Enum<T>> safeValueOf(name: String): T? =
     } catch(e: IllegalArgumentException) {
         null
     }
+
+inline fun Fragment.showDefaultErrorDialog() {
+    showErrorDialog(content = getString(com.kt.apps.media.mobile.R.string.error_happen))
+}

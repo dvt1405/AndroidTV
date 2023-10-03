@@ -189,6 +189,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
 
+    private val exceptionHandler: CoroutineExceptionHandler = CoroutineExceptionHandler { _, _ ->
+        showDefaultErrorDialog()
+    }
+
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
         liveLabel?.visibility = View.GONE
@@ -209,9 +213,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
         favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_bookmark_selector, context?.theme)
         favoriteButton?.setOnClickListener { view ->
-            lifecycleScope.launch {
-                toggleFavorite()
-            }
+            toggleFavorite()
         }
         favoriteButton?.visibility = View.INVISIBLE
 
@@ -600,9 +602,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
 
-    protected suspend fun toggleFavorite() {
-        val isSelected = favoriteButton?.isSelected ?: return
-        interactor.toggleFavoriteCurrent(isSelected)
+    protected fun toggleFavorite() {
+        lifecycleScope.launch(exceptionHandler) {
+            val isSelected = favoriteButton?.isSelected ?: return@launch
+            interactor.toggleFavoriteCurrent(isSelected)
+        }
+
     }
     private fun toggleChannelListVisibility(shouldShow: Boolean) {
         channelListRecyclerView?.visibility = if (shouldShow) {
