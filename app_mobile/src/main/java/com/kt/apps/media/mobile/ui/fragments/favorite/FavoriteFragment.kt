@@ -11,6 +11,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.kt.apps.core.base.BaseFragment
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
+import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.inVisible
 import com.kt.apps.core.utils.showErrorDialog
@@ -22,6 +25,7 @@ import com.kt.apps.media.mobile.ui.view.childItemClicks
 import com.kt.apps.media.mobile.utils.ActivityIndicator
 import com.kt.apps.media.mobile.utils.groupAndSort
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
+import com.kt.apps.media.mobile.utils.safeValueOf
 import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.FavoriteInteractor
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -71,9 +75,8 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
                         showContentView()
                     }
 
-                    binding.channelList.reloadAllData(groupAndSort(it).map { pair -> ChannelListData(pair.first, pair.second.map { video ->
-                        ChannelElement.FavoriteVideo(video)
-                    }) })
+                    binding.channelList
+                        .reloadAllData(it.group())
 
                 }
             }
@@ -108,4 +111,33 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>() {
         fun newInstance() =
             FavoriteFragment()
     }
+}
+
+fun List<VideoFavoriteDTO>.groupByType(): Map<VideoFavoriteDTO.Type, List<Pair<String, List<VideoFavoriteDTO>>>> {
+    val groupByType = groupBy { it.type }
+    return groupByType.mapValues { groupAndSort(it.value) }
+}
+
+fun List<VideoFavoriteDTO>.group(): List<ChannelListData> {
+    return groupByType()
+        .flatMap { entry ->
+            if (entry.key == VideoFavoriteDTO.Type.TV) {
+                return@flatMap entry.value.map { pair ->
+                    ChannelListData(
+                        safeValueOf<TVChannelGroup>(pair.first)?.value ?: pair.first,
+                        pair.second.map { video ->
+                            ChannelElement.FavoriteVideo(video)
+                        }
+                    )
+                }
+            }
+            return@flatMap entry.value.map { pair ->
+                ChannelListData(
+                    pair.first,
+                    pair.second.map { video ->
+                        ChannelElement.FavoriteVideo(video)
+                    }
+                )
+            }
+        }
 }
