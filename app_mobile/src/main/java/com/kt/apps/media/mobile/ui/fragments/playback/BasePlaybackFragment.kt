@@ -182,7 +182,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     private val channelListVisibility: Int
         get() {
-            return if (resources.getBoolean(R.bool.is_small_size)) {
+            return if (context?.resources?.getBoolean(R.bool.is_small_size) != false) {
                 View.GONE
             } else {
                 View.VISIBLE
@@ -210,7 +210,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_bookmark_selector, context?.theme)
         favoriteButton?.setOnClickListener { view ->
             lifecycleScope.launch {
-                interactor.toggleFavoriteCurrent(view.isSelected)
+                toggleFavorite()
             }
         }
         favoriteButton?.visibility = View.INVISIBLE
@@ -600,6 +600,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
 
+    protected suspend fun toggleFavorite() {
+        val isSelected = favoriteButton?.isSelected ?: return
+        interactor.toggleFavoriteCurrent(isSelected)
+    }
     private fun toggleChannelListVisibility(shouldShow: Boolean) {
         channelListRecyclerView?.visibility = if (shouldShow) {
             channelListVisibility

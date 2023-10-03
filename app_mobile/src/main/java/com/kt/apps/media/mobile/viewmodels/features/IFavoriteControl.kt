@@ -9,12 +9,21 @@ interface IFavoriteControl {
     val currentPlayingVideo: StateFlow<StreamLinkData?>
 }
 
-suspend fun  IFavoriteControl.toggleFavoriteCurrent(isFavorite: Boolean) {
-    val currentVideo = (currentPlayingVideo.value as? StreamLinkData.TVStreamLinkData)?.data ?: return
-    if (isFavorite) {
-        favoriteViewModel.unSaveTVChannel(currentVideo.channel)
-    } else {
-        favoriteViewModel.saveTVChannel(currentVideo.channel)
+suspend fun IFavoriteControl.toggleFavoriteCurrent(isFavorite: Boolean) {
+    val streamLinkData = currentPlayingVideo.value
+    if (streamLinkData is StreamLinkData.TVStreamLinkData) {
+        val currentVideo = streamLinkData.data
+        if (isFavorite) {
+            favoriteViewModel.unSaveTVChannel(currentVideo.channel)
+        } else {
+            favoriteViewModel.saveTVChannel(currentVideo.channel)
+        }
+    } else if (streamLinkData is StreamLinkData.ExtensionStreamLinkData) {
+        if (isFavorite) {
+            favoriteViewModel.unsaveFavoriteKt(streamLinkData.data)
+        } else {
+            favoriteViewModel.saveFavoriteKt(streamLinkData.data)
+        }
     }
     loadFavorite()
 }
