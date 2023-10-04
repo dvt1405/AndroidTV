@@ -102,6 +102,19 @@ class SearchForText @Inject constructor(
         Logger.d(this@SearchForText, "TVChannel", rawQuery)
         val tvChannelSource: Single<List<SearchResult>> = roomDataBase.tvChannelDao()
             .searchChannelByNameFts4(SimpleSQLiteQuery(rawQuery))
+            .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
+            .flatMap {
+                if (it.isEmpty()) {
+                    Single.error(Throwable("Empty list"))
+                } else {
+                    Single.just(it)
+                }
+            }
+            .retry { t1, t2 ->
+                Logger.d(this@SearchForText, "TVChannel", "retry: $t1, $t2")
+                Thread.sleep(500)
+                return@retry t1 < 3
+            }
             .onErrorReturnItem(listOf())
             .map {
                 it.map {
@@ -116,6 +129,7 @@ class SearchForText @Inject constructor(
 
         val extensionsSource: Single<List<SearchResult>> = roomDataBase.extensionsChannelDao()
             .searchByNameQuery(getSqlQuery(query, filter, limit, offset))
+            .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
             .map {
                 val list = it.map {
                     val calculateScore = calculateScore(it.tvChannelName, queryNormalize, filterHighlight)
