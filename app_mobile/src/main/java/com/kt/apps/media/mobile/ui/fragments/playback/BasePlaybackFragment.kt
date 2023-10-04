@@ -774,6 +774,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     open fun provideInPIPModeLayout(): ConstraintSet? {
+
         Log.d(TAG, "provideInPIPModeLayout: ")
         return safeLet(exoPlayer, minimalLayout, channelListRecyclerView ) {
                 exoplayer,  minimal, list ->
