@@ -6,9 +6,14 @@
     android:backgroundTint="#FF282828"
     android:padding="24dp"
     >
-    <include
-        layout="@layout/layout_video_codec_info"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_height="match_parent">
+        <include
+            layout="@layout/layout_video_codec_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+    </ScrollView>
+
 </FrameLayout>
