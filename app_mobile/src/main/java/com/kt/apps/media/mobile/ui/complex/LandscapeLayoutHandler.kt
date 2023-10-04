@@ -188,6 +188,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
             TransitionManager.beginDelayedTransition(surfaceView, CustomTransition())
             set.applyTo(surfaceView)
+            playback.background = AppCompatResources.getDrawable(playback.context, R.drawable.playback_minimal_bg)
             playback.outlineProvider = RoundedCornersOutlineProvider((12).dpToPx().toFloat(), (12).dpToPx().toFloat(), (12).dpToPx().toFloat(), 0F, 0F)
             playback.clipToOutline = true
 

@@ -81,10 +81,10 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
                 this@DashboardFragment.popupMenu.show()
                 return@OnItemSelectedListener true
             }
-            if (it.itemId == R.id.search) {
-                showSearchPopup()
-                return@OnItemSelectedListener true
-            }
+//            if (it.itemId == R.id.search) {
+//                showSearchPopup()
+//                return@OnItemSelectedListener true
+//            }
             binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
             return@OnItemSelectedListener true
         } else {
@@ -142,9 +142,12 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
     }
 
     override fun onDestroyView() {
+
+        Log.d(TAG, "onDestroyView: ")
         binding.viewpager.adapter = null
         super.onDestroyView()
     }
+
     override fun onDetach() {
         super.onDetach()
         (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener(null)
@@ -182,10 +185,12 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
             ?.add(android.R.id.content, searchFragment)
             ?.addToBackStack(searchFragment.screenName)
             ?.commit()
+
     }
 
     companion object {
         private const val SELECTED_ID = "selected_id"
+        private const val PREVIOUS_ORIENTATION = "PREVIOUS_ORIENTATION"
         fun newInstance(): DashboardFragment {
             val fragment = DashboardFragment()
             return fragment
