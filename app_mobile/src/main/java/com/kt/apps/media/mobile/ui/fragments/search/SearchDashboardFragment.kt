@@ -34,7 +34,7 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
     override val layoutResId: Int
         get() = R.layout.fragment_search_dashboard
     override val screenName: String
-        get() = "SearchDashboardFragment"
+        get() = name
 
     private val viewModel by lazy {
         SearchDashboardViewModel(ViewModelProvider(requireActivity(), factory), requireContext())
@@ -60,10 +60,11 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
             addItemDecoration(PaddingItemDecoration(PaddingItemDecoration.Edge(0, 12, 0, 0)))
         }
 
-        binding.backButton?.setOnClickListener {
-            activity?.onBackPressedDispatcher?.onBackPressed()
-//            activity?.onBackPressed()
-        }
+//        binding.
+//        binding.backButton?.setOnClickListener {
+//            activity?.onBackPressedDispatcher?.onBackPressed()
+////            activity?.onBackPressed()
+//        }
     }
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
@@ -84,14 +85,14 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
                 }
             }
 
-            if (!isLandscape) {
-                launch {
-                    viewModel.onOpenPlayback
-                        .collectLatest {
-                            activity?.onBackPressed()
-                        }
-                }
-            }
+//            if (!isLandscape) {
+//                launch {
+//                    viewModel.onOpenPlayback
+//                        .collectLatest {
+//                            activity?.onBackPressed()
+//                        }
+//                }
+//            }
 
         }
 
@@ -136,6 +137,8 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
     }
 
     companion object {
+
+        const val name = "SearchDashboardFragment"
         fun newInstance(): SearchDashboardFragment {
             val fragment = SearchDashboardFragment()
             return fragment

@@ -30,7 +30,7 @@
                 android:id="@+id/channel_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingHorizontal="40dp"
+                android:paddingHorizontal="@dimen/search_list_padding"
                 android:layout_marginTop="24dp"
                 />
         </ViewSwitcher>

@@ -42,6 +42,7 @@ import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors

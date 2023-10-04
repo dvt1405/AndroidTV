@@ -10,44 +10,31 @@
         tools:background="@color/black"
         android:background="@color/black"
         >
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/back_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@color/transparent"
-            app:icon="@drawable/ic_arrow_back"
-            app:iconSize="@dimen/base_icon_size"
-            app:iconTint="@color/white"
-            style="@style/Widget.Material3.Button.IconButton"
-            app:layout_constraintTop_toTopOf="@id/textInputLayout1"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="@id/textInputLayout1"
-            android:layout_marginStart="40dp"
-            />
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="40dp"
-            app:hintEnabled="false"
+            android:layout_marginTop="@dimen/search_margin_top"
+            android:layout_marginEnd="@dimen/search_list_padding"
+            android:layout_marginStart="@dimen/search_list_padding"
+            android:textColorHint="@color/edittext_border"
             android:theme="@style/TextInputLayout"
 
-            android:textColorHint="@color/edittext_border"
-            app:startIconDrawable="@drawable/ic_search_24p"
-            app:startIconTint="@color/white"
-            app:boxStrokeColor="@color/box_stroke_color"
             app:boxBackgroundColor="#36FFFFFF"
             app:boxBackgroundMode="outline"
-            app:boxStrokeWidth="2dp"
             app:boxCornerRadiusBottomEnd="@dimen/search_box_corner_radius"
             app:boxCornerRadiusBottomStart="@dimen/search_box_corner_radius"
             app:boxCornerRadiusTopEnd="@dimen/search_box_corner_radius"
             app:boxCornerRadiusTopStart="@dimen/search_box_corner_radius"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toEndOf="@id/back_button"
+            app:boxStrokeColor="@color/box_stroke_color"
+            app:boxStrokeWidth="2dp"
+            app:hintEnabled="false"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:startIconDrawable="@drawable/ic_search_24p"
+            app:startIconTint="@color/white"
 
             >
 
@@ -55,26 +42,25 @@
                 android:id="@+id/search_input_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="@string/search_input_placeholder"
                 android:imeOptions="actionDone"
                 android:inputType="text"
-                android:textColor="@color/white"
-                android:hint="@string/search_input_placeholder"
-                android:textColorHint="@color/edittext_border"
                 android:textAppearance="@style/TextAppearance.Body"
-                />
+                android:textColor="@color/white"
+                android:textColorHint="@color/edittext_border" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/current_search_container"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/textInputLayout1"
-            app:layout_constraintStart_toStartOf="@id/back_button"
-            app:layout_constraintEnd_toEndOf="@id/textInputLayout1"
             android:layout_marginTop="24dp"
             android:orientation="horizontal"
-            >
-        </androidx.recyclerview.widget.RecyclerView>
+            app:layout_constraintEnd_toEndOf="@id/textInputLayout1"
+            app:layout_constraintTop_toBottomOf="@id/textInputLayout1"
+            app:layout_constraintStart_toStartOf="@id/textInputLayout1"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            />
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragment_container"
