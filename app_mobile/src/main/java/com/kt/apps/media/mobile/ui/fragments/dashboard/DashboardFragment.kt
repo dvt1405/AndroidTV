@@ -56,6 +56,10 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         DashboardPagerAdapter(this)
     }
 
+    private val supportedFragmentId: List<Int> by lazy {
+        listOf(R.id.search, R.id.favorite, R.id.tv, R.id.radio, R.id.extension, R.id.info)
+    }
+
     private val uiControlViewModel by lazy {
         ViewModelProvider(this.requireActivity(), factory)[UIControlViewModel::class.java]
     }
@@ -81,13 +85,10 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
                 this@DashboardFragment.popupMenu.show()
                 return@OnItemSelectedListener true
             }
-//            if (it.itemId == R.id.search) {
-//                showSearchPopup()
-//                return@OnItemSelectedListener true
-//            }
             binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
             return@OnItemSelectedListener true
         } else {
+            Log.d(TAG,  "onItemSelectedListener: $it")
             binding.viewpager.setCurrentItem(_adapter.getPositionForItem(it.itemId), false)
             return@OnItemSelectedListener true
         }
@@ -105,29 +106,17 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        if (!isLandscape) {
-            val popupMenu = popupMenu.menu
-            if (BuildConfig.isBeta) {
-                popupMenu.findItem(R.id.football).isVisible = true
-            }
-            val navigationMenu = (binding.bottomNavigation as NavigationBarView).menu
-            _adapter.onRefresh((navigationMenu.children.toList() + popupMenu.children.toList())
-                .filter { it.isVisible }
-                .map {
-                it.itemId
-            }.asSequence())
+        _adapter.onRefresh(supportedFragmentId.asSequence())
+        if (isLandscape) {
+            (binding.bottomNavigation as NavigationBarView).menu.children
         } else {
-            if (BuildConfig.isBeta) {
-                (binding.bottomNavigation as NavigationBarView).menu.findItem(R.id.football).isVisible =
-                    true
-            }
-            _adapter.onRefresh((binding.bottomNavigation as NavigationBarView).menu.children
-                .filter { it.isVisible }
-                .map {
-                it.itemId
-            })
+            (binding.bottomNavigation as NavigationBarView).menu.children + popupMenu.menu.children
         }
-
+        .forEach {
+            if (!supportedFragmentId.contains(it.itemId) && it.itemId != R.id.more) {
+                it.isVisible = false
+            }
+        }
         (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener(onItemSelectedListener)
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -153,10 +142,18 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         (binding.bottomNavigation as NavigationBarView).setOnItemSelectedListener(null)
         binding.viewpager.adapter = null
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val currentItem = binding.viewpager.currentItem
+        _adapter.getPositionForItem(currentItem)
+    }
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
+        Log.d(TAG, "onViewStateRestored: $savedInstanceState")
         binding.viewpager.currentItem.let { _adapter.getItemOrNull(it) }
             ?.run {
+                Log.d(TAG, "onViewStateRestored $this $popupMenu.menu.children.toList()")
                 silentSelectNavigationBar(
                     if (isLandscape) {
                         this
@@ -177,15 +174,6 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
             selectedItemId = item
             this.setOnItemSelectedListener(onItemSelectedListener)
         }
-    }
-    private fun showSearchPopup() {
-        val searchFragment = SearchDashboardFragment()
-
-        this.activity?.supportFragmentManager?.beginTransaction()
-            ?.add(android.R.id.content, searchFragment)
-            ?.addToBackStack(searchFragment.screenName)
-            ?.commit()
-
     }
 
     companion object {

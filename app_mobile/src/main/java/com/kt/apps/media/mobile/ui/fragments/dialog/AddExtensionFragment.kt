@@ -106,13 +106,13 @@ class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
 
     private var isUserEditName: Boolean = false
 
-    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-
-        val dialog = super.onCreateDialog(savedInstanceState)
-        dialog.window?.setBackgroundDrawableResource(com.kt.apps.resources.R.color.transparent)
-        dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
-        return dialog
-    }
+//    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+//
+//        val dialog = super.onCreateDialog(savedInstanceState)
+//        dialog.window?.setBackgroundDrawableResource(com.kt.apps.resources.R.color.transparent)
+//        dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+//        return dialog
+//    }
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView: ")
         sourceLinkLayout.prefixTextView.updateLayoutParams<ViewGroup.LayoutParams> {
