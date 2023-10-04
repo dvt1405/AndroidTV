@@ -27,8 +27,7 @@
         android:id="@+id/football"
         android:enabled="true"
         android:icon="@drawable/ic_soccer_ball"
-        android:title="Bóng đá"
-        android:visible="false" />
+        android:title="Bóng đá"/>
 
     <item
         android:id="@+id/extension"
