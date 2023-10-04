@@ -40,5 +40,6 @@
     <dimen name="player_common_padding36">36dp</dimen>
     <dimen name="search_list_padding">4dp</dimen>
     <dimen name="search_margin_top">4dp</dimen>
+    <dimen name="player_livetime_margin_start">24dp</dimen>
 
 </resources>
