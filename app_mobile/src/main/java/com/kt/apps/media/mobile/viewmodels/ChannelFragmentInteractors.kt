@@ -57,9 +57,8 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
     }
 
     suspend fun getListTVChannelAsync(forceRefresh: Boolean) {
-//        tvChannelViewModel.getListTVChannel(forceRefresh)
-//        tvChannelViewModel.tvChannelLiveData.await()
-        throw Throwable("Test")
+        tvChannelViewModel.getListTVChannel(forceRefresh)
+        tvChannelViewModel.tvChannelLiveData.await()
     }
 }
 
