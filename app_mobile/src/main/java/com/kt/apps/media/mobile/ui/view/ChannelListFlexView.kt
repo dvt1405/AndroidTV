@@ -92,7 +92,7 @@ class ChannelListView @JvmOverloads constructor(
             isItemPrefetchEnabled = false
         }
         recyclerView.layoutManager = when(style) {
-            DisplayStyle.GRID -> GridAutoFitLayoutManager(context, resources.getDimension(R.dimen.item_channel_width).toInt())
+            DisplayStyle.GRID -> GridAutoFitLayoutManager(context, resources.getDimension(R.dimen.item_channel_width).toInt() + channelItemDecoration.padding)
             DisplayStyle.HORIZONTAL_LINEAR -> LinearLayoutManager(context, RecyclerView.HORIZONTAL, false).apply {
                 isItemPrefetchEnabled = false
             }
