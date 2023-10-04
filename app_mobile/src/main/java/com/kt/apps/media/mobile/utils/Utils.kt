@@ -328,19 +328,24 @@ fun <T> LiveData<DataState<T>>.asDataStateFlow(tag: String): Flow<DataState<T>> 
 }
 
 
-inline val channelItemDecoration
-    get() = object: RecyclerView.ItemDecoration() {
-        override fun getItemOffsets(
-            outRect: Rect,
-            view: View,
-            parent: RecyclerView,
-            state: RecyclerView.State
-        ) {
-            val value = App.get().resources.getDimensionPixelSize(com.kt.apps.media.mobile.R.dimen.item_channel_decoration)
-            outRect.right = value
-            outRect.bottom = value
-        }
+class ChannelItemDecoration: RecyclerView.ItemDecoration() {
+    val padding
+        get() = App.get().resources.getDimensionPixelSize(com.kt.apps.media.mobile.R.dimen.item_channel_decoration)
+
+    override fun getItemOffsets(
+        outRect: Rect,
+        view: View,
+        parent: RecyclerView,
+        state: RecyclerView.State
+    ) {
+        val value = App.get().resources.getDimensionPixelSize(com.kt.apps.media.mobile.R.dimen.item_channel_decoration)
+        outRect.right = value
+        outRect.bottom = value
     }
+}
+
+inline val channelItemDecoration
+    get() = ChannelItemDecoration()
 
 inline fun <T1: Any, T2: Any, R: Any> safeLet(p1: T1?, p2: T2?, block: (T1, T2)->R?): R? {
     return if (p1 != null && p2 != null) block(p1, p2) else null

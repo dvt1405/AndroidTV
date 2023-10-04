@@ -195,18 +195,7 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
                 PlaybackState.Invisible, PlaybackState.PIP -> 0f
                 PlaybackState.Minimal -> 0.3f
             })
-//            val transition = when(Pair(currentState, state)) {
-//                Pair(PlaybackState.Invisible, PlaybackState.Minimal), Pair(PlaybackState.Invisible, PlaybackState.Fullscreen) -> Slide().apply {
-//                    slideEdge = Gravity.BOTTOM
-//                }
-//                Pair(PlaybackState.Minimal, PlaybackState.Fullscreen), Pair(PlaybackState.Fullscreen, PlaybackState.Minimal)  -> AutoTransition()
-//                else -> Slide().apply {
-//                    slideEdge = Gravity.TOP
-//                }
-//            }.apply {
-//                duration = 2000L
-//                interpolator = LinearInterpolator()
-//            }
+
             val transition = object: TransitionSet() {
                 init {
                     ordering = ORDERING_SEQUENTIAL
