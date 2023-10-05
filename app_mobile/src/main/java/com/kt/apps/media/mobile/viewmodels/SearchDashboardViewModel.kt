@@ -5,11 +5,15 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
+import com.kt.apps.core.usecase.search.SearchForText
+import com.kt.apps.core.utils.TAG
+import com.kt.apps.media.mobile.utils.await
 import com.kt.apps.media.mobile.viewmodels.features.SearchViewModels
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 private const val HISTORY_LIST_KEY = "HISTORY_LIST_KEY"
 private const val MAX_ITEM_HISTORY = 5
@@ -59,8 +63,14 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
         }
     }
 
-    fun performSearch(string: String) {
-        searchViewModel.querySearch(string)
+    suspend fun performSearch(string: String) {
+        try {
+            searchViewModel.querySearch(string)
+            searchViewModel.searchQueryLiveData.await(TAG)
+        } catch (e: Throwable) {
+            searchViewModel.querySearch(string, SearchForText.FILTER_ONLY_TV_CHANNEL)
+        }
+
     }
 
     fun performClearSearch() {

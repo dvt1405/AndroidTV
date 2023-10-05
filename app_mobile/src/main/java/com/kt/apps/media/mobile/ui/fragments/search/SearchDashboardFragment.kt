@@ -102,7 +102,10 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
                     .takeIf { it.isNotEmpty() }
                     ?.run {
                         viewModel.saveHistorySearch(this)
-                        viewModel.performSearch(this)
+                        lifecycleScope.launch {
+                            viewModel.performSearch(this@run)
+                        }
+
                     }
             }
             false
@@ -113,7 +116,9 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
                 binding.searchInputText.text.toString().trim().takeIf { it.isNotEmpty() }
                     ?.run {
                         viewModel.saveHistorySearch(this)
-                        viewModel.performSearch(this)
+                        lifecycleScope.launch {
+                            viewModel.performSearch(this@run)
+                        }
                     }
             }
         }
@@ -130,7 +135,9 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
 
     private val performSearchChange: (String) -> Unit = {
         if (it.isNotEmpty()) {
-            viewModel.performSearch(it)
+            lifecycleScope.launch {
+                viewModel.performSearch(it)
+            }
         } else {
             viewModel.performClearSearch()
         }
