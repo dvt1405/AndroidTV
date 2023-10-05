@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.google.common.collect.MapMaker
@@ -15,6 +16,7 @@ import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCateg
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.usecase.history.GetListHistory
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 import io.reactivex.rxjava3.core.Maybe
