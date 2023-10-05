@@ -17,14 +17,30 @@ xmlns:app="http://schemas.android.com/apk/res-auto">
             android:id="@+id/empty_placeholder"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
-            <ImageView
-                android:layout_width="160dp"
-                android:layout_height="160dp"
-                android:src="@drawable/ic_bookmark_selector"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                app:tint="@color/box_stroke_color"
-                android:alpha="0.25"
-                />
+                android:orientation="vertical"
+                >
+                <ImageView
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:src="@drawable/ic_bookmark_selector"
+                    app:tint="@color/box_stroke_color"
+                    android:alpha="0.25"
+                    android:layout_gravity="center"
+                    />
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Danh sách yêu thích trống"
+                    android:textAlignment="center"
+                    android:textAppearance="@style/TextAppearance.Body"
+                    android:textColor="@color/box_stroke_color"
+                    />
+            </LinearLayout>
+
         </FrameLayout>
         <com.kt.apps.media.mobile.ui.view.ChannelListRecyclerView
             android:id="@+id/channel_list"
