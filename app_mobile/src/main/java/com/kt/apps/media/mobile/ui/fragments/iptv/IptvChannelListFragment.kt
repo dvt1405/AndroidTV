@@ -72,6 +72,7 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
 
             launch {
                 activityIndicator.isLoading.collectLatest {
+                    Log.d(TAG, "initAction: isLoading $it")
                     swipeRefreshLayout.isRefreshing = it
                     recyclerView.showHideSkeleton(it)
                 }
@@ -99,20 +100,25 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
 
     private val loadData: suspend (Unit) -> Unit = {
         viewModels?.apply {
-            lifecycleScope.launch(CoroutineExceptionHandler { _, e ->
-                Log.d(TAG, "loadData: $e ")
+            lifecycleScope.launchTrack(activityIndicator, CoroutineExceptionHandler { _, throwable ->
+                Log.d(TAG, "loadData: $throwable ")
                 viewSwitcher.showError()
             }) {
                 viewSwitcher.showContentView()
-                val list = loadDataAsync().await()
+                val list = loadData()
                 val grouped = groupAndSort(list).map {
-                    ChannelListData(it.first, it.second.map {channel ->
-                        ChannelElement.ExtensionChannelElement(channel)
-                    })
+                    ChannelListData(
+                        it.first,
+                        it.second.map { channel ->
+                            ChannelElement.ExtensionChannelElement(
+                                channel
+                            )
+                        })
                 }
                 binding.listChannelRecyclerview.reloadAllData(grouped)
+            }.invokeOnCompletion {
+                swipeRefreshLayout.isRefreshing = false
             }
-                .trackJob(activityIndicator)
         }
     }
 

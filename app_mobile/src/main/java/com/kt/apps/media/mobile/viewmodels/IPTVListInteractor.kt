@@ -1,6 +1,8 @@
 package com.kt.apps.media.mobile.viewmodels
 
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.kt.apps.core.base.DataState
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PlaybackState
@@ -16,7 +18,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class IPTVListInteractor(
     private val provider: ViewModelProvider,
@@ -37,9 +42,32 @@ class IPTVListInteractor(
         uiControlViewModel.playerState.map { it == PlaybackState.Minimal }
             .stateIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed(), false)
     }
-    fun loadDataAsync(): Deferred<List<ExtensionsChannel>> {
-        return CoroutineScope(Dispatchers.Main).async {
-            extensionViewModel.loadChannelForConfig(category).await(TAG)
+//    fun loadDataAsync(): Deferred<List<ExtensionsChannel>> {
+//        return CoroutineScope(Dispatchers.Main).async {
+//            extensionViewModel.loadChannelForConfig(category).await(TAG)
+//        }
+//    }
+
+    suspend fun loadData(): List<ExtensionsChannel> {
+        return suspendCancellableCoroutine {cont ->
+            val liveData = extensionViewModel.loadChannelForConfig(category)
+            val observer = Observer<DataState<List<ExtensionsChannel>>> {
+                when (it) {
+                    is DataState.Success -> {
+                        cont.resume(it.data)
+                        cont.cancel()
+                    }
+                    is DataState.Error -> {
+                        cont.cancel(it.throwable)
+                    }
+                    else -> { }
+                }
+            }
+            liveData.observeForever(observer)
+
+            cont.invokeOnCancellation {
+                liveData.removeObserver(observer)
+            }
         }
     }
 
