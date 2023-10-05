@@ -9,6 +9,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
@@ -179,6 +180,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     protected var lastPlayerControllerConfig: PlayerControllerConfig = PlayerControllerConfig(true, 3000)
+
+    private lateinit var informationDialog: AlertDialog
 
     private val channelListVisibility: Int
         get() {
@@ -433,7 +436,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     
     private fun showInformationDialog() {
         val player = exoPlayerManager.exoPlayer ?: return
-        MaterialAlertDialogBuilder(requireContext())
+        informationDialog = MaterialAlertDialogBuilder(requireContext())
             .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
                 findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
                     text = player.mediaMetadata.title
@@ -479,6 +482,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         _cachePlayingState = exoPlayerManager.exoPlayer?.isPlaying ?: false
         exoPlayerManager.pause()
         exoPlayer?.keepScreenOn = false
+
+        if (this::informationDialog.isInitialized) {
+            if (informationDialog.isShowing) {
+                informationDialog.dismiss()
+            }
+        }
     }
 
     override fun onDestroy() {
