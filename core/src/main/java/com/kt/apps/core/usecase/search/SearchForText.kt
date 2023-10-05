@@ -132,6 +132,9 @@ class SearchForText @Inject constructor(
         val extensionsSource: Single<List<SearchResult>> = roomDataBase.extensionsChannelDao()
             .searchByNameQuery(getSqlQuery(query, filter, limit, offset))
             .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
+            .doOnError {
+                Log.d("Search", "prepareExecute: it")
+            }
             .map {
                 val list = it.map {
                     val calculateScore = calculateScore(it.tvChannelName, queryNormalize, filterHighlight)
