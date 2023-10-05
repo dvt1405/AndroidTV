@@ -140,16 +140,24 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         }
 
         if (resources.getBoolean(R.bool.is_landscape)) {
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            WindowInsetsControllerCompat(window, binding.root).let {
-                it.hide(WindowInsetsCompat.Type.systemBars())
-                it.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowCompat.setDecorFitsSystemWindows(window, false)
+                WindowInsetsControllerCompat(window, binding.root).let {
+                    it.hide(WindowInsetsCompat.Type.systemBars())
+                    it.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                }
+            } else {
+                window.decorView.apply {
+                    systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN
+                }
             }
+            actionBar?.hide()
         } else {
             WindowCompat.setDecorFitsSystemWindows(window, true)
             WindowInsetsControllerCompat(window, binding.root).let {
                 it.show(WindowInsetsCompat.Type.systemBars())
             }
+            actionBar?.show()
         }
       }
 
