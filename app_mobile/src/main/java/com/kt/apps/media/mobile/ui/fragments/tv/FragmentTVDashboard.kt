@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.core.os.bundleOf
+import androidx.core.view.size
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -74,7 +75,7 @@ class FragmentTVDashboard : BaseFragment<FragmentTvDashboardBinding>() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun initAction(savedInstanceState: Bundle?) {
-        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
                 tvViewModel.groupTVChannel.mapLatest {
                     it.keys
@@ -88,6 +89,7 @@ class FragmentTVDashboard : BaseFragment<FragmentTvDashboardBinding>() {
     companion object {
         const val isRadioExtra = "extra:isRadio"
         const val TAG = "FragmentTVDashboard"
+        private const val currentItem = "CURRENT_ITEM"
         fun newInstance(isRadio: Boolean): FragmentTVDashboard {
 
             val fragment = FragmentTVDashboard().apply {
