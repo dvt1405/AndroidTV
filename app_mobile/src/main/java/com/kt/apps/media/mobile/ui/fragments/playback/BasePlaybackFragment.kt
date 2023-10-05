@@ -216,6 +216,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
         favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_bookmark_selector, context?.theme)
         favoriteButton?.setOnClickListener { view ->
+            Log.d(TAG, "toggleFavorite: ")
             toggleFavorite()
         }
         favoriteButton?.visibility = View.INVISIBLE
@@ -363,6 +364,18 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                         }
                     }
             }
+
+            launch {
+                interactor.currentPlayingVideo.collectLatest {
+                    if (it != null) {
+                        favoriteButton?.visible()
+                        informationButton?.visible()
+                    } else {
+                        favoriteButton?.inVisible()
+                        informationButton?.inVisible()
+                    }
+                }
+            }
         }
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -390,11 +403,19 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
 
             launch {
+                interactor.listFavorite.collectLatest {
+                    Log.d(TAG, "toggleFavoriteCurrent listFavorite: ${it}")
+                }
+            }
+
+            launch {
                 combine(interactor.listFavorite, currentPlayingMediaItem, transform = { listFavorite, currentPlay ->
+                    Log.d(TAG, "toggleFavoriteCurrent combine: ${listFavorite}")
                     listFavorite.any { videoFavoriteDTO ->
                         videoFavoriteDTO.id == currentPlay?.mediaId && videoFavoriteDTO.title == currentPlay.mediaMetadata.title
                     }
                 }).collectLatest {
+                    Log.d(TAG, "toggleFavoriteCurrent combine: ${it}")
                     favoriteButton?.isSelected = it
                 }
             }
@@ -531,8 +552,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             isProgressing.value = false
             exoPlayer?.keepScreenOn = true
             progressBar?.isEnabled = true
-            favoriteButton?.visible()
-            informationButton?.visible()
+//            favoriteButton?.visible()
+//            informationButton?.visible()
 
             retryTimes = MAX_RETRY_TIME
         } else {
@@ -678,8 +699,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayerManager.detach()
         isProgressing.emit(true)
         title.emit(data.title)
-        favoriteButton?.inVisible()
-        informationButton?.inVisible()
+//        favoriteButton?.inVisible()
+//        informationButton?.inVisible()
     }
 
     protected open suspend fun playVideo(data: StreamLinkData) {

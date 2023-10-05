@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.viewmodels
 
+import android.util.Log
 import com.kt.apps.core.base.viewmodels.BaseFavoriteViewModel
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsChannelAndConfig
@@ -12,6 +13,7 @@ import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.utils.await
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.yield
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -21,8 +23,14 @@ class FavoriteViewModel@Inject constructor(
     private val roomDataBase: RoomDataBase
 ): BaseFavoriteViewModel(_repository) {
 
+    suspend fun fetchList() {
+        getListFavorite()
+        listFavoriteLiveData.await(TAG)
+    }
     suspend fun saveTVChannel(tvChannel: TVChannel) {
+        Log.d(TAG, "saveTVChannel: init")
         return suspendCancellableCoroutine { cont ->
+            Log.d(TAG, "saveTVChannel: execute")
             add(
                 _repository.save(
                     VideoFavoriteDTO(
@@ -42,10 +50,12 @@ class FavoriteViewModel@Inject constructor(
                     .doOnDispose { cont.cancel() }
                     .subscribe( {
                         Logger.d(TAG, "Save", "$tvChannel")
+                        Log.d(TAG, "saveTVChannel: complete")
                         cont.resume(Unit)
                     }, { it ->
                         cont.resumeWithException(it)
                         Logger.e(TAG, "SaveError", it)
+                        Log.d(TAG, "saveTVChannel Error: ")
                     })
             )
         }
