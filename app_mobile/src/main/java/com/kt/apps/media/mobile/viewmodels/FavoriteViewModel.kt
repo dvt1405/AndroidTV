@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.viewmodels
 
 import com.kt.apps.core.base.viewmodels.BaseFavoriteViewModel
 import com.kt.apps.core.extensions.ExtensionsChannel
+import com.kt.apps.core.extensions.ExtensionsChannelAndConfig
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.repository.IFavoriteRepository
 import com.kt.apps.core.storage.local.RoomDataBase
@@ -82,5 +83,23 @@ class FavoriteViewModel@Inject constructor(
     suspend fun unsaveFavoriteKt(channel: ExtensionsChannel) {
         deleteFavorite(channel)
         deleteIptvChannelLiveData.await(TAG)
+    }
+
+    suspend fun getResultForItem(item: VideoFavoriteDTO) : ExtensionsChannelAndConfig? {
+        return suspendCancellableCoroutine { cont ->
+            add(
+                _repository.get(item.id, VideoFavoriteDTO.Type.IPTV)
+                    .flatMapSingle {
+                        roomDataBase.extensionsChannelDao()
+                            .getConfigAndChannelByStreamLink(item.url)
+                    }
+                    .doOnDispose { cont.cancel() }
+                    .subscribe({
+                        cont.resume(it)
+                    }, {
+                        cont.resumeWithException(it)
+                    })
+            )
+        }
     }
 }

@@ -18,7 +18,6 @@ import com.kt.apps.media.mobile.viewmodels.features.IFetchFavoriteControl
 import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
-import com.kt.apps.media.mobile.viewmodels.features.loadFavoriteChannel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +39,7 @@ class FavoriteInteractor(
         provider[UIControlViewModel::class.java]
     }
 
-    private val favoriteViewModel: FavoriteViewModel by lazy {
+    override val favoriteViewModel: FavoriteViewModel by lazy {
         provider[FavoriteViewModel::class.java]
     }
 
@@ -58,8 +57,5 @@ class FavoriteInteractor(
         val item = (item as? ChannelElement.FavoriteVideo) ?: return
         loadFavoriteChannel(item)
     }
-
-
-
 }
 
