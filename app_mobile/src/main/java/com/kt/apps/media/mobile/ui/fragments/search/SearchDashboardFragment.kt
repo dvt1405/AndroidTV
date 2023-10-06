@@ -38,7 +38,7 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
 
     private val viewModel by lazy {
         SearchDashboardViewModel(ViewModelProvider(requireActivity(), factory), requireContext())
-    }
+    }   
 
     private val historyAdapter by lazy {
         HistoryAdapter().apply {
@@ -84,16 +84,6 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
                     historyAdapter.onRefresh(it)
                 }
             }
-
-//            if (!isLandscape) {
-//                launch {
-//                    viewModel.onOpenPlayback
-//                        .collectLatest {
-//                            activity?.onBackPressed()
-//                        }
-//                }
-//            }
-
         }
 
         binding.searchInputText?.setOnEditorActionListener { v, actionId, event ->

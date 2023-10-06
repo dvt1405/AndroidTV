@@ -18,6 +18,7 @@ import com.kt.apps.media.mobile.utils.asUpdateFlow
 import com.kt.apps.media.mobile.utils.await
 import com.kt.apps.media.mobile.viewmodels.FavoriteViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,43 +63,33 @@ interface IFetchDeepLinkControl {
 interface IFetchFavoriteControl: IFetchTVChannelControl {
     val uiControlViewModel: UIControlViewModel
     val favoriteViewModel: FavoriteViewModel
-
-    data class LoadedData(val prepare: PrepareStreamLinkData, val streamLinkData: StreamLinkData)
     suspend fun loadFavoriteChannel(element: ChannelElement.FavoriteVideo) {
-        playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
 
-        val loadedData = when(element.model.type) {
+        when (element.model.type) {
             VideoFavoriteDTO.Type.TV, VideoFavoriteDTO.Type.RADIO -> {
-                tvChannelViewModel.getLinkStreamById(element.model.id)
+                playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
                 val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await(tag = "IFetchTVChannelControl")
-                LoadedData(
-                    if (linkStream.channel.isRadio) {
-                        PrepareStreamLinkData.Radio(linkStream.channel)
-                    } else {
-                        PrepareStreamLinkData.TV(linkStream.channel)
-                    }, StreamLinkData.TVStreamLinkData(linkStream)
+                val prepare = if (linkStream.channel.isRadio) {
+                    PrepareStreamLinkData.Radio(linkStream.channel)
+                } else {
+                    PrepareStreamLinkData.TV(linkStream.channel)
+                }
+                uiControlViewModel.openPlayback(prepare)
+                playbackViewModel.changeProcessState(
+                    PlaybackViewModel.State.LOADING(prepare)
                 )
 
+                playbackViewModel.changeProcessState(
+                    PlaybackViewModel.State.PLAYING(StreamLinkData.TVStreamLinkData(linkStream))
+                )
             }
             VideoFavoriteDTO.Type.IPTV -> {
                 val extensionsChannelAndConfig = favoriteViewModel.getResultForItem(element.model) ?: kotlin.run {
                     throw Throwable("Error")
                 }
-                LoadedData(
-                    PrepareStreamLinkData.IPTV(extensionsChannelAndConfig.channel, extensionsChannelAndConfig.config.sourceUrl),
-                    StreamLinkData.ExtensionStreamLinkData(extensionsChannelAndConfig.channel, extensionsChannelAndConfig.channel.tvStreamLink)
-                )
-
+                uiControlViewModel.openPlayback(PrepareStreamLinkData.IPTV(extensionsChannelAndConfig.channel, extensionsChannelAndConfig.config.sourceUrl))
             }
         }
-
-        uiControlViewModel.openPlayback(loadedData.prepare)
-        playbackViewModel.changeProcessState(
-            PlaybackViewModel.State.LOADING(loadedData.prepare)
-        )
-        playbackViewModel.changeProcessState(
-            PlaybackViewModel.State.PLAYING(loadedData.streamLinkData)
-        )
     }
 }
 

@@ -175,6 +175,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
     private fun transitionMinimal() {
         state = PlaybackState.Minimal
+        Log.d(TAG, "transitionMinimal: ${Log.getStackTraceString(Throwable())}")
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -198,6 +199,7 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
 
     private fun transitionIDLE() {
         state = PlaybackState.Invisible
+        Log.d(TAG, "transitionIDLE: ${Log.getStackTraceString(Throwable())}")
         safeLet(surfaceView, fragmentContainerPlayback) {
                 surfaceView, playback ->
             val set = ConstraintSet().apply {
@@ -209,28 +211,6 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
             TransitionManager.beginDelayedTransition(surfaceView, Fade(Fade.IN))
             set.applyTo(surfaceView)
         }
-    }
-
-}
-open class TransitionCallback: Transition.TransitionListener {
-    override fun onTransitionStart(transition: Transition) {
-        Log.d(TAG, "onTransitionStart: $transition")
-    }
-
-    override fun onTransitionEnd(transition: Transition) {
-        Log.d(TAG, "onTransitionEnd: $transition")
-    }
-
-    override fun onTransitionCancel(transition: Transition) {
-        Log.d(TAG, "onTransitionCancel: $transition")
-    }
-
-    override fun onTransitionPause(transition: Transition) {
-        Log.d(TAG, "onTransitionPause: $transition")
-    }
-
-    override fun onTransitionResume(transition: Transition) {
-        Log.d(TAG, "onTransitionResume: $transition")
     }
 
 }

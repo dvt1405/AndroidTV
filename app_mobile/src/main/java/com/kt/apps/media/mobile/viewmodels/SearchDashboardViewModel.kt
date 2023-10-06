@@ -33,8 +33,6 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
 
     val searchQueryData = uiControlViewModel.searchQuery
 
-    val onOpenPlayback = uiControlViewModel.openPlayback
-
     suspend fun registerHistorySearchList(): Flow<List<String>> {
         return callbackFlow {
             val listener =
