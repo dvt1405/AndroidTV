@@ -369,10 +369,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 interactor.currentPlayingVideo.collectLatest {
                     if (it != null) {
                         favoriteButton?.visible()
-                        informationButton?.visible()
                     } else {
                         favoriteButton?.inVisible()
-                        informationButton?.inVisible()
                     }
                 }
             }
@@ -554,11 +552,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             exoPlayer?.keepScreenOn = true
             progressBar?.isEnabled = true
 //            favoriteButton?.visible()
-//            informationButton?.visible()
+            informationButton?.visible()
 
             retryTimes = MAX_RETRY_TIME
         } else {
             progressBar?.isEnabled = false
+            informationButton?.inVisible()
         }
         if (playbackState == ExoPlayer.STATE_ENDED) {
             exoPlayer?.keepScreenOn = false

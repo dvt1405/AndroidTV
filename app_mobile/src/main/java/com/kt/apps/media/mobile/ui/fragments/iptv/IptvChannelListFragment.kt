@@ -65,10 +65,12 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
+        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
                 merge(flowOf(Unit), swipeRefreshLayout.onRefresh()).collectLatest(loadData)
             }
+        }
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
 
             launch {
                 activityIndicator.isLoading.collectLatest {
