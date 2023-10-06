@@ -29,16 +29,16 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
         provider[TVChannelViewModel::class.java]
     }
 
-    val playbackViewModel: PlaybackViewModel by lazy {
-        provider[PlaybackViewModel::class.java]
-    }
-
     val networkState: NetworkStateViewModel by lazy {
         provider[NetworkStateViewModel::class.java]
     }
 
     override val uiControlViewModel: UIControlViewModel by lazy {
         provider[UIControlViewModel::class.java]
+    }
+
+    override val playbackViewModel: PlaybackViewModel by lazy {
+        provider[PlaybackViewModel::class.java]
     }
 
     abstract val listChannels: Flow<List<TVChannel>>
@@ -61,6 +61,7 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
         tvChannelViewModel.tvChannelLiveData.await()
     }
 }
+
 
 class TVChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
     : ChannelFragmentInteractors(provider, coroutineContext) {

@@ -7,6 +7,7 @@ import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.utils.await
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
@@ -33,6 +34,9 @@ class IPTVListInteractor(
     }
 
 
+    override val playbackViewModel: PlaybackViewModel by lazy {
+        provider[PlaybackViewModel::class.java]
+    }
 
     override val uiControlViewModel: UIControlViewModel by lazy {
         provider[UIControlViewModel::class.java]

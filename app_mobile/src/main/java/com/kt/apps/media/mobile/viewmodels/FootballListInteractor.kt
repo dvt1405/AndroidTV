@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.utils.asUpdateFlow
 import com.kt.apps.media.mobile.utils.await
 import com.kt.apps.media.mobile.utils.isLiveMatch
@@ -30,9 +31,14 @@ class FootballListInteractor(
     override val uiControlViewModel: UIControlViewModel by lazy {
         provider[UIControlViewModel::class.java]
     }
+
+    override val playbackViewModel: PlaybackViewModel by lazy {
+        provider[PlaybackViewModel::class.java]
+    }
     private val listMatches: Flow<List<FootballMatch>> by lazy {
         footballViewModel.listFootMatchDataState.asUpdateFlow(tag = "football_live_matches")
     }
+
 
     val playbackPadding by lazy {
         uiControlViewModel.playerState

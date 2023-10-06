@@ -7,6 +7,7 @@ import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
+import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.asProgressFlow
@@ -23,6 +24,11 @@ import kotlinx.coroutines.flow.combine
 class SearchListViewModel(private val provider: ViewModelProvider): IUIControl {
     private val searchViewModel by lazy {
         provider[SearchViewModels::class.java]
+    }
+
+
+    override val playbackViewModel: PlaybackViewModel by lazy {
+        provider[PlaybackViewModel::class.java]
     }
 
     override val uiControlViewModel: UIControlViewModel by lazy {

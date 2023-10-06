@@ -349,8 +349,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 }
             }
 
-            launch {
-                interactor.state.asSharedFlow()
+            lifecycleScope.launch {
+                interactor.state.shareIn(lifecycleScope, SharingStarted.WhileSubscribed(), 0)
                     .collectLatest { state ->
                         Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
                         when(state) {
@@ -535,6 +535,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected fun onError(throwable: Throwable?) {
         val errorCode = (throwable as? PlaybackThrowable)?.code ?: -1
+        Log.d(TAG, "onError: ${Throwable().stackTraceToString()}")
         showErrorDialog(
             content = "Xin lỗi, mở nội dung không thành công. Vui lòng thử lại sau.\nMã lỗi: $errorCode",
             cancellable = false)

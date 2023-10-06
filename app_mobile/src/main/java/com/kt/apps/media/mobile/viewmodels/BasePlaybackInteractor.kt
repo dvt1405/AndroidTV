@@ -31,7 +31,7 @@ open class BasePlaybackInteractor(
         provider[FavoriteViewModel::class.java]
     }
 
-    val playbackViewModel by lazy {
+    override val playbackViewModel by lazy {
         provider[PlaybackViewModel::class.java]
     }
 
