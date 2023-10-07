@@ -15,6 +15,7 @@ class GetListHistory @Inject constructor(
 
     override fun prepareExecute(params: Map<String, Any>): Maybe<List<HistoryMediaItemDTO>> {
         return historyDao.getAll()
+            .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
             .toMaybe()
     }
 

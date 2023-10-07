@@ -41,7 +41,10 @@ class SearchViewModels @Inject constructor(
     }
     val lastSearchQuery: String?
         get() = _lastSearchQuery
-    fun queryDefaultSearch() {
+    fun queryDefaultSearch(force: Boolean = false) {
+        if (force) {
+            _lastSearchQuery = null
+        }
         if (_lastSearchQuery.isNullOrBlank()) {
             if (_lastSearchQuery == null) {
                 querySearch("")
