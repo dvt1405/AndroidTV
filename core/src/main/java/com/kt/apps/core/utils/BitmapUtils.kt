@@ -154,16 +154,16 @@ fun ImageView.loadImgByDrawableIdResName(
 ) {
 
     Log.d(TAG, "loadImgByDrawableIdResName: $name")
-    val context = context.applicationContext
-    val id = context.resources.getIdentifier(
-        name.trim().removeSuffix(".png")
-            .removeSuffix(".jpg")
-            .removeSuffix(".webp")
-            .removeSuffix(".jpeg"),
-        "drawable",
-        context.packageName
-    )
     try {
+        val context = context.applicationContext
+        val id = context.resources.getIdentifier(
+            name.trim().removeSuffix(".png")
+                .removeSuffix(".jpg")
+                .removeSuffix(".webp")
+                .removeSuffix(".jpeg"),
+            "drawable",
+            context.packageName
+        )
         val drawable = ContextCompat.getDrawable(context, id)
         GlideApp.with(this)
             .load(drawable)
