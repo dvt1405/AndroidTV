@@ -39,4 +39,14 @@ sealed class StreamLinkData(
         false,
         match.getMediaItemData()
     )
+
+    class Custom(
+        title: String,
+        isHls: Boolean,
+        linkStream: List<LinkStream>,
+        itemMetaData: Map<String, String>,
+        streamId: String,
+    ): StreamLinkData(
+        title, linkStream, streamId, isHls, itemMetaData
+    )
 }

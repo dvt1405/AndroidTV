@@ -172,6 +172,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected val isPlayingState = MutableStateFlow(false)
     protected val currentPlayingMediaItem = MutableStateFlow<MediaItem?>(null)
     protected var retryTimes: Int = 3
+    protected var executingIndex: Int = -1
 
     protected abstract val interactor: BasePlaybackInteractor
 
@@ -357,6 +358,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                             is PlaybackViewModel.State.LOADING -> preparePlayView(state.data)
                             is PlaybackViewModel.State.PLAYING -> {
                                 retryTimes = MAX_RETRY_TIME
+                                executingIndex = -1
                                 playVideo(state.data)
                             }
                             is PlaybackViewModel.State.ERROR -> onError(state.error)
@@ -551,10 +553,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             isProgressing.value = false
             exoPlayer?.keepScreenOn = true
             progressBar?.isEnabled = true
-//            favoriteButton?.visible()
             informationButton?.visible()
 
             retryTimes = MAX_RETRY_TIME
+            executingIndex = -1
         } else {
             progressBar?.isEnabled = false
             informationButton?.inVisible()
@@ -571,26 +573,44 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     override fun onPlayerError(error: PlaybackException) {
         super.onPlayerError(error)
-//        Log.d(TAG, "onPlayerError: $error $retryTimes ${playbackViewModel.state.replayCache}")
-        if (retryTimes > 0) {
-            interactor.state.value
-                .let { it as? PlaybackViewModel.State.PLAYING }
-                ?.run {
-                    retryTimes -= 1
-                    lifecycleScope.launch {
-                        playVideo(this@run.data)
-                    }
-                } ?: kotlin.run {
-                lifecycleScope.launch {
-                    interactor.playbackError(PlaybackThrowable(error.errorCode, error))
-                }
-            }
-        } else {
+        fun notifyError() {
             lifecycleScope.launch {
                 interactor.playbackError(PlaybackThrowable(error.errorCode, error))
             }
-            retryTimes = MAX_RETRY_TIME
         }
+        val executingData = interactor.state.value
+            .let { (it as? PlaybackViewModel.State.PLAYING)?.data }
+            ?: kotlin.run {
+                notifyError()
+                return
+            }
+        if (retryTimes > 0) {
+            if (executingIndex in 0 until executingData.linkStream.size) {
+                val newLinkData = executingData.linkStream.subList(
+                    executingIndex + 1, executingData.linkStream.size
+                )
+                if (newLinkData.isNotEmpty()) {
+                    val newStreamLinkData = StreamLinkData.Custom(
+                        title = executingData.title,
+                        linkStream = newLinkData,
+                        isHls = executingData.isHls,
+                        streamId = executingData.streamId,
+                        itemMetaData = executingData.itemMetaData
+                    )
+                    lifecycleScope.launch {
+                        playVideo(newStreamLinkData)
+                    }
+                    return
+                }
+            }
+            executingIndex = -1
+            retryTimes -= 1
+            lifecycleScope.launch {
+                playVideo(executingData)
+            }
+            return
+        }
+        notifyError()
     }
 
     override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -707,7 +727,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         if (exoPlayerManager.exoPlayer?.isPlaying == true) {
             return
         }
-        Log.d(TAG, "playVideo: - retry time ${retryTimes}")
+        Log.d(TAG, "playVideo: - retry time ${retryTimes} ${executingIndex} ${data.linkStream}")
+        if (executingIndex < 0) {
+            executingIndex = 0
+        } else {
+            executingIndex += 1
+        }
         exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , this)
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)

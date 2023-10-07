@@ -1,5 +1,6 @@
 package com.kt.apps.core.base.player
 
+import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.repository.IMediaHistoryRepository
@@ -11,7 +12,11 @@ class ExoPlayerManagerMobile @Inject constructor(
     private val _audioFocusManager: AudioFocusManager,
     private val historyManager: IMediaHistoryRepository
 ) : AbstractExoPlayerManager(_application, _audioFocusManager, historyManager) {
-
+//    private val internalPlayerListener = object: Player.Listener {
+//        override fun onPlayerError(error: PlaybackException) {
+//
+//        }
+//    }
     override fun prepare() {
         if (exoPlayer == null) {
             mExoPlayer?.stop()
@@ -27,6 +32,8 @@ class ExoPlayerManagerMobile @Inject constructor(
         headers: Map<String, String>?
     ) {
         super.playVideo(linkStreams, isHls, itemMetaData, playerListener, headers)
+//        mExoPlayer?.removeListener(internalPlayerListener)
+//        mExoPlayer?.addListener(internalPlayerListener)
         mExoPlayer?.play()
     }
 
@@ -39,5 +46,6 @@ class ExoPlayerManagerMobile @Inject constructor(
         mExoPlayer?.release()
         mExoPlayer = null
     }
+
 
 }
