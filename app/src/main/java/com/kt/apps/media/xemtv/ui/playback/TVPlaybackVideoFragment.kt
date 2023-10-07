@@ -171,8 +171,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
         onItemClickedListener = OnItemViewClickedListener { itemViewHolder, item, rowViewHolder, row ->
             tvChannelViewModel.markLastWatchedChannel(item as TVChannel)
-            tvChannelViewModel.loadProgramForChannel(item)
-            tvChannelViewModel.getLinkStreamForChannel(item)
+            getLinkStreamAndProgramForChannel(item)
             (mAdapter as ArrayObjectAdapter).indexOf(item)
                 .takeIf {
                     it > -1
@@ -206,6 +205,11 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                 lastWatchedChannel.currentProgramme = it.data
             }
         }
+    }
+
+    private fun getLinkStreamAndProgramForChannel(item: TVChannel) {
+        tvChannelViewModel.loadProgramForChannel(item)
+        tvChannelViewModel.getLinkStreamForChannel(item)
     }
 
     private fun setBackgroundByStreamingType(it: TVChannelLinkStream) {
@@ -381,8 +385,8 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         Logger.d(this, message = "onKeyCodeChannelDown: $mPlayingPosition")
         val maxItemCount = mGridViewHolder?.gridView?.adapter?.itemCount ?: 0
         if (mPlayingPosition <= maxItemCount - 1) {
-            val item = mAdapter?.get(mPlayingPosition)
-            tvChannelViewModel.getLinkStreamForChannel(item as TVChannel)
+            val item = mAdapter?.get(mPlayingPosition) as? TVChannel ?: return
+            getLinkStreamAndProgramForChannel(item)
         } else {
             mPlayingPosition = maxItemCount - 1
         }
@@ -396,8 +400,8 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         Logger.d(this, message = "onKeyCodeChannelUp: $mPlayingPosition")
         val maxItemCount = mGridViewHolder?.gridView?.adapter?.itemCount ?: 0
         if (mPlayingPosition <= maxItemCount - 1) {
-            val item = mAdapter?.get(mPlayingPosition)
-            tvChannelViewModel.getLinkStreamForChannel(item as TVChannel)
+            val item = mAdapter?.get(mPlayingPosition) as? TVChannel ?: return
+            getLinkStreamAndProgramForChannel(item)
         } else {
             mPlayingPosition = mGridViewHolder?.gridView?.selectedPosition ?: 0
         }
