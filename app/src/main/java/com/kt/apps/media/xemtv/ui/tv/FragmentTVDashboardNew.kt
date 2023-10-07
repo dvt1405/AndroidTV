@@ -159,7 +159,11 @@ class FragmentTVDashboardNew : BaseTabLayoutFragment() {
             return if (position == 0) {
                 totalList[position]
             } else {
-                TVChannelGroup.valueOf(totalList[position]).value
+                try {
+                    TVChannelGroup.valueOf(totalList[position]).value
+                } catch (e: Exception) {
+                    totalList[position]
+                }
             }
         }
 
