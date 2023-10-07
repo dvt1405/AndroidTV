@@ -51,4 +51,5 @@ dependencies {
     implementation firebaseDependencies.values()
     implementation externalDependencies.values()
     implementation project(":core")
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.2'
 }
