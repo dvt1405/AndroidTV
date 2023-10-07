@@ -12,6 +12,7 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logSearchForText
 import com.kt.apps.core.logging.logSearchForTextAndPerformClick
 import com.kt.apps.core.storage.local.RoomDataBase
+import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannel.Companion.mapToTVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
@@ -92,7 +93,9 @@ class SearchViewModels @Inject constructor(
                         .map {
                             TVChannelLinkStream(
                                 it.mapToTVChannel(),
-                                it.urls.map { it.url }
+                                it.urls.map {
+                                    TVChannel.Url.fromUrl(it.url)
+                                }
                             )
                         }
                         .subscribeOn(Schedulers.io())

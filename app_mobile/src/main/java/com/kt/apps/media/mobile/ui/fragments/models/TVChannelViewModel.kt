@@ -67,7 +67,9 @@ open class TVChannelViewModel @Inject constructor(
                             DataState.Success(
                                 TVChannelLinkStream(
                                     TVChannel.fromChannelExtensions(tvChannel),
-                                    arrayListOf(it)
+                                    arrayListOf(it).map {
+                                        TVChannel.Url.fromUrl(it)
+                                    }
                                 )
                             )
                         )
@@ -85,7 +87,9 @@ open class TVChannelViewModel @Inject constructor(
                             DataState.Success(
                                 TVChannelLinkStream(
                                     TVChannel.fromChannelExtensions(tvChannel),
-                                    arrayListOf(linkToPlay)
+                                    arrayListOf(linkToPlay).map {
+                                        TVChannel.Url.fromUrl(it)
+                                    }
                                 )
                             )
                         )

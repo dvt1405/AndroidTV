@@ -1,20 +1,24 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.os.bundleOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.exoplayer2.PlaybackException
+import com.kt.apps.core.base.BasePlaybackFragment
+import com.kt.apps.core.logging.logPlaybackRetryGetStreamLink
+import com.kt.apps.core.logging.logPlaybackRetryPlayVideo
 import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
+import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
@@ -34,8 +38,7 @@ import kotlinx.coroutines.launch
 interface IDispatchTouchListener {
     fun onDispatchTouchEvent(view: View?, mv: MotionEvent)
 }
-class
-TVPlaybackFragment: ChannelPlaybackFragment() {
+class TVPlaybackFragment: ChannelPlaybackFragment() {
     private val _playbackInteractor by lazy {
         TVPlaybackInteractor(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope)
     }
@@ -54,6 +57,76 @@ TVPlaybackFragment: ChannelPlaybackFragment() {
             adapter = itemAdapter
             addItemDecoration(channelItemDecoration)
             layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
+        }
+    }
+    private val mapRetryTimes by lazy {
+        mutableMapOf<String, Int>()
+    }
+
+    override fun onPlayerError(error: PlaybackException) {
+        fun notifyError() {
+            lifecycleScope.launch {
+                interactor.playbackError(PlaybackThrowable(error.errorCode, error))
+            }
+        }
+        val retriedTimes = try {
+            mapRetryTimes[_playbackInteractor.tvChannelViewModel.lastWatchedChannel?.channel?.channelId] ?: 0
+        } catch (e: Exception) {
+            0
+        }
+
+        when {
+            retriedTimes > BasePlaybackFragment.MAX_RETRY_TIME || (_playbackInteractor.tvChannelViewModel.lastWatchedChannel?.linkReadyToStream?.size ?: 0) == 0 -> {
+                notifyError()
+            }
+
+            (_playbackInteractor.tvChannelViewModel.lastWatchedChannel?.linkReadyToStream?.size ?: 0) > 1 -> {
+                val newLinks = _playbackInteractor.tvChannelViewModel.lastWatchedChannel!!.linkReadyToStream
+                val newStreamList = newLinks.subList(
+                    1,
+                    newLinks.size
+                )
+                val newChannelWithLink = TVChannelLinkStream(
+                    _playbackInteractor.tvChannelViewModel.lastWatchedChannel!!.channel,
+                    newStreamList
+                )
+                _playbackInteractor.tvChannelViewModel.markLastWatchedChannel(newChannelWithLink)
+
+                val newLinkData = newLinks.subList(
+                    executingIndex + 1, newLinks.size
+                )
+                val newExecutingData = StreamLinkData.TVStreamLinkData(newChannelWithLink)
+
+
+                if (newLinkData.isNotEmpty()) {
+                    val newStreamLinkData = StreamLinkData.Custom(
+                        title = newExecutingData.title,
+                        linkStream = newExecutingData.linkStream,
+                        isHls = newExecutingData.isHls,
+                        streamId = newExecutingData.streamId,
+                        itemMetaData = newExecutingData.itemMetaData
+                    )
+                    lifecycleScope.launch {
+                        playVideo(newStreamLinkData)
+                        _playbackInteractor.tvChannelViewModel.actionLogger.logPlaybackRetryPlayVideo(
+                            error,
+                            _playbackInteractor.tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "Unknown",
+                            "link" to newStreamList.first()
+                        )
+                        mapRetryTimes[_playbackInteractor.tvChannelViewModel.lastWatchedChannel?.channel!!.channelId] = retriedTimes + 1
+                    }
+                    return
+                }
+            }
+
+            else -> {
+                _playbackInteractor.tvChannelViewModel.retryGetLastWatchedChannel()
+                _playbackInteractor.tvChannelViewModel.actionLogger.logPlaybackRetryGetStreamLink(
+                    error,
+                    _playbackInteractor.tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "Unknown"
+                )
+                mapRetryTimes[_playbackInteractor.tvChannelViewModel.lastWatchedChannel?.channel!!.channelId] = retriedTimes + 1
+            }
         }
     }
 

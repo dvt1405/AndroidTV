@@ -1,6 +1,5 @@
 package com.kt.apps.media.mobile.models
 
-import com.airbnb.lottie.L
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
@@ -16,7 +15,7 @@ sealed class StreamLinkData(
 ) {
     data class TVStreamLinkData(val data: TVChannelLinkStream): StreamLinkData(
         data.channel.tvChannelName,
-        data.linkStream.map { LinkStream(it, data.channel.tvChannelWebDetailPage, data.channel.tvChannelWebDetailPage) },
+        data.linkStream.map { LinkStream(it.url, data.channel.tvChannelWebDetailPage, data.channel.tvChannelWebDetailPage) },
         data.channel.channelId,
         data.channel.isHls,
         data.channel.getMapData()
