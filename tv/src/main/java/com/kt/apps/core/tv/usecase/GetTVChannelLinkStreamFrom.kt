@@ -36,17 +36,23 @@ class GetTVChannelLinkStreamFrom @Inject constructor(
 
 
         if (sourceFrom == TVDataSourceFrom.V && tvDetail.tvGroup == TVChannelGroup.VOV.name) {
-            return Observable.just(TVChannelLinkStream(tvDetail, listOf(tvDetail.tvChannelWebDetailPage)))
+            return Observable.just(TVChannelLinkStream(tvDetail, listOf(tvDetail.tvChannelWebDetailPage).map {
+                TVChannel.Url.fromUrl(it)
+            }))
         }
 
         if (sourceFrom == TVDataSourceFrom.V && tvDetail.tvGroup == TVChannelGroup.VOH.name) {
-            return Observable.just(TVChannelLinkStream(tvDetail, listOf(tvDetail.tvChannelWebDetailPage)))
+            return Observable.just(TVChannelLinkStream(tvDetail, listOf(tvDetail.tvChannelWebDetailPage).map {
+                TVChannel.Url.fromUrl(it)
+            }))
         }
 //        if (sourceFrom == TVDataSourceFrom.V && tvDetail.tvGroup == TVChannelGroup.Others.name) {
 //            return Observable.just(TVChannelLinkStream(tvDetail, listOf(tvDetail.tvChannelWebDetailPage)))
 //        }
         if (sourceFrom == TVDataSourceFrom.V && tvDetail.tvChannelWebDetailPage.contains(";stream")) {
-            return Observable.just(TVChannelLinkStream(tvDetail, listOf(tvDetail.tvChannelWebDetailPage)))
+            return Observable.just(TVChannelLinkStream(tvDetail, listOf(tvDetail.tvChannelWebDetailPage).map {
+                TVChannel.Url.fromUrl(it)
+            }))
         }
 
         if (sourceFrom == TVDataSourceFrom.V) {
@@ -64,11 +70,17 @@ class GetTVChannelLinkStreamFrom @Inject constructor(
                 }
         }
 
-        return mapDataSource[sourceFrom]!!.getTvLinkFromDetail(tvDetail)
+        return mapDataSource[sourceFrom]!!.getTvLinkFromDetail(
+            tvDetail,
+            params[EXTRA_IS_BACKUP] as? Boolean ?: false
+        )
             .doOnNext {
                 FirebaseLogUtils.logGetLinkVideoM3u8(tvDetail)
             }.doOnError {
-                FirebaseLogUtils.logGetLinkVideoM3u8Error(tvDetail, (it.message ?: it::class.java.name))
+                FirebaseLogUtils.logGetLinkVideoM3u8Error(
+                    tvDetail,
+                    (it.message ?: it::class.java.name)
+                )
             }
 
     }
@@ -80,24 +92,18 @@ class GetTVChannelLinkStreamFrom @Inject constructor(
         )
     )
 
-    operator fun invoke(tvDetail: TVChannel, isBackup: Boolean): Observable<TVChannelLinkStream> =
-        when {
-            !isBackup -> {
-                invoke(tvDetail)
-            }
-            mapSourceBackup[tvDetail.tvGroup] != TVDataSourceFrom.V -> {
-                val tvDetailFromOtherSource = tvDetail.apply {
-                    this.sourceFrom = mapSourceBackup[tvDetail.tvGroup]!!.name
-                }
-                invoke(tvDetailFromOtherSource)
-            }
-            else -> {
-                Observable.error(Throwable())
-            }
-        }
+    operator fun invoke(tvChannel: TVChannel, isBackup: Boolean): Observable<TVChannelLinkStream> =
+        execute(
+            mapOf(
+                EXTRA_TV_CHANNEL to tvChannel,
+                EXTRA_SOURCE_FROM to TVDataSourceFrom.valueOf(tvChannel.sourceFrom),
+                EXTRA_IS_BACKUP to isBackup
+            )
+        )
 
     companion object {
         private const val EXTRA_SOURCE_FROM = "extra:datasource_from"
         private const val EXTRA_TV_CHANNEL = "extra:tv_channel"
+        private const val EXTRA_IS_BACKUP = "extra:is_backup"
     }
 }

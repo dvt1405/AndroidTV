@@ -102,7 +102,9 @@ class VOVDataSourceImpl @Inject constructor(
                             matcher.group(0)?.let { it1 -> listUrl.add(it1) }
                         }
                         emitter.onNext(
-                            TVChannelLinkStream(tvChannel, listUrl)
+                            TVChannelLinkStream(tvChannel, listUrl.map {
+                                TVChannel.Url.fromUrl(it)
+                            })
                         )
                         emitter.onComplete()
                     }, {

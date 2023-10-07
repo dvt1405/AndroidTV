@@ -2,13 +2,20 @@ package com.kt.apps.core.tv.model
 
 import android.os.Parcelable
 import com.google.gson.Gson
+import com.kt.apps.core.tv.datasource.impl.MainTVDataSource
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data class TVChannelLinkStream(
     val channel: TVChannel,
-    val linkStream: List<String>
+    val linkStream: List<TVChannel.Url>
 ) : Parcelable {
+    val linkReadyToStream: List<TVChannel.Url>
+        get() {
+            return linkStream.filter {
+                it.type == MainTVDataSource.TVChannelUrlType.STREAM.value
+            }
+        }
     override fun toString(): String {
         return "{" +
                 "channel: $channel," +

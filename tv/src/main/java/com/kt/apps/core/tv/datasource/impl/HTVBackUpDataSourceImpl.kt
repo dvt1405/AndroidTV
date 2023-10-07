@@ -138,7 +138,9 @@ class HTVBackUpDataSourceImpl @Inject constructor(
                 emitter.onError(Throwable("Cannot get stream link"))
             } else {
                 getLinkStream(link!!, kenhTvDetail, {
-                    emitter.onNext(TVChannelLinkStream(kenhTvDetail, it))
+                    emitter.onNext(TVChannelLinkStream(kenhTvDetail, it.map {
+                        TVChannel.Url.fromUrl(it)
+                    }))
                     emitter.onComplete()
                 }, {
                     emitter.onError(it)

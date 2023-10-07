@@ -64,7 +64,9 @@ class HYDataSourceImpl @Inject constructor(
         if (listLinkStream.isEmpty()) throw IllegalStateException("Empty link stream found!")
         return TVChannelLinkStream(
             tvChannel,
-            listLinkStream
+            listLinkStream.map {
+                TVChannel.Url.fromUrl(it)
+            }
         )
     }
 

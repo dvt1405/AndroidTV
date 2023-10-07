@@ -136,7 +136,9 @@ class VtcBackupDataSourceImpl @Inject constructor(
                     emitter.onNext(
                         TVChannelLinkStream(
                             tvChannel,
-                            listOf(realChunks)
+                            listOf(realChunks).map {
+                                TVChannel.Url.fromUrl(it)
+                            }
                         )
                     )
                     emitter.onComplete()

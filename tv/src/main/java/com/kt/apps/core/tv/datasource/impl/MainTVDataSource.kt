@@ -300,7 +300,7 @@ class MainTVDataSource @Inject constructor(
         tvChannel: TVChannel,
         isBackup: Boolean
     ): Observable<TVChannelLinkStream> {
-        Logger.d(this@MainTVDataSource, message = "getTVFromDetail: ${Gson().toJson(tvChannel)}")
+        Logger.d(this@MainTVDataSource, message = "getTVFromDetail: ${Gson().toJson(tvChannel)}, isBackup: $isBackup")
 
         val streamingUrl = tvChannel.urls
             .filter {
@@ -320,69 +320,95 @@ class MainTVDataSource @Inject constructor(
                 }
             }
 
-        tvChannel.urls
+        val webUrl = tvChannel.urls
             .filter {
-                it.url.isNotBlank()
-            }
-            .firstOrNull {
-                it.type.lowercase() == TVChannelUrlType.WEB_PAGE.value
-            }?.let {
-                return when (it.dataSource) {
+                it.url.isNotBlank() && it.type.lowercase() == TVChannelUrlType.WEB_PAGE.value
+            }.toMutableList()
 
-                    TVChannelURLSrc.VTV.value -> {
-                        vtvDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+        if (webUrl.isNotEmpty()) {
+            return if (!isBackup) {
+                Observable.just(webUrl.first())
+                    .flatMap {
+                        getStreamUrlByWebUrlAndSrc(it, tvChannel, false)
+                    }.map { finalTVWithLinkStream ->
+                        if (streamingUrl.isNotEmpty()) {
+                            val newListStreaming = finalTVWithLinkStream.linkStream.toMutableList()
+                            newListStreaming.addAll(streamingUrl.map {
+                                TVChannel.Url.fromUrl(it.url, type = TVChannelUrlType.STREAM.value)
+                            })
+                            webUrl.removeAt(0)
+                            newListStreaming.addAll(webUrl)
+                            return@map TVChannelLinkStream(
+                                finalTVWithLinkStream.channel,
+                                newListStreaming.distinct()
+                            )
+                        }
+                        return@map finalTVWithLinkStream
                     }
+            } else {
+                if (webUrl.size > 1) {
+                    webUrl.removeAt(0)
+                    Observable.fromIterable(webUrl)
+                        .flatMap {
+                            getStreamUrlByWebUrlAndSrc(it, tvChannel, false)
+                        }
 
-                    TVChannelURLSrc.HY.value -> {
-                        hyDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
-                    }
-
-                    TVChannelURLSrc.SCTV.value -> {
-                        sctvDataSource.getTvLinkFromDetail(tvChannel, isBackup)
-                    }
-
-                    TVChannelURLSrc.V.value -> {
-                        tvChannel.tvChannelWebDetailPage = it.url
-                        vDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
-                            .onErrorResumeNext {
-                                Logger.e(this@MainTVDataSource, "VDataSource", it)
-                                if (streamingUrl.isNotEmpty()) {
-                                    Observable.just(
-                                        TVChannelLinkStream(
-                                            tvChannel,
-                                            streamingUrl.map {
-                                                it.url
-                                            }
-                                        )
-                                    )
-                                } else {
-                                    Observable.error(it)
-                                }
+                } else {
+                    Observable.just(
+                        TVChannelLinkStream(
+                            tvChannel,
+                            streamingUrl.map {
+                                TVChannel.Url.fromUrl(it.url, type = TVChannelUrlType.STREAM.value)
                             }
-                    }
-
-                    else -> {
-                        vDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
-                    }
-                }.map { finalTVWithLinkStream ->
-                    if (streamingUrl.isNotEmpty()) {
-                        val newListStreaming = finalTVWithLinkStream.linkStream.toMutableList()
-                        newListStreaming.addAll(streamingUrl.map { it.url })
-                        return@map TVChannelLinkStream(
-                            finalTVWithLinkStream.channel,
-                            newListStreaming.distinct()
                         )
-                    }
-                    return@map finalTVWithLinkStream
+                    )
                 }
             }
+        }
 
         return Observable.just(
             TVChannelLinkStream(
                 tvChannel,
-                streamingUrl.map { it.url }
+                streamingUrl.map {
+                    TVChannel.Url.fromUrl(it.url, type = TVChannelUrlType.STREAM.value)
+                }
             )
         )
+    }
+
+    fun getStreamUrlByWebUrlAndSrc(
+        url: TVChannel.Url,
+        tvChannel: TVChannel, isBackup: Boolean
+    ): Observable<TVChannelLinkStream> {
+        tvChannel.tvChannelWebDetailPage = url.url
+        return when (url.dataSource) {
+            TVChannelURLSrc.VTV.value -> {
+                vtvDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+
+            TVChannelURLSrc.HY.value -> {
+                hyDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+
+            TVChannelURLSrc.SCTV.value -> {
+                sctvDataSource.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+
+            TVChannelURLSrc.V.value -> {
+                vDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+
+            else -> {
+                vDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+        }.onErrorResumeNext {
+            Observable.just(
+                TVChannelLinkStream(
+                    tvChannel,
+                    emptyList()
+                )
+            )
+        }
     }
 
     data class TVChannelFromDB @JvmOverloads constructor(

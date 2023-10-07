@@ -38,7 +38,7 @@ class NetworkModule {
                 Dispatcher(
                     ForkJoinPool(
                         // max #workers - 1
-                        0x7fff.coerceAtMost(Runtime.getRuntime().availableProcessors()),
+                        0x7fff.coerceAtMost(Runtime.getRuntime().availableProcessors() * 10),
                         ForkJoinPool.defaultForkJoinWorkerThreadFactory,
                         unCatchExceptionHandler,
                         false

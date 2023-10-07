@@ -119,6 +119,7 @@ class VTVBackupDataSourceImpl @Inject constructor(
 
     override fun getTvLinkFromDetail(tvChannel: TVChannel, isBackup: Boolean): Observable<TVChannelLinkStream> {
         val cache = sharePreference.getTvByGroup(TVDataSourceFrom.VTV_BACKUP.name)
+        trustEveryone()
         return if (_cookie.isEmpty() || cache.isEmpty()) {
             getTvList()
                 .flatMap { list ->
@@ -241,7 +242,9 @@ class VTVBackupDataSourceImpl @Inject constructor(
                         onSuccess(
                             TVChannelLinkStream(
                                 channel = kenhTvDetail,
-                                linkStream = vtvStream.stream_url
+                                linkStream = vtvStream.stream_url.map {
+                                    TVChannel.Url.fromUrl(it)
+                                }
                             )
                         )
                     } catch (e: Exception) {
@@ -264,7 +267,9 @@ class VTVBackupDataSourceImpl @Inject constructor(
             onSuccess(
                 TVChannelLinkStream(
                     channel = kenhTvDetail,
-                    linkStream = it
+                    linkStream = it.map {
+                        TVChannel.Url.fromUrl(it)
+                    }
                 )
             )
         }, {

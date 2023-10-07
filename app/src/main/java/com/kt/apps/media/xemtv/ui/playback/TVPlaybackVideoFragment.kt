@@ -21,6 +21,7 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logPlaybackRetryGetStreamLink
 import com.kt.apps.core.logging.logPlaybackRetryPlayVideo
 import com.kt.apps.core.logging.logPlaybackShowError
+import com.kt.apps.core.tv.datasource.impl.MainTVDataSource
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
@@ -78,14 +79,24 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
 
         when {
-            retriedTimes > MAX_RETRY_TIME || (tvChannelViewModel.lastWatchedChannel?.linkStream?.size ?: 0) == 0 -> {
-                notifyPlaybackError(error)
+            retriedTimes > MAX_RETRY_TIME || (tvChannelViewModel.lastWatchedChannel?.linkReadyToStream?.size ?: 0) == 0 -> {
+                if (tvChannelViewModel.lastWatchedChannel?.linkStream?.filter {
+                        it.type == MainTVDataSource.TVChannelUrlType.WEB_PAGE.value
+                    }.isNullOrEmpty()) {
+                    notifyPlaybackError(error)
+                } else {
+                    retryTimes[tvChannelViewModel.lastWatchedChannel?.channel!!.channelId] = 0
+                    tvChannelViewModel.getLinkStreamForChannel(
+                        tvChannelViewModel.lastWatchedChannel!!.channel,
+                        true
+                    )
+                }
             }
 
-            (tvChannelViewModel.lastWatchedChannel?.linkStream?.size ?: 0) > 1 -> {
-                val newStreamList = tvChannelViewModel.lastWatchedChannel!!.linkStream.subList(
+            (tvChannelViewModel.lastWatchedChannel?.linkReadyToStream?.size ?: 0) > 1 -> {
+                val newStreamList = tvChannelViewModel.lastWatchedChannel!!.linkReadyToStream.subList(
                     1,
-                    tvChannelViewModel.lastWatchedChannel!!.linkStream.size
+                    tvChannelViewModel.lastWatchedChannel!!.linkReadyToStream.size
                 )
                 val newChannelWithLink = TVChannelLinkStream(
                     tvChannelViewModel.lastWatchedChannel!!.channel,
@@ -333,6 +344,12 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     private fun playVideo(tvChannelLinkStream: TVChannelLinkStream, showVideoInfo: Boolean = true) {
         playVideo(
             linkStreams = tvChannelLinkStream.linkStream
+                .filter {
+                    it.type == MainTVDataSource.TVChannelUrlType.STREAM.value
+                }
+                .map {
+                    it.url
+                }
                 .filter {
                     Uri.parse(it).host != null
                 }.map {

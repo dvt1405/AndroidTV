@@ -207,7 +207,9 @@ class VDataSourceImpl @Inject constructor(
                 emitter.onNext(
                     TVChannelLinkStream(
                         tvChannel,
-                        listStreamLink
+                        listStreamLink.map {
+                            TVChannel.Url.fromUrl(it)
+                        }
                     )
                 )
             }

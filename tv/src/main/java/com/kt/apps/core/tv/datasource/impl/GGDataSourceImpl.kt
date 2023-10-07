@@ -64,7 +64,9 @@ class GGDataSourceImpl @Inject constructor(
         return Observable.just(
             TVChannelLinkStream(
                 tvChannel,
-                listOf(tvChannel.tvChannelWebDetailPage)
+                listOf(tvChannel.tvChannelWebDetailPage).map {
+                    TVChannel.Url.fromUrl(it)
+                }
             )
         )
     }

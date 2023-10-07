@@ -203,6 +203,8 @@ class SCTVDataSourceImpl @Inject constructor(
                             listOf(linkPlay)
                         } else {
                             listOf(linkPlay, hlsInplayInfo)
+                        }.map {
+                            TVChannel.Url.fromUrl(it)
                         }
                     )
                 )
@@ -222,9 +224,7 @@ class SCTVDataSourceImpl @Inject constructor(
                             tvChannel.apply {
                                 this.referer = WEB_PAGE_BASE_URL
                             },
-                            streamingLink.map {
-                                it.url
-                            }
+                            streamingLink
                         )
                     )
                     it.onComplete()

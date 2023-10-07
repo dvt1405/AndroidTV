@@ -79,16 +79,40 @@ open class BaseTVChannelViewModel constructor(
             lastTVStreamLinkTask?.dispose()
         }
         markLastWatchedChannel(tvDetail)
+        Logger.d(this, message = "getLinkStreamForChannel: ${Gson().toJson(tvDetail)}")
+        var tvChannelStreamLink: TVChannelLinkStream? = null
         lastTVStreamLinkTask = interactors.getChannelLinkStream(tvDetail, isBackup)
             .subscribe({
-                Logger.d(this, message = Gson().toJson(it))
-                markLastWatchedChannel(it)
-                enqueueInsertWatchNextTVChannel(it.channel)
-                _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
-                actionLogger.logStreamingTV(it.channel.tvChannelName)
+                tvChannelStreamLink = if (tvChannelStreamLink == null) {
+                    it
+                } else {
+                    val newLinkStream = tvChannelStreamLink!!.linkStream.toMutableList()
+                    newLinkStream.addAll(it.linkStream)
+                    TVChannelLinkStream(it.channel, newLinkStream)
+                }.also {
+                    markLastWatchedChannel(it)
+                }
             }, {
                 Logger.e(this, exception = it)
                 _tvWithLinkStreamLiveData.postValue(DataState.Error(it))
+            }, {
+                if (tvChannelStreamLink != null && tvChannelStreamLink!!.linkStream.isNotEmpty()) {
+                    Logger.d(this, message = Gson().toJson(tvChannelStreamLink))
+                    markLastWatchedChannel(tvChannelStreamLink)
+                    enqueueInsertWatchNextTVChannel(tvChannelStreamLink!!.channel)
+                    _tvWithLinkStreamLiveData.postValue(DataState.Success(tvChannelStreamLink!!))
+                    actionLogger.logStreamingTV(tvChannelStreamLink!!.channel.tvChannelName)
+                    Logger.d(this, message = "onComplete")
+                } else {
+                    _tvWithLinkStreamLiveData.postValue(
+                        DataState.Error(
+                            Throwable(
+                                "Kênh ${lastWatchedChannel?.channel?.tvChannelName} " +
+                                        "hiện tại đang lỗi hoặc chưa hỗ trợ nội dung miễn phí"
+                            )
+                        )
+                    )
+                }
             })
 
         add(lastTVStreamLinkTask!!)
@@ -210,10 +234,12 @@ open class BaseTVChannelViewModel constructor(
                         )
                     )
                 )
+            } else if (currentRetryCount > 1) {
+                tvChannelStreamingRetryCount[it.channel.channelId] = currentRetryCount + 1
+                getLinkStreamForChannel(it.channel, true)
             } else {
                 tvChannelStreamingRetryCount[it.channel.channelId] = currentRetryCount + 1
-                it.channel.urls.size > 2
-                getLinkStreamForChannel(it.channel)
+                getLinkStreamForChannel(it.channel, true)
             }
         }
     }

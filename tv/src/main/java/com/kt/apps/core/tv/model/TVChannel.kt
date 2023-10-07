@@ -41,6 +41,18 @@ class TVChannel(
     ) : Parcelable {
         val isHls: Boolean
             get() = url.contains("m3u8")
+
+        companion object {
+            fun fromUrl(
+                url: String,
+                type: String = MainTVDataSource.TVChannelUrlType.STREAM.value,
+                dataSource: String? = null
+            ) = Url(
+                type = type,
+                url = url,
+                dataSource = dataSource
+            )
+        }
     }
 
     val isRadio: Boolean
