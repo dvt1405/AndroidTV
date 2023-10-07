@@ -24,6 +24,7 @@ import okhttp3.internal.http.HTTP_MULT_CHOICE
 import okhttp3.internal.http.HTTP_PERM_REDIRECT
 import okhttp3.internal.http.HTTP_SEE_OTHER
 import okhttp3.internal.http.HTTP_TEMP_REDIRECT
+import okhttp3.internal.http.HTTP_USE_PROXY
 import org.json.JSONArray
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
@@ -674,7 +675,8 @@ class ParserExtensionsSource @Inject constructor(
                 HTTP_MULT_CHOICE,
                 HTTP_MOVED_PERM,
                 HTTP_MOVED_TEMP,
-                HTTP_SEE_OTHER
+                HTTP_SEE_OTHER,
+                HTTP_USE_PROXY
             )
         }
 

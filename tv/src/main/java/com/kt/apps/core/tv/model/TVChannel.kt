@@ -51,7 +51,6 @@ class TVChannel(
 
     val isHls: Boolean
         get() = tvChannelWebDetailPage.contains("m3u8")
-                || tvGroup != TVChannelGroup.VOV.name
 
     fun getMapData() = mapOf(
         AbstractExoPlayerManager.EXTRA_MEDIA_ID to channelId,

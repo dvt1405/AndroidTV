@@ -47,6 +47,8 @@ class ParserExtensionsProgramSchedule @Inject constructor(
         roomDataBase.extensionsTVChannelProgramDao()
     }
 
+    private val _tvSchedulerDao = roomDataBase.tvSchedulerDao()
+
     private val pendingSource by lazy {
         mutableMapOf<String, Completable>()
     }
@@ -217,8 +219,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
 
     fun parseForConfig(config: ExtensionsConfig) {
         disposable.add(
-            roomDataBase.tvSchedulerDao()
-                .getAllByExtensionlId(config.sourceUrl)
+            _tvSchedulerDao.getAllByExtensionlId(config.sourceUrl)
                 .toObservable()
                 .flatMapIterable {
                     it
@@ -296,8 +297,9 @@ class ParserExtensionsProgramSchedule @Inject constructor(
     }
 
     private fun getListTvProgramRx(config: ExtensionsConfig, programScheduleUrl: String) =
-        roomDataBase.extensionsTVChannelProgramDao()
-            .deleteProgramByConfig(config.sourceUrl, programScheduleUrl)
+        extensionsProgramDao.deleteProgramByConfig(config.sourceUrl, programScheduleUrl)
+            .observeOn(pool)
+            .subscribeOn(pool)
             .onErrorComplete()
             .andThen(getListTvProgram(config, programScheduleUrl).observeOn(pool))
             .subscribeOn(pool)
@@ -326,7 +328,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
     private fun getListTvProgram(
         config: ExtensionsConfig,
         programScheduleUrl: String
-    ) = Observable.create { emitter ->
+    ) = Observable.create<Any> { emitter ->
         val networkCall = client.newCall(
             Request.Builder()
                 .url(programScheduleUrl)
@@ -359,7 +361,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
             NodeBuilder.read(stream)
         } catch (e: Exception) {
             if (emitter.isDisposed) return@create
-            emitter.onNext(InvalidFormatThrowable("Cannot retry"))
+            emitter.onError(InvalidFormatThrowable("Cannot retry"))
             return@create
         }
         var readNode: InputNode? = node.next
@@ -472,7 +474,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                     "TVScheduler",
                     message = "$it"
                 )
-                roomDataBase.tvSchedulerDao()
+                _tvSchedulerDao
                     .insert(it)
                     .onErrorComplete()
             }
