@@ -303,6 +303,8 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
             }
             if (mMainFragment !is TVSearchFragment) {
                 searchViewModels.queryDefaultSearch()
+            } else if (mMainFragment is FragmentDashboardExtensions) {
+                searchViewModels.queryDefaultSearch(true)
             }
             if (selectedPosition >= 0) {
                 navDrawerView.setEnableSelectedItem(selectedPosition, true)
