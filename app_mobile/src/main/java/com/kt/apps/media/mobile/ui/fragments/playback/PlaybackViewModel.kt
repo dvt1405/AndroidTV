@@ -3,6 +3,7 @@ package com.kt.apps.media.mobile.ui.fragments.playback
 import android.util.Log
 import com.kt.apps.core.base.BaseViewModel
 import com.kt.apps.core.logging.IActionLogger
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
@@ -26,6 +27,7 @@ class PlaybackViewModel @Inject constructor(): BaseViewModel() {
         get() = _stateEvents
 
     suspend fun changeProcessState(state: State) {
+        Log.d(TAG, "changeProcessState: $state ${Throwable().stackTraceToString()}")
         _stateEvents.emit(state)
     }
 

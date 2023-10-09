@@ -134,8 +134,10 @@ class TVPlaybackFragment: ChannelPlaybackFragment() {
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
 
-        val itemToPlay = arguments?.get(EXTRA_TV_CHANNEL) as? TVChannel
 
+        val itemToPlay = if(_playbackInteractor.currentPlayingVideo.value == null) {
+            arguments?.get(EXTRA_TV_CHANNEL) as? TVChannel
+        } else null
 
         lifecycleScope.launch {
             val loadItemFlow: Flow<ChannelElement.TVChannelElement> = merge(
@@ -226,7 +228,9 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
     }
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
-        val itemToPlay = arguments?.get(TVPlaybackFragment.EXTRA_TV_CHANNEL) as? TVChannel
+        val itemToPlay = if(_playbackInteractor.currentPlayingVideo.value == null) {
+            arguments?.get(TVPlaybackFragment.EXTRA_TV_CHANNEL) as? TVChannel
+        } else null
 
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             val loadItemFlow = merge(

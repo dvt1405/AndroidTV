@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.util.Util
 import com.kt.apps.core.extensions.ExtensionsChannel
+import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.gone
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.ui.main.ChannelElement
@@ -101,7 +102,10 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
 
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
-        val extensionsChannel = arguments?.get(EXTRA_TV_CHANNEL) as? ExtensionsChannel
+//        val extensionsChannel = arguments?.get(EXTRA_TV_CHANNEL) as? ExtensionsChannel
+        val extensionsChannel = if(_playbackViewModel.currentPlayingVideo.value == null) {
+            arguments?.get(TVPlaybackFragment.EXTRA_TV_CHANNEL) as? ExtensionsChannel
+        } else null
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             val loadChannelFlow = merge(
                 extensionsChannel?.let { flowOf(it) } ?: emptyFlow(),
