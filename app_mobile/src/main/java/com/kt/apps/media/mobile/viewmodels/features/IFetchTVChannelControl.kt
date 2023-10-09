@@ -60,34 +60,27 @@ interface IFetchDeepLinkControl {
     val uiControlViewModel: UIControlViewModel
 }
 
-interface IFetchFavoriteControl: IFetchTVChannelControl {
-    val uiControlViewModel: UIControlViewModel
+interface IFetchFavoriteControl: IFetchTVChannelControl, IUIControl {
     val favoriteViewModel: FavoriteViewModel
     suspend fun loadFavoriteChannel(element: ChannelElement.FavoriteVideo) {
 
         when (element.model.type) {
             VideoFavoriteDTO.Type.TV, VideoFavoriteDTO.Type.RADIO -> {
                 playbackViewModel.changeProcessState(PlaybackViewModel.State.IDLE)
+                tvChannelViewModel.getLinkStreamById(element.model.id)
                 val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await(tag = "IFetchTVChannelControl")
                 val prepare = if (linkStream.channel.isRadio) {
                     PrepareStreamLinkData.Radio(linkStream.channel)
                 } else {
                     PrepareStreamLinkData.TV(linkStream.channel)
                 }
-                uiControlViewModel.openPlayback(prepare)
-                playbackViewModel.changeProcessState(
-                    PlaybackViewModel.State.LOADING(prepare)
-                )
-
-                playbackViewModel.changeProcessState(
-                    PlaybackViewModel.State.PLAYING(StreamLinkData.TVStreamLinkData(linkStream))
-                )
+                openPlayback(prepare)
             }
             VideoFavoriteDTO.Type.IPTV -> {
                 val extensionsChannelAndConfig = favoriteViewModel.getResultForItem(element.model) ?: kotlin.run {
                     throw Throwable("Error")
                 }
-                uiControlViewModel.openPlayback(PrepareStreamLinkData.IPTV(extensionsChannelAndConfig.channel, extensionsChannelAndConfig.config.sourceUrl))
+                openPlayback(PrepareStreamLinkData.IPTV(extensionsChannelAndConfig.channel, extensionsChannelAndConfig.config.sourceUrl))
             }
         }
     }
