@@ -216,11 +216,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
 
         favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_bookmark_selector, context?.theme)
+        favoriteButton?.isSelected = false
         favoriteButton?.setOnClickListener { view ->
             Log.d(TAG, "toggleFavorite: ")
             toggleFavorite()
         }
-        favoriteButton?.visibility = View.INVISIBLE
+        favoriteButton?.inVisible()
 
         informationButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.core.R.drawable.ic_round_error_outline_24, context?.theme)
         informationButton?.setOnClickListener { showInformationDialog() }
@@ -719,8 +720,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayerManager.detach()
         isProgressing.emit(true)
         title.emit(data.title)
-//        favoriteButton?.inVisible()
-//        informationButton?.inVisible()
     }
 
     protected open suspend fun playVideo(data: StreamLinkData) {
