@@ -7,15 +7,15 @@ import com.kt.apps.media.mobile.ui.fragments.tv.RadioPerChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.TVPerChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.tvchannels.RadioChannelsFragment
 import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
-import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
-import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentInteractors
-import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentInteractors
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
+import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentViewModel
+import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentViewModel
 import kotlin.coroutines.CoroutineContext
 
 interface IDashboardHelper {
     fun totalFragment(): ChannelFragment
     fun perChannelFragment(filterCategory: String): PerChannelListFragment
-    fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentInteractors
+    fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentViewModel
 }
 
 class TVDashboardHelper: IDashboardHelper {
@@ -27,8 +27,8 @@ class TVDashboardHelper: IDashboardHelper {
         return TVPerChannelListFragment.newInstance(filterCategory)
     }
 
-    override fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentInteractors {
-        return  TVChannelFragmentInteractors(viewModel, context)
+    override fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentViewModel {
+        return  TVChannelFragmentViewModel(viewModel, context)
     }
 
 }
@@ -42,7 +42,7 @@ class RadioDashboardHelper: IDashboardHelper {
         return RadioPerChannelListFragment.newInstance(filterCategory)
     }
 
-    override fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentInteractors {
-        return  RadioChannelFragmentInteractors(viewModel, context)
+    override fun wrapViewModel(viewModel: ViewModelProvider, context: CoroutineContext): ChannelFragmentViewModel {
+        return  RadioChannelFragmentViewModel(viewModel, context)
     }
 }

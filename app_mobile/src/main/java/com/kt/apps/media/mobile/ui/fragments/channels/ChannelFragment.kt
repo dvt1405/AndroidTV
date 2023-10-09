@@ -23,7 +23,7 @@ import com.kt.apps.media.mobile.utils.launchTrack
 import com.kt.apps.media.mobile.utils.onRefresh
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
-import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
 import com.kt.skeleton.KunSkeleton
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.collectLatest
@@ -74,7 +74,7 @@ abstract  class ChannelFragment: BaseMobileFragment<ActivityMainBinding>() {
         }
     }
 
-    abstract val viewModel: ChannelFragmentInteractors
+    abstract val viewModel: ChannelFragmentViewModel
 
     private val playbackViewModel: PlaybackViewModel? by lazy {
         activity?.run {

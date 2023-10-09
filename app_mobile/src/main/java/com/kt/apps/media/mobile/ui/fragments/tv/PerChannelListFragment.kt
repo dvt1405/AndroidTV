@@ -3,7 +3,6 @@ package com.kt.apps.media.mobile.ui.fragments.tv
 import android.os.Bundle
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.media.mobile.R
@@ -13,7 +12,7 @@ import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.ChannelListView
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.screenHeight
-import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -28,7 +27,7 @@ abstract class PerChannelListFragment : BaseMobileFragment<FragmentTvChannelList
     override val screenName: String
         get() = "FragmentTVChannelList"
 
-    abstract val interactors: ChannelFragmentInteractors
+    abstract val interactors: ChannelFragmentViewModel
 
     private val filterCategory by lazy {
         requireArguments().getString(EXTRA_TV_CHANNEL_CATEGORY)!!

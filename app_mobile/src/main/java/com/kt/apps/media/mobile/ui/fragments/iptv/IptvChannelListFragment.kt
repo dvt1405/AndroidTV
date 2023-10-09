@@ -67,7 +67,9 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
     override fun initAction(savedInstanceState: Bundle?) {
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
-                merge(flowOf(Unit), swipeRefreshLayout.onRefresh()).collectLatest(loadData)
+                merge(flowOf(Unit), swipeRefreshLayout.onRefresh()).collectLatest {
+                    loadData()
+                }
             }
         }
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -100,7 +102,7 @@ class IptvChannelListFragment : BaseFragment<FragmentChannelListBinding>(){
             .launchIn(viewLifecycleOwner.lifecycleScope)
     }
 
-    private val loadData: suspend (Unit) -> Unit = {
+    private fun loadData() {
         viewModels?.apply {
             lifecycleScope.launchTrack(activityIndicator, CoroutineExceptionHandler { _, throwable ->
                 Log.d(TAG, "loadData: $throwable ")

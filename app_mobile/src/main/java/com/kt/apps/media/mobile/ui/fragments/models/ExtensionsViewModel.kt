@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.lifecycle.viewModelScope
 import com.kt.apps.core.base.BaseViewModel
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.viewmodels.BaseExtensionsViewModel
@@ -22,6 +23,7 @@ import com.kt.apps.core.usecase.GetListProgrammeForChannel
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.di.AppScope
 import com.kt.apps.media.mobile.utils.asDataStateFlow
+import com.kt.apps.media.mobile.utils.asUpdateFlow
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Observable
@@ -30,8 +32,9 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.security.cert.Extension
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
-typealias ExtensionResult = Map<ExtensionsConfig, List<ExtensionsChannel>>
 sealed class AddSourceState {
     data class StartLoad(val source: ExtensionsConfig): AddSourceState()
     data class Success(val source: ExtensionsConfig): AddSourceState()
@@ -57,21 +60,36 @@ class ExtensionsViewModel @Inject constructor(
     storage,
     historyIteractors
 ) {
-    fun removeExtensionConfig(extensionsConfig: ExtensionsConfig) {
+
+    val extensionConfigsKt: StateFlow<List<ExtensionsConfig>> by lazy {
+        totalExtensionsConfig.asUpdateFlow("IPTVViewModel")
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(),
+                emptyList()
+            )
+    }
+
+    suspend fun removeExtensionConfig(extensionsConfig: ExtensionsConfig) {
 //        storage.removeLastRefreshExtensions(extensionsConfig)
-        add(
-            roomDataBase.extensionsConfig()
-                .delete(extensionsConfig)
-                .doOnComplete {
-                    this.loadAllListExtensionsChannelConfig(true)
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    Logger.d(this, message = "remove complete")
-                }, {
-                    Logger.e(this, exception = it)
-                })
-        )
+
+        return suspendCancellableCoroutine { cont ->
+            add(
+                roomDataBase.extensionsConfig()
+                    .delete(extensionsConfig)
+                    .doOnComplete {
+                        this.loadAllListExtensionsChannelConfig(true)
+                    }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        Logger.d(this, message = "remove complete")
+                        cont.resume(Unit)
+                    }, {
+                        Logger.e(this, exception = it)
+                        cont.resumeWithException(it)
+                    })
+            )
+        }
     }
 }
