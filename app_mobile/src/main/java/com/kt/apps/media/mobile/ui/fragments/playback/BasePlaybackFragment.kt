@@ -221,7 +221,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             Log.d(TAG, "toggleFavorite: ")
             toggleFavorite()
         }
-        favoriteButton?.inVisible()
+        favoriteButton?.gone()
+        Log.d(TAG, "favoriteButton?.invisible(): ${Thread.currentThread()}")
 
         informationButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.core.R.drawable.ic_round_error_outline_24, context?.theme)
         informationButton?.setOnClickListener { showInformationDialog() }
@@ -370,10 +371,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
             launch {
                 interactor.currentPlayingVideo.collectLatest {
-                    if (it != null) {
-                        favoriteButton?.visible()
-                    } else {
-                        favoriteButton?.inVisible()
+                    MainScope().launch {
+                        if (it != null) {
+                            favoriteButton?.visible()
+                            Log.d(TAG, "favoriteButton?.visible() $it ${favoriteButton?.visibility}: ${Thread.currentThread()}")
+                        } else {
+                            favoriteButton?.inVisible()
+                            Log.d(TAG, "favoriteButton?.invisible() $it ${favoriteButton?.visibility}: ${Thread.currentThread()}")
+                        }
                     }
                 }
             }
