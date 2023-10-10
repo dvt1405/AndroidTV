@@ -1,5 +1,6 @@
 package com.kt.apps.media.mobile.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.extensions.ExtensionsChannel
@@ -29,15 +30,14 @@ class IPTVPlaybackInteractor(provider: ViewModelProvider, private val coroutineS
     }
 
     suspend fun loadChannelConfig(configId: String, group: String) {
-        extensionViewModel.loadChannelForConfig(configId).asSuccessFlow("loadChannelConfig $configId")
-            .collectLatest {
-                groupAndSort(it).firstOrNull { pair -> pair.first == group }
-                    ?.run {
-                        _relatedItems.emit(second)
-                    }?: kotlin.run {
-                        _relatedItems.emit(it)
-                }
-            }
+
+        val list = extensionViewModel.loadChannelForConfig(configId).awaitNextValue()
+        groupAndSort(list).firstOrNull { pair -> pair.first == group }
+            ?.run {
+                _relatedItems.emit(second)
+            }?: kotlin.run {
+            _relatedItems.emit(list)
+        }
     }
 
     fun loadProgramForChanel(channel: ExtensionsChannel): Flow<TVScheduler.Programme> {

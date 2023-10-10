@@ -263,7 +263,9 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
                             }
                     }
             }
+        }
 
+        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
             launch {
                 _playbackInteractor.radioChannelList.collectLatest {
                     itemAdapter.onRefresh(it)

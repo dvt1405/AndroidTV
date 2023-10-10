@@ -252,12 +252,8 @@ fun <T> LiveData<DataState<T>>.asProgressFlow(): Flow<Boolean> {
 
 suspend fun <T> LiveData<DataState<T>>.awaitNextValue(tag: String = "TAG") : T {
     return suspendCancellableCoroutine { continuation ->
-        val oldData = value
         val observer = object : Observer<DataState<T>> {
             override fun onChanged(value: DataState<T>) {
-                if (value == oldData) {
-                    return
-                }
                 when (value) {
                     is DataState.Success -> {
                         removeObserver(this)
