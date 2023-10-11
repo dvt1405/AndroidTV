@@ -70,46 +70,38 @@ class TVScheduler @JvmOverloads constructor(
 
         fun getTime(): String {
             val start = Calendar.getInstance()
-            start.timeInMillis = startTimeMilli
+            start.timeInMillis = startTimeMilli()
             val end = Calendar.getInstance()
-            end.timeInMillis = endTimeMilli
+            end.timeInMillis = endTimeMilli()
             val startTime = String.format("%02d:%02d", start.get(Calendar.HOUR_OF_DAY), start.get(Calendar.MINUTE))
             val endTime = String.format("%02d:%02d", end.get(Calendar.HOUR_OF_DAY), end.get(Calendar.MINUTE))
             return "$startTime - $endTime"
         }
 
-        @get:Ignore
-        @delegate:Ignore
-        val startTimeMilli by lazy {
-            if (start.trim() == "+0700") {
-                val calendar = Calendar.getInstance()
-                calendar.set(Calendar.HOUR, 0)
-                calendar.set(Calendar.MINUTE, 0)
-                calendar.timeInMillis
-            } else {
-                start.toDate(
-                    start.getPattern(),
-                    Locale.getDefault(),
-                    false
-                )?.time ?: System.currentTimeMillis()
-            }
+        fun startTimeMilli() = if (start.trim() == "+0700") {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.HOUR, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.timeInMillis
+        } else {
+            start.toDate(
+                start.getPattern(),
+                Locale.getDefault(),
+                false
+            )?.time ?: System.currentTimeMillis()
         }
 
-        @get:Ignore
-        @delegate:Ignore
-        val endTimeMilli by lazy {
-            if (stop.trim() == "+0700") {
-                val calendar = Calendar.getInstance()
-                calendar.set(Calendar.HOUR, 23)
-                calendar.set(Calendar.MINUTE, 59)
-                calendar.timeInMillis
-            } else {
-                stop.toDate(
-                    stop.getPattern(),
-                    Locale.getDefault(),
-                    false
-                )?.time ?: System.currentTimeMillis()
-            }
+        fun endTimeMilli() = if (stop.trim() == "+0700") {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.HOUR, 23)
+            calendar.set(Calendar.MINUTE, 59)
+            calendar.timeInMillis
+        } else {
+            stop.toDate(
+                stop.getPattern(),
+                Locale.getDefault(),
+                false
+            )?.time ?: System.currentTimeMillis()
         }
 
         override fun toString(): String {
@@ -124,7 +116,7 @@ class TVScheduler @JvmOverloads constructor(
         }
 
         fun isToday(): Boolean {
-            return DateUtils.isToday(startTimeMilli)
+            return DateUtils.isToday(startTimeMilli())
         }
     }
 

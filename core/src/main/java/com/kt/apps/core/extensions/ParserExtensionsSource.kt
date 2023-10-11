@@ -577,12 +577,11 @@ class ParserExtensionsSource @Inject constructor(
             .checkExtensionById(configId)
             .subscribeOn(Schedulers.io())
             .onErrorResumeNext {
-                Maybe.just(0)
+                Single.just(0)
             }
             .map { count ->
                 count > 0
             }
-            .toSingle()
     }
 
     fun updateIPTVSource(extensionsConfig: ExtensionsConfig): Completable {

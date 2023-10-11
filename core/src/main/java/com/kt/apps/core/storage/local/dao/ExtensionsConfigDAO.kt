@@ -33,18 +33,18 @@ abstract class ExtensionsConfigDAO {
 
     @Query("SELECT COUNT(*) FROM ExtensionsConfig WHERE sourceUrl = :id")
     @Transaction
-    abstract fun checkExtensionById(id: String): Maybe<Int>
+    abstract fun checkExtensionById(id: String): Single<Int>
 
     @Update
     abstract fun update(extensionsConfig: ExtensionsConfig): Completable
 
     @Query("SELECT * FROM ExtensionsConfig WHERE sourceUrl = :id")
     @Transaction
-    abstract fun getExtensionChannelList(id: String): Maybe<ExtensionsConfigWithLoadedListChannel>
+    abstract fun getExtensionChannelList(id: String): Single<ExtensionsConfigWithLoadedListChannel>
 
     @Query("SELECT * FROM ExtensionsConfig WHERE sourceUrl = :id limit 1")
     @Transaction
-    abstract fun getExtensionChannelWithCategory(id: String): Maybe<ExtensionsConfigWithListCategory>
+    abstract fun getExtensionChannelWithCategory(id: String): Single<ExtensionsConfigWithListCategory>
 
     @Delete
     abstract fun delete(config: ExtensionsConfig): Completable
