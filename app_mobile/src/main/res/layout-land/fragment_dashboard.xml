@@ -26,8 +26,11 @@
         <ScrollView
             android:id="@+id/navigation_container"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:fillViewport="true"
             >
             <com.google.android.material.navigationrail.NavigationRailView
                 android:id="@+id/bottom_navigation"

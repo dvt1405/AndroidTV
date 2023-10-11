@@ -83,6 +83,48 @@ class ParserExtensionsSourceTest {
     }
 
     @Test
+    fun parseFromRemoteRxList() {
+        val listData = listOf(
+            "https://vthanhtivi.pw",
+            "https://gg.gg/coocaa",
+            "https://gg.gg/bearlivetv",
+            "https://gg.gg/PHAPTX5",
+            "https://bit.ly/beartvplay",
+            "https://cvmtv.site",
+            "https://gg.gg/khangg",
+            "https://s.id/bearlivetv",
+            "https://s.id/nhamng",
+            "https://antmedia.anttv.xyz",
+            "https://bit.ly/vietteliptv",
+            "https://gg.gg/Coban66",
+            "https://gg.gg/SN-tv",
+            "https://hqth.me/fptphimle",
+            "https://hqth.me/tvhaypl",
+            "https://hqth.me/tvhaypb",
+            "https://s.id/phimiptv",
+            "https://s.id/ziptvvn",
+            "https://gg.gg/phimiptv",
+            "https://hqth.me/tvhayphimle",
+            "https://gg.gg/vn360sport",
+            "https://gg.gg/90phuttv",
+            "https://gg.gg/SN-90phut",
+            "https://gg.gg/SN-thethao",
+            "https://gg.gg/SN-thapcam"
+        )
+        listData.map {
+            ExtensionsConfig(
+                sourceName = it.replace("https://", "").replace("http://", ""),
+                sourceUrl = it
+            )
+        }.forEachIndexed { index, extensionsConfig ->
+            parserExtensionsSource.parseFromRemoteRx(extensionsConfig)
+                .test()
+                .assertNoErrors()
+                .assertComplete()
+        }
+    }
+
+    @Test
     fun parseFromRemote() {
         val result = parserExtensionsSource.parseFromRemoteRx(config)
             .blockingGet()
