@@ -301,7 +301,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
         }
     }
-    private fun loadPlayback(data: PrepareStreamLinkData) {
+    private fun  loadPlayback(data: PrepareStreamLinkData) {
         Log.d(TAG, "loadPlayback: $data")
         when(data) {
             is PrepareStreamLinkData.TV -> TVPlaybackFragment.newInstance(data.data)

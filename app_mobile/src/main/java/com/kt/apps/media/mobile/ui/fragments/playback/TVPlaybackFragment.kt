@@ -82,19 +82,24 @@ class TVPlaybackFragment: ChannelPlaybackFragment() {
 
             (_playbackInteractor.tvChannelViewModel.lastWatchedChannel?.linkReadyToStream?.size ?: 0) > 1 -> {
                 val newLinks = _playbackInteractor.tvChannelViewModel.lastWatchedChannel!!.linkReadyToStream
-                val newStreamList = newLinks.subList(
-                    1,
-                    newLinks.size
-                )
+                val newStreamList = if (newLinks.isNotEmpty()) {
+                    newLinks.subList(
+                        1,
+                        newLinks.size
+                    )
+                } else emptyList()
+
                 val newChannelWithLink = TVChannelLinkStream(
                     _playbackInteractor.tvChannelViewModel.lastWatchedChannel!!.channel,
                     newStreamList
                 )
                 _playbackInteractor.tvChannelViewModel.markLastWatchedChannel(newChannelWithLink)
+                val newLinkData = if (executingIndex + 1 <= newLinks.size) {
+                    newLinks.subList(
+                        executingIndex + 1, newLinks.size
+                    )
+                } else emptyList()
 
-                val newLinkData = newLinks.subList(
-                    executingIndex + 1, newLinks.size
-                )
                 val newExecutingData = StreamLinkData.TVStreamLinkData(newChannelWithLink)
 
 
