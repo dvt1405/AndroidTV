@@ -245,8 +245,12 @@ class ParserExtensionsSource @Inject constructor(
             .newCall(
                 Request.Builder()
                     .url(extension.sourceUrl)
-                    .addHeader("User-agent", Constants.USER_AGENT)
-                    .addHeader("Host", Uri.parse(extension.sourceUrl).host!!)
+                    .addHeader("User-agent", Constants.USER_AGENT).apply {
+                        Uri.parse(extension.sourceUrl).host?.takeIf { it.isNotEmpty() }
+                            ?.let {
+                                this.addHeader("Host", it)
+                            }
+                    }
                     .build()
             ).execute()
 
@@ -260,6 +264,8 @@ class ParserExtensionsSource @Inject constructor(
         }
         if (response.code in followUpResCode) {
             val location = response.header("Location")!!
+                .trim()
+                .replace(REGEX_TRIM_END_LINE, "")
             return executeHttpCall(
                 ExtensionsConfig(
                     sourceUrl = location,
@@ -374,7 +380,7 @@ class ParserExtensionsSource @Inject constructor(
                     .trim()
                     .replace(REGEX_TRIM_END_LINE, "")
                 while (channelLink.contains(TAG_REFERER)) {
-                    val refererInChannelLink = getByRegex(REFERER_REGEX, line)
+                    val refererInChannelLink = getByRegex(REFERER_REGEX, channelLink)
                     channelLink = channelLink.replace("$TAG_REFERER=$refererInChannelLink", "")
                         .trim()
                 }
