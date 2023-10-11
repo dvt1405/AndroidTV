@@ -2,6 +2,7 @@ package com.kt.apps.media.mobile.di.workers
 
 import android.content.Context
 import android.database.Observable
+import android.net.Uri
 import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -47,31 +48,66 @@ class PreloadDataWorker(private val context: Context, private val params: Worker
     }
 
     companion object {
-        val mapData = mapOf<String, String>(
-            "90phut" to "http://gg.gg/SN-90phut",
-            "film" to "https://gg.gg/films24",
-            "Truy@n hinh FPTI" to "https://hqth.me/fptv1",
-            "Truyen hinh FPT2" to "https://hqth.me/fptv2i",
-            "Truyen hinh VPT" to "https://hqth.me/vnptli",
-            "Truyen hinh Viettel" to "https://hath.me/viettelv1",
-            "VietSimpleTV" to "https://hqth.me/vietstv",
-            "KIPTV SPORT" to "https://hqth.me/kiptvs",
-            "VthanhTV" to "http://vthanhtivi.pw",
-            "Coocaa" to "http://hgth.me/coca",
-            "Nguyen Kiet" to "https://hqth.me/ngkiettv1",
-            "VietNgaTV" to "https://hoth.me/vietngatv",
-            "Beartv" to "http://bit.ly/beartvplay",
-            "PCRTV" to "http://hqth.me/pcripty",
-            "BepTV" to "https://hqth.me/bepty",
-            "360 Sport" to "http://hqth.me/90p",
-            "Phim mien phi" to "https://hqth.me/phimfree",
-            "Phim le" to "http://hqth.me/phimle",
-            "Phim le tvhay" to "http://hqth.me/tvhayphimle",
-            "Phim le fptplay" to "http://hqth.me/fptphimle",
-            "Phim bo" to "http://hqth.me/phimbo",
-            "ChinaTV" to "http://hqth.me/china-ty",
-            "Quoc te" to "https://hqth.me/qttvl",
+//        val mapData = mapOf<String, String>(
+//            "90phut" to "http://gg.gg/SN-90phut",
+//            "film" to "https://gg.gg/films24",
+//            "Truy@n hinh FPTI" to "https://hqth.me/fptv1",
+//            "Truyen hinh FPT2" to "https://hqth.me/fptv2i",
+//            "Truyen hinh VPT" to "https://hqth.me/vnptli",
+//            "Truyen hinh Viettel" to "https://hath.me/viettelv1",
+//            "VietSimpleTV" to "https://hqth.me/vietstv",
+//            "KIPTV SPORT" to "https://hqth.me/kiptvs",
+//            "VthanhTV" to "http://vthanhtivi.pw",
+//            "Coocaa" to "http://hgth.me/coca",
+//            "Nguyen Kiet" to "https://hqth.me/ngkiettv1",
+//            "VietNgaTV" to "https://hoth.me/vietngatv",
+//            "Beartv" to "http://bit.ly/beartvplay",
+//            "PCRTV" to "http://hqth.me/pcripty",
+//            "BepTV" to "https://hqth.me/bepty",
+//            "360 Sport" to "http://hqth.me/90p",
+//            "Phim mien phi" to "https://hqth.me/phimfree",
+//            "Phim le" to "http://hqth.me/phimle",
+//            "Phim le tvhay" to "http://hqth.me/tvhayphimle",
+//            "Phim le fptplay" to "http://hqth.me/fptphimle",
+//            "Phim bo" to "http://hqth.me/phimbo",
+//            "ChinaTV" to "http://hqth.me/china-ty",
+//            "Quoc te" to "https://hqth.me/qttvl",
+//        )
+        val listData = listOf(
+        "https://vthanhtivi.pw",
+        "https://gg.gg/coocaa",
+        "https://gg.gg/bearlivetv",
+        "https://gg.gg/PHAPTX5",
+        "https://bit.ly/beartvplay",
+        "https://cvmtv.site",
+        "https://gg.gg/khangg",
+        "https://s.id/bearlivetv",
+        "https://s.id/nhamng",
+        "https://antmedia.anttv.xyz",
+        "https://bit.ly/vietteliptv",
+        "https://gg.gg/Coban66",
+        "https://gg.gg/SN-tv",
+        "https://hqth.me/fptphimle",
+        "https://hqth.me/tvhaypl",
+        "https://hqth.me/tvhaypb",
+        "https://s.id/phimiptv",
+        "https://s.id/ziptvvn",
+        "https://gg.gg/phimiptv",
+        "https://hqth.me/tvhayphimle",
+        "https://gg.gg/vn360sport",
+        "https://gg.gg/90phuttv",
+        "https://gg.gg/SN-90phut",
+        "https://gg.gg/SN-thethao",
+        "https://gg.gg/SN-thapcam"
         )
+
+        val mapData: Map<String, String> = listData.mapIndexed { index,str ->
+            val key = Uri.parse(
+                str.replace("https://", "")
+                    .replace("http://","")
+            ).pathSegments.lastOrNull { t -> t.trim().isNotEmpty() } ?: "Unknown${index}"
+            key to str
+        }.toMap()
     }
 }
 
