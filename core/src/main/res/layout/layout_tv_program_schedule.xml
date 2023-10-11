@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+    </data>
+
+    <FrameLayout
+        android:id="@+id/container_program"
+        android:layout_width="500dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="end|center_vertical"
+        android:background="@color/black_dim_99_hex"
+        android:focusable="true"
+        android:gravity="end|center_vertical"
+        android:translationX="0dp"
+        tools:ignore="MissingDefaultResource">
+
+        <com.kt.apps.core.base.leanback.VerticalGridView
+            android:id="@+id/vertical_grid_view"
+            style="@style/BaseGridViewStyle.NoPaddingTop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:focusedByDefault="true"
+            android:gravity="start"
+            android:horizontalSpacing="0dp"
+            android:paddingStart="0dp"
+            android:paddingEnd="0dp"
+            android:paddingBottom="0dp"
+            android:verticalSpacing="0dp" />
+    </FrameLayout>
+
+</layout>

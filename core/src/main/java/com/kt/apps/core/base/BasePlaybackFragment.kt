@@ -83,6 +83,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private var mGridViewPickHeight = 0f
     private var mGridViewOverlays: FrameLayout? = null
     private var playPauseBtn: ImageButton? = null
+    private var mBtnProgrammeSchedule: View? = null
     private var playbackOverlaysContainerView: View? = null
     private var mBackgroundView: View? = null
     private var playbackInfoContainerView: LinearLayout? = null
@@ -97,6 +98,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private var videoInfoCodecContainerView: ViewGroup? = null
     private var btnVideoCodecInfo: ImageView? = null
     private var btnFavouriteVideo: ImageView? = null
+    protected open var allowDpadUpToOpenSearch = false
     protected var onItemClickedListener: OnItemViewClickedListener? = null
     private val mChildLaidOutListener = OnChildLaidOutListener { _, _, _, _ ->
     }
@@ -288,13 +290,17 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private val autoHideOverlayRunnable by lazy {
         Runnable {
             playPauseBtn?.visible()
-            playPauseBtn?.requestFocus()
+            if (!isProgramScheduleShowing()) {
+                playPauseBtn?.requestFocus()
+            }
             playbackOverlaysContainerView?.fadeOut {
                 playPauseBtn?.alpha = 0f
                 mGridViewHolder?.gridView?.selectedPosition = 0
                 mGridViewOverlays?.translationY = mGridViewPickHeight
                 mSelectedPosition = 0
-                mGridViewHolder?.gridView?.clearFocus()
+                if (!isProgramScheduleShowing()) {
+                    mGridViewHolder?.gridView?.clearFocus()
+                }
                 overlaysUIState = OverlayUIState.STATE_HIDDEN
             }
         }
@@ -363,6 +369,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         btnVideoCodecInfo = root.findViewById(R.id.btn_video_codec_info)
         centerContainerView = root.findViewById(R.id.center_controls_container)
         btnFavouriteVideo = root.findViewById(R.id.btn_favourite)
+        mBtnProgrammeSchedule = root.findViewById(R.id.program_schedule)
         hideControlsOverlay(false)
         val controlBackground = root.findViewById<View>(androidx.leanback.R.id.playback_controls_dock)
         controlBackground.makeGone()
@@ -402,6 +409,10 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             onFavoriteVideoClicked(it.isSelected)
             mHandler.removeCallbacks(autoHideOverlayRunnable)
             mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
+        }
+        mBtnProgrammeSchedule?.setOnClickListener {
+            onShowProgramSchedule()
+            autoHideOverlayRunnable.run()
         }
         return root
     }
@@ -532,16 +543,21 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         mGridViewOverlays?.nextFocusUpId = if (seekBarContainer?.visibility == View.VISIBLE) {
             R.id.progress_bar_container
         } else {
-            R.id.ic_play_pause
+            R.id.program_schedule
         }
 
-        playPauseBtn?.nextFocusDownId = if (seekBarContainer?.visibility == View.VISIBLE) {
-            R.id.progress_bar_container
-        } else {
-            R.id.browse_grid_dock
-        }
+        playPauseBtn?.nextFocusDownId = R.id.program_schedule
 
+    }
 
+    open fun onShowProgramSchedule() {
+    }
+    open fun onHideProgramSchedule() {
+        mBtnProgrammeSchedule?.clearFocus()
+        playPauseBtn?.requestFocus()
+    }
+    open fun isProgramScheduleShowing(): Boolean {
+        return false
     }
 
     fun prepare(
@@ -973,10 +989,17 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     fun canBackToMain(): Boolean {
         return overlaysUIState == OverlayUIState.STATE_HIDDEN && videoInfoCodecContainerView?.isVisible != true
+                && childFragmentManager.findFragmentById(R.id.container_program).let {
+            it == null || !it.isVisible
+        }
     }
 
     fun hideOverlay() {
-        if (videoInfoCodecContainerView?.isVisible == true) {
+        if (childFragmentManager.findFragmentById(R.id.container_program).let {
+                it != null || it?.isVisible == true
+            }) {
+            onHideProgramSchedule()
+        } else if (videoInfoCodecContainerView?.isVisible == true) {
             videoInfoCodecContainerView?.fadeOut {
                 videoInfoCodecContainerView?.gone()
             }
@@ -1031,7 +1054,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     }
 
     override fun onDpadDown() {
-        if (true == videoInfoCodecContainerView?.isVisible) {
+        if (true == videoInfoCodecContainerView?.isVisible || isProgramScheduleShowing()) {
             return
         }
         if (overlaysUIState == OverlayUIState.STATE_HIDDEN) {
@@ -1050,8 +1073,10 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 seekBar?.requestFocus()
                 mHandler.removeCallbacks(autoHideOverlayRunnable)
                 mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
-            } else {
+            } else if (mBtnProgrammeSchedule?.isFocused == true) {
                 handleUI(OverlayUIState.STATE_ONLY_GRID_CONTENT, true)
+            } else {
+                mBtnProgrammeSchedule?.requestFocus()
             }
         } else {
             mHandler.removeCallbacks(autoHideOverlayRunnable)
@@ -1069,7 +1094,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
 
     override fun onDpadUp() {
         when {
-            true == videoInfoCodecContainerView?.isVisible -> {
+            true == videoInfoCodecContainerView?.isVisible || isProgramScheduleShowing() -> {
 
             }
             !isMenuShowed() -> {
@@ -1088,20 +1113,21 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     playPauseBtn?.requestFocus()
                     mHandler.removeCallbacks(autoHideOverlayRunnable)
                     mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
-                    return
-                    playPauseBtn?.requestFocus()
-                    startActivity(
-                        Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(
-                                "xemtv://iptv/search?" +
-                                        "filter=${getSearchFilter()}" +
-                                        (getSearchHint()?.let {
-                                            "&query_hint=$it"
-                                        } ?: "")
+                    if (allowDpadUpToOpenSearch) {
+                        playPauseBtn?.requestFocus()
+                        startActivity(
+                            Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse(
+                                    "xemtv://iptv/search?" +
+                                            "filter=${getSearchFilter()}" +
+                                            (getSearchHint()?.let {
+                                                "&query_hint=$it"
+                                            } ?: "")
+                                )
                             )
                         )
-                    )
+                    }
                 }
             }
 
@@ -1119,7 +1145,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         if (seekBarContainer?.isVisible == true && seekBar?.isActivated == true) {
             seekBar?.requestFocus()
         } else {
-            playPauseBtn?.requestFocus()
+            mBtnProgrammeSchedule?.requestFocus()
             mHandler.postDelayed(autoHideOverlayRunnable, DELAY_AUTO_HIDE_OVERLAY)
         }
     }
@@ -1282,6 +1308,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         mGlueHost.setSurfaceHolderCallback(null)
         setSurfaceHolderCallback(null)
         mMediaPlaybackCallback = null
+        mBtnProgrammeSchedule = null
         super.onDetach()
     }
 

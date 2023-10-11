@@ -113,23 +113,41 @@
                         android:singleLine="true"
                         android:text="Video info" />
 
-                    <TextView
-                        android:id="@+id/playback_info"
-                        style="@style/TextAppearance.Leanback.PlaybackControlLabel"
+                    <LinearLayout
+                        android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:drawablePadding="8dp"
-                        android:gravity="start"
-                        android:textColor="#99ffffff"
-                        android:maxLines="5"
-                        android:textSize="15sp"
-                        android:layout_gravity="start"
-                        android:includeFontPadding="false"
-                        android:text="Video info"
-                        android:ellipsize="end"
-                        android:layout_marginEnd="16dp"
-                        tools:drawableEnd="@drawable/background_live_football_circle" />
+                        android:layout_height="wrap_content">
+                        <TextView
+                            android:id="@+id/playback_info"
+                            style="@style/TextAppearance.Leanback.PlaybackControlLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:drawablePadding="8dp"
+                            android:gravity="start"
+                            android:textColor="#99ffffff"
+                            android:maxLines="5"
+                            android:textSize="15sp"
+                            android:layout_gravity="start"
+                            android:includeFontPadding="false"
+                            android:text="Video info"
+                            android:ellipsize="end"
+                            android:layout_marginEnd="16dp"
+                            tools:drawableEnd="@drawable/background_live_football_circle" />
 
+                        <TextView
+                            android:paddingHorizontal="@dimen/common_padding"
+                            android:background="@color/background_tint_color"
+                            android:id="@+id/program_schedule"
+                            android:text="Lịch phát sóng"
+                            android:textColor="#99ffffff"
+                            android:includeFontPadding="false"
+                            android:layout_gravity="center_vertical"
+                            android:nextFocusUp="@id/ic_play_pause"
+                            android:nextFocusDown="@id/video_progress_bar"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content" />
+
+                    </LinearLayout>
                     <TextView
                         android:id="@+id/playback_live"
                         style="@style/TextAppearance.Leanback.PlaybackControlLabel"
@@ -161,7 +179,7 @@
                     android:layout_height="20dp"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
-                    android:nextFocusUp="@id/ic_play_pause"
+                    android:nextFocusUp="@id/program_schedule"
                     android:paddingHorizontal="4dp"
                     android:progressTint="@color/white"
                     android:secondaryProgressTint="#99ffffff"
@@ -169,7 +187,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     tools:max="100"
                     tools:progress="50"
-                    tools:secondaryProgress="60"/>
+                    tools:secondaryProgress="60" />
 
                 <TextView
                     android:layout_marginStart="5dp"

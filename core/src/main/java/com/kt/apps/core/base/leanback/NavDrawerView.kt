@@ -256,7 +256,7 @@ class NavDrawerView @JvmOverloads constructor(
             _isOpen = true
             _isAnimating.set(true)
             for (i in 0 until childCount) {
-                val headerTitle = getChildAt(i).findViewById<TextView>(R.id.row_header)
+                val headerTitle = getChildAt(i).findViewById<TextView?>(R.id.row_header)
                 headerTitle?.visibility = VISIBLE
                 headerTitle?.text = menu.getItem(i).title
             }
@@ -287,7 +287,7 @@ class NavDrawerView @JvmOverloads constructor(
         _isAnimating.set(true)
         openNavigator.cancel()
         for (i in 0 until childCount) {
-            val headerTitle = getChildAt(i).findViewWithTag<TextView>(R.id.row_header)
+            val headerTitle = getChildAt(i).findViewWithTag<TextView?>(R.id.row_header)
             headerTitle?.visibility = VISIBLE
             headerTitle?.text = null
         }
@@ -298,7 +298,7 @@ class NavDrawerView @JvmOverloads constructor(
         forEachIndexed { _, childView ->
             childView.isSelected = false
             childView.isPressed = childView.tag == selectedItemId
-            val headerTitle = childView.findViewById<TextView>(R.id.row_header)
+            val headerTitle = childView.findViewById<TextView?>(R.id.row_header)
             headerTitle?.visibility = INVISIBLE
         }
         _isOpen = false

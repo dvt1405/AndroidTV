@@ -19,6 +19,7 @@
     android:id="@+id/lb_row_container_header_dock"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="#00ff00"
     android:orientation="horizontal"
     style="?attr/rowHeaderDockStyle"
     android:clipToPadding="false">

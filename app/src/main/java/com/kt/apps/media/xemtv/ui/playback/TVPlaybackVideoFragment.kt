@@ -5,7 +5,9 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import com.kt.apps.core.base.leanback.ArrayObjectAdapter
 import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import com.kt.apps.core.base.leanback.PresenterSelector
@@ -26,7 +28,8 @@ import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
 import com.kt.apps.core.usecase.search.SearchForText
-import com.kt.apps.core.utils.removeAllSpecialChars
+import com.kt.apps.core.utils.fadeIn
+import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
@@ -52,6 +55,10 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         favoriteViewModel = _favoriteViewModel
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        return super.onCreateView(inflater, container, savedInstanceState) as ViewGroup
     }
 
     override fun onFavoriteVideoClicked(isFavorite: Boolean) {
@@ -177,6 +184,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             mCurrentSelectedChannel = it.channel
             setBackgroundByStreamingType(it)
             tvChannelViewModel.loadProgramForChannel(it.channel)
+            tvChannelViewModel.getListProgramForChannel(it.channel)
             playVideo(tvChannel)
             tvChannelViewModel.markLastWatchedChannel(it)
         }
@@ -192,6 +200,9 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         }
         tvChannelViewModel.tvWithLinkStreamLiveData.observe(viewLifecycleOwner) {
             streamingByDataState(it)
+        }
+
+        tvChannelViewModel.listProgramForChannel.observe(viewLifecycleOwner) {
         }
 
         tvChannelViewModel.tvChannelLiveData.observe(viewLifecycleOwner) {
@@ -216,6 +227,47 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                 lastWatchedChannel.currentProgramme = it.data
             }
         }
+    }
+
+    override fun onShowProgramSchedule() {
+        val rootView = view as? ViewGroup ?: return
+        if (rootView.findViewById<View?>(R.id.container_program) == null) {
+            val frameProgram = LayoutInflater.from(requireContext())
+                .inflate(R.layout.layout_tv_program_schedule, rootView, false)
+
+            rootView.addView(frameProgram)
+        } else {
+            view?.findViewById<View?>(R.id.container_program)
+                ?.fadeIn()
+        }
+
+        fun commitNewFragment() {
+            childFragmentManager.beginTransaction()
+                .replace(R.id.container_program, FragmentProgramSchedule())
+                .commitNow()
+        }
+        childFragmentManager.findFragmentById(R.id.container_program)?.let {
+            if (it.isHidden || it.isDetached || it.isRemoving) {
+                commitNewFragment()
+            }
+        } ?: commitNewFragment()
+    }
+
+    override fun onHideProgramSchedule() {
+        view?.findViewById<View?>(R.id.container_program)
+            ?.fadeOut()
+        childFragmentManager.findFragmentById(R.id.container_program)?.let {
+            if (it.isVisible) {
+                childFragmentManager.beginTransaction()
+                    .remove(it)
+                    .commitNow()
+            }
+        }
+        super.onHideProgramSchedule()
+    }
+
+    override fun isProgramScheduleShowing(): Boolean {
+        return childFragmentManager.findFragmentById(R.id.container_program)?.isVisible == true
     }
 
     private fun getLinkStreamAndProgramForChannel(item: TVChannel) {
