@@ -163,11 +163,14 @@ fun Activity.showErrorDialog(
 
         successAlert.setOnDismissListener {
             onDismissListener?.invoke()
+            (this as? BaseActivity<*>)?.run { this.onDialogDismiss() }
         }
         successAlert.setOnShowListener {
             onShowListener?.invoke()
             successAlert.getButton(cn.pedant.Sweetalert.R.id.confirm_button)
                 .requestFocus()
+
+            (this as? BaseActivity<*>)?.run { this.onDialogShowing() }
         }
         successAlert.show()
         (this as? FragmentActivity)?.let {
@@ -187,6 +190,7 @@ fun Activity.showErrorDialog(
                 }
             })
         }
+
 
         Handler(Looper.getMainLooper()).postDelayed(
             { onSuccessListener?.let { it() } },
@@ -213,7 +217,15 @@ fun Activity.showSweetDialog(
     successAlert.titleText = titleText
     successAlert.confirmText = confirmText
     successAlert.setBackground(ColorDrawable(Color.TRANSPARENT))
+    successAlert.setOnDismissListener {
+        (this as? BaseActivity<*>)?.run { this.onDialogDismiss() }
+    }
+    successAlert.setOnShowListener {
+        successAlert.getButton(cn.pedant.Sweetalert.R.id.confirm_button)
+            .requestFocus()
 
+        (this as? BaseActivity<*>)?.run { this.onDialogShowing() }
+    }
     successAlert.show()
     if (autoDismiss) {
         Handler(Looper.getMainLooper()).postDelayed({ successAlert.dismissWithAnimation() }, 1500)

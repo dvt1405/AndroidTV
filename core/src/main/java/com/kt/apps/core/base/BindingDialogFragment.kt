@@ -16,18 +16,15 @@ import javax.inject.Inject
 open class BaseDialogFragment: DaggerDialogFragment() {
 
     override fun show(manager: FragmentManager, tag: String?) {
-
-        dialog?.window?.run {
-            setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-            decorView.systemUiVisibility = FULLSCREEN_FLAGS
-        }
-
         super.show(manager, tag)
-        dialog?.window?.run {
-            clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
-        }
     }
 
+    override fun onStart() {
+        super.onStart()
+        dialog?.window?.run {
+            decorView.systemUiVisibility = FULLSCREEN_FLAGS
+        }
+    }
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
         this.activity?.window?.run {

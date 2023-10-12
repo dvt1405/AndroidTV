@@ -49,6 +49,7 @@ import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -371,6 +372,24 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         handleIntent(intent)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+
+        toggleHideSystemBar()
+    }
+
+    override fun onDialogShowing() {
+        super.onDialogShowing()
+        Log.d(TAG, "onDialogShowing: ")
+        toggleHideSystemBar()
+    }
+
+    override fun onDialogDismiss() {
+        super.onDialogDismiss()
+        Log.d(TAG, "onDialogDismiss: ")
+        toggleHideSystemBar()
     }
 
     private fun handleIntent(intent: Intent?) {

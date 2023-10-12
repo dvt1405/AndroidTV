@@ -157,19 +157,23 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
 
     private fun showAlertRemoveExtension(config: ExtensionsConfig) {
         val dialog = RemoveIPTVDialogFragment.newInstance(config.sourceName)
-        childFragmentManager.setFragmentResultListener(RemoveIPTVDialogFragment.TAG, this) {
-            key, bundle ->
-            when(bundle.getInt(RemoveIPTVDialogFragment.RESULT, 0)) {
-                Activity.RESULT_OK -> {
-                    lifecycleScope.launch {
-                        viewModel.remove(config)
-                        binding.viewpager.adapter = null
-                        binding.viewpager.adapter = _adapter
-                     }
+
+        activity?.supportFragmentManager?.run {
+            setFragmentResultListener(RemoveIPTVDialogFragment.REQUEST, this@IptvDashboardFragment) {
+                    key, bundle ->
+                when(bundle.getInt(RemoveIPTVDialogFragment.RESULT, 0)) {
+                    Activity.RESULT_OK -> {
+                        lifecycleScope.launch {
+                            viewModel.remove(config)
+                            binding.viewpager.adapter = null
+                            binding.viewpager.adapter = _adapter
+                        }
+                    }
                 }
             }
-         }
-        dialog.show(childFragmentManager, RemoveIPTVDialogFragment.TAG)
+            dialog.show(this, RemoveIPTVDialogFragment.TAG)
+        }
+
     }
 
     companion object {
@@ -190,7 +194,8 @@ class RemoveIPTVDialogFragment: BaseDialogFragment() {
             setMessage("Bạn có muốn xóa nguồn ${arguments?.getString(SOURCE_NAME)}?")
             setCancelable(true)
             setPositiveButton("Có") { dialog, which ->
-                setFragmentResult(TAG, bundleOf(RESULT to Activity.RESULT_OK) )
+                activity?.supportFragmentManager?.setFragmentResult(REQUEST, bundleOf(RESULT to Activity.RESULT_OK) )
+
                 this@RemoveIPTVDialogFragment.dismiss()
             }
             setNegativeButton("Không") { dialog, _ ->
@@ -203,6 +208,7 @@ class RemoveIPTVDialogFragment: BaseDialogFragment() {
     companion object {
         const val TAG = "RemoveIPTVDialogFragment"
         const val RESULT = "RESULT"
+        const val REQUEST = "RemoveIPTVDialogFragment:REQUEST"
         const val SOURCE_NAME = "SOURCE_NAME"
 
         fun newInstance(sourceName: String): RemoveIPTVDialogFragment {
