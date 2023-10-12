@@ -48,7 +48,9 @@ import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
+import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
+import com.kt.apps.media.mobile.ui.fragments.dialog.CustomDialogFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadFavorite
@@ -463,6 +465,40 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     
     private fun showInformationDialog() {
         val player = exoPlayerManager.exoPlayer ?: return
+        val builder = MaterialAlertDialogBuilder(requireContext())
+            .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
+                findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
+                    text = player.mediaMetadata.title
+                }
+                if (player.contentDuration < 120_000) {
+                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.gone()
+                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.gone()
+                } else {
+                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.visible()
+                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.apply {
+                        visible()
+                        val builder = StringBuilder()
+                        val formatter = Formatter(builder, Locale.getDefault())
+                        text = Util.getStringForTime(builder, formatter, player.contentDuration)
+                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
+                    }
+                }
+                findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
+                    "${player.videoSize.width}x${player.videoSize.height}"
+                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
+                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
+                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
+                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
+                    !it?.trim().isNullOrEmpty()
+                } ?: "NoValue"
+
+                this.findTextViewsInView().forEach {
+                    it.apply {
+                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
+                    }
+                }
+            })
+
         informationDialog = MaterialAlertDialogBuilder(requireContext())
             .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
                 findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
@@ -496,6 +532,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             })
+            .setOnDismissListener {
+                (activity as? ComplexActivity)?.toggleHideSystemBar()
+            }
             .show()
     }
 

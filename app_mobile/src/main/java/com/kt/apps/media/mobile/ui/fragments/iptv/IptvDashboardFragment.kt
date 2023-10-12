@@ -1,45 +1,36 @@
 package com.kt.apps.media.mobile.ui.fragments.iptv
 
+import android.app.Activity
 import android.app.AlertDialog
+import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.DialogFragment
+import android.view.WindowManager
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
+import com.kt.apps.core.base.BaseDialogFragment
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentIptvDashboardBinding
-import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.IDashboardHelper
+import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
-import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVDashboardAdapter
-import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
 import com.kt.apps.media.mobile.utils.clicks
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.IPTVViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import org.jsoup.Connection.Base
 import javax.inject.Inject
 
 class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
@@ -160,29 +151,25 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
         dialog.onSuccess = {
             it.dismiss()
         }
+
         dialog.show(childFragmentManager, AddExtensionFragment.TAG)
     }
 
     private fun showAlertRemoveExtension(config: ExtensionsConfig) {
-        AlertDialog.Builder(context, R.style.AlertDialogTheme).apply {
-            setMessage("Bạn có muốn xóa nguồn ${config.sourceName}?")
-            setCancelable(true)
-            setPositiveButton("Có") { dialog, which ->
-                lifecycleScope.launch {
-                    viewModel.remove(config)
-                    binding.viewpager.adapter = null
-                    binding.viewpager.adapter = _adapter
+        val dialog = RemoveIPTVDialogFragment.newInstance(config.sourceName)
+        childFragmentManager.setFragmentResultListener(RemoveIPTVDialogFragment.TAG, this) {
+            key, bundle ->
+            when(bundle.getInt(RemoveIPTVDialogFragment.RESULT, 0)) {
+                Activity.RESULT_OK -> {
+                    lifecycleScope.launch {
+                        viewModel.remove(config)
+                        binding.viewpager.adapter = null
+                        binding.viewpager.adapter = _adapter
+                     }
                 }
-                dialog.dismiss()
-
             }
-            setNegativeButton("Không") { dialog, _ ->
-                dialog.dismiss()
-            }
-        }
-            .create()
-            .show()
-
+         }
+        dialog.show(childFragmentManager, RemoveIPTVDialogFragment.TAG)
     }
 
     companion object {
@@ -192,6 +179,36 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
 
             val fragment = IptvDashboardFragment()
             fragment.arguments = args
+            return fragment
+        }
+    }
+}
+
+class RemoveIPTVDialogFragment: BaseDialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val builder = AlertDialog.Builder(context, R.style.AlertDialogTheme).apply {
+            setMessage("Bạn có muốn xóa nguồn ${arguments?.getString(SOURCE_NAME)}?")
+            setCancelable(true)
+            setPositiveButton("Có") { dialog, which ->
+                setFragmentResult(TAG, bundleOf(RESULT to Activity.RESULT_OK) )
+                this@RemoveIPTVDialogFragment.dismiss()
+            }
+            setNegativeButton("Không") { dialog, _ ->
+                this@RemoveIPTVDialogFragment.dismiss()
+            }
+        }
+        return builder.create()
+    }
+
+    companion object {
+        const val TAG = "RemoveIPTVDialogFragment"
+        const val RESULT = "RESULT"
+        const val SOURCE_NAME = "SOURCE_NAME"
+
+        fun newInstance(sourceName: String): RemoveIPTVDialogFragment {
+            val fragment =  RemoveIPTVDialogFragment().apply {
+                arguments = bundleOf(SOURCE_NAME to sourceName)
+            }
             return fragment
         }
     }
@@ -224,3 +241,4 @@ class IPTVDashboardAdapter(val fragment: Fragment) : FragmentStateAdapter(fragme
         notifyDataSetChanged()
     }
 }
+

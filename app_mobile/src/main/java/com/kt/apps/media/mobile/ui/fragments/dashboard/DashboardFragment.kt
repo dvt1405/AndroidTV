@@ -108,7 +108,7 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         (binding.bottomNavigation as NavigationBarView).apply {
             labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
         }
-        (binding.bottomNavigation as NavigationRailView).apply {
+        (binding.bottomNavigation as? NavigationRailView)?.apply {
             menuGravity = Gravity.CENTER
         }
     }
