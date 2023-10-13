@@ -217,8 +217,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
 
-        favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_bookmark_selector, context?.theme)
-        favoriteButton?.isSelected = false
+        favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24, context?.theme)
         favoriteButton?.setOnClickListener { view ->
             Log.d(TAG, "toggleFavorite: ")
             toggleFavorite()
@@ -376,7 +375,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     MainScope().launch {
                         if (it != null) {
                             favoriteButton?.visible()
-                            Log.d(TAG, "favoriteButton?.visible() $it ${favoriteButton?.visibility}: ${Thread.currentThread()}")
+                            Log.d(TAG, "favoriteButton?.visible() $it ${favoriteButton?.visibility}: ${favoriteButton?.icon}")
                         } else {
                             favoriteButton?.inVisible()
                             Log.d(TAG, "favoriteButton?.invisible() $it ${favoriteButton?.visibility}: ${Thread.currentThread()}")
@@ -424,7 +423,13 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }).collectLatest {
                     Log.d(TAG, "toggleFavoriteCurrent combine: ${it}")
+//                    favoriteButton?.icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_bookmark_selector, context?.theme)
                     favoriteButton?.isSelected = it
+                    favoriteButton?.icon = if (it) {
+                        ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_round_bookmark_24, context?.theme)
+                    } else {
+                        ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24, context?.theme)
+                    }
                 }
             }
 
