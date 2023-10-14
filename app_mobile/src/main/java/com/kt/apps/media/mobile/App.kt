@@ -22,7 +22,10 @@ import com.kt.apps.football.di.FootballComponents
 import com.kt.apps.media.mobile.di.AppComponents
 import com.kt.apps.media.mobile.di.DaggerAppComponents
 import com.kt.apps.media.mobile.di.MobileTVChannelModule
+import com.kt.apps.media.mobile.di.MobileVoiceSelectorModule
 import com.kt.apps.media.mobile.di.workers.PreloadDataWorker
+import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
+import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
 import java.time.Duration
@@ -64,6 +67,13 @@ class App : CoreApp(), Configuration.Provider {
 
     val footballComponents: FootballComponents
         get() = _footballComponent
+
+    private val _voiceSelector: VoiceSelectorComponent by lazy {
+        DaggerVoiceSelectorComponent.builder()
+            .coreComponents(_coreComponents)
+            .voiceSelectorModule(MobileVoiceSelectorModule())
+            .build()
+    }
 
     @Inject
     lateinit var workManager: WorkManager
@@ -140,6 +150,7 @@ class App : CoreApp(), Configuration.Provider {
             .coreComponents(_coreComponents)
             .tvComponents(_tvComponents)
             .footballComponent(_footballComponent)
+            .voiceSelectorComponents(_voiceSelector)
             .build()
     }
 

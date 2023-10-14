@@ -37,6 +37,7 @@ import com.kt.apps.core.utils.*
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.App
 import com.kt.apps.resources.R
+import io.reactivex.rxjava3.core.Maybe
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -484,4 +485,13 @@ inline fun <reified T : Enum<T>> safeValueOf(name: String): T? =
 
 inline fun Fragment.showDefaultErrorDialog() {
     showErrorDialog(content = getString(com.kt.apps.media.mobile.R.string.error_happen))
+}
+
+// Convert it to a Kotlin Coroutine
+suspend fun <T> Maybe<T>.toCoroutine(): T? = suspendCancellableCoroutine { continuation ->
+    this.subscribe(
+        { result -> continuation.resume(result) },
+        { error -> continuation.resumeWithException(error) },
+        { continuation.resume(null) }
+    )
 }

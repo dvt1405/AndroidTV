@@ -102,6 +102,7 @@ dependencies {
     implementation project(":football")
     implementation project(":resources")
     implementation project(":autoupdate")
+    implementation project(":voiceselector")
     implementation 'com.pnikosis:materialish-progress:1.7'
     implementation otherLibs.values()
     implementation media.values()

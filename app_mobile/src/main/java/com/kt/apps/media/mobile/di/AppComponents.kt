@@ -12,6 +12,7 @@ import com.kt.apps.media.mobile.di.main.MainTVModule
 import com.kt.apps.media.mobile.di.workers.WorkerModule
 import com.kt.apps.media.mobile.di.AppScope
 import com.kt.apps.media.mobile.logger.PlatformLoggerModule
+import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjector
@@ -20,7 +21,8 @@ import dagger.android.support.AndroidSupportInjectionModule
 @Component(
     dependencies = [CoreComponents::class,
         TVComponents::class,
-        FootballComponents::class],
+        FootballComponents::class,
+        VoiceSelectorComponent::class],
     modules = [
         ViewModelModule::class,
         AndroidSupportInjectionModule::class,
@@ -43,6 +45,7 @@ interface AppComponents : AndroidInjector<App> {
         fun coreComponents(coreComponents: CoreComponents): Builder
         fun tvComponents(tvComponents: TVComponents): Builder
         fun footballComponent(footballComponents: FootballComponents): Builder
+        fun voiceSelectorComponents(voiceSelectorComponent: VoiceSelectorComponent): Builder
         fun build(): AppComponents
     }
 

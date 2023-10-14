@@ -55,6 +55,7 @@ import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadFavorite
 import com.kt.apps.media.mobile.viewmodels.features.toggleFavoriteCurrent
+import com.kt.apps.voiceselector.VoiceSelectorManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import org.w3c.dom.Text
@@ -96,6 +97,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     @Inject
     lateinit var exoPlayerManager: ExoPlayerManagerMobile
+
+    @Inject
+    lateinit var voiceSelectorManager: VoiceSelectorManager
 
     private var _cachePlayingState: Boolean = false
 
@@ -195,8 +199,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
 
-    private val exceptionHandler: CoroutineExceptionHandler = CoroutineExceptionHandler { _, _ ->
-        showDefaultErrorDialog()
+    private val exceptionHandler: CoroutineExceptionHandler = CoroutineExceptionHandler { _, ex ->
+//        showDefaultErrorDialog()
+        showErrorDialog(content = "${ex.message}") { }
     }
 
     override fun initView(savedInstanceState: Bundle?) {
@@ -703,9 +708,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     protected fun toggleFavorite() {
+//        lifecycleScope.launch(exceptionHandler) {
+//            val isSelected = favoriteButton?.isSelected ?: return@launch
+//            interactor.toggleFavoriteCurrent(isSelected)
+//        }
+//        voiceSelectorManager.openVoiceAssistant()
         lifecycleScope.launch(exceptionHandler) {
-            val isSelected = favoriteButton?.isSelected ?: return@launch
-            interactor.toggleFavoriteCurrent(isSelected)
+            val result = voiceSelectorManager.openVoiceAssistant().toCoroutine()
+            Log.d(TAG, "voiceSelector: $result")
         }
 
     }

@@ -6,6 +6,8 @@ import com.kt.apps.core.logging.ActionLoggerFactory
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.tv.di.TVScope
 import com.kt.apps.media.mobile.logger.MobileActionLoggerImpl
+import com.kt.apps.voiceselector.di.VoiceSelectorScope
+import com.kt.apps.voiceselector.models.VoicePackage
 import dagger.Module
 import dagger.Provides
 
@@ -27,4 +29,11 @@ class AppModule {
     @Provides
     @TVScope
     fun providesTimeout(): Long? = 20
+
+    @Provides
+    @VoiceSelectorScope
+    fun providesVoicePackage(): VoicePackage = VoicePackage(
+        packageName = "",
+        category = "android.intent.category.LAUNCHER"
+    )
 }

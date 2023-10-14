@@ -18,6 +18,7 @@
         android:theme="@style/Theme.XemTv"
         android:usesCleartextTraffic="true"
         tools:ignore="UnusedAttribute" >
+
         <activity
             android:name=".ui.complex.ComplexActivity"
             android:exported="true"
