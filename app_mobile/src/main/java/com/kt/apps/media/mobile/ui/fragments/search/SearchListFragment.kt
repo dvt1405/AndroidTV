@@ -45,7 +45,15 @@ class SearchListFragment : BaseFragment<FragmentSearchListBinding>() {
 
     override fun initAction(savedInstanceState: Bundle?) {
         viewModel.searchResult
-            .onEach(display)
+            .onEach {
+                val mappedData = mapToView(it)
+                if (mappedData.isEmpty()) {
+                    showEmptyPlaceholder()
+                } else {
+                    showRecyclerView()
+                }
+                binding.channelList.reloadAllData(mapToView(it))
+            }
             .launchIn(viewLifecycleOwner.lifecycleScope)
 
         lifecycleScope.launch {
@@ -97,14 +105,5 @@ class SearchListFragment : BaseFragment<FragmentSearchListBinding>() {
         }
     }
 
-    private val display: (Map<String,List<SearchForText.SearchResult>>) -> Unit = {
-        val mappedData = mapToView(it)
-        if (mappedData.isEmpty()) {
-            showEmptyPlaceholder()
-        } else {
-            showRecyclerView()
-        }
-        binding.channelList.reloadAllData(mapToView(it))
-    }
 }
 

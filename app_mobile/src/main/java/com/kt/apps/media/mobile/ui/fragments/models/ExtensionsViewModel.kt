@@ -70,16 +70,11 @@ class ExtensionsViewModel @Inject constructor(
             )
     }
 
-    suspend fun removeExtensionConfig(extensionsConfig: ExtensionsConfig) {
-//        storage.removeLastRefreshExtensions(extensionsConfig)
-
+    private suspend fun removeConfig(extensionsConfig: ExtensionsConfig) {
         return suspendCancellableCoroutine { cont ->
             add(
                 roomDataBase.extensionsConfig()
                     .delete(extensionsConfig)
-                    .doOnComplete {
-                        this.loadAllListExtensionsChannelConfig(true)
-                    }
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe({
@@ -92,4 +87,46 @@ class ExtensionsViewModel @Inject constructor(
             )
         }
     }
+    private suspend fun removeExtensionChannelConfig(extensionsConfig: ExtensionsConfig) {
+        return suspendCancellableCoroutine { cont ->
+            add(
+                roomDataBase.extensionsChannelDao()
+                    .deleteBySourceId(extensionsConfig.sourceUrl)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        Logger.d(this, message = "remove complete")
+                        cont.resume(Unit)
+                    }, {
+                        Logger.e(this, exception = it)
+                        cont.resumeWithException(it)
+                    })
+            )
+        }
+    }
+
+    private suspend fun removeFavoriteExtensionChannel(extensionsConfig: ExtensionsConfig) {
+        return suspendCancellableCoroutine { cont ->
+            add(
+                roomDataBase.videoFavoriteDao()
+                    .deleteBySourceId(extensionsConfig.sourceUrl)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe({
+                        Logger.d(this, message = "remove complete")
+                        cont.resume(Unit)
+                    }, {
+                        Logger.e(this, exception = it)
+                        cont.resumeWithException(it)
+                    })
+            )
+        }
+    }
+    suspend fun removeExtensionConfig(extensionsConfig: ExtensionsConfig) {
+        removeExtensionChannelConfig(extensionsConfig)
+        removeFavoriteExtensionChannel(extensionsConfig)
+        removeConfig(extensionsConfig)
+        loadAllListExtensionsChannelConfig(true)
+    }
+
 }
