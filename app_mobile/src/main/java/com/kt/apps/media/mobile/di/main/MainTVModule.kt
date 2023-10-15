@@ -10,6 +10,7 @@ import com.kt.apps.media.mobile.ui.fragments.football.dashboard.FootballDashboar
 import com.kt.apps.media.mobile.ui.fragments.football.list.FootballListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvChannelListFragment
 import com.kt.apps.media.mobile.ui.fragments.iptv.IptvDashboardFragment
+import com.kt.apps.media.mobile.ui.fragments.iptv.RemoveIPTVDialogFragment
 import com.kt.apps.media.mobile.ui.fragments.lightweightchannels.LightweightChannelFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
@@ -53,6 +54,9 @@ abstract class MainTVModule {
     internal abstract fun footballPlaybackFragment(): FootballPlaybackFragment
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun addExtensionSourceFragment(): AddExtensionFragment
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun removeIPTVDialogFragment(): RemoveIPTVDialogFragment
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun lightweightChannelFragment(): LightweightChannelFragment

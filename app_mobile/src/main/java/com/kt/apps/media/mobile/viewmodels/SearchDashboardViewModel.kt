@@ -64,7 +64,7 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
     suspend fun performSearch(string: String) {
         try {
             searchViewModel.querySearch(string)
-            searchViewModel.searchQueryLiveData.await(TAG)
+            searchViewModel.    searchQueryLiveData.await(TAG)
         } catch (e: Throwable) {
             searchViewModel.querySearch(string, SearchForText.FILTER_ONLY_TV_CHANNEL)
         }

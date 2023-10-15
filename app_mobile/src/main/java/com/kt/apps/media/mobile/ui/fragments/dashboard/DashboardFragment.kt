@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.navigation.NavigationBarView
 import com.google.android.material.navigation.NavigationBarView.OnItemSelectedListener
+import com.google.android.material.navigationrail.NavigationRailView
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.fadeIn
@@ -57,7 +58,12 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
     }
 
     private val supportedFragmentId: List<Int> by lazy {
-        listOf(R.id.search, R.id.favorite, R.id.tv, R.id.radio, R.id.extension, R.id.info)
+
+        if (BuildConfig.isBeta) {
+            listOf(R.id.search, R.id.favorite, R.id.tv, R.id.radio, R.id.football, R.id.extension, R.id.info)
+        } else {
+            listOf(R.id.search, R.id.favorite, R.id.tv, R.id.radio, R.id.extension, R.id.info)
+        }
     }
 
     private val uiControlViewModel by lazy {
@@ -101,7 +107,9 @@ class DashboardFragment : BaseMobileFragment<FragmentDashboardBinding>() {
         }
         (binding.bottomNavigation as NavigationBarView).apply {
             labelVisibilityMode = NavigationBarView.LABEL_VISIBILITY_LABELED
-
+        }
+        (binding.bottomNavigation as? NavigationRailView)?.apply {
+            menuGravity = Gravity.CENTER
         }
     }
 

@@ -250,6 +250,33 @@ fun <T> LiveData<DataState<T>>.asProgressFlow(): Flow<Boolean> {
     }
 }
 
+suspend fun <T> LiveData<DataState<T>>.awaitNextValue(tag: String = "TAG") : T {
+    return suspendCancellableCoroutine { continuation ->
+        val observer = object : Observer<DataState<T>> {
+            override fun onChanged(value: DataState<T>) {
+                when (value) {
+                    is DataState.Success -> {
+                        removeObserver(this)
+                        continuation.resume(value.data)
+                    }
+                    is DataState.Error -> {
+                        removeObserver(this)
+                        continuation.resumeWithException(value.throwable)
+                    }
+                    else -> { }
+                }
+
+            }
+        }
+
+        observeForever(observer)
+
+        continuation.invokeOnCancellation {
+            removeObserver(observer)
+        }
+    }
+}
+
 suspend fun <T> LiveData<DataState<T>>.await(tag: String = "TAG") : T {
     return suspendCancellableCoroutine { continuation ->
         val oldData = value

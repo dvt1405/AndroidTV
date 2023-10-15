@@ -1,7 +1,5 @@
 package com.kt.apps.media.mobile.ui.fragments.dialog
 
-import android.app.Dialog
-import android.content.DialogInterface
 import android.graphics.Point
 import android.net.Uri
 import android.os.Bundle
@@ -9,7 +7,6 @@ import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import android.view.Window
 import android.view.WindowManager
 import androidx.core.view.updateLayoutParams
 import androidx.core.widget.doAfterTextChanged
@@ -17,13 +14,9 @@ import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import cn.pedant.SweetAlert.ProgressHelper
-import com.kt.apps.core.base.BaseDialogFragment
-import com.kt.apps.core.extensions.ExtensionsChannel
+import com.kt.apps.core.base.BindingDialogFragment
 import com.kt.apps.core.extensions.ExtensionsConfig
-import com.kt.apps.core.extensions.ParserExtensionsSource
-import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.fadeOut
 import com.kt.apps.core.utils.hideKeyboard
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.App
@@ -32,12 +25,6 @@ import com.kt.apps.media.mobile.databinding.AddExtensionDialogBinding
 import com.kt.apps.media.mobile.isNetworkAvailable
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.AddIptvViewModels
-import com.pnikosis.materialishprogress.ProgressWheel
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Completable
-import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.disposables.CompositeDisposable
-import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
@@ -45,7 +32,7 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-class AddExtensionFragment: BaseDialogFragment<AddExtensionDialogBinding>() {
+class AddExtensionFragment: BindingDialogFragment<AddExtensionDialogBinding>() {
     sealed class State {
         object EDITING: State()
         object PROCESSING: State()

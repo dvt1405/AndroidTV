@@ -18,6 +18,7 @@ import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
 class SearchViewModels @Inject constructor(
@@ -25,7 +26,6 @@ class SearchViewModels @Inject constructor(
     private val searchForText: SearchForText,
     private val actionLogger: IActionLogger
 ) : BaseViewModel() {
-
     private val _searchQueryLiveData by lazy {
         MutableLiveData<DataState<Map<String, List<SearchForText.SearchResult>>>>()
     }

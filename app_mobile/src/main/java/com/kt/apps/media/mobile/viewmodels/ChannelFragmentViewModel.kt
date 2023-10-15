@@ -1,19 +1,14 @@
 package com.kt.apps.media.mobile.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModelProvider
+import com.kt.apps.core.base.BaseViewModel
 import com.kt.apps.core.tv.model.TVChannel
-import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.models.NetworkState
 import com.kt.apps.media.mobile.models.PlaybackState
-import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.NetworkStateViewModel
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
-import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.utils.*
-import com.kt.apps.media.mobile.viewmodels.features.IFetchRadioChannel
-import com.kt.apps.media.mobile.viewmodels.features.IFetchTVChannelControl
 import com.kt.apps.media.mobile.viewmodels.features.IUIControl
 import com.kt.apps.media.mobile.viewmodels.features.UIControlViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -22,8 +17,8 @@ import kotlinx.coroutines.flow.*
 import kotlin.coroutines.CoroutineContext
 
 typealias GroupTVChannel = Map<String, List<TVChannel>>
-abstract class ChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
-    : IUIControl {
+abstract class ChannelFragmentViewModel(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
+    : BaseViewModel(), IUIControl {
 
     val tvChannelViewModel: TVChannelViewModel by lazy {
         provider[TVChannelViewModel::class.java]
@@ -63,43 +58,41 @@ abstract class ChannelFragmentInteractors(private val provider: ViewModelProvide
 }
 
 
-class TVChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
-    : ChannelFragmentInteractors(provider, coroutineContext) {
+class TVChannelFragmentViewModel(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
+    : ChannelFragmentViewModel(provider, coroutineContext) {
     @OptIn(ExperimentalCoroutinesApi::class)
     override val listChannels: Flow<List<TVChannel>> by lazy {
-        tvChannelViewModel.tvChannelLiveData.asUpdateFlow(tag = "tvchannel - listchannels")
+        tvChannelViewModel.tvChannelKt
             .mapLatest {
                 it.filter { channel -> !channel.isRadio }
             }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val groupTVChannel: StateFlow<GroupTVChannel> by lazy {
+    override val groupTVChannel: Flow<GroupTVChannel> by lazy {
         listChannels.mapLatest {
             groupAndSort(it).associate { value ->
                 value.first to value.second
             }
-        }.stateIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed(), emptyMap())
+        }
     }
 }
 
-class RadioChannelFragmentInteractors(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
-    : ChannelFragmentInteractors(provider, coroutineContext) {
+class RadioChannelFragmentViewModel(private val provider: ViewModelProvider, private val coroutineContext: CoroutineContext)
+    : ChannelFragmentViewModel(provider, coroutineContext) {
     @OptIn(ExperimentalCoroutinesApi::class)
     override val listChannels: Flow<List<TVChannel>> by lazy {
-        tvChannelViewModel.tvChannelLiveData.asUpdateFlow(tag = "radioChannel - listchannels").mapLatest {
+        tvChannelViewModel.tvChannelKt.mapLatest {
             it.filter { channel -> channel.isRadio }
         }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override val groupTVChannel: StateFlow<GroupTVChannel> by lazy {
+    override val groupTVChannel: Flow<GroupTVChannel> by lazy {
         listChannels.mapLatest {
             groupAndSort(it).associate { value ->
                 value.first to value.second
             }
         }
-            .stateIn(CoroutineScope(coroutineContext), SharingStarted.WhileSubscribed(), emptyMap())
     }
-
 }

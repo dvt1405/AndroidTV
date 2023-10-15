@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.media.mobile.ui.fragments.models.ExtensionsViewModel
 import com.kt.apps.media.mobile.utils.asSuccessFlow
+import com.kt.apps.media.mobile.viewmodels.features.SearchViewModels
 import kotlinx.coroutines.flow.Flow
 
 class IPTVViewModel(private val provider: ViewModelProvider) {
@@ -11,19 +12,14 @@ class IPTVViewModel(private val provider: ViewModelProvider) {
         provider[ExtensionsViewModel::class.java]
     }
 
-    val extensionConfigs: Flow<List<ExtensionsConfig>> by lazy {
-        extensionViewModel.totalExtensionsConfig.asSuccessFlow("IPTVViewModel")
+    private val searchViewModel: SearchViewModels by lazy {
+        provider[SearchViewModels::class.java]
     }
+    val extensionConfigs = extensionViewModel.extensionConfigsKt
 
-    val addExtensionsConfig: Flow<ExtensionsConfig> by lazy {
-        extensionViewModel.addExtensionConfigLiveData.asSuccessFlow(tag = "IPTVViewModel_addExtensionsConfig")
-    }
-
-    fun reloadData() {
-        extensionViewModel.loadAllListExtensionsChannelConfig(true)
-    }
 
     suspend fun remove(config: ExtensionsConfig) {
         extensionViewModel.removeExtensionConfig(config)
+        searchViewModel.clearSearchList()
     }
 }

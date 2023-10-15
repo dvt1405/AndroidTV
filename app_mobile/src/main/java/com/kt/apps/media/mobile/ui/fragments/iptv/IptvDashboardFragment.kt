@@ -1,40 +1,36 @@
 package com.kt.apps.media.mobile.ui.fragments.iptv
 
+import android.app.Activity
 import android.app.AlertDialog
+import android.app.Dialog
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.DialogFragment
+import android.view.WindowManager
+import androidx.core.os.bundleOf
+import androidx.fragment.app.setFragmentResult
+import androidx.fragment.app.setFragmentResultListener
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.tabs.TabLayoutMediator
+import com.kt.apps.core.base.BaseDialogFragment
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentIptvDashboardBinding
-import com.kt.apps.media.mobile.ui.fragments.dashboard.adapter.IDashboardHelper
+import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
-import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVDashboardAdapter
-import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
 import com.kt.apps.media.mobile.utils.clicks
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.viewmodels.IPTVViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.jsoup.Connection.Base
 import javax.inject.Inject
 
 class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
@@ -57,20 +53,11 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
         binding.tabLayout
     }
 
-    private val list: MutableList<ExtensionsConfig> = mutableListOf()
+    private var pendingIndex: Int = -1
 
     private val _adapter by lazy {
-        object: FragmentStateAdapter(this) {
-            override fun getItemCount(): Int {
-                return list.size
-            }
-
-            override fun createFragment(position: Int): Fragment {
-                return  IptvChannelListFragment.newInstance(list.getOrNull(position)?.sourceUrl ?: "")
-            }
-        }
+        IPTVDashboardAdapter(this)
     }
-
     override fun initView(savedInstanceState: Bundle?) {
         tabLayout?.let {tabLayout ->
             binding.viewpager?.let {viewPager2 ->
@@ -79,27 +66,34 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
                 val tab = TabLayoutMediator(
                     tabLayout, viewPager2, true, false
                 ) { tab, position ->
-                    tab.text = list.getOrNull(position)?.sourceName ?: ""
+                    tab.text = _adapter.getTitleForPage(position)
+                    pendingIndex = binding.viewpager.currentItem
                 }
                 tab.attach()
             }
         }
 
+        _adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onChanged() {
+                super.onChanged()
+                if (binding.viewpager.currentItem != pendingIndex) {
+                    binding.viewpager.currentItem = pendingIndex
+                }
+            }
+        })
+
         binding.removeExtension?.setOnClickListener {
             binding.tabLayout?.selectedTabPosition?.apply {
-                list.getOrNull(this)?.apply {
+                _adapter.getItem(this)?.apply {
                     showAlertRemoveExtension(this)
                 }
             }
         }
 
+        pendingIndex = savedInstanceState?.getInt(currentIndex, -1) ?: -1
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
-        viewModel.addExtensionsConfig
-            .onEach { viewModel.reloadData() }
-            .launchIn(viewLifecycleOwner.lifecycleScope)
-
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             launch {
                 binding.addExtension.clicks().collectLatest {
@@ -108,63 +102,82 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
             }
         }
 
-        repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
-            viewModel.extensionConfigs.collectLatest {
-                val lastSize = list.size
-                list.clear()
-                list.addAll(it)
-                if (lastSize != it.size) {
-                    if (list.isNotEmpty()) {
-                        motionLayout?.transitionToState(R.id.end)
-                    } else {
-                        motionLayout?.transitionToState(R.id.start)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.extensionConfigs
+                .collectLatest {
+                    Log.d(TAG, "viewModel.extensionConfigs: ${it} ${binding.viewpager.currentItem}")
+                    if (it.isNotEmpty() && motionLayout.currentState != R.id.end) {
+                            motionLayout?.transitionToState(R.id.end)
+                    } else if(it.isEmpty() && motionLayout.currentState != R.id.start) {
+                            motionLayout?.transitionToState(R.id.start)
                     }
-
-                    val lastSelectedIndex = tabLayout.selectedTabPosition
-                    binding.viewpager.adapter = null
-                    binding.viewpager.adapter = _adapter
-                    MainScope().launch {
-                        tabLayout.getTabAt(lastSelectedIndex)?.run {
-                            tabLayout.selectTab(this)
-                        }
+                    _adapter.onRefresh(it)
+                    delay(200)
+                    if (pendingIndex >= 0) {
+                        binding.viewpager.currentItem = pendingIndex
                     }
                 }
-                _adapter.notifyDataSetChanged()
-            }
         }
     }
 
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(currentIndex, binding.viewpager.currentItem)
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+
+
+        lifecycleScope.launch {
+            Log.d(TAG, "onViewStateRestored viewModel.extensionConfigs: ${this} ${binding.viewpager.currentItem}")
+            savedInstanceState?.let {
+                it.getInt(currentIndex, 0)
+            }?.run {
+                binding.viewpager.currentItem = this
+                Log.d(TAG, "onViewStateRestored viewModel.extensionConfigs: ${this} ${binding.viewpager.currentItem}")
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        binding.viewpager.adapter = null
+        super.onDestroyView()
+    }
 
     private fun showAddIPTVDialog() {
         val dialog = AddExtensionFragment()
         dialog.onSuccess = {
             it.dismiss()
         }
+
         dialog.show(childFragmentManager, AddExtensionFragment.TAG)
     }
 
     private fun showAlertRemoveExtension(config: ExtensionsConfig) {
-        AlertDialog.Builder(context, R.style.AlertDialogTheme).apply {
-            setMessage("Bạn có muốn xóa nguồn ${config.sourceName}?")
-            setCancelable(true)
-            setPositiveButton("Có") { dialog, which ->
-                lifecycleScope.launch {
-                    viewModel.remove(config)
-                }
-                dialog.dismiss()
+        val dialog = RemoveIPTVDialogFragment.newInstance(config.sourceName)
 
+        activity?.supportFragmentManager?.run {
+            setFragmentResultListener(RemoveIPTVDialogFragment.REQUEST, this@IptvDashboardFragment) {
+                    key, bundle ->
+                when(bundle.getInt(RemoveIPTVDialogFragment.RESULT, 0)) {
+                    Activity.RESULT_OK -> {
+                        lifecycleScope.launch {
+                            viewModel.remove(config)
+                            binding.viewpager.adapter = null
+                            binding.viewpager.adapter = _adapter
+                        }
+                    }
+                }
             }
-            setNegativeButton("Không") { dialog, _ ->
-                dialog.dismiss()
-            }
+            dialog.show(this, RemoveIPTVDialogFragment.TAG)
         }
-            .create()
-            .show()
 
     }
 
     companion object {
+        private const val currentIndex = "CURRENT_INDEX"
         fun newInstance(): IptvDashboardFragment {
             val args = Bundle()
 
@@ -174,3 +187,64 @@ class IptvDashboardFragment : BaseFragment<FragmentIptvDashboardBinding>() {
         }
     }
 }
+
+class RemoveIPTVDialogFragment: BaseDialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val builder = AlertDialog.Builder(context, R.style.AlertDialogTheme).apply {
+            setMessage("Bạn có muốn xóa nguồn ${arguments?.getString(SOURCE_NAME)}?")
+            setCancelable(true)
+            setPositiveButton("Có") { dialog, which ->
+                activity?.supportFragmentManager?.setFragmentResult(REQUEST, bundleOf(RESULT to Activity.RESULT_OK) )
+
+                this@RemoveIPTVDialogFragment.dismiss()
+            }
+            setNegativeButton("Không") { dialog, _ ->
+                this@RemoveIPTVDialogFragment.dismiss()
+            }
+        }
+        return builder.create()
+    }
+
+    companion object {
+        const val TAG = "RemoveIPTVDialogFragment"
+        const val RESULT = "RESULT"
+        const val REQUEST = "RemoveIPTVDialogFragment:REQUEST"
+        const val SOURCE_NAME = "SOURCE_NAME"
+
+        fun newInstance(sourceName: String): RemoveIPTVDialogFragment {
+            val fragment =  RemoveIPTVDialogFragment().apply {
+                arguments = bundleOf(SOURCE_NAME to sourceName)
+            }
+            return fragment
+        }
+    }
+}
+class IPTVDashboardAdapter(val fragment: Fragment) : FragmentStateAdapter(fragment){
+
+    private val _listItem by lazy {
+        mutableListOf<ExtensionsConfig>()
+    }
+
+    override fun getItemCount(): Int {
+        return _listItem.size
+    }
+
+
+    override fun createFragment(position: Int): Fragment {
+        return  IptvChannelListFragment.newInstance(_listItem.getOrNull(position)?.sourceUrl ?: "")
+    }
+
+    fun getItem(position: Int): ExtensionsConfig? {
+        return _listItem.getOrNull(position)
+    }
+
+    fun getTitleForPage(position: Int): CharSequence {
+        return _listItem.getOrNull(position)?.sourceName ?: ""
+    }
+    fun onRefresh(listItemCategory: List<ExtensionsConfig>) {
+        _listItem.clear()
+        _listItem.addAll(listItemCategory)
+        notifyDataSetChanged()
+    }
+}
+

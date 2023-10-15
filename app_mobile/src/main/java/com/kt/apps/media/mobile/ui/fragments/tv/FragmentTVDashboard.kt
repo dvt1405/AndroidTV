@@ -7,6 +7,7 @@ import androidx.core.os.bundleOf
 import androidx.core.view.size
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayoutMediator
 import com.kt.apps.core.base.BaseFragment
@@ -19,7 +20,9 @@ import com.kt.apps.media.mobile.ui.fragments.tv.adapter.TVDashboardAdapter
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -75,14 +78,16 @@ class FragmentTVDashboard : BaseFragment<FragmentTvDashboardBinding>() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun initAction(savedInstanceState: Bundle?) {
-        repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
-            launch {
-                tvViewModel.groupTVChannel.mapLatest {
-                    it.keys
-                }.collectLatest {
+        viewLifecycleOwner.lifecycleScope.launch {
+            tvViewModel.groupTVChannel.mapLatest {
+                it.keys
+            }
+                .distinctUntilChanged()
+                .collectLatest {
+                    Log.d(TAG, "tvViewModel.groupTVChannel: $it ${tvViewModel}")
                     _adapter.onRefresh(it)
                 }
-            }
+
         }
     }
 

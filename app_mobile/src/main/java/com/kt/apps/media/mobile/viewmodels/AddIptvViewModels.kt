@@ -32,6 +32,7 @@ class AddIptvViewModels(private val provider: ViewModelProvider) {
             }
             delay(250)
             uiControlViewModel.changeAddSourceState(AddSourceState.IDLE)
+            extensionViewModel.loadAllListExtensionsChannelConfig(true)
         }
     }
 }

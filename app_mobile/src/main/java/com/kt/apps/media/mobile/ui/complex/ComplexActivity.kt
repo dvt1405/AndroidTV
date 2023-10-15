@@ -49,6 +49,7 @@ import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
@@ -139,6 +140,10 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             this.callback = playbackAction
         }
 
+        toggleHideSystemBar()
+      }
+
+    fun toggleHideSystemBar() {
         if (resources.getBoolean(R.bool.is_landscape)) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -148,10 +153,11 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
             } else {
                 window.decorView.apply {
-                    systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    systemUiVisibility = FULLSCREEN_FLAGS
                 }
             }
-            actionBar?.hide()
+
+            window.decorView.fitsSystemWindows = true
         } else {
             WindowCompat.setDecorFitsSystemWindows(window, true)
             WindowInsetsControllerCompat(window, binding.root).let {
@@ -159,7 +165,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
             actionBar?.show()
         }
-      }
+    }
 
     override fun initAction(savedInstanceState: Bundle?) {
         repeatLaunchesOnLifeCycle(Lifecycle.State.STARTED) {
@@ -301,7 +307,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
         }
     }
-    private fun loadPlayback(data: PrepareStreamLinkData) {
+    private fun  loadPlayback(data: PrepareStreamLinkData) {
         Log.d(TAG, "loadPlayback: $data")
         when(data) {
             is PrepareStreamLinkData.TV -> TVPlaybackFragment.newInstance(data.data)
@@ -366,6 +372,24 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         handleIntent(intent)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+
+        toggleHideSystemBar()
+    }
+
+    override fun onDialogShowing() {
+        super.onDialogShowing()
+        Log.d(TAG, "onDialogShowing: ")
+        toggleHideSystemBar()
+    }
+
+    override fun onDialogDismiss() {
+        super.onDialogDismiss()
+        Log.d(TAG, "onDialogDismiss: ")
+        toggleHideSystemBar()
     }
 
     private fun handleIntent(intent: Intent?) {
@@ -439,5 +463,11 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     companion object {
         const val LAST_ORIENTATION = "LAST_ORIENTATION"
+        const val FULLSCREEN_FLAGS = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
     }
 }

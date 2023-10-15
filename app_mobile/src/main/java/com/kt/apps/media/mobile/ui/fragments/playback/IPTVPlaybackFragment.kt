@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.SeekBar
 import android.widget.TextView
@@ -13,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.util.Util
 import com.kt.apps.core.extensions.ExtensionsChannel
+import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.gone
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.ui.main.ChannelElement
@@ -101,7 +104,11 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
 
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
-        val extensionsChannel = arguments?.get(EXTRA_TV_CHANNEL) as? ExtensionsChannel
+//        val extensionsChannel = arguments?.get(EXTRA_TV_CHANNEL) as? ExtensionsChannel
+        val extensionsChannel = if(_playbackViewModel.currentPlayingVideo.value == null) {
+            arguments?.get(TVPlaybackFragment.EXTRA_TV_CHANNEL) as? ExtensionsChannel
+        } else null
+
         repeatLaunchesOnLifeCycle(Lifecycle.State.CREATED) {
             val loadChannelFlow = merge(
                 extensionsChannel?.let { flowOf(it) } ?: emptyFlow(),
@@ -113,16 +120,6 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                 loadChannelFlow.collectLatest {
                     _playbackViewModel.loadIPTVJob(it)
                 }
-            }
-
-            avoidExceptionLaunch {
-                combine(
-                    (((arguments?.get(EXTRA_EXTENSION_ID) as? String)?.let { flowOf(it) }) ?: flowOf("")),
-                    (((arguments?.get(EXTRA_EXTENSION_GROUP) as? String)?.let { flowOf(it) }) ?: flowOf(""))
-                ) { id, group -> Pair(id, group)}
-                    .collectLatest {
-                        _playbackViewModel.loadChannelConfig(it.first, it.second)
-                    }
             }
         }
 
@@ -148,7 +145,22 @@ class IPTVPlaybackFragment : ChannelPlaybackFragment() {
                     delay(1000)
                 }
             }
+
+            avoidExceptionLaunch {
+                combine(
+                    (((arguments?.get(EXTRA_EXTENSION_ID) as? String)?.let { flowOf(it) }) ?: flowOf("")),
+                    (((arguments?.get(EXTRA_EXTENSION_GROUP) as? String)?.let { flowOf(it) }) ?: flowOf(""))
+                ) { id, group -> Pair(id, group)}
+                    .collectLatest {
+                        _playbackViewModel.loadChannelConfig(it.first, it.second)
+                    }
+            }
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("Test", "Demo")
     }
 
     override fun onPlaybackStateChanged(playbackState: Int) {

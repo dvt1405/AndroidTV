@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.ui.fragments.models
 
 import android.net.Uri
+import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.DataState
@@ -16,17 +17,35 @@ import com.kt.apps.core.utils.isShortLink
 import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.isNetworkAvailable
 import com.kt.apps.media.mobile.models.NoNetworkException
+import com.kt.apps.media.mobile.utils.asUpdateFlow
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 
 open class TVChannelViewModel @Inject constructor(
     private val interactors: TVChannelInteractors,
     private val app: App,
     private val workManager: WorkManager
 ) : BaseTVChannelViewModel(interactors) {
+    val tvChannelKt: StateFlow<List<TVChannel>> by lazy {
+        tvChannelLiveData.asUpdateFlow("TVChannelViewModel")
+            .stateIn(
+                viewModelScope,
+                SharingStarted.WhileSubscribed(),
+                emptyList()
+            )
+    }
     override fun getListTVChannel(forceRefresh: Boolean, sourceFrom: TVDataSourceFrom) {
         if (app.isNetworkAvailable())
             super.getListTVChannel(forceRefresh, sourceFrom)

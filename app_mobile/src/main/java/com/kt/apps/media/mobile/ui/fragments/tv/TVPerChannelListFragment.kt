@@ -9,9 +9,9 @@ import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.ui.main.ChannelElement
 import com.kt.apps.media.mobile.ui.view.childClicks
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
-import com.kt.apps.media.mobile.viewmodels.ChannelFragmentInteractors
-import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentInteractors
-import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentInteractors
+import com.kt.apps.media.mobile.viewmodels.ChannelFragmentViewModel
+import com.kt.apps.media.mobile.viewmodels.RadioChannelFragmentViewModel
+import com.kt.apps.media.mobile.viewmodels.TVChannelFragmentViewModel
 import com.kt.apps.media.mobile.viewmodels.features.loadLinkStreamChannel
 import com.kt.apps.media.mobile.viewmodels.features.openPlayback
 import kotlinx.coroutines.flow.collectLatest
@@ -20,9 +20,9 @@ import kotlinx.coroutines.launch
 
 class TVPerChannelListFragment : PerChannelListFragment() {
     private val _interactors by lazy {
-        TVChannelFragmentInteractors(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
+        TVChannelFragmentViewModel(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
     }
-    override val interactors: ChannelFragmentInteractors
+    override val interactors: ChannelFragmentViewModel
         get() = _interactors
 
     override fun initAction(savedInstanceState: Bundle?) {
@@ -50,9 +50,9 @@ class TVPerChannelListFragment : PerChannelListFragment() {
 
 class RadioPerChannelListFragment : PerChannelListFragment() {
     private val _interactors by lazy {
-        RadioChannelFragmentInteractors(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
+        RadioChannelFragmentViewModel(ViewModelProvider(requireActivity(), factory), viewLifecycleOwner.lifecycleScope.coroutineContext)
     }
-    override val interactors: ChannelFragmentInteractors
+    override val interactors: ChannelFragmentViewModel
         get() = _interactors
 
     override fun initAction(savedInstanceState: Bundle?) {
