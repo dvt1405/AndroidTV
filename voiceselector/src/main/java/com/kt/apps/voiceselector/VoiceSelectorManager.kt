@@ -4,15 +4,18 @@ import android.app.Activity
 import android.app.Application
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import androidx.core.content.edit
 import androidx.fragment.app.FragmentActivity
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
 import com.kt.apps.voiceselector.models.Event
 import com.kt.apps.voiceselector.models.VoicePackage
+import com.kt.apps.voiceselector.ui.GGVoiceSelectorFragment
 import com.kt.apps.voiceselector.ui.VoicePackageInstallDialogFragment
 import com.kt.apps.voiceselector.ui.VoiceSearchActivity
 import com.kt.apps.voiceselector.usecase.CheckVoiceInput
@@ -36,7 +39,8 @@ data class VoiceSelectorInteractor @Inject constructor(
 class VoiceSelectorManager @Inject constructor(
     private val interactor: VoiceSelectorInteractor,
     private val voicePackage: VoicePackage,
-    private val app: CoreApp
+    private val app: CoreApp,
+    private val sharedPreferences: SharedPreferences
 ) {
     private lateinit var lastActivity: WeakReference<Activity>
 
@@ -93,8 +97,16 @@ class VoiceSelectorManager @Inject constructor(
             return
         } ?: return
 
-        val modal = VoicePackageInstallDialogFragment.newInstance()
-        modal.show(activity.supportFragmentManager, VoicePackageInstallDialogFragment.TAG)
+        if (sharedPreferences.getBoolean(GG_ALWAYS, false)) {
+            voiceGGSearch()
+        } else if (sharedPreferences.getBoolean(GG_LAST_TIME, false)) {
+            val modal = GGVoiceSelectorFragment.newInstance()
+            modal.show(activity.supportFragmentManager, GGVoiceSelectorFragment.TAG)
+        } else {
+            val modal = VoicePackageInstallDialogFragment.newInstance()
+            modal.show(activity.supportFragmentManager, VoicePackageInstallDialogFragment.TAG)
+        }
+
     }
 
     fun launchVoicePackageStore() {
@@ -127,6 +139,9 @@ class VoiceSelectorManager @Inject constructor(
                 flags = FLAG_ACTIVITY_NEW_TASK
             }
         )
+        sharedPreferences.edit(true) {
+            putBoolean(GG_LAST_TIME, true   )
+        }
     }
 
     fun subscribeToVoiceSearch(onNext: (Event) -> Unit): Disposable {
@@ -139,6 +154,17 @@ class VoiceSelectorManager @Inject constructor(
 
     fun emitEvent(event: Event) {
         _event.onNext(event)
+    }
+
+    fun turnOnAlwaysGG() {
+        sharedPreferences.edit(true) {
+            putBoolean(GG_ALWAYS, true)
+        }
+    }
+
+    companion object {
+        private const val GG_LAST_TIME = "key:GG_LAST_TIME"
+        private const val GG_ALWAYS = "key:GG_ALWAYS"
     }
 }
 

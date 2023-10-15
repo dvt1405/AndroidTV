@@ -6,4 +6,8 @@
     <string name="others_desc">Sử dụng ứng dụng khác</string>
     <string name="gg_assistant_title">Nhập bằng giọng nói Google</string>
     <string name="gg_assistant_desc">TÌm kiếm nội dung trong ứng dụng</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="always">Luôn luôn</string>
+    <string name="use">Sử dụng</string>
 </resources>
