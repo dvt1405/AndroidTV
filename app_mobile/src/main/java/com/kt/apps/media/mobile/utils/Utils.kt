@@ -38,6 +38,9 @@ import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.App
 import com.kt.apps.resources.R
 import io.reactivex.rxjava3.core.Maybe
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -495,3 +498,4 @@ suspend fun <T> Maybe<T>.toCoroutine(): T? = suspendCancellableCoroutine { conti
         { continuation.resume(null) }
     )
 }
+

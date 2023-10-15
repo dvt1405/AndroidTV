@@ -24,6 +24,7 @@ import com.kt.apps.media.mobile.di.DaggerAppComponents
 import com.kt.apps.media.mobile.di.MobileTVChannelModule
 import com.kt.apps.media.mobile.di.MobileVoiceSelectorModule
 import com.kt.apps.media.mobile.di.workers.PreloadDataWorker
+import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
 import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.android.AndroidInjector
@@ -78,10 +79,14 @@ class App : CoreApp(), Configuration.Provider {
     @Inject
     lateinit var workManager: WorkManager
 
+    @Inject
+    lateinit var voiceSelectorManager: VoiceSelectorManager
+
     override fun onCreate() {
         super.onCreate()
         app = this
         (applicationInjector() as AppComponents).inject(this)
+        voiceSelectorManager.registerLifeCycle()
     }
 
     override fun onRemoteConfigReady() {

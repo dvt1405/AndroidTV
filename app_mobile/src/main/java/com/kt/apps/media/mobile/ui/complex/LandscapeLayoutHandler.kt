@@ -103,6 +103,12 @@ class LandscapeLayoutHandler(private val weakActivity: WeakReference<ComplexActi
         }
     }
 
+    override fun changeToMinimal() {
+        if (state != PlaybackState.Invisible && state != PlaybackState.Minimal) {
+            transitionMinimal()
+        }
+    }
+
     override fun forceFullScreen() {
         transitionFullscreen()
     }

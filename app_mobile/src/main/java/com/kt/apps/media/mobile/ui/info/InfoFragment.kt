@@ -6,12 +6,16 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.base.BaseFragment
 import com.kt.apps.media.mobile.BuildConfig
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentInfoBinding
+import com.kt.apps.media.mobile.utils.toCoroutine
+import com.kt.apps.voiceselector.VoiceSelectorManager
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import javax.inject.Inject
 
@@ -28,6 +32,9 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
 
     @Inject
     lateinit var factory: ViewModelProvider.Factory
+
+    @Inject
+    lateinit var voiceSelectorManager: VoiceSelectorManager
 
     override fun initView(savedInstanceState: Bundle?) {
         binding.appName.text = getString(com.kt.apps.autoupdate.R.string.version_title, BuildConfig.VERSION_NAME.removePrefix("Mobile."))
@@ -47,6 +54,12 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
     }
 
     private fun openURL(url: String) {
+        if (true) {
+            lifecycleScope.launch {
+                voiceSelectorManager.openVoiceAssistant().toCoroutine()
+            }
+            return
+        }
         var url = url
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             url = "http://$url"

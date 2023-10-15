@@ -9,9 +9,11 @@ import com.kt.apps.voiceselector.usecase.AppQuery
 import com.kt.apps.voiceselector.usecase.CheckVoiceInput
 import dagger.BindsInstance
 import dagger.Component
+import dagger.android.support.AndroidSupportInjectionModule
 
 @Component(
-    modules = [VoiceSelectorModule::class],
+    modules = [
+        VoiceSelectorModule::class],
     dependencies = [CoreComponents::class]
 )
 @VoiceSelectorScope

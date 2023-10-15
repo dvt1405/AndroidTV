@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="voice_control_title">Điều khiển bằng giọng nói</string>
+    <string name="voice_selector_desc">Chọn phương thức bạn muốn sử dụng</string>
+    <string name="install">Cài đặt</string>
+    <string name="others_desc">Sử dụng ứng dụng khác</string>
+    <string name="gg_assistant_title">Nhập bằng giọng nói Google</string>
+    <string name="gg_assistant_desc">TÌm kiếm nội dung trong ứng dụng</string>
+</resources>

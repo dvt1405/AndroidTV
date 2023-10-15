@@ -46,6 +46,8 @@ import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
+import com.kt.apps.voiceselector.VoiceSelectorManager
+import com.kt.apps.voiceselector.models.Event
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -65,6 +67,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     @Inject
     lateinit var logger: IActionLogger
+
+    @Inject
+    lateinit var voiceSelectorManager: VoiceSelectorManager
 
     override val layoutRes: Int
         get() = R.layout.activity_complex
@@ -103,7 +108,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     override fun initView(savedInstanceState: Bundle?) {
         val metrics = resources.displayMetrics
-
         layoutHandler = if (metrics.widthPixels <= metrics.heightPixels) {
             PortraitLayoutHandler(WeakReference(this))
         } else {
@@ -210,6 +214,18 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             launch {
                 viewModel.loadingDeepLink.isLoading?.collectLatest {
                     binding.progressWheel?.visibility = if (it) View.VISIBLE else View.GONE
+                }
+            }
+
+            launch {
+                voiceSelectorManager.ktSubscribeToVoiceSearch().collectLatest {
+                    when(it) {
+                        is Event.VoiceResult -> {
+                            layoutHandler?.changeToMinimal()
+                            viewModel.openSearch(it.string)
+                        }
+                        else -> { }
+                    }
                 }
             }
 

@@ -30,10 +30,4 @@ class AppModule {
     @TVScope
     fun providesTimeout(): Long? = 20
 
-    @Provides
-    @VoiceSelectorScope
-    fun providesVoicePackage(): VoicePackage = VoicePackage(
-        packageName = "",
-        category = "android.intent.category.LAUNCHER"
-    )
 }

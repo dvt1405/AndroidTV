@@ -3,21 +3,29 @@ package com.kt.apps.voiceselector
 import android.app.Activity
 import android.app.Application
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
-import com.kt.apps.voiceselector.ui.VoiceSelectorDialogFragment
+import com.kt.apps.voiceselector.models.Event
+import com.kt.apps.voiceselector.models.VoicePackage
+import com.kt.apps.voiceselector.ui.VoicePackageInstallDialogFragment
+import com.kt.apps.voiceselector.ui.VoiceSearchActivity
 import com.kt.apps.voiceselector.usecase.CheckVoiceInput
 import com.kt.apps.voiceselector.usecase.VoiceInputInfo
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.subjects.PublishSubject
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import java.lang.ref.WeakReference
 import javax.inject.Inject
-import javax.inject.Singleton
 
 
 data class VoiceSelectorInteractor @Inject constructor(
@@ -27,16 +35,23 @@ data class VoiceSelectorInteractor @Inject constructor(
 @VoiceSelectorScope
 class VoiceSelectorManager @Inject constructor(
     private val interactor: VoiceSelectorInteractor,
+    private val voicePackage: VoicePackage,
     private val app: CoreApp
 ) {
     private lateinit var lastActivity: WeakReference<Activity>
-    init {
+
+    private val _event: PublishSubject<Event> = PublishSubject.create()
+
+    fun registerLifeCycle() {
         app.registerActivityLifecycleCallbacks(object: Application.ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
 
             override fun onActivityStarted(activity: Activity) {}
 
             override fun onActivityResumed(activity: Activity) {
+                if (activity is VoiceSearchActivity) {
+                    return
+                }
                 lastActivity = WeakReference(activity)
             }
 
@@ -49,6 +64,7 @@ class VoiceSelectorManager @Inject constructor(
             override fun onActivityDestroyed(activity: Activity) {}
         })
     }
+
     fun openVoiceAssistant(): Maybe<Boolean> {
         Log.d(TAG, "openVoiceAssistant: ")
         return interactor.checkVoiceInput()
@@ -77,7 +93,67 @@ class VoiceSelectorManager @Inject constructor(
             return
         } ?: return
 
-        val modal = VoiceSelectorDialogFragment()
-        modal.show(activity.supportFragmentManager, VoiceSelectorDialogFragment.TAG)
+        val modal = VoicePackageInstallDialogFragment.newInstance()
+        modal.show(activity.supportFragmentManager, VoicePackageInstallDialogFragment.TAG)
     }
+
+    fun launchVoicePackageStore() {
+        try {
+            app.applicationContext.startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("market://details?id=${voicePackage.packageName}")
+                ).apply {
+                    flags = FLAG_ACTIVITY_NEW_TASK
+                }
+            )
+
+        } catch (e: Throwable) {
+            Log.d(TAG, "launchVoicePackageStore: $e")
+            app.applicationContext.startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=${voicePackage.packageName}")
+                ).apply {
+                    flags = FLAG_ACTIVITY_NEW_TASK
+                }
+            )
+        }
+    }
+
+    fun voiceGGSearch() {
+        app.applicationContext.startActivity(
+            Intent(app.applicationContext, VoiceSearchActivity::class.java).apply {
+                flags = FLAG_ACTIVITY_NEW_TASK
+            }
+        )
+    }
+
+    fun subscribeToVoiceSearch(onNext: (Event) -> Unit): Disposable {
+        return _event.subscribe(onNext)
+    }
+
+    suspend fun ktSubscribeToVoiceSearch(): Flow<Event> {
+        return _event.toCoroutine()
+    }
+
+    fun emitEvent(event: Event) {
+        _event.onNext(event)
+    }
+}
+
+suspend fun <T> PublishSubject<T>.toCoroutine(): Flow<T> = callbackFlow {
+    val disposable = CompositeDisposable()
+    disposable.add(
+        this@toCoroutine.subscribe(
+            { value ->
+                this.trySend(value)
+            }, { error ->
+                this.close(error)
+            }, {
+                this.close(null)
+            }
+        )
+    )
+    awaitClose { disposable.dispose() }
 }

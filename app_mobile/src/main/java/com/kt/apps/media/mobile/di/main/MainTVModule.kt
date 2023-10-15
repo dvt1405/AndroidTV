@@ -24,6 +24,8 @@ import com.kt.apps.media.mobile.ui.fragments.tvchannels.RadioChannelsFragment
 import com.kt.apps.media.mobile.ui.fragments.tvchannels.TVChannelsFragment
 import com.kt.apps.media.mobile.ui.info.InfoFragment
 import com.kt.apps.media.mobile.ui.playback.PlaybackActivity
+import com.kt.apps.voiceselector.ui.VoicePackageInstallDialogFragment
+import com.kt.apps.voiceselector.ui.VoiceSearchActivity
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 
@@ -35,6 +37,9 @@ abstract class MainTVModule {
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun  complexActivity(): ComplexActivity
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun voiceSearchActivity(): VoiceSearchActivity
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun channelTVChannelFragment(): TVChannelsFragment
@@ -96,4 +101,7 @@ abstract class MainTVModule {
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentFavorite(): FavoriteFragment
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentVoicePackageInstallDialog(): VoicePackageInstallDialogFragment
 }

@@ -28,6 +28,8 @@ interface ComplexLayoutHandler {
     fun onLoadedVideoSuccess(videoSize: VideoSize)
     fun onOpenFullScreen()
 
+    fun changeToMinimal() { }
+
     fun forceFullScreen() { }
 
     fun onCloseMinimal()

@@ -88,4 +88,8 @@ class ComplexInteractors(private val provider: ViewModelProvider, private val sc
         val filter = deepLink.getQueryParameter("query")
         uiControlViewModel.openSearch(filter ?: "")
     }
+
+    suspend fun openSearch(value: String) {
+        uiControlViewModel.openSearch(value ?: "")
+    }
 }

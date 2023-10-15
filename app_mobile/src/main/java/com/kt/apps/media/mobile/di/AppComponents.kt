@@ -28,7 +28,8 @@ import dagger.android.support.AndroidSupportInjectionModule
         AndroidSupportInjectionModule::class,
         MainTVModule::class,
         AppModule::class,
-        PlatformLoggerModule::class
+        PlatformLoggerModule::class,
+        ViewModelModule::class
     ]
 )
 @AppScope

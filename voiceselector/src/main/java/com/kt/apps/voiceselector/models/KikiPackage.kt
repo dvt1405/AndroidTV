@@ -2,10 +2,14 @@ package com.kt.apps.voiceselector.models
 
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import androidx.annotation.DrawableRes
 
 data class VoicePackage(
     val packageName: String,
-    val category: String
+    val category: String,
+    @DrawableRes val icon:  Int?,
+    val title: String,
+    val description: String
 )
 
 data class AppInfo(
@@ -14,3 +18,8 @@ data class AppInfo(
     val icon: Drawable?,
     val launchIntent: Intent?
 )
+
+sealed class Event {
+    data class VoiceResult(val string: String): Event()
+    object Cancel: Event()
+}

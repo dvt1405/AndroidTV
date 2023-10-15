@@ -1,0 +1,7 @@
+<resources>
+    <declare-styleable name="AppItemView">
+        <attr name="icon_logo" format="reference" />
+        <attr name="title" format="string" />
+        <attr name="description" format="string" />
+    </declare-styleable>
+</resources>
