@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "698404753211",
+    "firebase_url": "https://xemtv-e551b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "xemtv-e551b",
+    "storage_bucket": "xemtv-e551b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:698404753211:android:24382dbc705328fe8ab11e",
+        "android_client_info": {
+          "package_name": "com.kt.apps.media.xemtv"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "698404753211-dtg5bp29nhpvrivv068l7q86qg4crrqg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.kt.apps.media.xemtv",
+            "certificate_hash": "a69f1b49b7f71279f33f6906766084d178dc26c8"
+          }
+        },
+        {
+          "client_id": "698404753211-90g9tp6mq4jreupf183lvgq47herodbp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtw2Mj7xWr1ccc0n9_9JXgNzVS_29iC3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "698404753211-90g9tp6mq4jreupf183lvgq47herodbp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

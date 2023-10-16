@@ -1,4 +1,5 @@
 ext {
+    roomDatabaseVersion = '2.5.2'
     firebaseBomVersion = '32.2.2'
     appDependencies = [
             coreKt            : 'androidx.core:core-ktx:1.10.1',
@@ -21,6 +22,7 @@ ext {
     testDependencies = [
             jUnit  : 'junit:junit:4.13.2',
             jupiter: 'org.junit.jupiter:junit-jupiter:5.9.1',
+            roomDB : "androidx.room:room-testing:$roomDatabaseVersion"
     ]
 
     androidTest = [
@@ -50,12 +52,12 @@ ext {
             kapDaggerCompiler        : "com.google.dagger:dagger-compiler:2.44",
             kapDaggerAndroidProcessor: "com.google.dagger:dagger-android-processor:2.44",
             glide                    : "com.github.bumptech.glide:compiler:4.14.2",
-            roomCompiler             : "androidx.room:room-compiler:2.5.2"
+            roomCompiler             : "androidx.room:room-compiler:$roomDatabaseVersion"
     ]
 
     roomDatabase = [
-            runtime   : "androidx.room:room-runtime:2.5.2",
-            roomRxJava: "androidx.room:room-rxjava3:2.5.2"
+            runtime   : "androidx.room:room-runtime:$roomDatabaseVersion",
+            roomRxJava: "androidx.room:room-rxjava3:$roomDatabaseVersion"
     ]
 
     retrofitDependencies = [

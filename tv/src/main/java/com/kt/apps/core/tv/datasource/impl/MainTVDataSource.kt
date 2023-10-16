@@ -192,60 +192,6 @@ class MainTVDataSource @Inject constructor(
             t1 < 3
         }
 
-    private fun List<TVChannelWithUrls>.mapToTVChannel(): List<TVChannel> {
-        return this.map {
-            it.mapToTVChannel()
-        }
-    }
-
-    private fun TVChannelWithUrls.mapToTVChannel(): TVChannel {
-        return TVChannel(
-            tvGroup = this.tvChannel.tvGroup,
-            tvChannelName = this.tvChannel.tvChannelName,
-            tvChannelWebDetailPage = this.urls.firstOrNull {
-                it.type == TVChannelUrlType.WEB_PAGE.value
-            }?.url ?: this.urls[0].url,
-            urls = this.urls.map { url ->
-                TVChannel.Url(
-                    dataSource = url.src,
-                    url = url.url,
-                    type = url.type
-                )
-            },
-            sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
-            logoChannel = this.tvChannel.logoChannel,
-            channelId = this.tvChannel.channelId
-        )
-    }
-
-    private fun TVChannelFromDB.mapToTVChannel(): TVChannel {
-        val totalUrls = this.urls.filterNotNull()
-        return TVChannel(
-            tvGroup = this.group,
-            tvChannelName = this.name,
-            tvChannelWebDetailPage = totalUrls.firstOrNull {
-                it.type == TVChannelUrlType.WEB_PAGE.value
-            }?.url ?: totalUrls[0].url,
-            urls = totalUrls
-                .map { url ->
-                    TVChannel.Url(
-                        dataSource = url.src,
-                        url = url.url,
-                        type = url.type
-                    )
-                },
-            sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
-            logoChannel = this.thumb,
-            channelId = this.id
-        )
-    }
-
-    private fun List<TVChannelFromDB>.mapToListChannel(): List<TVChannel> {
-        return this.map {
-            it.mapToTVChannel()
-        }
-    }
-
     private fun saveToRoomDB(tvDetails: List<TVChannel>) {
         val tvUrl = mutableListOf<TVChannelDTO.TVChannelUrl>()
         val tvChannelList = mutableListOf<TVChannelDTO>()
@@ -451,6 +397,57 @@ class MainTVDataSource @Inject constructor(
 
                 TVChannelGroup.VOV,
                 TVChannelGroup.VOH,
+            )
+        }
+        fun List<TVChannelFromDB>.mapToListChannel(): List<TVChannel> {
+            return this.map {
+                it.mapToTVChannel()
+            }
+        }
+
+        fun List<TVChannelWithUrls>.mapToTVChannel(): List<TVChannel> {
+            return this.map {
+                it.mapToTVChannel()
+            }
+        }
+        fun TVChannelWithUrls.mapToTVChannel(): TVChannel {
+            return TVChannel(
+                tvGroup = this.tvChannel.tvGroup,
+                tvChannelName = this.tvChannel.tvChannelName,
+                tvChannelWebDetailPage = this.urls.firstOrNull {
+                    it.type == TVChannelUrlType.WEB_PAGE.value
+                }?.url ?: this.urls[0].url,
+                urls = this.urls.map { url ->
+                    TVChannel.Url(
+                        dataSource = url.src,
+                        url = url.url,
+                        type = url.type
+                    )
+                },
+                sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
+                logoChannel = this.tvChannel.logoChannel,
+                channelId = this.tvChannel.channelId
+            )
+        }
+        fun TVChannelFromDB.mapToTVChannel(): TVChannel {
+            val totalUrls = this.urls.filterNotNull()
+            return TVChannel(
+                tvGroup = this.group,
+                tvChannelName = this.name,
+                tvChannelWebDetailPage = totalUrls.firstOrNull {
+                    it.type == TVChannelUrlType.WEB_PAGE.value
+                }?.url ?: totalUrls[0].url,
+                urls = totalUrls
+                    .map { url ->
+                        TVChannel.Url(
+                            dataSource = url.src,
+                            url = url.url,
+                            type = url.type
+                        )
+                    },
+                sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
+                logoChannel = this.thumb,
+                channelId = this.id
             )
         }
     }

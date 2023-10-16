@@ -29,7 +29,26 @@ class TVChannelDTO(
         val type: String,
         val url: String,
         val tvChannelId: String
-    )
+    ) {
+        override fun toString(): String {
+            return "{" +
+                    "\"src\": \"$src\", " +
+                    "\"type\": \"$type\", " +
+                    "\"url\": \"$url\", " +
+                    "\"tvChannelId\": \"$tvChannelId\"" +
+                    "}"
+        }
+    }
+    override fun toString(): String {
+        return "{" +
+                "\"tvGroup\": \"$tvGroup\", " +
+                "\"logoChannel\": \"$logoChannel\", " +
+                "\"tvChannelName\": \"$tvChannelName\", " +
+                "\"sourceFrom\": \"$sourceFrom\", " +
+                "\"channelId\": \"$channelId\", " +
+                "\"searchKey\": \"$searchKey\"" +
+                "}"
+    }
 }
 
 

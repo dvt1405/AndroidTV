@@ -19,6 +19,8 @@ android {
         versionCode 23100801
         versionName version_name
         setProperty("archivesBaseName", "iMedia.$versionName")
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
         kapt {
             arguments {
                 arg("room.schemaLocation", "$projectDir/schemas")
@@ -79,6 +81,18 @@ android {
     lint {
         baseline = file("lint-baseline.xml")
     }
+    sourceSets {
+        androidTest {
+            java.srcDirs += ["${project(':core').projectDir}/src/androidTest/java"]
+            res.srcDirs += ["${project(':core').projectDir}/src/androidTest/res"]
+            assets {
+                srcDirs += ["${project(':core').projectDir}/src/androidTest/assets"]
+            }
+        }
+    }
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -92,10 +106,14 @@ dependencies {
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation testDependencies.values()
+    testImplementation project(path: ':core')
+    androidTestImplementation project(path: ':core')
+    androidTestImplementation project(path: ':core')
     kaptTest kotlinTestDependencies.values()
     kaptAndroidTest kotlinAndroidTestDependencies.values()
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation "com.google.firebase:testlab-instr-lib:0.2"
     implementation daggerDependencies.values()
     implementation retrofitDependencies.values()
     implementation okhttpDependencies.values()

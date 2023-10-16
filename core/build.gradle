@@ -65,6 +65,10 @@ dependencies {
     implementation otherLibs.values()
     implementation media.values()
     implementation rxJavaDependencies.values()
+    testImplementation testDependencies.values()
+    kaptTest kotlinTestDependencies.values()
+    kaptAndroidTest kotlinAndroidTestDependencies.values()
+    androidTestImplementation "com.google.firebase:testlab-instr-lib:0.2"
     implementation('com.squareup.retrofit2:converter-simplexml:2.1.0') {
         exclude group: 'xpp3', module: 'xpp3'
         exclude group: 'stax', module: 'stax-api'
