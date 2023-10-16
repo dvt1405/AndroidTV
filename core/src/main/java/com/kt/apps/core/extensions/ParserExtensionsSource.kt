@@ -1,6 +1,7 @@
 package com.kt.apps.core.extensions
 
 import android.net.Uri
+import android.os.Build
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.kt.apps.core.Constants
 import com.kt.apps.core.di.CoreScope
@@ -16,6 +17,7 @@ import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.internal.http.HTTP_MOVED_PERM
@@ -245,7 +247,13 @@ class ParserExtensionsSource @Inject constructor(
             .newCall(
                 Request.Builder()
                     .url(extension.sourceUrl)
-                    .addHeader("User-agent", Constants.USER_AGENT).apply {
+                    .addHeader(
+                        "User-agent", Constants.TV_MATE_USER_AGENT_BUILD
+                            .replace(Constants.TV_MATE_MANUFACTURER_REPLACE, Build.MANUFACTURER)
+                            .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
+                            .replace(Constants.TV_MATE_OS_VERSION_REPLACE, Build.VERSION.RELEASE)
+                    )
+                    .apply {
                         Uri.parse(extension.sourceUrl).host?.takeIf { it.isNotEmpty() }
                             ?.let {
                                 this.addHeader("Host", it)
@@ -266,9 +274,18 @@ class ParserExtensionsSource @Inject constructor(
             val location = response.header("Location")!!
                 .trim()
                 .replace(REGEX_TRIM_END_LINE, "")
+            if (DEBUG) {
+                Logger.d(this@ParserExtensionsSource, "Redirect", "Location: $location")
+            }
+            val newUrl = response.request.url.resolve(location)
+                ?: throw ParserIPTVThrowable(
+                    false,
+                    message = "Http redirect location is null $location"
+                )
+
             return executeHttpCall(
                 ExtensionsConfig(
-                    sourceUrl = location,
+                    sourceUrl = newUrl.toString(),
                     sourceName = extension.sourceName,
                     type = extension.type
                 )
