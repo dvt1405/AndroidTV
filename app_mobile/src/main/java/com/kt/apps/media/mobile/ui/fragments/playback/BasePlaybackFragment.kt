@@ -1,6 +1,7 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
 import android.content.pm.ActivityInfo
+import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -138,6 +139,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.findViewById(R.id.information_button)
     }
 
+    private val voiceSearchButton: ImageButton? by lazy {
+        exoPlayer?.findViewById(R.id.voice_search)
+    }
+
+    private val voiceSearchLoading: View? by lazy {
+        exoPlayer?.findViewById(R.id.voice_search_loading)
+    }
+
     private val titleLabel: MaterialTextView? by lazy {
         exoPlayer?.findViewById(R.id.title)
     }
@@ -176,6 +185,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected val title = MutableStateFlow("")
     protected val isProgressing = MutableStateFlow(true)
     protected val isPlayingState = MutableStateFlow(false)
+    protected val voiceSearchProgress = ActivityIndicator()
     protected val currentPlayingMediaItem = MutableStateFlow<MediaItem?>(null)
     protected var retryTimes: Int = 3
     protected var executingIndex: Int = -1
@@ -233,6 +243,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         informationButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.core.R.drawable.ic_round_error_outline_24, context?.theme)
         informationButton?.setOnClickListener { showInformationDialog() }
         informationButton?.inVisible()
+
+        voiceSearchButton?.setOnClickListener {
+            toggleVoiceSearch()
+        }
 
         playPauseButton?.visibility = View.INVISIBLE
         progressWheel?.visibility = View.INVISIBLE
@@ -449,6 +463,18 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             }
+
+            launch {
+                voiceSearchProgress.isLoading.collectLatest {
+                    if (it) {
+                        voiceSearchLoading?.visible()
+                        voiceSearchButton?.inVisible()
+                    } else {
+                        voiceSearchLoading?.gone()
+                        voiceSearchButton?.visible()
+                    }
+                }
+            }
         }
 
         interactor.loadFavorite()
@@ -472,7 +498,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         delay(250)
         callback?.onOpenFullScreen()
     }
-    
+
     private fun showInformationDialog() {
         val player = exoPlayerManager.exoPlayer ?: return
         val builder = MaterialAlertDialogBuilder(requireContext())
@@ -708,16 +734,17 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     protected fun toggleFavorite() {
-//        lifecycleScope.launch(exceptionHandler) {
-//            val isSelected = favoriteButton?.isSelected ?: return@launch
-//            interactor.toggleFavoriteCurrent(isSelected)
-//        }
-//        voiceSelectorManager.openVoiceAssistant()
+        lifecycleScope.launch(exceptionHandler) {
+            val isSelected = favoriteButton?.isSelected ?: return@launch
+            interactor.toggleFavoriteCurrent(isSelected)
+        }
+    }
+
+    protected fun toggleVoiceSearch() {
         lifecycleScope.launch(exceptionHandler) {
             val result = voiceSelectorManager.openVoiceAssistant().toCoroutine()
             Log.d(TAG, "voiceSelector: $result")
-        }
-
+        }.trackJob(voiceSearchProgress)
     }
     private fun toggleChannelListVisibility(shouldShow: Boolean) {
         channelListRecyclerView?.visibility = if (shouldShow) {

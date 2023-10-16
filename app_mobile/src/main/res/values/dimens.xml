@@ -41,5 +41,7 @@
     <dimen name="search_list_padding">4dp</dimen>
     <dimen name="search_margin_top">4dp</dimen>
     <dimen name="player_livetime_margin_start">24dp</dimen>
+    <dimen name="dashboard_land_padding_start">4dp</dimen>
+    <dimen name="search_start_padding">4dp</dimen>
 
 </resources>

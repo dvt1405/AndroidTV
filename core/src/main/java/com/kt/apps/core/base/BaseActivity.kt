@@ -88,6 +88,8 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
     private var networkChangeReceiver: NetworkChangeReceiver? = NetworkChangeReceiver.getInstance()
 
     private var isCheckedUpdate: Boolean = false
+
+    open val shouldShowUpdateNotification: Boolean = true
     override fun onCreate(savedInstanceState: Bundle?) {
         if (BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(
@@ -120,7 +122,7 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
         updateLocale()
         isCheckedUpdate  = savedInstanceState?.getBoolean(IS_CHECK_UPDATE) ?: false
         appUpdateInfoTask.addOnSuccessListener { updateInfo ->
-            if (updateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE && !isCheckedUpdate) {
+            if (updateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE && !isCheckedUpdate && shouldShowUpdateNotification) {
                 isCheckedUpdate = true
                 updateManager.registerListener(appUpdateListener)
                 updateManager.startUpdateFlowForResult(

@@ -71,6 +71,10 @@ class SearchDashboardViewModel(private val provider: ViewModelProvider, private 
 
     }
 
+    suspend fun togglePerformVoiceSearch(isFinish: Boolean) {
+        uiControlViewModel.togglePerformVoiceSearch(isFinish)
+    }
+
     fun performClearSearch() {
         searchViewModel.clearSearchList()
     }

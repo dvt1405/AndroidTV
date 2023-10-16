@@ -5,6 +5,8 @@ import android.text.InputFilter
 import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -23,7 +25,10 @@ import com.kt.apps.media.mobile.utils.PaddingItemDecoration
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.showKeyboard
 import com.kt.apps.media.mobile.utils.textChanges
+import com.kt.apps.media.mobile.utils.toCoroutine
+import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.SearchDashboardViewModel
+import com.kt.apps.voiceselector.VoiceSelectorManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -31,6 +36,9 @@ import javax.inject.Inject
 class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBinding>() {
     @Inject
     lateinit var factory: ViewModelProvider.Factory
+
+    @Inject
+    lateinit var voiceSearchManager: VoiceSelectorManager
     override val layoutResId: Int
         get() = R.layout.fragment_search_dashboard
     override val screenName: String
@@ -60,11 +68,14 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
             addItemDecoration(PaddingItemDecoration(PaddingItemDecoration.Edge(0, 12, 0, 0)))
         }
 
-//        binding.
-//        binding.backButton?.setOnClickListener {
-//            activity?.onBackPressedDispatcher?.onBackPressed()
-////            activity?.onBackPressed()
-//        }
+        binding.voiceButton?.icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_voice_search)
+        binding.voiceButton?.setOnClickListener {
+            lifecycleScope.launch {
+                viewModel.togglePerformVoiceSearch(false)
+                voiceSearchManager.openVoiceAssistant().toCoroutine()
+                viewModel.togglePerformVoiceSearch(true)
+            }
+        }
     }
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {

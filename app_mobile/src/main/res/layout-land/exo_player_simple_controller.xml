@@ -72,6 +72,33 @@
             tools:progress="50"
             android:secondaryProgress="60"
             />
+
+        <FrameLayout
+            android:layout_width="@dimen/button_fullscreen_size"
+            android:layout_height="@dimen/button_fullscreen_size"
+            app:layout_constraintTop_toTopOf="@id/exo_ratio"
+            app:layout_constraintEnd_toStartOf="@id/exo_ratio"
+            android:layout_marginEnd="@dimen/small_padding"
+            >
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/voice_search_loading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                app:indicatorColor="@color/white"
+                android:layout_gravity="center"
+                android:visibility="visible"
+                app:indicatorSize="@dimen/base_icon_size"
+                />
+            <ImageButton
+                android:id="@+id/voice_search"
+                style="@style/ExoStyledControls.Button.Bottom"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="visible"
+                android:src="@drawable/ic_voice_search"
+                />
+        </FrameLayout>
         <ImageButton
             android:id="@+id/exo_ratio"
             style="@style/ExoStyledControls.Button.Bottom"

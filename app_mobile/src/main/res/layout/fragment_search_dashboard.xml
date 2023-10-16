@@ -11,6 +11,25 @@
         android:background="@color/black"
         >
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/voice_button"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:backgroundTint="#33FFFFFF"
+            tools:icon="@drawable/lb_ic_search_mic_out"
+            app:iconSize="@dimen/base_icon_size"
+            app:iconTint="@color/white"
+            app:cornerRadius="56dp"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_marginStart="@dimen/search_list_padding"
+            app:iconGravity="textStart"
+
+            app:layout_constraintDimensionRatio="1"
+            app:layout_constraintTop_toTopOf="@id/textInputLayout1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/textInputLayout1"
+            />
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout1"
             android:layout_width="0dp"
@@ -32,7 +51,7 @@
             app:hintEnabled="false"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/voice_button"
             app:startIconDrawable="@drawable/ic_search_24p"
             app:startIconTint="@color/white"
 
@@ -58,7 +77,7 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="@id/textInputLayout1"
             app:layout_constraintTop_toBottomOf="@id/textInputLayout1"
-            app:layout_constraintStart_toStartOf="@id/textInputLayout1"
+            app:layout_constraintStart_toStartOf="@id/voice_button"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             />
 

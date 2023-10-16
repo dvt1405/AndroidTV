@@ -23,3 +23,10 @@ sealed class Event {
     data class VoiceResult(val string: String): Event()
     object Cancel: Event()
 }
+
+sealed class State {
+    object IDLE: State()
+    object LaunchIntent: State()
+
+    object ShowDialog: State()
+}

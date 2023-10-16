@@ -37,6 +37,8 @@ class UIControlViewModel @Inject constructor(): BaseViewModel() {
     private var _searchQuery: MutableStateFlow<String> = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
+    private var _voiceSearchProgressing: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val voiceSearchProgressing = _voiceSearchProgressing.asStateFlow()
     suspend fun openPlayback(data: PrepareStreamLinkData) {
         _openPlayback.emit(data)
     }
@@ -55,6 +57,10 @@ class UIControlViewModel @Inject constructor(): BaseViewModel() {
     suspend fun openSearch(query: String) {
         _openSearchEvent.emit(Unit)
         _searchQuery.emit(query)
+    }
+
+    suspend fun togglePerformVoiceSearch(isFinished: Boolean) {
+        _voiceSearchProgressing.value = !isFinished
     }
 
 }

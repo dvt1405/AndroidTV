@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.kt.apps.core.base.BaseBottomSheetDialogFragment
 import com.kt.apps.voiceselector.R
 import com.kt.apps.voiceselector.VoiceSelectorManager
@@ -41,10 +42,11 @@ class GGVoiceSelectorFragment : BaseBottomSheetDialogFragment<FragmentGgVoiceSel
         }
         binding.voiceAppItem.title = voicePackage.title
         binding.voiceAppItem.descriptionValue = voicePackage.description
-
-        binding.installBtn.setOnClickListener {
-            voiceSelectorManager.launchVoicePackageStore()
-            dismiss()
+        arrayListOf(binding.voiceAppItem, binding.installBtn).forEach {
+            it.setOnClickListener {
+                voiceSelectorManager.launchVoicePackageStore()
+                dismiss()
+            }
         }
         arrayListOf(binding.ggAssistant, binding.useBtn).forEach {
             it.setOnClickListener { useGGAssistant() }
@@ -58,6 +60,11 @@ class GGVoiceSelectorFragment : BaseBottomSheetDialogFragment<FragmentGgVoiceSel
 
     override fun initAction(savedInstanceState: Bundle?) {
 
+    }
+
+    override fun onStart() {
+        super.onStart()
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 
     private fun useGGAssistant() {

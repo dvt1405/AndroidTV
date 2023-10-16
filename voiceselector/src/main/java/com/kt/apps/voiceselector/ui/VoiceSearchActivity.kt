@@ -23,6 +23,9 @@ class VoiceSearchActivity : BaseActivity<ActivityVoiceSearchBinding>() {
 
     override val layoutRes: Int = R.layout.activity_voice_search
 
+    override val shouldShowUpdateNotification: Boolean
+        get() = false
+
     override fun initView(savedInstanceState: Bundle?) {
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
     }

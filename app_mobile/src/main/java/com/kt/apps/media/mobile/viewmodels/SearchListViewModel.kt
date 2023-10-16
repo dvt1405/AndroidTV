@@ -39,8 +39,9 @@ class SearchListViewModel(private val provider: ViewModelProvider): IUIControl {
     val isProgressing
         get() = combine(
             _isProgressing,
-            searchProgress
-        ) { t1, t2 -> t1 || t2}
+            searchProgress,
+            uiControlViewModel.voiceSearchProgressing
+        ) { t1, t2, t3 -> t1 || t2 || t3}
 
    val searchResult: Flow<Map<String, List<SearchForText.SearchResult>>> by lazy {
        searchViewModel.searchQueryLiveData

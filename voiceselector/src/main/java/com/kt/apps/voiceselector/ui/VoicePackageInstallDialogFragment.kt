@@ -54,9 +54,12 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
         voiceAppItem.title = voicePackage.title
         voiceAppItem.descriptionValue = voicePackage.description
 
-        binding.installBtn.setOnClickListener {
-            voiceSelectorManager.launchVoicePackageStore()
-            dismiss()
+        arrayListOf(binding.installBtn, binding.voiceAppItem).forEach {
+            it.setOnClickListener {
+                voiceSelectorManager.launchVoicePackageStore()
+                dismiss()
+            }
+
         }
 
         binding.ggAssistant.setOnClickListener {

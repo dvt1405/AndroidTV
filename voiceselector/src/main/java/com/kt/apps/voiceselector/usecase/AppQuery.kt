@@ -23,11 +23,9 @@ class AppQuery @Inject constructor(
 ): MaybeUseCase<List<AppInfo>>() {
     override fun prepareExecute(params: Map<String, Any>): Maybe<List<AppInfo>> {
         val category = params[EXTRA_CATEGORY] as? String ?: return Maybe.empty()
+        Log.d(TAG, "prepareExecute AppQuery: $this")
         return Maybe.create { emitter ->
             val apps = context.getAllApps(category)
-            apps.forEach {
-                Log.d(TAG, "prepareExecute: ${it.packageName}")
-            }
             emitter.onSuccess(apps)
         }
     }

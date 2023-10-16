@@ -48,11 +48,13 @@ import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.models.Event
+import com.kt.apps.voiceselector.models.State
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -228,7 +230,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                     }
                 }
             }
-
         }
 
         addOnPictureInPictureModeChangedListener {
@@ -270,20 +271,25 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             }
         }
     }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (!viewModel.isShowingPlayback.value) {
             return
         }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-                && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val params = PictureInPictureParams.Builder()
-                    this@ComplexActivity.enterPictureInPictureMode(params.build())
-                } else {
-                    this@ComplexActivity.enterPictureInPictureMode()
-                }
+        Log.d(TAG, "onUserLeaveHint: ${voiceSelectorManager} ${voiceSelectorManager.state}")
+        if (voiceSelectorManager.state == State.LaunchIntent) {
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+            && packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val params = PictureInPictureParams.Builder()
+                this@ComplexActivity.enterPictureInPictureMode(params.build())
+            } else {
+                this@ComplexActivity.enterPictureInPictureMode()
             }
+        }
     }
 
     private fun dismissAllDialog() {

@@ -14,6 +14,7 @@ import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
 import com.kt.apps.voiceselector.models.Event
+import com.kt.apps.voiceselector.models.State
 import com.kt.apps.voiceselector.models.VoicePackage
 import com.kt.apps.voiceselector.ui.GGVoiceSelectorFragment
 import com.kt.apps.voiceselector.ui.VoicePackageInstallDialogFragment
@@ -23,6 +24,7 @@ import com.kt.apps.voiceselector.usecase.VoiceInputInfo
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.PublishSubject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -44,7 +46,14 @@ class VoiceSelectorManager @Inject constructor(
 ) {
     private lateinit var lastActivity: WeakReference<Activity>
 
+    private var _cacheLastLaunchIntent: VoiceInputInfo? = null
     private val _event: PublishSubject<Event> = PublishSubject.create()
+    private var _state: State = State.IDLE
+    var state: State
+        set(value) {
+            _state =value
+        }
+        get() = _state
 
     fun registerLifeCycle() {
         app.registerActivityLifecycleCallbacks(object: Application.ActivityLifecycleCallbacks {
@@ -53,6 +62,7 @@ class VoiceSelectorManager @Inject constructor(
             override fun onActivityStarted(activity: Activity) {}
 
             override fun onActivityResumed(activity: Activity) {
+                _state = State.IDLE
                 if (activity is VoiceSearchActivity) {
                     return
                 }
@@ -68,11 +78,25 @@ class VoiceSelectorManager @Inject constructor(
             override fun onActivityDestroyed(activity: Activity) {}
         })
     }
-
+    private fun queryAndExecute(): Maybe<VoiceInputInfo?> {
+        return interactor.checkVoiceInput()
+            .doOnSuccess {
+                _cacheLastLaunchIntent = it
+                executeFetchedData(it)
+            }
+    }
     fun openVoiceAssistant(): Maybe<Boolean> {
         Log.d(TAG, "openVoiceAssistant: ")
-        return interactor.checkVoiceInput()
-            .doOnSuccess { infor -> executeFetchedData(infor) }
+        val lastInfor = _cacheLastLaunchIntent
+        return  if (lastInfor != null) {
+            Maybe.just(lastInfor)
+                .doOnSuccess {
+                    executeFetchedData(it)
+                }
+                .onErrorResumeNext { queryAndExecute() }
+        } else {
+            queryAndExecute()
+        }
             .map { it.appInfo != null }
     }
 
@@ -86,7 +110,7 @@ class VoiceSelectorManager @Inject constructor(
             presentSelector(infor)
             return
         }
-
+        state = State.LaunchIntent
         app.applicationContext.startActivity(launchIntent)
     }
 
@@ -101,8 +125,10 @@ class VoiceSelectorManager @Inject constructor(
             voiceGGSearch()
         } else if (sharedPreferences.getBoolean(GG_LAST_TIME, false)) {
             val modal = GGVoiceSelectorFragment.newInstance()
+            state = State.ShowDialog
             modal.show(activity.supportFragmentManager, GGVoiceSelectorFragment.TAG)
         } else {
+            state = State.ShowDialog
             val modal = VoicePackageInstallDialogFragment.newInstance()
             modal.show(activity.supportFragmentManager, VoicePackageInstallDialogFragment.TAG)
         }
@@ -134,6 +160,7 @@ class VoiceSelectorManager @Inject constructor(
     }
 
     fun voiceGGSearch() {
+        state = State.LaunchIntent
         app.applicationContext.startActivity(
             Intent(app.applicationContext, VoiceSearchActivity::class.java).apply {
                 flags = FLAG_ACTIVITY_NEW_TASK
@@ -169,6 +196,22 @@ class VoiceSelectorManager @Inject constructor(
 }
 
 suspend fun <T> PublishSubject<T>.toCoroutine(): Flow<T> = callbackFlow {
+    val disposable = CompositeDisposable()
+    disposable.add(
+        this@toCoroutine.subscribe(
+            { value ->
+                this.trySend(value)
+            }, { error ->
+                this.close(error)
+            }, {
+                this.close(null)
+            }
+        )
+    )
+    awaitClose { disposable.dispose() }
+}
+
+suspend fun <T> BehaviorSubject<T>.toCoroutine(): Flow<T> = callbackFlow {
     val disposable = CompositeDisposable()
     disposable.add(
         this@toCoroutine.subscribe(
