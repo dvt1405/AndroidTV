@@ -567,13 +567,19 @@ class SearchView @JvmOverloads constructor(
                     "direction: $direction" +
                     "}"
         )
-        if (focused == mSearchSrcTextView
+        if (focused == mVoiceButton && direction == View.FOCUS_RIGHT) {
+            return if (mSearchSrcTextView?.isEmpty == true) {
+                mSearchSrcTextView
+            } else {
+                mCloseButton
+            }
+        } else if (focused == mSearchSrcTextView
             && (mSearchSrcTextView?.isEmpty == true
                     || mSearchSrcTextView!!.selectionStart == 0)
             && ((direction == View.FOCUS_LEFT) || (direction == View.FOCUS_UP))
         ) {
             return if (direction == View.FOCUS_UP) {
-                focused
+                mVoiceButton
             } else {
                 super.focusSearch(focused, direction)
             }
@@ -920,23 +926,23 @@ class SearchView @JvmOverloads constructor(
 
         override fun onKeyPreIme(keyCode: Int, event: KeyEvent): Boolean {
             Logger.d(this@SearchAutoComplete, message = "On Key PreIme: $keyCode")
-//            if (keyCode == KeyEvent.KEYCODE_BACK) {
-//                // special case for the back key, we do not even try to send it
-//                // to the drop down list but instead, consume it immediately
-//                if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
-//                    val state = keyDispatcherState
-//                    state?.startTracking(event, this)
-//                    return true
-//                } else if (event.action == KeyEvent.ACTION_UP) {
-//                    val state = keyDispatcherState
-//                    state?.handleUpEvent(event)
-//                    if (event.isTracking && !event.isCanceled) {
-//                        mSearchView?.mVoiceButton?.requestFocus()
-//                        setImeVisibility(false)
-//                        return true
-//                    }
-//                }
-//            }
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                // special case for the back key, we do not even try to send it
+                // to the drop down list but instead, consume it immediately
+                if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) {
+                    val state = keyDispatcherState
+                    state?.startTracking(event, this)
+                    return true
+                } else if (event.action == KeyEvent.ACTION_UP) {
+                    val state = keyDispatcherState
+                    state?.handleUpEvent(event)
+                    if (event.isTracking && !event.isCanceled) {
+                        mSearchView?.mVoiceButton?.requestFocus()
+                        setImeVisibility(false)
+                        return true
+                    }
+                }
+            }
             return super.onKeyPreIme(keyCode, event)
         }
 

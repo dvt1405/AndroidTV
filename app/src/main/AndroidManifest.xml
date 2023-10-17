@@ -53,6 +53,9 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
             </intent-filter>
 
             <intent-filter>

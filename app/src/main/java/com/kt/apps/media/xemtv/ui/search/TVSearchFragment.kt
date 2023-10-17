@@ -72,7 +72,6 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
     private var _searchFilter: String? = null
     private var _queryHint: String? = null
     private var _searchView: SearchView? = null
-    private var _searchBtn: AppCompatImageButton? = null
     private var _rootView: BrowseFrameLayout? = null
     private var _btnClose: ImageView? = null
     private var _btnVoice: ImageView? = null
@@ -122,7 +121,6 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         _btnClose = rootView.findViewById(androidx.appcompat.R.id.search_close_btn)
         _emptySearchIcon = rootView.findViewById(R.id.ic_empty_search)
         _loadingIcon = rootView.findViewById(R.id.ic_loading)
-        _searchBtn = rootView.findViewById(R.id.voice_search_btn)
         autoCompleteView = _searchView?.searchEdtAutoComplete
         _searchFilter = arguments?.getString(EXTRA_QUERY_FILTER)
         _queryHint = arguments?.getString(EXTRA_QUERY_HINT).takeIf {
@@ -304,7 +302,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         viewModel.selectedItemLiveData.observe(viewLifecycleOwner, handleSelectedItem())
         viewModel.searchQueryLiveData.observe(this, handleSearchResult(autoCompleteView))
 
-        _searchBtn?.setOnClickListener {
+        _btnVoice?.setOnClickListener {
             disposable.add(
                 voiceSelectorManager.openVoiceAssistant().subscribe {
                     Log.d(TAG, "initAction: $it")
@@ -491,7 +489,9 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         val viewFocus = view?.findFocus()
         Logger.d(this, message = "onBackPressed view focused $viewFocus")
         _searchView?.searchEdtAutoComplete?.let {
-            if (_searchView?.isFocused == true) {
+            if (_btnVoice?.isFocused == true && activity is TVSearchActivity) {
+                activity?.finish()
+            } else if (_searchView?.isFocused == true) {
                 finishActivityIfNeeded()
             } else {
                 it.requestFocus(View.FOCUS_UP)
