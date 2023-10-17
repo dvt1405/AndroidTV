@@ -389,6 +389,7 @@ class ParserExtensionsSource @Inject constructor(
 
             if (line.contains(TAG_REFERER)) {
                 referer = getByRegex(REFERER_REGEX, line)
+                props[REFERER] = referer
             }
 
             if (line.removePrefix("#").startsWith("http")) {
@@ -398,12 +399,29 @@ class ParserExtensionsSource @Inject constructor(
                     .replace(REGEX_TRIM_END_LINE, "")
                 while (channelLink.contains(TAG_REFERER)) {
                     val refererInChannelLink = getByRegex(REFERER_REGEX, channelLink)
-                    channelLink = channelLink.replace("$TAG_REFERER=$refererInChannelLink", "")
-                        .trim()
+                    val textToReplace = "$TAG_REFERER=$refererInChannelLink"
+                    if (channelLink.contains(textToReplace)) {
+                        channelLink = channelLink.replace(textToReplace, "")
+                            .trim()
+                    } else {
+                        if (channelLink.contains("|")) {
+                            channelLink = channelLink.substring(0, channelLink.indexOf("|"))
+                        }
+                    }
+                    if (DEBUG) {
+                        Logger.d(
+                            this@ParserExtensionsSource,
+                            "ChannelLink",
+                            "Remove referer: $channelLink|$TAG_REFERER=$refererInChannelLink "
+                        )
+                    }
                 }
                 channelLink = channelLink.trim()
                     .removeSuffix("#")
                     .trim()
+                if (channelLink.contains("|")) {
+                    channelLink = channelLink.substring(0, channelLink.indexOf("|"))
+                }
                 if (DEBUG) {
                     Logger.d(this@ParserExtensionsSource, "ChannelLink", channelLink)
                 }
@@ -670,6 +688,7 @@ class ParserExtensionsSource @Inject constructor(
             "http-referrer" to "referer",
             "http-user-agent" to "user-agent"
         )
+        private const val REFERER = "referer"
 
         val filmData = mapOf(
             "Phim lẻ TVHay" to "http://hqth.me/tvhayphimle",
