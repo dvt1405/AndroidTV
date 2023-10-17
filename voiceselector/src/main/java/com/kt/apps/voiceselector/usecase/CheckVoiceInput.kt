@@ -14,8 +14,8 @@ class CheckVoiceInput @Inject constructor(
     private val appQuery: AppQuery
 ): MaybeUseCase<VoiceInputInfo>() {
     override fun prepareExecute(params: Map<String, Any>): Maybe<VoiceInputInfo> {
-        Log.d(TAG, "prepareExecute: ")
-        return appQuery(voicePackage.category).map {
+        Log.d(TAG, "prepareExecute: $voicePackage")
+        return appQuery(voicePackage.action, voicePackage.category).map {
             val appInfor = it.firstOrNull { appInfo ->
                 appInfo.packageName == voicePackage.packageName
             }

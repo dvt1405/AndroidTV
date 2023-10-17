@@ -11,6 +11,9 @@ open class VoiceSelectorModule {
     open fun providesVoicePackage(): VoicePackage = VoicePackage(
         "",
         "",
+        "",
+        "",
+        "",
         null,
         "",
         ""

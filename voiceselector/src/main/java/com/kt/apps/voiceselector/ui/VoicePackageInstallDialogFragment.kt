@@ -1,7 +1,9 @@
 package com.kt.apps.voiceselector.ui
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnPreDraw
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -66,10 +68,14 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
             voiceSelectorManager.voiceGGSearch()
             dismiss()
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            setupForAndroidTV()
+        }
     }
 
     override fun initAction(savedInstanceState: Bundle?) {
     }
+
 
     override fun onAttach(context: Context) {
         AndroidSupportInjection.inject(this )
@@ -82,6 +88,25 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
         view?.doOnPreDraw {
             bottomSheetBehavior.peekHeight = requireView().measuredHeight - binding.ggAssistant.measuredHeight
         }
+        binding.installBtn.requestFocus()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun setupForAndroidTV() {
+        binding.installBtn.apply {
+            isFocusedByDefault = true
+            nextFocusDownId = binding.ggAssistant.id
+        }
+
+        binding.ggAssistant.apply {
+            nextFocusUpId = binding.installBtn.id
+            setOnFocusChangeListener { v, hasFocus ->
+                if (hasFocus) {
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+                }
+            }
+        }
+
     }
     companion object {
         fun newInstance(): VoicePackageInstallDialogFragment =

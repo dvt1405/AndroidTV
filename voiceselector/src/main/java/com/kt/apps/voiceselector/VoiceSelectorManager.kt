@@ -3,6 +3,7 @@ package com.kt.apps.voiceselector
 import android.app.Activity
 import android.app.Application
 import android.content.Intent
+import android.content.Intent.ACTION_VIEW
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.SharedPreferences
 import android.net.Uri
@@ -88,20 +89,12 @@ class VoiceSelectorManager @Inject constructor(
     fun openVoiceAssistant(): Maybe<Boolean> {
         Log.d(TAG, "openVoiceAssistant: ")
         val lastInfor = _cacheLastLaunchIntent
-        return  if (lastInfor != null) {
-            Maybe.just(lastInfor)
-                .doOnSuccess {
-                    executeFetchedData(it)
-                }
-                .onErrorResumeNext { queryAndExecute() }
-        } else {
-            queryAndExecute()
-        }
+        return queryAndExecute()
             .map { it.appInfo != null }
     }
 
     private fun executeFetchedData(infor: VoiceInputInfo?) {
-        Log.d(TAG, "presentSelectorDialog: $infor")
+//        Log.d(TAG, "presentSelectorDialog: $infor")
         val appInfor = infor?.appInfo ?: kotlin.run {
             presentSelector(infor)
             return
@@ -111,10 +104,37 @@ class VoiceSelectorManager @Inject constructor(
             return
         }
         state = State.LaunchIntent
-        app.applicationContext.startActivity(launchIntent)
+        app.applicationContext.startActivity(launchIntent.apply {
+            data = Uri.parse(voicePackage.launchData)
+        })
+//        app.applicationContext.startActivity(
+//            Intent(ACTION_VIEW).apply {
+//                data = Uri.parse("kikiassistant://tv")
+//                flags = FLAG_ACTIVITY_NEW_TASK
+//            }
+//        )
+
+    }
+
+    private fun tryDeepLink(): Boolean {
+        return try {
+            app.applicationContext.startActivity(
+                Intent(voicePackage.action).apply {
+                    data = Uri.parse(voicePackage.launchData)
+                    flags = FLAG_ACTIVITY_NEW_TASK
+                }
+            )
+            true
+        } catch (t: Throwable) {
+            Log.d(TAG, "tryDeepLink: $t")
+            false
+        }
     }
 
     private fun presentSelector(infor: VoiceInputInfo?) {
+        if (tryDeepLink()) {
+            return
+        }
         val activity = if (this::lastActivity.isInitialized) {
             lastActivity.get() as? FragmentActivity
         } else {
@@ -140,7 +160,7 @@ class VoiceSelectorManager @Inject constructor(
             app.applicationContext.startActivity(
                 Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse("market://details?id=${voicePackage.packageName}")
+                    Uri.parse("market://details?id=${voicePackage.packageName}${voicePackage.extraData}")
                 ).apply {
                     flags = FLAG_ACTIVITY_NEW_TASK
                 }
@@ -151,7 +171,7 @@ class VoiceSelectorManager @Inject constructor(
             app.applicationContext.startActivity(
                 Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse("https://play.google.com/store/apps/details?id=${voicePackage.packageName}")
+                    Uri.parse("https://play.google.com/store/apps/details?id=${voicePackage.packageName}${voicePackage.extraData}")
                 ).apply {
                     flags = FLAG_ACTIVITY_NEW_TASK
                 }

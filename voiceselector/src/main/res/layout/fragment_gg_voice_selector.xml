@@ -45,45 +45,53 @@
                 app:title="@string/gg_assistant_title"
                 app:description="@string/gg_assistant_desc"
                 android:clickable="true"
-                android:focusable="true" />
+                android:focusable="true"
+                android:background="@drawable/item_focused_background"
+                />
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 >
-                <com.google.android.material.button.MaterialButton
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/always_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/always"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    android:theme="@style/Theme.MaterialComponents"
                     android:textColor="@color/install_btn"
                     android:minHeight="0dp"
                     android:minWidth="0dp"
                     android:textSize="14sp"
                     android:layout_gravity="end"
                     android:layout_marginEnd="@dimen/dialog_base_padding"
+                    android:background="@drawable/btn_outline_focused_background"
+                    android:padding="12dp"
                     />
-                <com.google.android.material.button.MaterialButton
+                <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/use_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/use"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    android:theme="@style/Theme.MaterialComponents"
                     android:textColor="@color/install_btn"
                     android:minHeight="0dp"
                     android:minWidth="0dp"
                     android:textSize="14sp"
                     android:layout_gravity="end"
                     android:layout_marginEnd="@dimen/dialog_base_padding"
+                    android:background="@drawable/btn_outline_focused_background"
+                    android:padding="12dp"
                     />
             </LinearLayout>
-            <com.google.android.material.divider.MaterialDivider
+            <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:background="#54FFFFFF"
+                android:layout_marginTop="4dp"
                 />
-            <com.google.android.material.textview.MaterialTextView
+            <androidx.appcompat.widget.AppCompatButton
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/others_desc"
@@ -91,6 +99,7 @@
 
                 android:paddingVertical="@dimen/dialog_padding_8dp"
                 android:paddingHorizontal="@dimen/dialog_base_padding"
+                android:background="@drawable/btn_outline_focused_background"
                 />
             <com.kt.apps.voiceselector.AppItemView
                 android:id="@+id/voice_app_item"
@@ -99,19 +108,22 @@
                 app:icon_logo="@drawable/app_icon"
                 app:title="Trợ lý giọng nói Kiki"
                 app:description="Điều khiển thiết bị, tìm kiếm nội dung bằng tiếng Việt từ bất kỳ đâu"
+                android:background="@drawable/item_focused_background"
                 />
-            <com.google.android.material.button.MaterialButton
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/install_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/install"
-                style="@style/Widget.Material3.Button.TextButton"
+                android:theme="@style/Theme.MaterialComponents"
                 android:textColor="@color/install_btn"
                 android:minHeight="0dp"
                 android:minWidth="0dp"
                 android:textSize="14sp"
                 android:layout_gravity="end"
                 android:layout_marginEnd="@dimen/dialog_base_padding"
+                android:background="@drawable/btn_outline_focused_background"
+                android:padding="12dp"
                 />
         </LinearLayout>
     </ScrollView>

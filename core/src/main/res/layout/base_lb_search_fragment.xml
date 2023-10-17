@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.kt.apps.core.base.leanback.BrowseFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/browse_grid_dock"
     android:theme="@style/Theme.BaseLeanBack.SearchScreen"
     android:layout_width="match_parent"
@@ -11,24 +12,52 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <com.kt.apps.core.base.leanback.BrowseFrameLayout
-            android:id="@+id/search_view_container"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#CC000000">
-
-            <com.kt.apps.core.base.leanback.SearchView
-                android:id="@+id/search_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:background="#000000"
+            >
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/voice_search_btn"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:theme="@style/Theme.AppCompat"
                 android:layout_gravity="center"
-                android:layout_marginHorizontal="40dp"
-                android:layout_marginBottom="24dp"
-                android:layout_marginTop="@dimen/common_padding_32dp"
-                android:theme="@style/ThemeCompat.Search"
-                app:defaultQueryHint="@string/search_query_hint_default" />
+                android:background="@drawable/base_background_btn_circle"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:focusedByDefault="true"
+                android:padding="20dp"
+                android:layout_margin="20dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/lb_ic_search_mic_out"
+                app:tint="@color/color_ic_tint_w_state"
+                tools:ignore="UseAppTint"
+                tools:targetApi="o" />
 
-        </com.kt.apps.core.base.leanback.BrowseFrameLayout>
+            <com.kt.apps.core.base.leanback.BrowseFrameLayout
+                android:id="@+id/search_view_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#CC000000">
+
+                <com.kt.apps.core.base.leanback.SearchView
+                    android:id="@+id/search_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginEnd="40dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginBottom="24dp"
+                    android:layout_marginTop="@dimen/common_padding_32dp"
+                    android:theme="@style/ThemeCompat.Search"
+                    android:nextFocusLeft="@id/voice_search_btn"
+                    app:defaultQueryHint="@string/search_query_hint_default" />
+
+            </com.kt.apps.core.base.leanback.BrowseFrameLayout>
+        </LinearLayout>
+
 
         <FrameLayout
             android:layout_width="match_parent"

@@ -23,27 +23,34 @@ class AppQuery @Inject constructor(
 ): MaybeUseCase<List<AppInfo>>() {
     override fun prepareExecute(params: Map<String, Any>): Maybe<List<AppInfo>> {
         val category = params[EXTRA_CATEGORY] as? String ?: return Maybe.empty()
-        Log.d(TAG, "prepareExecute AppQuery: $this")
+        val action = params[EXTRA_ACTION] as? String ?: "android.intent.action.MAIN"
+        Log.d(TAG, "prepareExecute AppQuery: $params")
         return Maybe.create { emitter ->
-            val apps = context.getAllApps(category)
+            val apps = context.getAllApps(action, category)
+            apps.forEach {
+                Log.d(TAG, "query app : ${it.packageName} ")
+            }
             emitter.onSuccess(apps)
         }
     }
 
     operator fun invoke(
+        action: String,
         category: String
     ) = execute(mapOf(
-        EXTRA_CATEGORY to category
+        EXTRA_CATEGORY to category,
+        EXTRA_ACTION to action
     ))
 
 
     companion object {
         private const val EXTRA_CATEGORY  = "extra:category"
+        private const val EXTRA_ACTION = "extra:action"
     }
 
     @SuppressLint("QueryPermissionsNeeded")
-    fun Context.getAllApps(category: String): List<AppInfo> {
-        val queryIntent = Intent("android.intent.action.MAIN")
+    fun Context.getAllApps(action: String, category: String): List<AppInfo> {
+        val queryIntent = Intent(action)
         queryIntent.addCategory(category)
         val resolveInfoList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             this.packageManager.queryIntentActivities(
@@ -71,11 +78,12 @@ class AppQuery @Inject constructor(
 
     private fun getLaunchIntent(
         info: ResolveInfo,
+        action: String = "android.intent.action.MAIN",
         category: String = "android.intent.category.LAUNCHER"
     ): Intent {
         val componentName =
             ComponentName(info.activityInfo.applicationInfo.packageName, info.activityInfo.name)
-        val intent = Intent("android.intent.action.MAIN")
+        val intent = Intent(action)
         intent.addCategory(category)
         intent.component = componentName
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)

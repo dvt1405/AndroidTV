@@ -25,7 +25,11 @@ import com.kt.apps.football.di.DaggerFootballComponents
 import com.kt.apps.football.di.FootballComponents
 import com.kt.apps.media.xemtv.di.AppComponents
 import com.kt.apps.media.xemtv.di.DaggerAppComponents
+import com.kt.apps.media.xemtv.di.module.TVVoiceSelectorModule
 import com.kt.apps.media.xemtv.ui.main.MainActivity
+import com.kt.apps.voiceselector.VoiceSelectorManager
+import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
+import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
 import java.time.Duration
@@ -59,6 +63,14 @@ class App : CoreApp() {
             .coreComponents(_coreComponents)
             .build()
     }
+
+    private val _voiceSelector: VoiceSelectorComponent by lazy {
+        DaggerVoiceSelectorComponent.builder()
+            .coreComponents(_coreComponents)
+            .voiceSelectorModule(TVVoiceSelectorModule())
+            .build()
+    }
+
     var startTimeTracker = System.currentTimeMillis()
 
     override val coreComponents: CoreComponents
@@ -73,6 +85,9 @@ class App : CoreApp() {
     @Inject
     lateinit var workManager: WorkManager
 
+    @Inject
+    lateinit var voiceSelectorManager: VoiceSelectorManager
+
     override fun onCreate() {
         super.onCreate()
         app = this
@@ -81,6 +96,7 @@ class App : CoreApp() {
             addShortcuts()
         } catch (_: Exception) {
         }
+        voiceSelectorManager.registerLifeCycle()
     }
 
     private fun addShortcuts() {
@@ -145,6 +161,7 @@ class App : CoreApp() {
             .coreComponents(_coreComponents)
             .footballComponent(_footballComponent)
             .appUpdateComponent(_appUpdateComponent)
+            .voiceSelectorComponent(_voiceSelector)
             .app(this)
             .build()
     }

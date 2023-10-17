@@ -25,6 +25,9 @@ import com.kt.apps.media.xemtv.ui.tv.BaseTabLayoutFragment
 import com.kt.apps.media.xemtv.ui.tv.FragmentTVDashboard
 import com.kt.apps.media.xemtv.ui.tv.FragmentTVDashboardNew
 import com.kt.apps.media.xemtv.ui.tv.FragmentTVGrid
+import com.kt.apps.voiceselector.ui.GGVoiceSelectorFragment
+import com.kt.apps.voiceselector.ui.VoicePackageInstallDialogFragment
+import com.kt.apps.voiceselector.ui.VoiceSearchActivity
 import dagger.Module
 import dagger.android.ContributesAndroidInjector
 
@@ -103,4 +106,12 @@ abstract class MainTVModule {
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentQrCode(): FragmentQrCode
 
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun voiceSearchActivity(): VoiceSearchActivity
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentVoicePackageInstallDialog(): VoicePackageInstallDialogFragment
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentGGVoiceSelectorDialog(): GGVoiceSelectorFragment
 }

@@ -6,7 +6,10 @@ import androidx.annotation.DrawableRes
 
 data class VoicePackage(
     val packageName: String,
+    val action: String,
     val category: String,
+    val launchData: String = "",
+    val extraData: String = "",
     @DrawableRes val icon:  Int?,
     val title: String,
     val description: String

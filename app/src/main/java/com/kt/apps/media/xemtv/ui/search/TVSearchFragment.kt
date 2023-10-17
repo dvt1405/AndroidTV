@@ -7,14 +7,18 @@ import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.AutoCompleteTextView
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
+import androidx.appcompat.widget.AppCompatImageButton
+import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
@@ -43,12 +47,17 @@ import com.kt.apps.core.utils.visible
 import com.kt.apps.media.xemtv.presenter.DashboardTVChannelPresenter
 import com.kt.apps.media.xemtv.presenter.SearchPresenter
 import com.kt.apps.media.xemtv.ui.playback.PlaybackActivity
+import com.kt.apps.voiceselector.VoiceSelectorManager
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 import javax.inject.Inject
 
 class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
     @Inject
     lateinit var factory: ViewModelProvider.Factory
+
+    @Inject
+    lateinit var voiceSelectorManager: VoiceSelectorManager
 
     private val viewModel: SearchViewModels by lazy {
         ViewModelProvider(requireActivity(), factory)[SearchViewModels::class.java]
@@ -63,6 +72,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
     private var _searchFilter: String? = null
     private var _queryHint: String? = null
     private var _searchView: SearchView? = null
+    private var _searchBtn: AppCompatImageButton? = null
     private var _rootView: BrowseFrameLayout? = null
     private var _btnClose: ImageView? = null
     private var _btnVoice: ImageView? = null
@@ -75,6 +85,8 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
     }
 
     private var mContainerListAlignTop: Int = 35.dpToPx()
+
+    private val disposable = CompositeDisposable()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         context ?: return
@@ -106,10 +118,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
     override fun initView(rootView: View) {
         _rootView = rootView as BrowseFrameLayout
         _searchView = rootView.findViewById(R.id.search_view)
-        _btnVoice = rootView.findViewById(androidx.appcompat.R.id.search_voice_btn)
+        _btnVoice = rootView.findViewById(R.id.search_voice_btn)
         _btnClose = rootView.findViewById(androidx.appcompat.R.id.search_close_btn)
         _emptySearchIcon = rootView.findViewById(R.id.ic_empty_search)
         _loadingIcon = rootView.findViewById(R.id.ic_loading)
+        _searchBtn = rootView.findViewById(R.id.voice_search_btn)
         autoCompleteView = _searchView?.searchEdtAutoComplete
         _searchFilter = arguments?.getString(EXTRA_QUERY_FILTER)
         _queryHint = arguments?.getString(EXTRA_QUERY_HINT).takeIf {
@@ -290,6 +303,15 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         }
         viewModel.selectedItemLiveData.observe(viewLifecycleOwner, handleSelectedItem())
         viewModel.searchQueryLiveData.observe(this, handleSearchResult(autoCompleteView))
+
+        _searchBtn?.setOnClickListener {
+            disposable.add(
+                voiceSelectorManager.openVoiceAssistant().subscribe {
+                    Log.d(TAG, "initAction: $it")
+                }
+            )
+
+        }
     }
 
     private fun handleSearchResult(autoCompleteView: SearchView.SearchAutoComplete?): (t: DataState<Map<String, List<SearchForText.SearchResult>>>) -> Unit =

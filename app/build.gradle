@@ -131,6 +131,7 @@ dependencies {
     implementation project(":football")
     implementation project(":autoupdate")
     implementation project(':resources')
+    implementation project(":voiceselector")
     implementation otherLibs.values()
     implementation rxJavaDependencies.values()
 
