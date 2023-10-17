@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android" android:enterFadeDuration="200" android:exitFadeDuration="200">
-    <item android:drawable="@drawable/base_background_btn_circle_focused" android:state_focused="true" />
-    <item android:drawable="@drawable/base_background_btn_circle_focused" />
+    <item android:drawable="@drawable/ic_scheduler_list_focused" android:state_focused="true" />
+    <item android:drawable="@drawable/ic_scheduler_list" />
 </selector>

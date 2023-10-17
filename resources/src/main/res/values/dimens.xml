@@ -4,6 +4,8 @@
     <dimen name="nav_spacing_between">20dp</dimen>
     <dimen name="leanback_active_bar_height_seek_bark">10dp</dimen>
     <dimen name="leanback_active_bar_radius_seek_bark">8dp</dimen>
+    <dimen name="btn_size_large">50dp</dimen>
+    <dimen name="btn_size_medium">24dp</dimen>
 
     <dimen name="splashscreen_icon_mask_size_no_background">410dp</dimen>
     <dimen name="splashscreen_icon_mask_size_with_background">342dp</dimen>

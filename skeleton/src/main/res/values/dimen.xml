@@ -7,6 +7,7 @@
     <dimen name="text_size_large">17sp</dimen>
 
     <dimen name="padding_0dp">0dp</dimen>
+    <dimen name="common_padding_8dp">8dp</dimen>
     <dimen name="common_padding">16dp</dimen>
     <dimen name="large_padding">24dp</dimen>
     <dimen name="very_large_padding">32dp</dimen>

@@ -48,7 +48,7 @@
     </style>
 
     <style name="BaseGridViewStyle.NoPadding" parent="BaseGridViewStyle">
-        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingTop">0dp</item>
         <item name="android:paddingStart">0dp</item>
         <item name="android:paddingEnd">0dp</item>
         <item name="android:paddingBottom">0dp</item>
@@ -145,6 +145,16 @@
 <!--        <item name="cornerRadius">50%</item>-->
     </style>
 
+    <style name="PlaybackControlButton">
+        <item name="android:layout_width">@dimen/btn_size_large</item>
+        <item name="android:layout_height">@dimen/btn_size_large</item>
+        <item name="android:background">@drawable/base_background_btn_circle_focused</item>
+        <item name="android:backgroundTint">@color/color_background_selector</item>
+        <item name="android:padding">13dp</item>
+        <item name="android:theme">@style/Theme.AppCompat</item>
+        <item name="tint">@color/color_ic_tint_w_state</item>
+        <item name="android:focusable">true</item>
+    </style>
 
 
 </resources>
