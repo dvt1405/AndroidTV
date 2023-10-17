@@ -23,6 +23,7 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logStreamingTV
 import com.kt.apps.core.utils.expandUrl
 import com.kt.apps.core.utils.isShortLink
+import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -57,7 +58,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
     private val extension: ExtensionsConfig by lazy {
         requireArguments().getParcelable(EXTRA_EXTENSION_ID)!!
     }
-
+    override var allowDpadUpToOpenSearch = BuildConfig.isBeta
     override fun getSearchFilter(): String {
         return extension.sourceUrl
     }
