@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.multidex.MultiDex
 import androidx.work.Configuration
+import androidx.work.WorkManager
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.initialize
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -24,6 +25,7 @@ abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks, Config
     override fun onCreate() {
         super.onCreate()
         app = this
+
         Firebase.initialize(this)
         Firebase.remoteConfig
             .setDefaultsAsync(mapOf(

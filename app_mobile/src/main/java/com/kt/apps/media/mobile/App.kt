@@ -16,7 +16,9 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVChannelModule
 import com.kt.apps.core.tv.di.TVComponents
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.workers.TVEpgWorkers
+import com.kt.apps.core.workers.factory.MyWorkerFactory
 import com.kt.apps.football.di.DaggerFootballComponents
 import com.kt.apps.football.di.FootballComponents
 import com.kt.apps.media.mobile.di.AppComponents
@@ -68,6 +70,7 @@ class App : CoreApp(), Configuration.Provider {
     @Inject
     lateinit var workManager: WorkManager
 
+
     override fun onCreate() {
         super.onCreate()
         app = this
@@ -76,23 +79,22 @@ class App : CoreApp(), Configuration.Provider {
 
     override fun onRemoteConfigReady() {
         if (BuildConfig.isBeta) enqueuePreloadData()
-//        workManager.enqueueUniquePeriodicWork(
-//            "RefreshEpgData",
-//            ExistingPeriodicWorkPolicy.KEEP,
-//            if (BuildConfig.DEBUG) {
-//                PeriodicWorkRequestBuilder<TVEpgWorkers>(15, TimeUnit.MINUTES)
-//            } else {
-//                PeriodicWorkRequestBuilder<TVEpgWorkers>(1, TimeUnit.HOURS)
-//            }.setInputData(
-//                Data.Builder()
-//                    .putString(
-//                        TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig
-//                            .getString("epg_url").ifEmpty {
-//                                "http://lichphatsong.xyz/schedule/vthanhtivi_epg.xml"
-//                            })
-//                    .build()
-//            ).build()
-//        )
+        workManager.enqueueUniquePeriodicWork(
+            "RefreshEpgData",
+            ExistingPeriodicWorkPolicy.KEEP,
+            if (BuildConfig.DEBUG) {
+                PeriodicWorkRequestBuilder<TVEpgWorkers>(15, TimeUnit.MINUTES)
+            } else {
+                PeriodicWorkRequestBuilder<TVEpgWorkers>(1, TimeUnit.HOURS)
+            }.setInputData(
+                Data.Builder()
+                    .putString(TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig
+                        .getString("epg_url").ifEmpty {
+                            "http://lichphatsong.xyz/schedule/vthanhtivi_epg.xml"
+                        })
+                    .build()
+            ).build()
+        )
     }
 
     override fun onLowMemory() {
@@ -151,11 +153,12 @@ class App : CoreApp(), Configuration.Provider {
     override fun getWorkManagerConfiguration(): Configuration {
         return Configuration.Builder()
             .setDefaultProcessName("com.kt.apps")
+            .setWorkerFactory(appComponents.workerFactory())
             .build()
     }
 
     private fun enqueuePreloadData() {
-        workManager.enqueue(OneTimeWorkRequestBuilder<PreloadDataWorker>()
+        workManager.enqueue(OneTimeWorkRequestBuilder<com.kt.apps.core.workers.PreloadDataWorker>()
             .build())
     }
 

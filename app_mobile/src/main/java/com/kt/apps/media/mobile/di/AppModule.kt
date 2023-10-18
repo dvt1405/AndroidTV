@@ -1,10 +1,12 @@
 package com.kt.apps.media.mobile.di
 
 import android.content.Context
+import androidx.work.Configuration
 import androidx.work.WorkManager
 import com.kt.apps.core.logging.ActionLoggerFactory
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.tv.di.TVScope
+import com.kt.apps.core.workers.factory.MyWorkerFactory
 import com.kt.apps.media.mobile.logger.MobileActionLoggerImpl
 import dagger.Module
 import dagger.Provides
