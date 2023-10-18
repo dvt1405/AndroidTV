@@ -11,6 +11,7 @@
         android:layout_width="@dimen/app_icon_size"
         android:layout_height="@dimen/app_icon_size"
         app:shapeAppearanceOverlay="@style/CircleImageView"
+        android:src="@drawable/ic_radio"
 
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/desc_container"
@@ -34,12 +35,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.Label"
+            tools:text="ANDROID_TV"
             />
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.LabelSmall"
+            android:textColor="@color/sub_text_color"
+            tools:text="ANDROID_TV"
             />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

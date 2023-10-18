@@ -34,7 +34,7 @@
                     android:text="@string/voice_selector_desc"
                     android:textAppearance="@style/TextAppearance.Medium"
                     android:textAlignment="center"
-                    android:layout_marginTop="@dimen/dialog_base_padding"
+                    android:textColor="@color/sub_text_color"
                     />
             </LinearLayout>
             <com.kt.apps.voiceselector.AppItemView
@@ -59,30 +59,30 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/always"
-                    android:theme="@style/Theme.MaterialComponents"
-                    android:textColor="@color/install_btn"
                     android:minHeight="0dp"
                     android:minWidth="0dp"
                     android:textSize="14sp"
                     android:layout_gravity="end"
                     android:layout_marginEnd="@dimen/dialog_base_padding"
-                    android:background="@drawable/btn_outline_focused_background"
                     android:padding="12dp"
+                    android:textColor="@color/install_btn"
+                    android:theme="@style/Theme.AppCompat"
+                    android:background="?android:attr/selectableItemBackground"
                     />
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/use_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/use"
-                    android:theme="@style/Theme.MaterialComponents"
                     android:textColor="@color/install_btn"
                     android:minHeight="0dp"
                     android:minWidth="0dp"
                     android:textSize="14sp"
                     android:layout_gravity="end"
                     android:layout_marginEnd="@dimen/dialog_base_padding"
-                    android:background="@drawable/btn_outline_focused_background"
                     android:padding="12dp"
+                    android:theme="@style/Theme.AppCompat"
+                    android:background="?android:attr/selectableItemBackground"
                     />
             </LinearLayout>
             <View
@@ -91,7 +91,7 @@
                 android:background="#54FFFFFF"
                 android:layout_marginTop="4dp"
                 />
-            <androidx.appcompat.widget.AppCompatButton
+            <com.google.android.material.textview.MaterialTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/others_desc"
@@ -99,7 +99,7 @@
 
                 android:paddingVertical="@dimen/dialog_padding_8dp"
                 android:paddingHorizontal="@dimen/dialog_base_padding"
-                android:background="@drawable/btn_outline_focused_background"
+                android:textStyle="bold"
                 />
             <com.kt.apps.voiceselector.AppItemView
                 android:id="@+id/voice_app_item"
@@ -115,15 +115,15 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/install"
-                android:theme="@style/Theme.MaterialComponents"
                 android:textColor="@color/install_btn"
                 android:minHeight="0dp"
                 android:minWidth="0dp"
                 android:textSize="14sp"
                 android:layout_gravity="end"
                 android:layout_marginEnd="@dimen/dialog_base_padding"
-                android:background="@drawable/btn_outline_focused_background"
                 android:padding="12dp"
+                android:theme="@style/Theme.AppCompat"
+                android:background="?android:attr/selectableItemBackground"
                 />
         </LinearLayout>
     </ScrollView>

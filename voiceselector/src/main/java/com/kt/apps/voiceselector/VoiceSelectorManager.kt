@@ -104,16 +104,11 @@ class VoiceSelectorManager @Inject constructor(
             return
         }
         state = State.LaunchIntent
+        
         app.applicationContext.startActivity(launchIntent.apply {
             data = Uri.parse(voicePackage.launchData)
+            putExtra(EXTRA_CALLING_PACKAGE, app.packageName)
         })
-//        app.applicationContext.startActivity(
-//            Intent(ACTION_VIEW).apply {
-//                data = Uri.parse("kikiassistant://tv")
-//                flags = FLAG_ACTIVITY_NEW_TASK
-//            }
-//        )
-
     }
 
     private fun tryDeepLink(): Boolean {
@@ -122,6 +117,7 @@ class VoiceSelectorManager @Inject constructor(
                 Intent(voicePackage.action).apply {
                     data = Uri.parse(voicePackage.launchData)
                     flags = FLAG_ACTIVITY_NEW_TASK
+                    putExtra(EXTRA_CALLING_PACKAGE, app.packageName)
                 }
             )
             true
@@ -212,6 +208,7 @@ class VoiceSelectorManager @Inject constructor(
     companion object {
         private const val GG_LAST_TIME = "key:GG_LAST_TIME"
         private const val GG_ALWAYS = "key:GG_ALWAYS"
+        private const val EXTRA_CALLING_PACKAGE = "calling_package_name"
     }
 }
 
