@@ -2,8 +2,11 @@ package com.kt.apps.media.mobile.di
 
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import com.kt.apps.core.logging.ActionLoggerFactory
+import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.R
+import com.kt.apps.media.mobile.logger.MobileActionLoggerImpl
 import com.kt.apps.voiceselector.di.VoiceSelectorModule
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
 import com.kt.apps.voiceselector.models.VoicePackage
@@ -20,4 +23,5 @@ class MobileVoiceSelectorModule: VoiceSelectorModule() {
         "Trợ lý giọng nói Kiki",
         "Điều khiển thiết bị, tìm kiếm nội dung bằng tiếng Việt từ bất kỳ đâu"
     )
+
 }

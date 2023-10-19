@@ -1,6 +1,7 @@
 package com.kt.apps.core.logging
 
 import android.os.Bundle
+import android.util.Log
 import com.google.firebase.analytics.FirebaseAnalytics
 import javax.inject.Inject
 

@@ -9,10 +9,13 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.kt.apps.core.base.BaseBottomSheetDialogFragment
+import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.voiceselector.R
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.databinding.FragmentGgVoiceSelectorBinding
 import com.kt.apps.voiceselector.databinding.FragmentVoiceSelectorDialogBinding
+import com.kt.apps.voiceselector.log.VoiceSelectorLog
+import com.kt.apps.voiceselector.log.logVoiceSelector
 import com.kt.apps.voiceselector.models.VoicePackage
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -32,6 +35,9 @@ class GGVoiceSelectorFragment : BaseBottomSheetDialogFragment<FragmentGgVoiceSel
     @Inject
     lateinit var voiceSelectorManager: VoiceSelectorManager
 
+    @Inject
+    lateinit var logger: IActionLogger
+
     override val resLayout: Int = R.layout.fragment_gg_voice_selector
 
     override fun getTheme(): Int = R.style.BottomSheetDialog
@@ -44,15 +50,20 @@ class GGVoiceSelectorFragment : BaseBottomSheetDialogFragment<FragmentGgVoiceSel
         binding.voiceAppItem.descriptionValue = voicePackage.description
         arrayListOf(binding.voiceAppItem, binding.installBtn).forEach {
             it.setOnClickListener {
+                logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchSelectInstallKiki)
                 voiceSelectorManager.launchVoicePackageStore()
                 dismiss()
             }
         }
         arrayListOf(binding.ggAssistant, binding.useBtn).forEach {
-            it.setOnClickListener { useGGAssistant() }
+            it.setOnClickListener {
+                logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchSelectGGOneTime)
+                useGGAssistant()
+            }
         }
 
         binding.alwaysBtn.setOnClickListener {
+            logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchSelectGGAlways)
             voiceSelectorManager.turnOnAlwaysGG()
             useGGAssistant()
         }

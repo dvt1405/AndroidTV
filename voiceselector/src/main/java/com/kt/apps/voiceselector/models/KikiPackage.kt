@@ -2,6 +2,7 @@ package com.kt.apps.voiceselector.models
 
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.os.Bundle
 import androidx.annotation.DrawableRes
 
 data class VoicePackage(

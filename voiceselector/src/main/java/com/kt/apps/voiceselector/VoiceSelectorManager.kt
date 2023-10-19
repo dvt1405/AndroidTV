@@ -3,17 +3,21 @@ package com.kt.apps.voiceselector
 import android.app.Activity
 import android.app.Application
 import android.content.Intent
-import android.content.Intent.ACTION_VIEW
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.core.content.edit
+import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentActivity
 import com.kt.apps.core.base.CoreApp
+import com.kt.apps.core.logging.FirebaseActionLoggerImpl
+import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
+import com.kt.apps.voiceselector.log.VoiceSelectorLog
+import com.kt.apps.voiceselector.log.logVoiceSelector
 import com.kt.apps.voiceselector.models.Event
 import com.kt.apps.voiceselector.models.State
 import com.kt.apps.voiceselector.models.VoicePackage
@@ -43,11 +47,11 @@ class VoiceSelectorManager @Inject constructor(
     private val interactor: VoiceSelectorInteractor,
     private val voicePackage: VoicePackage,
     private val app: CoreApp,
-    private val sharedPreferences: SharedPreferences
+    private val sharedPreferences: SharedPreferences,
+    private val logger: FirebaseActionLoggerImpl
 ) {
     private lateinit var lastActivity: WeakReference<Activity>
 
-    private var _cacheLastLaunchIntent: VoiceInputInfo? = null
     private val _event: PublishSubject<Event> = PublishSubject.create()
     private var _state: State = State.IDLE
     var state: State
@@ -64,6 +68,7 @@ class VoiceSelectorManager @Inject constructor(
 
             override fun onActivityResumed(activity: Activity) {
                 _state = State.IDLE
+                VoiceSelectorLog.cachedExtraData = bundleOf()
                 if (activity is VoiceSearchActivity) {
                     return
                 }
@@ -82,29 +87,30 @@ class VoiceSelectorManager @Inject constructor(
     private fun queryAndExecute(): Maybe<VoiceInputInfo?> {
         return interactor.checkVoiceInput()
             .doOnSuccess {
-                _cacheLastLaunchIntent = it
                 executeFetchedData(it)
             }
     }
-    fun openVoiceAssistant(): Maybe<Boolean> {
+    fun openVoiceAssistant(extraData: Bundle = bundleOf()): Maybe<Boolean> {
         Log.d(TAG, "openVoiceAssistant: ")
-        val lastInfor = _cacheLastLaunchIntent
+        VoiceSelectorLog.cachedExtraData = bundleOf()
         return queryAndExecute()
             .map { it.appInfo != null }
+            .doOnDispose {
+                VoiceSelectorLog.cachedExtraData = bundleOf()
+            }
     }
 
     private fun executeFetchedData(infor: VoiceInputInfo?) {
-//        Log.d(TAG, "presentSelectorDialog: $infor")
         val appInfor = infor?.appInfo ?: kotlin.run {
-            presentSelector(infor)
+            presentSelector()
             return
         }
         val launchIntent = appInfor.launchIntent ?: kotlin.run {
-            presentSelector(infor)
+            presentSelector()
             return
         }
         state = State.LaunchIntent
-        
+        logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchStartKikiAuto)
         app.applicationContext.startActivity(launchIntent.apply {
             data = Uri.parse(voicePackage.launchData)
             putExtra(EXTRA_CALLING_PACKAGE, app.packageName)
@@ -120,6 +126,7 @@ class VoiceSelectorManager @Inject constructor(
                     putExtra(EXTRA_CALLING_PACKAGE, app.packageName)
                 }
             )
+            logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchStartKikiAuto)
             true
         } catch (t: Throwable) {
             Log.d(TAG, "tryDeepLink: $t")
@@ -127,25 +134,30 @@ class VoiceSelectorManager @Inject constructor(
         }
     }
 
-    private fun presentSelector(infor: VoiceInputInfo?) {
+    private fun presentSelector() {
         if (tryDeepLink()) {
             return
         }
-        val activity = if (this::lastActivity.isInitialized) {
-            lastActivity.get() as? FragmentActivity
+
+        val activity: FragmentActivity = if (this::lastActivity.isInitialized && lastActivity.get() is FragmentActivity) {
+            lastActivity.get() as FragmentActivity
         } else {
-            return
-        } ?: return
+            throw Throwable("Can't attach activity")
+        }
 
         if (sharedPreferences.getBoolean(GG_ALWAYS, false)) {
+            logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchStartGGAuto)
+
             voiceGGSearch()
         } else if (sharedPreferences.getBoolean(GG_LAST_TIME, false)) {
             val modal = GGVoiceSelectorFragment.newInstance()
             state = State.ShowDialog
+            logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchShowDialog)
             modal.show(activity.supportFragmentManager, GGVoiceSelectorFragment.TAG)
         } else {
             state = State.ShowDialog
             val modal = VoicePackageInstallDialogFragment.newInstance()
+            logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchShowDialog)
             modal.show(activity.supportFragmentManager, VoicePackageInstallDialogFragment.TAG)
         }
 

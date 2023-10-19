@@ -8,10 +8,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.doOnPreDraw
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.kt.apps.core.base.BaseBottomSheetDialogFragment
+import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.voiceselector.R
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.databinding.FragmentVoiceSelectorDialogBinding
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
+import com.kt.apps.voiceselector.log.VoiceSelectorLog
+import com.kt.apps.voiceselector.log.logVoiceSelector
 import com.kt.apps.voiceselector.models.VoicePackage
 import dagger.android.AndroidInjection
 import dagger.android.AndroidInjector
@@ -39,6 +42,9 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
 
     @Inject
     lateinit var voiceSelectorManager: VoiceSelectorManager
+
+    @Inject
+    lateinit var logger: IActionLogger
     override val resLayout: Int
         get() = R.layout.fragment_voice_selector_dialog
 
@@ -58,6 +64,7 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
 
         arrayListOf(binding.installBtn, binding.voiceAppItem).forEach {
             it.setOnClickListener {
+                logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchSelectInstallKiki)
                 voiceSelectorManager.launchVoicePackageStore()
                 dismiss()
             }
@@ -65,6 +72,7 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
         }
 
         binding.ggAssistant.setOnClickListener {
+            logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchSelectGGOneTime)
             voiceSelectorManager.voiceGGSearch()
             dismiss()
         }
