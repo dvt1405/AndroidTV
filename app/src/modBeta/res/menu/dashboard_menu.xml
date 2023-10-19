@@ -3,7 +3,7 @@
     <item
         android:id="@+id/search"
         android:enabled="true"
-        android:icon="@drawable/ic_search_24p"
+        android:icon="@drawable/ic_search"
         android:title="@string/nav_search_title"
         android:visible="true" />
 
@@ -35,7 +35,7 @@
     <item
         android:id="@+id/extension"
         android:enabled="true"
-        android:icon="@drawable/iptv"
+        android:icon="@drawable/ic_iptv"
         android:title="@string/nav_iptv_title"
         android:visible="true" />
 

@@ -10,7 +10,7 @@
     <item
         android:id="@+id/extension"
         android:enabled="true"
-        android:icon="@drawable/iptv"
+        android:icon="@drawable/ic_iptv"
         android:title="IPTV"
         android:visible="true" />
     <item

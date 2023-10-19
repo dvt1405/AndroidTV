@@ -3,7 +3,7 @@
     <item
         android:id="@+id/search"
         android:enabled="true"
-        android:icon="@drawable/ic_search_24p"
+        android:icon="@drawable/ic_search"
         android:title="Tìm kiếm"
         android:visible="true" />
 
@@ -22,7 +22,7 @@
     <item
         android:id="@+id/more"
         android:enabled="true"
-        android:icon="@drawable/lb_ic_more"
+        android:icon="@drawable/ic_more"
         android:title="Thêm"
         />
 

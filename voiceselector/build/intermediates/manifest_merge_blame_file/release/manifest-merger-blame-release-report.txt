@@ -1,0 +1,56 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    xmlns:tools="http://schemas.android.com/tools"
+4    package="com.kt.apps.voiceselector" >
+5
+6    <uses-sdk android:minSdkVersion="21" />
+6-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml
+7
+8    <queries>
+8-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:5:5-16:15
+9        <intent>
+9-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:6:9-10:18
+10            <action android:name="android.intent.action.MAIN" />
+10-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:7:13-65
+10-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:7:21-62
+11
+12            <category android:name="android.intent.category.LAUNCHER" />
+12-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:9:13-73
+12-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:9:23-70
+13        </intent>
+14        <intent>
+14-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:11:9-15:18
+15            <action android:name="android.intent.action.MAIN" />
+15-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:7:13-65
+15-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:7:21-62
+16
+17            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+17-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:14:13-82
+17-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:14:23-79
+18        </intent>
+19    </queries>
+20
+21    <application>
+21-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:18:5-30:19
+22        <activity
+22-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:19:9-29:20
+23            android:name="com.kt.apps.voiceselector.ui.VoiceSearchActivity"
+23-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:20:13-51
+24            android:exported="true"
+24-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:21:13-36
+25            android:theme="@style/Theme.Transparent" >
+25-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:22:13-53
+26            <intent-filter>
+26-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:24:13-28:29
+27                <action android:name="android.intent.action.MAIN" />
+27-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:7:13-65
+27-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:7:21-62
+28
+29                <category android:name="android.intent.category.LAUNCHER" />
+29-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:9:13-73
+29-->/Volumes/external/Projects/AndroidTV/voiceselector/src/main/AndroidManifest.xml:9:23-70
+30            </intent-filter>
+31        </activity>
+32    </application>
+33
+34</manifest>

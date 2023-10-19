@@ -51,7 +51,7 @@
                 android:layout_gravity="center"
                 android:alpha="0.15"
                 android:theme="@style/Theme.AppCompat"
-                android:src="@drawable/ic_search_24p"
+                android:src="@drawable/ic_search"
                 android:visibility="visible" />
 
             <com.kt.apps.core.base.leanback.VerticalGridView

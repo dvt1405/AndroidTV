@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:paddingHorizontal="@dimen/dialog_base_padding"
+    android:paddingVertical="@dimen/dialog_padding_8dp">
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/app_icon"
+        android:layout_width="@dimen/app_icon_size"
+        android:layout_height="@dimen/app_icon_size"
+        app:shapeAppearanceOverlay="@style/CircleImageView"
+        android:src="@drawable/ic_radio"
+
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/desc_container"
+        app:layout_constraintBottom_toBottomOf="@+id/desc_container"
+        />
+    <LinearLayout
+        android:id="@+id/desc_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginStart="@dimen/dialog_base_padding"
+        android:paddingVertical="@dimen/dialog_base_padding"
+
+        app:layout_constraintStart_toEndOf="@+id/app_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+
+        >
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.Label"
+            tools:text="ANDROID_TV"
+            />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.LabelSmall"
+            android:textColor="@color/sub_text_color"
+            tools:text="ANDROID_TV"
+            />
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

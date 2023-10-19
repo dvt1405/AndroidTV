@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#444444</color>
+    <color name="gray_400">#FFBDBDBD</color>
+    <color name="gray_600">#FF757575</color>
+    <color name="install_btn">#00E0FF</color>
+    <color name="light_blue_400">#FF29B6F6</color>
+    <color name="light_blue_600">#FF039BE5</color>
+    <color name="sub_text_color">#BFFFFFFF</color>
+    <dimen name="app_icon_size">32dp</dimen>
+    <dimen name="dialog_base_padding">16dp</dimen>
+    <dimen name="dialog_padding_8dp">8dp</dimen>
+    <dimen name="font_size_body">18sp</dimen>
+    <dimen name="font_size_label">14sp</dimen>
+    <dimen name="font_size_label_small">11sp</dimen>
+    <dimen name="font_size_medium">12sp</dimen>
+    <dimen name="list_item_spacing">16dp</dimen>
+    <dimen name="list_item_spacing_half">8dp</dimen>
+    <string name="always">Luôn luôn</string>
+    <string name="gg_assistant_desc">TÌm kiếm nội dung trong ứng dụng</string>
+    <string name="gg_assistant_title">Nhập bằng giọng nói Google</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="install">Cài đặt</string>
+    <string name="others_desc">Sử dụng ứng dụng khác</string>
+    <string name="use">Sử dụng</string>
+    <string name="voice_control_title">Điều khiển bằng giọng nói</string>
+    <string name="voice_selector_desc">Chọn phương thức bạn muốn sử dụng</string>
+    <style name="BottomSheetDialog" parent="@style/ThemeOverlay.MaterialComponents.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/ModalBottomSheetDialog</item>
+    </style>
+    <style name="ModalBottomSheetDialog" parent="Widget.MaterialComponents.BottomSheet.Modal">
+        <item name="backgroundTint">@color/background</item>
+    </style>
+    <style name="TextAppearance.Body" parent="TextAppearance.Default">
+        <item name="android:textSize">@dimen/font_size_body</item>
+    </style>
+    <style name="TextAppearance.Default" parent="">
+        <item name="android:textColor">@color/white</item>
+    </style>
+    <style name="TextAppearance.Label" parent="TextAppearance.Default">
+        <item name="android:textSize">@dimen/font_size_label</item>
+    </style>
+    <style name="TextAppearance.LabelSmall" parent="TextAppearance.Default">
+        <item name="android:textSize">@dimen/font_size_label_small</item>
+    </style>
+    <style name="TextAppearance.Medium" parent="TextAppearance.Default">
+        <item name="android:textSize">@dimen/font_size_medium</item>
+    </style>
+    <style name="Theme.Transparent" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+    <declare-styleable name="AppItemView">
+        <attr format="reference" name="icon_logo"/>
+        <attr format="string" name="title"/>
+        <attr format="string" name="description"/>
+    </declare-styleable>
+</resources>

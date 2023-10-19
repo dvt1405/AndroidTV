@@ -20,7 +20,7 @@
                 <ImageView
                     android:layout_width="160dp"
                     android:layout_height="160dp"
-                    android:src="@drawable/ic_search_24p"
+                    android:src="@drawable/ic_search"
                     android:layout_gravity="center"
                     app:tint="@color/box_stroke_color"
                     android:alpha="0.25"

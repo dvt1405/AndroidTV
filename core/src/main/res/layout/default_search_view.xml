@@ -43,7 +43,7 @@
             android:layout_marginStart="16dp"
             android:focusable="false"
             android:scaleType="centerInside"
-            android:src="@drawable/ic_search_24p"
+            android:src="@drawable/ic_search"
             android:visibility="visible"
             tools:visibility="visible" />
 

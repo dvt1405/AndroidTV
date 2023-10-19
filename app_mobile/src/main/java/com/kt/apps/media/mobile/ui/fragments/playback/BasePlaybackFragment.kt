@@ -226,7 +226,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         favoriteButton?.gone()
         Log.d(TAG, "favoriteButton?.invisible(): ${Thread.currentThread()}")
 
-        informationButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.core.R.drawable.ic_round_error_outline_24, context?.theme)
+        informationButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_outline_info_24, context?.theme)
         informationButton?.setOnClickListener { showInformationDialog() }
         informationButton?.inVisible()
 
@@ -242,7 +242,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }, context?.theme)
 
         fullScreenButton?.visibility = View.VISIBLE
-        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_fullscreen_exit, context?.theme))
 
         aspectRatioButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_aspect_ratio, context?.theme))
         aspectRatioButton?.setOnClickListener { changeNextResizeMode() }
@@ -712,7 +712,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
     private fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
-        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_fullscreen_exit, context?.theme))
         exoPlayer?.apply {
             useController = true
             controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
@@ -739,7 +739,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
 
     private fun changeMinimalLayout() {
-        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_enter, context?.theme))
+        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_fullscreen_enter, context?.theme))
         if (isLandscape) {
             exoPlayer?.apply {
                 hideController()

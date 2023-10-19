@@ -481,13 +481,13 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
         }
         private val defaultPagesIcon by lazy {
             mapOf(
-                DashboardPageRowFactory.ROW_SEARCH to R.drawable.ic_search_24p,
+                DashboardPageRowFactory.ROW_SEARCH to com.kt.apps.resources.R.drawable.ic_search,
                 DashboardPageRowFactory.ROW_FAVORITE to com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24,
-                DashboardPageRowFactory.ROW_TV to R.drawable.ic_tv,
+                DashboardPageRowFactory.ROW_TV to com.kt.apps.resources.R.drawable.ic_tv,
                 DashboardPageRowFactory.ROW_FOOTBALL to R.drawable.ic_soccer_ball,
-                DashboardPageRowFactory.ROW_RADIO to R.drawable.ic_radio,
+                DashboardPageRowFactory.ROW_RADIO to com.kt.apps.resources.R.drawable.ic_radio,
                 DashboardPageRowFactory.ROW_ADD_EXTENSION to com.kt.apps.media.xemtv.R.drawable.round_add_circle_outline_24,
-                DashboardPageRowFactory.ROW_IPTV to R.drawable.iptv,
+                DashboardPageRowFactory.ROW_IPTV to com.kt.apps.resources.R.drawable.ic_iptv,
                 DashboardPageRowFactory.ROW_INFO to R.drawable.ic_outline_info_24,
             )
         }

@@ -20,7 +20,7 @@
             android:theme="@style/TextInputLayout"
 
             android:textColorHint="@color/edittext_border"
-            app:startIconDrawable="@drawable/ic_search_24p"
+            app:startIconDrawable="@drawable/ic_search"
             app:startIconTint="@color/white"
             app:endIconMode="clear_text"
             app:endIconDrawable="@drawable/ic_clear_24"
