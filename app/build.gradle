@@ -9,15 +9,14 @@ plugins {
 
 android {
     namespace 'com.kt.apps.media.xemtv'
-    compileSdk 33
-    def version_name = "23.10.01"
+    compileSdk extCompileSdkVersion.tv
 
     defaultConfig {
         applicationId "com.kt.apps.media.xemtv"
-        minSdk 26
-        targetSdk 33
-        versionCode 23100801
-        versionName version_name
+        minSdk extMinSdkVersion.tv
+        targetSdk extCompileSdkVersion.tv
+        versionCode extVersionCode.tv
+        versionName extVersionName.tv
         setProperty("archivesBaseName", "iMedia.$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -67,7 +66,7 @@ android {
         apkPure {
             dimension "version"
             applicationId "com.kt.apps.media.xemtv.beta"
-            versionName "${version_name}.B"
+            versionName "${extVersionName.tv}.B"
             buildConfigField "boolean", "isBeta", "true"
         }
     }

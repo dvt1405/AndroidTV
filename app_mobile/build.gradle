@@ -9,14 +9,14 @@ plugins {
 
 android {
     namespace 'com.kt.apps.media.mobile'
-    compileSdk 33
+    compileSdk extCompileSdkVersion.mobile
 
     defaultConfig {
         applicationId "com.kt.apps.media.mobile.xemtv"
-        minSdk 21
-        targetSdk 33
-        versionCode 23101501
-        versionName "Mobile.23.10.02"
+        minSdk extMinSdkVersion.mobile
+        targetSdk extCompileSdkVersion.mobile
+        versionCode extVersionCode.mobile
+        versionName extVersionName.mobile
         setProperty("archivesBaseName", "iMedia.$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
