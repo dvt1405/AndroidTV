@@ -25,6 +25,7 @@ import androidx.transition.AutoTransition
 import androidx.transition.Fade
 import androidx.transition.Transition
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.Format
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
@@ -184,7 +185,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     protected var lastPlayerControllerConfig: PlayerControllerConfig = PlayerControllerConfig(true, 3000)
 
-    private lateinit var informationDialog: AlertDialog
+    internal lateinit var informationDialog: AlertDialog
 
     private val channelListVisibility: Int
         get() {
@@ -462,75 +463,64 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         delay(250)
         callback?.onOpenFullScreen()
     }
+
+    open fun configInformationDialog(view: View) {
+        val player = exoPlayerManager.exoPlayer ?: return
+        view.apply {
+            findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
+                text = player.mediaMetadata.title
+            }
+            if (player.contentDuration < 120_000) {
+                findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.gone()
+                findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.gone()
+            } else {
+                findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.visible()
+                findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.apply {
+                    visible()
+                    val builder = StringBuilder()
+                    val formatter = Formatter(builder, Locale.getDefault())
+                    text = Util.getStringForTime(builder, formatter, player.contentDuration)
+                    setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
+                }
+            }
+            findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
+                "${player.videoSize.width}x${player.videoSize.height}"
+            findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
+            findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
+
+            if (player.videoFormat?.frameRate?.toInt() != Format.NO_VALUE) {
+                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
+            } else {
+                listOf(com.kt.apps.core.R.id.video_frame_rate, com.kt.apps.core.R.id.video_frame_rate_title)
+                    .mapNotNull { findViewById(it) }
+                    .forEach { it -> it.gone() }
+            }
+            findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
+                !it?.trim().isNullOrEmpty()
+            } ?: "NoValue"
+            
+            player.videoFormat?.colorInfo?.let { it.toString().trim() }.takeIf { !it.isNullOrEmpty() }?.run {
+                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = this
+            } ?: kotlin.run {
+                listOf(com.kt.apps.core.R.id.color_info, com.kt.apps.core.R.id.color_info_title)
+                    .mapNotNull { findViewById(it) }
+                    .forEach { it -> it.gone() }
+            }
+
+            this.findTextViewsInView().forEach {
+                it.apply {
+                    setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
+                }
+            }
+        }
+    }
     
     private fun showInformationDialog() {
         val player = exoPlayerManager.exoPlayer ?: return
-        val builder = MaterialAlertDialogBuilder(requireContext())
-            .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
-                findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
-                    text = player.mediaMetadata.title
-                }
-                if (player.contentDuration < 120_000) {
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.gone()
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.gone()
-                } else {
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.visible()
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.apply {
-                        visible()
-                        val builder = StringBuilder()
-                        val formatter = Formatter(builder, Locale.getDefault())
-                        text = Util.getStringForTime(builder, formatter, player.contentDuration)
-                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
-                    }
-                }
-                findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
-                    "${player.videoSize.width}x${player.videoSize.height}"
-                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
-                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
-                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
-                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
-                    !it?.trim().isNullOrEmpty()
-                } ?: "NoValue"
-
-                this.findTextViewsInView().forEach {
-                    it.apply {
-                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
-                    }
-                }
-            })
 
         informationDialog = MaterialAlertDialogBuilder(requireContext())
             .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
-                findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
-                    text = player.mediaMetadata.title
-                }
-                if (player.contentDuration < 120_000) {
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.gone()
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.gone()
-                } else {
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.visible()
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.apply {
-                        visible()
-                        val builder = StringBuilder()
-                        val formatter = Formatter(builder, Locale.getDefault())
-                        text = Util.getStringForTime(builder, formatter, player.contentDuration)
-                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
-                    }
-                }
-                findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
-                    "${player.videoSize.width}x${player.videoSize.height}"
-                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
-                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
-                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
-                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
-                    !it?.trim().isNullOrEmpty()
-                } ?: "NoValue"
-
-                this.findTextViewsInView().forEach {
-                    it.apply {
-                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
-                    }
-                }
+                configInformationDialog(this)
             })
             .setOnDismissListener {
                 (activity as? ComplexActivity)?.toggleHideSystemBar()

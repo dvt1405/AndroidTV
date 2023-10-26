@@ -22,6 +22,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.Format
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SeekParameters
@@ -241,7 +242,8 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         contentDurationView?.text = contentDuration
     }
 
-    private fun setCodecInfo(player: ExoPlayer) {
+    open fun setCodecInfo(player: ExoPlayer) {
+        val hidelist = mutableListOf<Int>()
         view?.findViewById<TextView>(R.id.video_title)?.text = player.mediaMetadata.title
         if (player.contentDuration < 120_000) {
             view?.findViewById<TextView>(R.id.video_duration)?.gone()
@@ -260,12 +262,25 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         }
         view?.findViewById<TextView>(R.id.video_resolution)?.text =
             "${player.videoSize.width}x${player.videoSize.height}"
-        view?.findViewById<TextView>(R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
+
+        player.videoFormat?.colorInfo?.run {
+            view?.findViewById<TextView>(R.id.color_info)?.text = "$this"
+        } ?: kotlin.run {
+            hidelist.addAll(listOf(R.id.color_info, R.id.color_info_title))
+        }
         view?.findViewById<TextView>(R.id.video_codec)?.text = player.videoFormat?.codecs
-        view?.findViewById<TextView>(R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
+        if (player.videoFormat?.frameRate?.toInt() != Format.NO_VALUE) {
+            view?.findViewById<TextView>(R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
+        } else {
+            hidelist.addAll(listOf(R.id.video_frame_rate, R.id.video_frame_rate_title))
+        }
+
         view?.findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
             !it?.trim().isNullOrEmpty()
         } ?: "NoValue"
+
+        hidelist.mapNotNull { view?.findViewById(it) }
+            .forEach { it.gone() }
     }
 
     open fun onPlayerPlaybackStateChanged(playbackState: Int) {

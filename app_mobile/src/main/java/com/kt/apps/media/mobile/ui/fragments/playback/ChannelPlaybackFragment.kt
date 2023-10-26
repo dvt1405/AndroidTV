@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.material.button.MaterialButton
+import com.kt.apps.core.utils.gone
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentPlaybackBinding
 import com.kt.apps.media.mobile.ui.view.ChannelListView
@@ -59,6 +60,7 @@ abstract class ChannelPlaybackFragment : BasePlaybackFragment<FragmentPlaybackBi
                 exoPlayer?.player?.play()
             }
         }
+
     }
     override fun initAction(savedInstanceState: Bundle?) {
         super.initAction(savedInstanceState)
@@ -73,6 +75,14 @@ abstract class ChannelPlaybackFragment : BasePlaybackFragment<FragmentPlaybackBi
                 }
             }
 
+        }
+    }
+
+    override fun configInformationDialog(view: View) {
+        super.configInformationDialog(view)
+        view.apply {
+            findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.gone()
+            findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.gone()
         }
     }
 

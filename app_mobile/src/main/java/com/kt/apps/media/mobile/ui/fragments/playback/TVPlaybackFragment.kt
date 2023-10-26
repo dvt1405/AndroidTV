@@ -301,6 +301,22 @@ class RadioPlaybackFragment: ChannelPlaybackFragment() {
         }
     }
 
+    override fun configInformationDialog(view: View) {
+        super.configInformationDialog(view)
+        view.apply {
+            listOf(
+                com.kt.apps.core.R.id.video_resolution,
+                com.kt.apps.core.R.id.video_resolution_title,
+                com.kt.apps.core.R.id.video_frame_rate,
+                com.kt.apps.core.R.id.video_frame_rate_title,
+                com.kt.apps.core.R.id.video_codec,
+                com.kt.apps.core.R.id.video_codec_title
+            )
+                .mapNotNull { findViewById(it) }
+                .forEach { it.gone() }
+        }
+    }
+
     companion object {
         const val screenName: String = "TVPlaybackFragment"
         private const val EXTRA_TV_CHANNEL = "extra:tv_channel"

@@ -10,6 +10,7 @@ import com.kt.apps.core.base.leanback.ArrayObjectAdapter
 import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import com.kt.apps.core.base.leanback.PresenterSelector
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackException
 import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.R
@@ -26,6 +27,7 @@ import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
 import com.kt.apps.core.usecase.search.SearchForText
+import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
@@ -375,6 +377,27 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                 it >= 0
             } ?: 0
         }
+
+    }
+
+    override fun setCodecInfo(player: ExoPlayer) {
+        super.setCodecInfo(player)
+//        val hideListId = mutableListOf(R.id.video_duration, R.id.video_duration_title)
+        val isRadio = tvChannelViewModel.lastWatchedChannel?.channel?.isRadio ?: false
+        if (isRadio) {
+            listOf(
+                R.id.video_resolution,
+                R.id.video_resolution_title,
+                R.id.video_frame_rate,
+                R.id.video_frame_rate_title,
+                R.id.video_codec,
+                R.id.video_codec_title
+            )
+        } else {
+            listOf(R.id.video_duration, R.id.video_duration_title)
+        }
+            .mapNotNull { view?.findViewById(it) }
+            .forEach { it.gone() }
 
     }
 
