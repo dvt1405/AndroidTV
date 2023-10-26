@@ -15,17 +15,13 @@
         </intent>
     </queries>
 
-    <application>
+    <application tools:node="merge">
         <activity
             android:name=".ui.VoiceSearchActivity"
-            android:exported="true"
+            android:exported="false"
             android:theme="@style/Theme.Transparent"
+            android:launchMode="singleInstance"
             >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 

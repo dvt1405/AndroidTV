@@ -1,14 +1,17 @@
 package com.kt.apps.voiceselector.ui
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.os.bundleOf
 import androidx.core.view.doOnPreDraw
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.kt.apps.core.base.BaseBottomSheetDialogFragment
 import com.kt.apps.core.logging.IActionLogger
+import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.voiceselector.R
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.databinding.FragmentVoiceSelectorDialogBinding
@@ -45,6 +48,8 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
 
     @Inject
     lateinit var logger: IActionLogger
+
+    private var installedVoicePackage: Intent? = null
     override val resLayout: Int
         get() = R.layout.fragment_voice_selector_dialog
 
@@ -55,6 +60,7 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
     }
     override fun initView(savedInstanceState: Bundle?) {
         setStyle(R.style.ModalBottomSheetDialog, theme)
+        installedVoicePackage = requireArguments().get(EXTRA_VOICE_PACKAGE_INTENT) as? Intent
         voicePackage.icon?.run {
             voiceAppItem.appIcon = ContextCompat.getDrawable(requireContext(), this)
         }
@@ -62,8 +68,22 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
         voiceAppItem.title = voicePackage.title
         voiceAppItem.descriptionValue = voicePackage.description
 
+        if (installedVoicePackage != null) {
+            binding.installBtn.text = resources.getString(R.string.use)
+        }
+
         arrayListOf(binding.installBtn, binding.voiceAppItem).forEach {
             it.setOnClickListener {
+                if (installedVoicePackage != null) {
+                    dismiss()
+                    try {
+                        voiceSelectorManager.launchVoiceIntent(installedVoicePackage!!)
+                    } catch (t: Throwable) {
+                        requireActivity().showErrorDialog(content = "Đã xảy ra lỗi vui lòng thử lại sau")
+                    }
+
+                    return@setOnClickListener
+                }
                 logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchSelectInstallKiki)
                 voiceSelectorManager.launchVoicePackageStore()
                 dismiss()
@@ -92,10 +112,8 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
 
     override fun onStart() {
         super.onStart()
-        bottomSheetBehavior.peekHeight = 0
-        view?.doOnPreDraw {
-            bottomSheetBehavior.peekHeight = requireView().measuredHeight - binding.ggAssistant.measuredHeight
-        }
+
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
         binding.installBtn.requestFocus()
     }
 
@@ -117,9 +135,12 @@ class VoicePackageInstallDialogFragment : BaseBottomSheetDialogFragment<Fragment
 
     }
     companion object {
-        fun newInstance(): VoicePackageInstallDialogFragment =
+        private const val EXTRA_VOICE_PACKAGE_INTENT = "extra:voice_intent"
+        fun newInstance(voiceIntent: Intent?): VoicePackageInstallDialogFragment =
             VoicePackageInstallDialogFragment().apply {
-
+                arguments = bundleOf(
+                    EXTRA_VOICE_PACKAGE_INTENT to voiceIntent
+                )
             }
 
     }

@@ -102,13 +102,20 @@ class VoiceSelectorManager @Inject constructor(
 
     private fun executeFetchedData(infor: VoiceInputInfo?) {
         val appInfor = infor?.appInfo ?: kotlin.run {
-            presentSelector()
+            presentSelector(null)
             return
         }
         val launchIntent = appInfor.launchIntent ?: kotlin.run {
-            presentSelector()
+            presentSelector(null)
             return
         }
+
+        if (!sharedPreferences.getBoolean(ACTIVE_VOICE_PACKAGE, false)) {
+            //1st time
+            presentSelector(infor)
+            return
+        }
+
         state = State.LaunchIntent
         logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchStartKikiAuto)
         app.applicationContext.startActivity(launchIntent.apply {
@@ -134,11 +141,7 @@ class VoiceSelectorManager @Inject constructor(
         }
     }
 
-    private fun presentSelector() {
-        if (tryDeepLink()) {
-            return
-        }
-
+    private fun presentSelector(infor: VoiceInputInfo?) {
         val activity: FragmentActivity = if (this::lastActivity.isInitialized && lastActivity.get() is FragmentActivity) {
             lastActivity.get() as FragmentActivity
         } else {
@@ -147,7 +150,6 @@ class VoiceSelectorManager @Inject constructor(
 
         if (sharedPreferences.getBoolean(GG_ALWAYS, false)) {
             logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchStartGGAuto)
-
             voiceGGSearch()
         } else if (sharedPreferences.getBoolean(GG_LAST_TIME, false)) {
             val modal = GGVoiceSelectorFragment.newInstance()
@@ -156,11 +158,24 @@ class VoiceSelectorManager @Inject constructor(
             modal.show(activity.supportFragmentManager, GGVoiceSelectorFragment.TAG)
         } else {
             state = State.ShowDialog
-            val modal = VoicePackageInstallDialogFragment.newInstance()
+            val modal = VoicePackageInstallDialogFragment.newInstance(infor?.appInfo?.launchIntent)
             logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchShowDialog)
             modal.show(activity.supportFragmentManager, VoicePackageInstallDialogFragment.TAG)
         }
 
+    }
+
+    fun launchVoiceIntent(intent: Intent) {
+        state = State.LaunchIntent
+        app.applicationContext.startActivity(intent.apply {
+            data = Uri.parse(voicePackage.launchData)
+            putExtra(EXTRA_CALLING_PACKAGE, app.packageName)
+        })
+        logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchStartKikiAuto)
+
+        sharedPreferences.edit(true) {
+            putBoolean(ACTIVE_VOICE_PACKAGE, true)
+        }
     }
 
     fun launchVoicePackageStore() {
@@ -220,6 +235,7 @@ class VoiceSelectorManager @Inject constructor(
     companion object {
         private const val GG_LAST_TIME = "key:GG_LAST_TIME"
         private const val GG_ALWAYS = "key:GG_ALWAYS"
+        private const val ACTIVE_VOICE_PACKAGE = "key:ACTIVE_VOICE"
         private const val EXTRA_CALLING_PACKAGE = "calling_package_name"
     }
 }

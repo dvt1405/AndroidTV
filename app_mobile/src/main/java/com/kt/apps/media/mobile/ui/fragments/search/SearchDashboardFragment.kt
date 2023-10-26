@@ -17,11 +17,13 @@ import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentSearchDashboardBinding
 import com.kt.apps.media.mobile.databinding.TextviewItemBinding
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.PaddingItemDecoration
+import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.showKeyboard
 import com.kt.apps.media.mobile.utils.textChanges
@@ -70,10 +72,15 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
 
         binding.voiceButton?.icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_voice_search)
         binding.voiceButton?.setOnClickListener {
-            lifecycleScope.launch {
+            lifecycleScope.launch(CoroutineExceptionHandler { _, throwable ->
+                showErrorDialog(content = resources.getString(R.string.error_happen))
+            }) {
                 viewModel.togglePerformVoiceSearch(false)
                 voiceSearchManager.openVoiceAssistant().toCoroutine()
-                viewModel.togglePerformVoiceSearch(true)
+            }.invokeOnCompletion {
+                lifecycleScope.launch {
+                    viewModel.togglePerformVoiceSearch(true)
+                }
             }
         }
     }
