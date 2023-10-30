@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -73,6 +74,16 @@ fun Fragment.showErrorDialog(
     successAlert.contentText = content
     successAlert.titleText = titleText
     successAlert.confirmText = confirmText
+    successAlert.showCancelButton(true)
+        .setCancelText(getString(com.kt.apps.resources.R.string.dialog_update_new_version_title))
+        .setCancelClickListener {
+            startActivity(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=com.kt.apps.media.xemtv")
+                )
+            )
+        }
     successAlert.setBackground(ColorDrawable(Color.TRANSPARENT))
     val oldForeground = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         this.view?.foreground
