@@ -2,6 +2,7 @@ package com.kt.apps.core.utils
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -159,6 +160,11 @@ fun Activity.showErrorDialog(
         successAlert.contentText = content
         successAlert.titleText = titleText
         successAlert.confirmText = confirmText
+        successAlert.showCancelButton(true)
+            .setCancelText(getString(com.kt.apps.resources.R.string.dialog_update_new_version_title))
+            .setCancelClickListener {
+                startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=$packageName")))
+            }
         successAlert.setBackground(ColorDrawable(Color.TRANSPARENT))
 
         successAlert.setOnDismissListener {

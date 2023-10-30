@@ -188,8 +188,7 @@
             <Button
                 android:id="@+id/cancel_button"
                 style="@style/dialog_blue_button"
-                android:layout_marginRight="25dp"
-                android:background="@drawable/red_button_background"
+                android:layout_marginRight="24dp"
                 android:visibility="gone"
                 tools:text="cancel"
                 tools:visibility="visible" />
@@ -207,7 +206,7 @@
             <Button
                 android:id="@+id/confirm_button"
                 style="@style/dialog_blue_button"
-                android:text="Ok"
+                android:text="OK"
                 android:focusableInTouchMode="?attr/sweet_alert_btn_confirm_default_focus"
                 android:focusable="?attr/sweet_alert_btn_confirm_default_focus"
                 android:focusedByDefault="?attr/sweet_alert_btn_confirm_default_focus"
