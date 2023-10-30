@@ -21,7 +21,7 @@ ext {
     ]
     extMinSdkVersion = [
             mobile: 21,
-            tv    : 26
+            tv    : 21
     ]
     buildVersionNameNumberInMonth = [
             mobile: 2,
