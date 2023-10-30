@@ -30,10 +30,18 @@
     <!--alpha: 20 percent-->
     <color name="white_dim_33_hex">#33FFFFFF</color>
     <color name="black_dim_33_hex">#33000000</color>
+    <!--alpha: 30 percent-->
+    <color name="white_dim_40_hex_30_percent">#40FFFFFF</color>
+    <color name="black_dim_40_hex_30_percent">#40000000</color>
     <!--alpha: 60 percent-->
     <color name="white_dim_99_hex">#99FFFFFF</color>
     <color name="black_dim_99_hex">#99000000</color>
+    <!--alpha: 70 percent-->
+    <color name="white_dim_B3_hex_70_percent">#B3FFFFFF</color>
+    <color name="black_dim_B3_hex_70_percent">#B3000000</color>
     <!--alpha: 80 percent-->
     <color name="white_dim_dd_hex">#DDFFFFFF</color>
     <color name="black_dim_dd_hex">#DD000000</color>
+    <color name="red">#FF0000</color>
+    <color name="orange">#FFB800</color>
 </resources>

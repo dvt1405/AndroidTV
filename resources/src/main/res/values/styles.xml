@@ -133,11 +133,11 @@
 
     <style name="TextViewTitleVideoInfo">
         <item name="android:textSize">12sp</item>
-        <item name="android:layout_marginTop">16dp</item>
     </style>
 
     <style name="TextViewDescriptionVideoInfo">
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:gravity">end</item>
     </style>
 
     <style name="CircleImageView">

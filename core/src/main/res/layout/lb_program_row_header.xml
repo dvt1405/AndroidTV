@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="CurrentProgramTitle"
+            type="androidx.databinding.ObservableField&lt;String>" />
+
+        <variable
+            name="ProgramTitle"
+            type="String" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusable="false"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:includeFontPadding="false"
+                android:text="@{ProgramTitle}"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                tools:text="Title Here" />
+
+            <TextView
+                android:id="@+id/channel_with_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:includeFontPadding="false"
+                android:text="@{CurrentProgramTitle}"
+                android:textColor="@color/white"
+                android:textSize="@dimen/text_size_medium_15sp"
+                tools:text="Animax - 30/06/2018" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:alpha="0.2"
+            android:background="@color/white" />
+    </LinearLayout>
+</layout>

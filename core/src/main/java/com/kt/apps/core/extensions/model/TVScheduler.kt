@@ -68,6 +68,49 @@ class TVScheduler @JvmOverloads constructor(
             }
         }
 
+        fun isCurrentProgram(): Boolean {
+            val currentTime: Long = Calendar.getInstance(Locale.getDefault())
+                .timeInMillis
+            val pattern = if (start.contains("+0700")) {
+                DATE_TIME_FORMAT_0700
+            } else {
+                DATE_TIME_FORMAT
+            }
+            val start: Long = if (start.trim() == "+0700") {
+                val calendar = Calendar.getInstance()
+                calendar.set(Calendar.HOUR, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.timeInMillis
+            } else {
+                start.toDate(
+                    pattern,
+                    Locale.getDefault(),
+                    false
+                )?.time ?: return false
+            }
+
+            val patternStop = if (stop.contains("+0700")) {
+                DATE_TIME_FORMAT_0700
+            } else {
+                DATE_TIME_FORMAT
+            }
+            val stop: Long = if (stop.trim() == "+0700") {
+                val calendar = Calendar.getInstance()
+                calendar.add(Calendar.DATE, 1)
+                calendar.set(Calendar.HOUR, 0)
+                calendar.set(Calendar.MINUTE, 0)
+                calendar.timeInMillis
+            } else {
+                stop.toDate(
+                    patternStop,
+                    Locale.getDefault(),
+                    false
+                )?.time ?: return false
+            }
+            if (!DateUtils.isToday(start) && !DateUtils.isToday(stop)) return false
+            return currentTime in start..stop
+        }
+
         fun getTime(): String {
             val start = Calendar.getInstance()
             start.timeInMillis = startTimeMilli()
@@ -77,7 +120,11 @@ class TVScheduler @JvmOverloads constructor(
             val endTime = String.format("%02d:%02d", end.get(Calendar.HOUR_OF_DAY), end.get(Calendar.MINUTE))
             return "$startTime - $endTime"
         }
-
+        fun getStartTime(): String {
+            val start = Calendar.getInstance()
+            start.timeInMillis = startTimeMilli()
+            return String.format("%02d:%02d", start.get(Calendar.HOUR_OF_DAY), start.get(Calendar.MINUTE))
+        }
         fun startTimeMilli() = if (start.trim() == "+0700") {
             val calendar = Calendar.getInstance()
             calendar.set(Calendar.HOUR, 0)

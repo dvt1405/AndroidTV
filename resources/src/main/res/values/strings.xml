@@ -10,4 +10,9 @@
     <string name="nav_football_title">Bóng đá</string>
     <string name="nav_iptv_title">IPTV</string>
     <string name="nav_info_title">Thông tin</string>
+    <string name="program_is_live_title">ĐANG PHÁT</string>
+    <string name="program_title">Lịch phát sóng</string>
+    <string name="program_channel_with_date_title">%s|%s</string>
+    <string name="empty_program_text">Chưa có thông tin lịch phát sóng</string>
+    <string name="dialog_update_new_version_title">Kiểm tra cập nhật</string>
 </resources>

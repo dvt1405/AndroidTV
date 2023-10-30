@@ -16,6 +16,7 @@ import com.kt.apps.media.xemtv.ui.football.FootballFragment
 import com.kt.apps.media.xemtv.ui.football.FootballPlaybackFragment
 import com.kt.apps.media.xemtv.ui.main.DashboardFragment
 import com.kt.apps.media.xemtv.ui.main.MainActivity
+import com.kt.apps.media.xemtv.ui.playback.FragmentProgramSchedule
 import com.kt.apps.media.xemtv.ui.playback.PlaybackActivity
 import com.kt.apps.media.xemtv.ui.playback.TVPlaybackVideoFragment
 import com.kt.apps.media.xemtv.ui.radio.RadioFragment
@@ -105,6 +106,8 @@ abstract class MainTVModule {
     internal abstract fun fragmentFavorite(): FavoriteFragment
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentQrCode(): FragmentQrCode
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentProgramSchedule(): FragmentProgramSchedule
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun voiceSearchActivity(): VoiceSearchActivity

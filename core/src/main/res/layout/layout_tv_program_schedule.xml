@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <variable
+            name="CurrentProgramTitle"
+            type="androidx.databinding.ObservableField&lt;String>" />
+    </data>
+
+    <FrameLayout
+        android:id="@+id/container_program"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/background_scrim_darker_program"
+        android:paddingHorizontal="120dp">
+
+        <include
+            android:layout_marginTop="@dimen/common_padding_32dp"
+            android:id="@+id/header_title"
+            layout="@layout/lb_program_row_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:CurrentProgramTitle="@{CurrentProgramTitle}"
+            app:ProgramTitle='@{@string/program_title}' />
+
+        <TextView
+            android:id="@+id/empty_program_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/empty_program_text"
+            android:textColor="@color/white"
+            android:textSize="13sp"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <com.kt.apps.core.base.leanback.VerticalGridView
+            android:id="@+id/vertical_grid_view"
+            style="@style/BaseGridViewStyle.NoPaddingTop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginTop="76dp"
+            android:background="@color/transparent"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:focusedByDefault="true"
+            android:gravity="start"
+            android:horizontalSpacing="0dp"
+            android:paddingStart="0dp"
+            android:paddingTop="0dp"
+            android:paddingEnd="0dp"
+            android:paddingBottom="0dp"
+            android:verticalSpacing="0dp"
+            app:focusOutEnd="false"
+            app:focusOutFront="false"
+            app:focusOutSideEnd="false"
+            app:focusOutSideStart="false"
+            tools:listitem="@layout/item_program" />
+
+    </FrameLayout>
+
+</layout>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" android:enterFadeDuration="200" android:exitFadeDuration="100" tools:ignore="MissingDefaultResource">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/white_dim_99_hex" />
+        </shape>
+    </item>
+</selector>
