@@ -70,6 +70,15 @@ public final class SeekBar extends View {
     private int mActiveRadius;
     private int mBarHeight;
     private int mActiveBarHeight;
+    private boolean mSeekAble = true;
+
+    public boolean isSeekAble() {
+        return mSeekAble;
+    }
+
+    public void setSeekAble(boolean mSeekAble) {
+        this.mSeekAble = mSeekAble;
+    }
 
     private AccessibilitySeekListener mAccessibilitySeekListener;
 
