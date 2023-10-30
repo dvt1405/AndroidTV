@@ -208,7 +208,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
                     )?.time ?: return@filter false
                 }
                 if (!DateUtils.isToday(start) && !DateUtils.isToday(stop)) return@filter false
-                ((start <= currentTime) && stop >= currentTime)
+                currentTime in start..stop
             } else {
                 true
             }

@@ -1,6 +1,7 @@
 package com.kt.apps.core.tv.viewmodels
 
 import android.net.Uri
+import androidx.databinding.ObservableField
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
@@ -16,14 +17,19 @@ import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.utils.removeAllSpecialChars
-import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
-import java.util.concurrent.TimeUnit
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import javax.inject.Inject
 
 open class BaseTVChannelViewModel constructor(
     private val interactors: TVChannelInteractors,
 ) : BaseViewModel() {
+    private val _currentProgramTitle by lazy {
+        ObservableField<String>()
+    }
+    val currentProgramTitle: ObservableField<String>
+        get() = _currentProgramTitle
 
     @Inject
     lateinit var actionLogger: IActionLogger
@@ -133,7 +139,7 @@ open class BaseTVChannelViewModel constructor(
         lastTVStreamLinkTask = interactors.getChannelLinkStreamById(channelId)
             .subscribe({
                 markLastWatchedChannel(it)
-                loadProgramForChannel(it.channel)
+                getListProgramForChannel(it.channel)
                 enqueueInsertWatchNextTVChannel(it.channel)
                 _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
                 Logger.d(
@@ -165,7 +171,7 @@ open class BaseTVChannelViewModel constructor(
         lastTVStreamLinkTask = interactors.getChannelLinkStreamById(lastPath)
             .subscribe({
                 markLastWatchedChannel(it)
-                loadProgramForChannel(it.channel)
+                getListProgramForChannel(it.channel)
                 enqueueInsertWatchNextTVChannel(it.channel)
                 _tvWithLinkStreamLiveData.postValue(DataState.Success(it))
                 Logger.d(
@@ -194,17 +200,46 @@ open class BaseTVChannelViewModel constructor(
         get() = _listProgramForChannel
 
     fun getListProgramForChannel(tvChannel: TVChannel) {
+        Logger.d(this, message = "getListProgramForChannel: ${Gson().toJson(tvChannel)}")
         add(
             interactors.getListProgrammeForChannel(tvChannel.toChannelDto())
-                .map {
-                    it.filter {
+                .map { oldProgramList ->
+                    Logger.d(this@BaseTVChannelViewModel, message = "Thread oldProgramList: $oldProgramList")
+                    if (oldProgramList.isEmpty()) {
+                        return@map oldProgramList
+                    }
+                    val newList = oldProgramList.filter {
                         it.channel.remoAllSpecialCharsAndPrefix() == tvChannel.channelIdWithoutSpecialChars
                                 && it.isToday()
+                    }.toMutableList()
+                    val currentProgramme = oldProgramList.first {
+                        it.isCurrentProgram()
                     }
+                    synchronized(newList) {
+                        oldProgramList.forEach {
+                            if (it.isCurrentProgram() &&
+                                (it.start != currentProgramme.start ||
+                                        it.title != currentProgramme.title)
+                            ) {
+                                newList.remove(it)
+                            }
+                        }
+                    }
+                    newList
                 }
                 .subscribe({
+                    Logger.d(this, message = "getListProgramForChannel: ${Gson().toJson(it)}")
+                    val currentProgramme = it.first {
+                        it.isCurrentProgram()
+                    }
+                    Logger.d(this, message = "current program: $currentProgramme")
+                    _programmeForChannelLiveData.postValue(DataState.Success(currentProgramme))
                     _listProgramForChannel.postValue(DataState.Success(it))
                 }, {
+                    Logger.e(this, exception = it)
+                    _programmeForChannelLiveData.postValue(
+                        DataState.Update(tvChannel.toDefaultProgramme())
+                    )
                     _listProgramForChannel.postValue(DataState.Error(it))
                 })
         )
@@ -212,6 +247,12 @@ open class BaseTVChannelViewModel constructor(
 
     fun markLastWatchedChannel(tvChannel: TVChannelLinkStream?) {
         _lastWatchedChannel = tvChannel
+        val date = Calendar.getInstance().time
+        _currentProgramTitle.set(
+            "${
+                lastWatchedChannel?.channel?.tvChannelName?.let { "$it | " } ?: ""
+            }${SimpleDateFormat("dd/MM/yyyy").format(date)}"
+        )
     }
 
     fun markLastWatchedChannel(tvChannel: TVChannel) {
@@ -255,34 +296,26 @@ open class BaseTVChannelViewModel constructor(
         private set
 
     fun loadProgramForChannel(channel: TVChannel, silentUpdate: Boolean = false) {
-        add(
-            interactors.getCurrentProgrammeForChannel.invoke(channel.channelId)
-                .filter {
-                    it.channel.remoAllSpecialCharsAndPrefix() == lastWatchedChannel
-                        ?.channel
-                        ?.channelIdWithoutSpecialChars
+        if (_listProgramForChannel.value is DataState.Success) {
+            val currentList = (_listProgramForChannel.value as DataState.Success).data
+            val isCurrentChannel = currentList.firstOrNull()?.channel
+                ?.remoAllSpecialCharsAndPrefix() == channel.channelIdWithoutSpecialChars
+            if (!isCurrentChannel) {
+                getListProgramForChannel(channel)
+                return
+            }
+            currentList.firstOrNull {
+                it.isCurrentProgram()
+            }?.let {
+                if (silentUpdate) {
+                    _programmeForChannelLiveData.postValue(DataState.Update(it))
+                } else {
+                    _programmeForChannelLiveData.postValue(DataState.Success(it))
                 }
-                .subscribe({
-                    lastGetProgramme = System.currentTimeMillis()
-
-                    if (silentUpdate) {
-                        _programmeForChannelLiveData.postValue(DataState.Update(it))
-                    } else {
-                        _programmeForChannelLiveData.postValue(DataState.Success(it))
-                    }
-                }, {
-                    if (silentUpdate) {
-                        _programmeForChannelLiveData.postValue(
-                            DataState.Update(channel.toDefaultProgramme())
-                        )
-                    } else {
-                        _programmeForChannelLiveData.postValue(
-                            DataState.Success(channel.toDefaultProgramme())
-                        )
-                    }
-
-                })
-        )
+            }
+        } else {
+            getListProgramForChannel(channel)
+        }
     }
 
     private fun TVChannel.toDefaultProgramme() = TVScheduler.Programme(
@@ -311,6 +344,11 @@ open class BaseTVChannelViewModel constructor(
 
     open fun onFetchTVListSuccess(listChannel: List<TVChannel>) {
 
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        Logger.d(this, message = "onCleared")
     }
 
     init {
