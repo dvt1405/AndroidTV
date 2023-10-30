@@ -9,7 +9,7 @@ import com.kt.apps.football.datasource.IFootballMatchDataSource
 import com.kt.apps.football.di.scope.Source91PhutConfig
 import com.kt.apps.football.model.*
 import com.kt.apps.xembongda.exceptions.FootballMatchThrowable
-import com.kt.apps.xembongda.exceptions.mapToMyException
+import com.kt.apps.core.exceptions.mapToMyException
 import io.reactivex.rxjava3.core.Observable
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element

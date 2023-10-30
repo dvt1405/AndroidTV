@@ -2,9 +2,12 @@ package com.kt.apps.core.base.viewmodels
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.base.BaseViewModel
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.di.CoreScope
+import com.kt.apps.core.exceptions.MyException
+import com.kt.apps.core.exceptions.mapToMyException
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.extensions.ParserExtensionsSource
@@ -23,6 +26,7 @@ import com.kt.apps.core.usecase.history.GetListHistory
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.lang.ref.WeakReference
 import java.net.UnknownHostException
@@ -89,6 +93,7 @@ open class BaseExtensionsViewModel @Inject constructor(
         Logger.e(this, message = "id = $id")
         _extensionsChannelListCache[id] = WeakReference(channelList)
     }
+
     private var _currentLiveDataConfig: LiveData<DataState<List<ExtensionsChannel>>>? = null
     val currentLiveDataConfig: LiveData<DataState<List<ExtensionsChannel>>>?
         get() = _currentLiveDataConfig
@@ -96,6 +101,7 @@ open class BaseExtensionsViewModel @Inject constructor(
     fun setCurrentDisplayData(currentDisplayData: LiveData<DataState<List<ExtensionsChannel>>>?) {
         _currentLiveDataConfig = currentDisplayData
     }
+
     fun loadChannelForConfig(configId: String): LiveData<DataState<List<ExtensionsChannel>>> {
         if (_extensionsChannelListCache[configId] != null
             && !_extensionsChannelListCache[configId]!!.get().isNullOrEmpty()
@@ -144,6 +150,83 @@ open class BaseExtensionsViewModel @Inject constructor(
                     _programmeForChannelLiveData.postValue(DataState.Error(it))
                 })
         )
+    }
+
+    private val _listProgramForChannel by lazy {
+        MutableLiveData<DataState<List<TVScheduler.Programme>>>()
+    }
+    val listProgramForChannel: LiveData<DataState<List<TVScheduler.Programme>>>
+        get() = _listProgramForChannel
+
+    private var _currentProgrammeTask: Disposable? = null
+    fun getListProgramForChannel(
+        channel: ExtensionsChannel,
+        extensionsType: ExtensionsConfig.Type
+    ) {
+        _currentProgrammeTask?.dispose()
+        _currentProgrammeTask = getListProgrammeForChannel.invoke(channel)
+            .subscribe({
+                Logger.d(this, message = "$it")
+                if (it.isNotEmpty()) {
+                    if (it.size > 1) {
+                        val oldProgramList = it.filter {
+                            it.isToday()
+                        }.sortedBy {
+                            it.startTimeMilli()
+                        }
+                        Logger.d(
+                            this@BaseExtensionsViewModel,
+                            message = "Thread oldProgramList: $oldProgramList"
+                        )
+                        val newList = oldProgramList.filter { it.isToday() }.toMutableList()
+                        val currentProgramme = oldProgramList.first {
+                            it.isCurrentProgram()
+                        }
+                        synchronized(newList) {
+                            oldProgramList.forEach {
+                                if (it.isCurrentProgram() &&
+                                    (it.start != currentProgramme.start ||
+                                            it.title != currentProgramme.title)
+                                ) {
+                                    newList.remove(it)
+                                }
+                            }
+                        }
+                        _listProgramForChannel.postValue(DataState.Success(newList))
+                        try {
+                            val currentProgram = it.first {
+                                it.isCurrentProgram()
+                            }
+                            _programmeForChannelLiveData.postValue(
+                                DataState.Success(
+                                    currentProgram
+                                )
+                            )
+                        } catch (e: NoSuchElementException) {
+                            _programmeForChannelLiveData.postValue(DataState.Error(e))
+                        }
+                    } else {
+                        val error = MyException.createException(
+                            code = ErrorCode.UN_SUPPORT_SHOW_PROGRAM,
+                            "Only 1 program found"
+                        )
+                        _listProgramForChannel.postValue(DataState.Error(error))
+                        _programmeForChannelLiveData.postValue(DataState.Success(it.first()))
+                    }
+                } else {
+                    val error = MyException.createException(
+                        code = ErrorCode.UN_SUPPORT_SHOW_PROGRAM,
+                        "Empty program found"
+                    )
+                    _listProgramForChannel.postValue(DataState.Error(error))
+                    _programmeForChannelLiveData.postValue(DataState.Error(error))
+                }
+            }, {
+                Logger.e(this, exception = it)
+                _listProgramForChannel.postValue(DataState.Error(it.mapToMyException(code = ErrorCode.UN_SUPPORT_SHOW_PROGRAM)))
+                _programmeForChannelLiveData.postValue(DataState.Error(it))
+            })
+        add(_currentProgrammeTask!!)
     }
 
     fun loadAllListExtensionsChannelConfig(refreshCache: Boolean = false) {
@@ -215,7 +298,11 @@ open class BaseExtensionsViewModel @Inject constructor(
                                         extensionsConfig.sourceUrl,
                                         extensionsConfig.sourceName
                                     )
-                                    _addExtensionConfigLiveData.postValue(DataState.Success(extensionsConfig))
+                                    _addExtensionConfigLiveData.postValue(
+                                        DataState.Success(
+                                            extensionsConfig
+                                        )
+                                    )
                                 }
                             }
                     } else {
@@ -229,7 +316,11 @@ open class BaseExtensionsViewModel @Inject constructor(
                                             extensionsConfig.sourceUrl,
                                             extensionsConfig.sourceName
                                         )
-                                        _addExtensionConfigLiveData.postValue(DataState.Success(extensionsConfig))
+                                        _addExtensionConfigLiveData.postValue(
+                                            DataState.Success(
+                                                extensionsConfig
+                                            )
+                                        )
                                         compositeDisposable.add(
                                             parserExtensionsSource.insertIptvSource(extensionsConfig)
                                                 .subscribe({
@@ -246,9 +337,15 @@ open class BaseExtensionsViewModel @Inject constructor(
                     }
                 }
                 .subscribe({
-                    Logger.d(this@BaseExtensionsViewModel, message = "addIPTVSource Success: $extensionsConfig")
+                    Logger.d(
+                        this@BaseExtensionsViewModel,
+                        message = "addIPTVSource Success: $extensionsConfig"
+                    )
                 }, {
-                    Logger.e(this@BaseExtensionsViewModel, message = "addIPTVSource Error: $extensionsConfig")
+                    Logger.e(
+                        this@BaseExtensionsViewModel,
+                        message = "addIPTVSource Error: $extensionsConfig"
+                    )
                     if (pendingIptvSource?.sourceUrl != extensionsConfig.sourceUrl) {
                         return@subscribe
                     }

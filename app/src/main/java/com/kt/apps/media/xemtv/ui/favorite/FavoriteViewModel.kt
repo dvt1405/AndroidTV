@@ -37,8 +37,10 @@ class FavoriteViewModel @Inject constructor(
                     sourceFrom = tvChannel.sourceFrom
                 )
             ).subscribe({
+                _saveIptvChannelLiveData.postValue(DataState.Success(tvChannel))
                 Logger.d(this@FavoriteViewModel, "Save", "$tvChannel")
             }, {
+                _saveIptvChannelLiveData.postValue(DataState.Error(it))
                 Logger.e(this@FavoriteViewModel, "SaveError", it)
             })
         )
@@ -92,8 +94,10 @@ class FavoriteViewModel @Inject constructor(
                     sourceFrom = tvChannel.sourceFrom
                 )
             ).subscribe({
+                _deleteIptvChannelLiveData.postValue(DataState.Success(tvChannel))
                 Logger.d(this@FavoriteViewModel, "Delete", "$tvChannel")
             }, {
+                _deleteIptvChannelLiveData.postValue(DataState.Error(it))
                 Logger.e(this@FavoriteViewModel, "DeleteError", it)
             })
         )

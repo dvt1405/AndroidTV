@@ -40,7 +40,7 @@ open class BaseFavoriteViewModel @Inject constructor(
         )
     }
 
-    private val _saveIptvChannelLiveData by lazy {
+    protected val _saveIptvChannelLiveData by lazy {
         MutableLiveData<DataState<Any>>()
     }
 
@@ -76,11 +76,11 @@ open class BaseFavoriteViewModel @Inject constructor(
         add(saveTask!!)
     }
 
-    private val _deleteIptvChannelLiveData by lazy {
-        MutableLiveData<DataState<ExtensionsChannel>>()
+    protected val _deleteIptvChannelLiveData by lazy {
+        MutableLiveData<DataState<Any>>()
     }
 
-    val deleteIptvChannelLiveData: LiveData<DataState<ExtensionsChannel>>
+    val deleteIptvChannelLiveData: LiveData<DataState<Any>>
         get() = _deleteIptvChannelLiveData
 
     private var deleteTask: Disposable? = null

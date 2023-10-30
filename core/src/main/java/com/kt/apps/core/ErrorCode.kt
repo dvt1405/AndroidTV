@@ -13,4 +13,6 @@ object ErrorCode {
 
     const val GET_STREAM_LINK_ERROR = 4998
     const val UN_EXPECTED_ERROR = 4999
+
+    const val UN_SUPPORT_SHOW_PROGRAM = 4404
 }

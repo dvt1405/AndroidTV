@@ -1,101 +1,218 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="280dp"
-    android:layout_height="392dp"
-    android:layout_gravity="end|center_vertical"
-    android:background="@drawable/background_corners_16dp"
-    android:backgroundTint="#FF282828"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:layout_marginEnd="24dp"
-    android:paddingStart="24dp"
-    >
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <TextView
-        android:layout_marginTop="0dp"
-        style="@style/TextViewTitleVideoInfo"
+    <data>
+
+    </data>
+
+    <FrameLayout
+        android:background="@drawable/background_scrim_darker_program"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Title" />
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingHorizontal="120dp">
 
-    <TextView
-        android:id="@+id/video_title"
-        style="@style/TextViewDescriptionVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            <include
+                android:id="@+id/header_title"
+                layout="@layout/lb_program_row_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:ProgramTitle='@{@string/nav_info_title}' />
 
-    <TextView
-        android:id="@+id/video_duration_title"
-        style="@style/TextViewTitleVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Duration" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:background="@drawable/background_selector_item_program"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/common_padding"
+                android:paddingVertical="@dimen/common_padding"
+                android:weightSum="2">
 
-    <TextView
-        android:id="@+id/video_duration"
-        style="@style/TextViewDescriptionVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+                <TextView
+                    style="@style/TextViewTitleVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
+                    android:layout_weight="1"
+                    android:text="Title" />
 
-    <TextView
-        style="@style/TextViewTitleVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Video Resolution" />
+                <TextView
+                    android:id="@+id/video_title"
+                    style="@style/TextViewDescriptionVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="Transformers (2007)(HD)" />
+            </LinearLayout>
 
-    <TextView
-        android:id="@+id/video_resolution"
-        style="@style/TextViewDescriptionVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:background="@drawable/background_selector_item_program"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/common_padding"
+                android:paddingVertical="@dimen/common_padding"
+                android:weightSum="2">
 
-    <TextView
-        style="@style/TextViewTitleVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Frames per seconds" />
+                <TextView
+                    android:id="@+id/video_duration_title"
+                    style="@style/TextViewTitleVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Duration" />
 
-    <TextView
-        android:id="@+id/video_frame_rate"
-        style="@style/TextViewDescriptionVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+                <TextView
+                    android:id="@+id/video_duration"
+                    style="@style/TextViewDescriptionVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="Hắc Diệp Ma Đạo Thư" />
+            </LinearLayout>
 
-    <TextView
-        style="@style/TextViewTitleVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Video codec" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:background="@drawable/background_selector_item_program"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/common_padding"
+                android:paddingVertical="@dimen/common_padding"
+                android:weightSum="2">
 
-    <TextView
-        android:id="@+id/video_codec"
-        style="@style/TextViewDescriptionVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+                <TextView
+                    style="@style/TextViewTitleVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Video Resolution" />
 
-    <TextView
-        style="@style/TextViewTitleVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Audio codec" />
+                <TextView
+                    android:id="@+id/video_resolution"
+                    style="@style/TextViewDescriptionVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="1920x1280" />
 
-    <TextView
-        android:id="@+id/audio_codec"
-        style="@style/TextViewDescriptionVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+            </LinearLayout>
 
-    <TextView
-        style="@style/TextViewTitleVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Color" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:background="@drawable/background_selector_item_program"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/common_padding"
+                android:paddingVertical="@dimen/common_padding"
+                android:weightSum="2">
 
-    <TextView
-        android:id="@+id/color_info"
-        style="@style/TextViewDescriptionVideoInfo"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="NoValue" />
+                <TextView
+                    style="@style/TextViewTitleVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Frames per seconds" />
 
-</LinearLayout>
+                <TextView
+                    android:id="@+id/video_frame_rate"
+                    style="@style/TextViewDescriptionVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="24" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:background="@drawable/background_selector_item_program"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/common_padding"
+                android:paddingVertical="@dimen/common_padding"
+                android:weightSum="2">
+
+                <TextView
+                    style="@style/TextViewTitleVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Video codec" />
+
+                <TextView
+                    android:id="@+id/video_codec"
+                    style="@style/TextViewDescriptionVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="vp09.00.51.08.01.01.01.01.00 (247) " />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:background="@drawable/background_selector_item_program"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/common_padding"
+                android:paddingVertical="@dimen/common_padding"
+                android:weightSum="2">
+
+                <TextView
+                    style="@style/TextViewTitleVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Audio codec" />
+
+                <TextView
+                    android:id="@+id/audio_codec"
+                    style="@style/TextViewDescriptionVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    tools:text="opus (251)" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="24dp"
+                android:background="@drawable/background_selector_item_program"
+                android:orientation="horizontal"
+                android:paddingHorizontal="@dimen/common_padding"
+                android:paddingVertical="@dimen/common_padding"
+                android:weightSum="2">
+
+                <TextView
+                    style="@style/TextViewTitleVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Color" />
+
+                <TextView
+                    android:id="@+id/color_info"
+                    style="@style/TextViewDescriptionVideoInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="NoValue" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+
+</layout>

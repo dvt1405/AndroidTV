@@ -60,7 +60,7 @@ fun View.translateY(
 
             override fun onAnimationCancel(animation: Animator) {
                 super.onAnimationCancel(animation)
-                onAnimationCancel()
+                onAnimationEnd()
             }
         })
 }
