@@ -85,7 +85,7 @@ class ParserExtensionsSourceTest(
     }
 
     companion object {
-        val listData = listOf(
+        private val listData = listOf(
             "https://vthanhtivi.pw",
             "https://gg.gg/coocaa",
             "https://gg.gg/bearlivetv",
@@ -106,6 +106,7 @@ class ParserExtensionsSourceTest(
             "https://gg.gg/vn360sport",
             "https://gg.gg/90phuttv",
             "http://m3u.at/SamsungTV",
+            "http://nxtxone.com:8080/get.php?username=gUSmpbgq&password=fB981Kt&type=m3u_plus&output=ts"
         )
 
         @Parameters
