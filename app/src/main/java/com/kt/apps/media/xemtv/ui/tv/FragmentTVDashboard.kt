@@ -80,6 +80,7 @@ class FragmentTVDashboard : BaseRowSupportFragment() {
                 showErrorDialog(content = "Đây là nội dung tính phí\r\nLiên hệ đội phát triển để có thêm thông tin")
                 return@OnItemViewClickedListener
             }
+            tvChannelViewModel.getListProgramForChannel(item)
             tvChannelViewModel.getLinkStreamForChannel(tvDetail = item)
             selectedView = itemViewHolder.view as ImageCardView
         }

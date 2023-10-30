@@ -44,7 +44,7 @@ interface IFetchTVChannelControl: IFetchDataControl {
     }
 
     fun loadProgramForChannel(element: ChannelElement.TVChannelElement) {
-        tvChannelViewModel.loadProgramForChannel(element.model)
+        tvChannelViewModel.getListProgramForChannel(element.model)
     }
 }
 

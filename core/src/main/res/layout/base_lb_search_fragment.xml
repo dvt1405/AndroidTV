@@ -21,6 +21,7 @@
             <androidx.appcompat.widget.AppCompatImageButton
                 android:id="@+id/voice_search_btn"
                 android:layout_width="56dp"
+                android:visibility="gone"
                 android:layout_height="56dp"
                 android:theme="@style/Theme.AppCompat"
                 android:layout_gravity="center"

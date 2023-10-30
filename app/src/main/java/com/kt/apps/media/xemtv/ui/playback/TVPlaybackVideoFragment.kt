@@ -5,16 +5,21 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
-import com.kt.apps.core.base.leanback.ArrayObjectAdapter
-import com.kt.apps.core.base.leanback.OnItemViewClickedListener
-import com.kt.apps.core.base.leanback.PresenterSelector
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.exoplayer2.PlaybackException
+import com.google.android.exoplayer2.Player
 import com.kt.apps.core.ErrorCode
 import com.kt.apps.core.R
 import com.kt.apps.core.base.BasePlaybackFragment
 import com.kt.apps.core.base.DataState
+import com.kt.apps.core.base.leanback.ArrayObjectAdapter
+import com.kt.apps.core.base.leanback.OnItemViewClickedListener
+import com.kt.apps.core.base.leanback.PresenterSelector
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.model.TVScheduler
 import com.kt.apps.core.logging.Logger
@@ -26,11 +31,13 @@ import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
 import com.kt.apps.core.usecase.search.SearchForText
-import com.kt.apps.core.utils.removeAllSpecialChars
+import com.kt.apps.core.utils.gone
+import com.kt.apps.core.utils.visible
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import dagger.android.AndroidInjector
+import java.text.SimpleDateFormat
 import javax.inject.Inject
 import kotlin.math.max
 
@@ -54,6 +61,30 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         favoriteViewModel = _favoriteViewModel
     }
 
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        val rootView = super.onCreateView(inflater, container, savedInstanceState)
+        tvChannelViewModel.programmeForChannelLiveData.observe(viewLifecycleOwner) {
+            if (it is DataState.Success) {
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel ?: return@observe
+                showInfo(
+                    programme = it.data,
+                    lastWatchedChannel
+                )
+                lastWatchedChannel.currentProgramme = it.data
+                updateProgress(exoPlayerManager.exoPlayer)
+            } else if (it is DataState.Update) {
+                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel ?: return@observe
+                updateVideoInfo(
+                    lastWatchedChannel.tvChannelName,
+                    buildVideoDescription(it.data),
+                    true
+                )
+                lastWatchedChannel.currentProgramme = it.data
+                updateProgress(exoPlayerManager.exoPlayer)
+            }
+        }
+        return rootView
+    }
     override fun onFavoriteVideoClicked(isFavorite: Boolean) {
         super.onFavoriteVideoClicked(isFavorite)
         tvChannelViewModel.lastWatchedChannel?.channel?.let {
@@ -143,6 +174,8 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     private var mPlayingPosition: Int = 0
     override val numOfRowColumns: Int
         get() = 5
+    override val listProgramForChannelLiveData: LiveData<DataState<List<TVScheduler.Programme>>>
+        get() = tvChannelViewModel.listProgramForChannel
 
     private fun setupRowAdapter(tvChannelList: List<TVChannel>) {
         mSelectedPosition = mCurrentSelectedChannel?.let {
@@ -176,11 +209,13 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         tvChannel?.let {
             mCurrentSelectedChannel = it.channel
             setBackgroundByStreamingType(it)
-            tvChannelViewModel.loadProgramForChannel(it.channel)
+//            tvChannelViewModel.loadProgramForChannel(it.channel)
+            tvChannelViewModel.getListProgramForChannel(it.channel)
             playVideo(tvChannel)
             tvChannelViewModel.markLastWatchedChannel(it)
         }
         onItemClickedListener = OnItemViewClickedListener { itemViewHolder, item, rowViewHolder, row ->
+            onRemoveProgramSchedule()
             tvChannelViewModel.markLastWatchedChannel(item as TVChannel)
             getLinkStreamAndProgramForChannel(item)
             (mAdapter as ArrayObjectAdapter).indexOf(item)
@@ -198,28 +233,62 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             val isRadio = tvChannel?.channel?.isRadio ?: false
             loadChannelListByDataState(it, isRadio)
         }
-        tvChannelViewModel.programmeForChannelLiveData.observe(viewLifecycleOwner) {
-            if (it is DataState.Success) {
-                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel ?: return@observe
-                showInfo(
-                    programme = it.data,
-                    lastWatchedChannel
-                )
-                lastWatchedChannel.currentProgramme = it.data
-            } else if (it is DataState.Update) {
-                val lastWatchedChannel = tvChannelViewModel.lastWatchedChannel?.channel ?: return@observe
-                updateVideoInfo(
-                    lastWatchedChannel.tvChannelName,
-                    buildVideoDescription(it.data),
-                    true
-                )
-                lastWatchedChannel.currentProgramme = it.data
+    }
+
+    private fun onRemoveProgramSchedule() {
+        try {
+            childFragmentManager.findFragmentById(R.id.container_program)?.let {
+                childFragmentManager.beginTransaction()
+                    .remove(it)
+                    .commitNow()
             }
+        } catch (_: Exception) {
         }
     }
 
+    override fun onCreateProgramScheduleFragment(): Fragment? {
+        return FragmentProgramSchedule.newInstance()
+    }
+
+    override fun onHideProgramSchedule() {
+        super.onHideProgramSchedule()
+    }
+
+    override fun updateProgress(player: Player?) {
+        val currentProgram = when (tvChannelViewModel.programmeForChannelLiveData.value) {
+            is DataState.Success -> {
+                (tvChannelViewModel.programmeForChannelLiveData.value as DataState.Success<TVScheduler.Programme>).data
+            }
+
+            is DataState.Update -> {
+                (tvChannelViewModel.programmeForChannelLiveData.value as DataState.Update<TVScheduler.Programme>).data
+            }
+
+            else -> {
+                null
+            }
+        }
+        currentProgram?.let {
+            val startTime = hourMinuteFormatter.format(it.startTimeMilli())
+            val endTime = hourMinuteFormatter.format(it.endTimeMilli())
+            val programTime = "$startTime - $endTime"
+            if (it.startTimeMilli() == it.endTimeMilli()) {
+                seekBar?.max = 1
+                seekBar?.progress = 1
+            } else {
+                seekBar?.max = (it.endTimeMilli() - it.startTimeMilli()).toInt()
+                seekBar?.progress = (System.currentTimeMillis() - it.startTimeMilli()).toInt()
+            }
+            seekBar?.isSeekAble = false
+            playbackLiveProgramDuration?.text = programTime
+            playbackLiveProgramDuration?.visible()
+            contentPositionView?.gone()
+            contentDurationView?.gone()
+        }
+    }
     private fun getLinkStreamAndProgramForChannel(item: TVChannel) {
-        tvChannelViewModel.loadProgramForChannel(item)
+//        tvChannelViewModel.loadProgramForChannel(item)
+        tvChannelViewModel.getListProgramForChannel(item)
         tvChannelViewModel.getLinkStreamForChannel(item)
     }
 
@@ -433,6 +502,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     }
 
     companion object {
+        val hourMinuteFormatter = SimpleDateFormat("HH:mm")
         fun newInstance(type: PlaybackActivity.Type, tvChannelLinkStream: TVChannelLinkStream) = TVPlaybackVideoFragment().apply {
             val args = Bundle()
             args.putParcelable(PlaybackActivity.EXTRA_PLAYBACK_TYPE, type)

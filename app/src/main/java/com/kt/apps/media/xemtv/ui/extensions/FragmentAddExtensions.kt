@@ -1,6 +1,8 @@
 package com.kt.apps.media.xemtv.ui.extensions
 
+import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -84,9 +86,7 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
         val oldFocusChange = onFocusChangeListener
         setOnFocusChangeListener { v, hasFocus ->
             if (hasFocus) {
-                val imm: InputMethodManager = requireContext().getSystemService(
-                    InputMethodManager::class.java
-                )
+                val imm: InputMethodManager = getInputMethodManager()
                 if (imm.isActive(v)) {
                     imm.showSoftInput(v, 0)
                 }
@@ -109,17 +109,13 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
                 }
                 this.setOnEditorActionListener { v, actionId, _ ->
                     if (actionId == EditorInfo.IME_ACTION_DONE) {
-                        val imm: InputMethodManager = requireContext().getSystemService(
-                            InputMethodManager::class.java
-                        )
+                        val imm: InputMethodManager = getInputMethodManager()
                         if (imm.isActive(v)) {
                             imm.hideSoftInputFromWindow(v.windowToken, 0)
                         }
                         addExtensionsSource()
                     } else if (actionId == EditorInfo.IME_ACTION_NEXT) {
-                        val imm: InputMethodManager = requireContext().getSystemService(
-                            InputMethodManager::class.java
-                        )
+                        val imm: InputMethodManager = getInputMethodManager()
                         if (imm.isActive(v)) {
                             imm.hideSoftInputFromWindow(v.windowToken, 0)
                         }
@@ -134,9 +130,7 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
                 if (actionId == EditorInfo.IME_ACTION_NEXT
                     || actionId == EditorInfo.IME_ACTION_DONE
                 ) {
-                    val imm: InputMethodManager = requireContext().getSystemService(
-                        InputMethodManager::class.java
-                    )
+                    val imm: InputMethodManager = getInputMethodManager()
                     if (imm.isActive(v)) {
                         imm.hideSoftInputFromWindow(v.windowToken, 0)
                     }
@@ -149,6 +143,14 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
         rootView.findViewById<View>(R.id.btn_save)!!.setOnClickListener {
             addExtensionsSource()
         }
+    }
+
+    private fun getInputMethodManager() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        requireContext().getSystemService(
+            InputMethodManager::class.java
+        )
+    } else {
+        requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
     }
 
     fun onDpadUp() {

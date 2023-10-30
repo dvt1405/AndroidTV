@@ -9,6 +9,8 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
 import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.exoplayer2.PlaybackException
@@ -19,6 +21,7 @@ import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
+import com.kt.apps.core.extensions.model.TVScheduler
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logStreamingTV
 import com.kt.apps.core.utils.expandUrl
@@ -26,6 +29,7 @@ import com.kt.apps.core.utils.isShortLink
 import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
+import com.kt.apps.media.xemtv.ui.playback.FragmentProgramSchedule
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -36,6 +40,8 @@ import javax.inject.Inject
 class FragmentExtensionsPlayback : BasePlaybackFragment() {
     override val numOfRowColumns: Int
         get() = 5
+    override val listProgramForChannelLiveData: LiveData<DataState<List<TVScheduler.Programme>>>
+        get() = extensionsViewModel.listProgramForChannel
 
     private var itemToPlay: ExtensionsChannel? = null
     private val listCurrentItem by lazy {
@@ -58,7 +64,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
     private val extension: ExtensionsConfig by lazy {
         requireArguments().getParcelable(EXTRA_EXTENSION_ID)!!
     }
-    override var allowDpadUpToOpenSearch = BuildConfig.isBeta
+    override var allowDpadUpToOpenSearch = false
     override fun getSearchFilter(): String {
         return extension.sourceUrl
     }
@@ -251,7 +257,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
             progressManager.show()
         }
         if (refreshProgramForChannel) {
-            extensionsViewModel.loadProgramForChannel(extensionsChannel, extension.type)
+            extensionsViewModel.getListProgramForChannel(extensionsChannel, extension.type)
         }
         lastExpandUrlTask?.let { disposable.remove(it) }
         disposable.clear()
@@ -337,6 +343,9 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
             isLive = extension.type == ExtensionsConfig.Type.FOOTBALL,
             forceShowVideoInfoContainer = false
         )
+    }
+    override fun onCreateProgramScheduleFragment(): Fragment? {
+        return FragmentProgramSchedule.newInstance()
     }
 
     override fun onPause() {
