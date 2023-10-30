@@ -467,10 +467,11 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             increaseAutoHideTimeout()
         }
         playbackInfoTxtView?.setOnClickListener {
-            if (5 == playbackInfoTxtView?.maxLines) {
+            val maxLines = playbackInfoTxtView?.maxLines ?: 0
+            if (maxLines < 100) {
                 playbackInfoTxtView?.maxLines = 100
             } else {
-                playbackInfoTxtView?.maxLines = 5
+                playbackInfoTxtView?.maxLines = 2
             }
         }
         return root
@@ -1406,6 +1407,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             || this.isRemoving) {
             return
         }
+        playPauseBtn?.isActivated = true
         showErrorDialog(
             content = errorMessage ?: getString(
                 com.kt.apps.resources.R.string.error_playback_popup_content_text,
