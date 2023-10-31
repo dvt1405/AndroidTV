@@ -575,7 +575,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         super.onStop()
         Log.d(TAG, "onStop: ")
         _cachePlayingState = exoPlayerManager.exoPlayer?.isPlaying ?: false
-        exoPlayerManager.pause()
+//        exoPlayerManager.pause()
         exoPlayer?.keepScreenOn = false
 
         if (this::informationDialog.isInitialized) {

@@ -1,5 +1,6 @@
 package com.kt.apps.core.utils
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Build
@@ -180,6 +181,29 @@ fun ImageView.loadImgByDrawableIdResName(
         } ?: loadDrawableRes(R.drawable.app_banner, scaleType)
     }
 
+}
+
+fun loadImgBitmapByResName(context: Context, name: String): Bitmap? {
+    try {
+        val context = context.applicationContext
+        val id = context.resources.getIdentifier(
+            name.trim().removeSuffix(".png")
+                .removeSuffix(".jpg")
+                .removeSuffix(".webp")
+                .removeSuffix(".jpeg"),
+            "drawable",
+            context.packageName
+        )
+        val drawable = ContextCompat.getDrawable(context, id)
+        return GlideApp.with(context)
+            .asBitmap()
+            .load(drawable)
+            .error(R.drawable.app_banner)
+            .submit()
+            .get()
+    } catch (e: Exception) {
+        return null
+    }
 }
 
 fun <TranscodeType> GlideRequest<TranscodeType>.scaleType(scaleType: ScaleType): GlideRequest<TranscodeType> {
