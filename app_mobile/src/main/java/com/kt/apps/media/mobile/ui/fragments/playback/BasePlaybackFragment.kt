@@ -1,7 +1,5 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
-import android.content.pm.ActivityInfo
-import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -14,7 +12,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.allViews
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
@@ -36,11 +33,9 @@ import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
-import com.kt.apps.core.base.player.ExoPlayerManager
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.gone
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.inVisible
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.visible
@@ -51,7 +46,6 @@ import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
-import com.kt.apps.media.mobile.ui.fragments.dialog.CustomDialogFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadFavorite
@@ -59,7 +53,6 @@ import com.kt.apps.media.mobile.viewmodels.features.toggleFavoriteCurrent
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import org.w3c.dom.Text
 import java.util.Formatter
 import java.util.Locale
 import javax.inject.Inject
@@ -818,10 +811,13 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         } else {
             executingIndex += 1
         }
-        exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , this)
+        exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData, this)
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)
         currentPlayingMediaItem.emit(exoPlayerManager.exoPlayer?.currentMediaItem)
+
+//        (activity as? ComplexActivity)?.audioServiceConnection?.service
+//            ?.attachPlayer(exoPlayerManager.exoPlayer)
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {

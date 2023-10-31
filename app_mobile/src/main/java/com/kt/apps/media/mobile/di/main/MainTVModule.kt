@@ -1,7 +1,7 @@
 package com.kt.apps.media.mobile.di.main
 
-import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.di.viewmodels.ViewModelModule
+import com.kt.apps.media.mobile.services.media.IMediaSessionService
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.dashboard.DashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.dialog.AddExtensionFragment
@@ -16,6 +16,7 @@ import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
+import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.ui.fragments.search.SearchListFragment
 import com.kt.apps.media.mobile.ui.fragments.tv.FragmentTVDashboard
 import com.kt.apps.media.mobile.ui.fragments.tv.RadioPerChannelListFragment
@@ -108,4 +109,7 @@ abstract class MainTVModule {
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentGGVoiceSelectorDialog(): GGVoiceSelectorFragment
+
+    @ContributesAndroidInjector
+    internal abstract fun serviceIMediaSessionService(): IMediaSessionService
 }

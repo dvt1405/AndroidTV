@@ -5,6 +5,8 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import androidx.core.app.NotificationChannelCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
 import androidx.work.*
 import com.google.firebase.ktx.Firebase
@@ -12,9 +14,7 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
-import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.di.DaggerTVComponents
-import com.kt.apps.core.tv.di.TVChannelModule
 import com.kt.apps.core.tv.di.TVComponents
 import com.kt.apps.core.workers.TVEpgWorkers
 import com.kt.apps.football.di.DaggerFootballComponents
@@ -24,12 +24,12 @@ import com.kt.apps.media.mobile.di.DaggerAppComponents
 import com.kt.apps.media.mobile.di.MobileTVChannelModule
 import com.kt.apps.media.mobile.di.MobileVoiceSelectorModule
 import com.kt.apps.media.mobile.di.workers.PreloadDataWorker
+import com.kt.apps.media.mobile.services.media.NOW_PLAYING_CHANNEL_ID
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
 import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -87,6 +87,18 @@ class App : CoreApp(), Configuration.Provider {
         app = this
         (applicationInjector() as AppComponents).inject(this)
         voiceSelectorManager.registerLifeCycle()
+        NotificationManagerCompat.from(this)
+            .createNotificationChannelsCompat(
+                listOf(
+                    NotificationChannelCompat.Builder(
+                        NOW_PLAYING_CHANNEL_ID,
+                        NotificationManagerCompat.IMPORTANCE_LOW
+                    )
+                        .setName("iMedia")
+                        .setDescription("iMedia Description")
+                        .build()
+                )
+            )
     }
 
     override fun onRemoteConfigReady() {

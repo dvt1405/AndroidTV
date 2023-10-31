@@ -2,12 +2,14 @@ package com.kt.apps.media.mobile.ui.complex
 
 import android.app.AlertDialog
 import android.app.PictureInPictureParams
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -34,6 +36,8 @@ import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
 import com.kt.apps.media.mobile.models.*
+import com.kt.apps.media.mobile.services.PlayerServiceConnection
+import com.kt.apps.media.mobile.services.media.IMediaSessionService
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.playback.BasePlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
@@ -42,7 +46,6 @@ import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
-import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
@@ -52,9 +55,7 @@ import com.kt.apps.voiceselector.models.State
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -107,6 +108,10 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             layoutHandler?.onCloseMinimal()
         }
     }
+
+    private var mediaBrowser: MediaBrowserCompat? = null
+
+    val audioServiceConnection: PlayerServiceConnection = PlayerServiceConnection()
 
     override fun initView(savedInstanceState: Bundle?) {
         val metrics = resources.displayMetrics
@@ -247,6 +252,38 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 }
             }
         }
+
+        mediaBrowser = MediaBrowserCompat(
+            this,
+            ComponentName(this, IMediaSessionService::class.java),
+            object : MediaBrowserCompat.ConnectionCallback() {
+                override fun onConnected() {
+                    super.onConnected()
+                    Log.d(TAG, "onConnected:")
+                    
+                }
+
+                override fun onConnectionFailed() {
+                    super.onConnectionFailed()
+                    Log.d(TAG, "onConnectionFailed: ")
+                }
+            },
+            null
+        )
+//
+        mediaBrowser?.connect()
+
+
+//        val intent = Intent(
+//            this,
+//            AudioService::class.java
+//        )
+//        ContextCompat.startForegroundService(
+//            this,
+//            intent
+//        )
+//
+//        bindService(intent, audioServiceConnection, Context.BIND_AUTO_CREATE)
 
         //Deeplink handle
         handleIntent(intent)

@@ -23,6 +23,7 @@ import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.util.Util
 import com.kt.apps.core.GlideApp
+import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.model.TVChannel
@@ -31,9 +32,13 @@ import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.usecase.GetListTVChannel
 import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.R
+import dagger.android.AndroidInjection
+import dagger.android.AndroidInjector
+import dagger.android.HasAndroidInjector
 import io.reactivex.rxjava3.disposables.CompositeDisposable
+import javax.inject.Inject
 
-class IMediaSessionService : MediaBrowserServiceCompat() {
+class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
     private val disposable by lazy {
         CompositeDisposable()
     }
@@ -68,7 +73,10 @@ class IMediaSessionService : MediaBrowserServiceCompat() {
                     }
                 }
 
-                override fun onNotificationCancelled(notificationId: Int, dismissedByUser: Boolean) {
+                override fun onNotificationCancelled(
+                    notificationId: Int,
+                    dismissedByUser: Boolean
+                ) {
                     stopForeground(true)
                     isForegroundService = false
                     stopSelf()
@@ -76,11 +84,9 @@ class IMediaSessionService : MediaBrowserServiceCompat() {
             }
         )
     }
-    private val exoPlayerManager: ExoPlayerManagerMobile by lazy {
-        App.get()
-            .coreComponents
-            .exoPlayerManager()
-    }
+
+    @Inject
+    lateinit var exoPlayerManager: ExoPlayerManagerMobile
 
     private val exoPlayerEventListener by lazy {
         object : Player.Listener {
@@ -146,6 +152,7 @@ class IMediaSessionService : MediaBrowserServiceCompat() {
     private lateinit var mediaSessionConnector: MediaSessionConnector
 
     override fun onCreate() {
+        AndroidInjection.inject(this)
         super.onCreate()
         val sessionActivityPendingIntent =
             packageManager!!.getLaunchIntentForPackage(packageName)!!.let { sessionIntent ->
@@ -210,6 +217,21 @@ class IMediaSessionService : MediaBrowserServiceCompat() {
             })
         disposable.add(loadChannelTask)
 
+        exoPlayerManager.registerPlayerAttachedObserver("IMediaSessionService") {
+            mediaSessionConnector.setPlayer(exoPlayerManager.exoPlayer)
+
+            exoPlayerManager.exoPlayer?.run {
+                notificationManager.showNotificationForPlayer(this)
+            } ?: kotlin.run {
+                notificationManager.hideNotification()
+            }
+        }
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        exoPlayerManager.unRegisterPlayerAttachedObserver("IMediaSessionService")
     }
 
 
@@ -258,6 +280,10 @@ class IMediaSessionService : MediaBrowserServiceCompat() {
         parentId: String,
         result: Result<MutableList<MediaBrowserCompat.MediaItem>>
     ) {
+        if (true) {
+            result.sendResult(mutableListOf<MediaBrowserCompat.MediaItem>())
+            return
+        }
         val finalMediaItemList = mutableListOf<MediaBrowserCompat.MediaItem>()
         when (parentId) {
             MEDIA_RECENT_ROOT -> {
@@ -405,6 +431,10 @@ class IMediaSessionService : MediaBrowserServiceCompat() {
         const val MEDIA_RECENT_ROOT = "__RECENT__"
         const val MEDIA_RADIO_ROOT = "__RADIO__"
 
+    }
+
+    override fun androidInjector(): AndroidInjector<Any> {
+        return (application as CoreApp).androidInjector()
     }
 
 }
