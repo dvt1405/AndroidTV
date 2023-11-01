@@ -108,11 +108,9 @@ class GGVoiceSelectorFragment : BaseBottomSheetDialogFragment<FragmentGgVoiceSel
         @JvmStatic
         fun newInstance(voiceIntent: Intent?) =
             GGVoiceSelectorFragment().apply {
-                arguments = Bundle().apply {
-                    arguments = bundleOf(
-                        EXTRA_VOICE_PACKAGE_INTENT to voiceIntent
-                    )
-                }
+                arguments = bundleOf(
+                    EXTRA_VOICE_PACKAGE_INTENT to voiceIntent
+                )
             }
     }
 
