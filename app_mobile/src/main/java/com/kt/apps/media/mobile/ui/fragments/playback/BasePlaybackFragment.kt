@@ -815,9 +815,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)
         currentPlayingMediaItem.emit(exoPlayerManager.exoPlayer?.currentMediaItem)
-
-//        (activity as? ComplexActivity)?.audioServiceConnection?.service
-//            ?.attachPlayer(exoPlayerManager.exoPlayer)
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {

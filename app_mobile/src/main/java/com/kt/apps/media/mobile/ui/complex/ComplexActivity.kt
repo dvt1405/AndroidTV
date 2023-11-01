@@ -7,8 +7,10 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
 import android.support.v4.media.MediaBrowserCompat
 import android.util.Log
 import android.view.MotionEvent
@@ -16,6 +18,7 @@ import android.view.View
 import android.view.Window
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -26,17 +29,21 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.video.VideoSize
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
+import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
-import com.kt.apps.media.mobile.models.*
-import com.kt.apps.media.mobile.services.PlayerServiceConnection
+import com.kt.apps.media.mobile.models.NoNetworkException
+import com.kt.apps.media.mobile.models.PlaybackFailException
+import com.kt.apps.media.mobile.models.PlaybackState
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.services.media.IMediaSessionService
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.playback.BasePlaybackFragment
@@ -74,6 +81,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     @Inject
     lateinit var voiceSelectorManager: VoiceSelectorManager
 
+    @Inject
+    lateinit var exoPlayerManager: ExoPlayerManagerMobile
+
     override val layoutRes: Int
         get() = R.layout.activity_complex
 
@@ -110,8 +120,10 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     }
 
     private var mediaBrowser: MediaBrowserCompat? = null
+    private val launchRequestPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
 
-    val audioServiceConnection: PlayerServiceConnection = PlayerServiceConnection()
+        }
 
     override fun initView(savedInstanceState: Bundle?) {
         val metrics = resources.displayMetrics
@@ -226,16 +238,37 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
             launch {
                 voiceSelectorManager.ktSubscribeToVoiceSearch().collectLatest {
-                    when(it) {
+                    when (it) {
                         is Event.VoiceResult -> {
                             layoutHandler?.changeToMinimal()
                             viewModel.openSearch(it.string)
                         }
-                        else -> { }
+
+                        else -> {}
                     }
                 }
             }
+
+//            launch {
+//                val value = ContextCompat.checkSelfPermission(
+//                    this@ComplexActivity,
+//                    android.Manifest.permission.POST_NOTIFICATIONS
+//                ) == PackageManager.PERMISSION_GRANTED
+//                isGrantedNotification.emit(value)
+//            }
         }
+
+//        repeatLaunchesOnLifeCycle(Lifecycle.State.) {
+//            launch {
+//                isGrantedNotification.collectLatest {
+//                    if (it) {
+//                        setupMediaBrowser()
+//                    } else {
+//                        requestNotificationPermission()
+//                    }
+//                }
+//            }
+//        }
 
         addOnPictureInPictureModeChangedListener {
             if (it.isInPictureInPictureMode) {
@@ -247,12 +280,25 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 if (last) {
                     viewModel.changePiPMode(false)
                     layoutHandler?.onStartLoading()
-
-
                 }
             }
         }
 
+        setupMediaBrowser()
+        //Deeplink handle
+        handleIntent(intent)
+    }
+
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            launchRequestPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            showSettingDialog()
+        }
+    }
+
+    private fun setupMediaBrowser() {
         mediaBrowser = MediaBrowserCompat(
             this,
             ComponentName(this, IMediaSessionService::class.java),
@@ -260,7 +306,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 override fun onConnected() {
                     super.onConnected()
                     Log.d(TAG, "onConnected:")
-                    
+
                 }
 
                 override fun onConnectionFailed() {
@@ -270,23 +316,25 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
             },
             null
         )
-//
         mediaBrowser?.connect()
+    }
 
 
-//        val intent = Intent(
-//            this,
-//            AudioService::class.java
-//        )
-//        ContextCompat.startForegroundService(
-//            this,
-//            intent
-//        )
-//
-//        bindService(intent, audioServiceConnection, Context.BIND_AUTO_CREATE)
-
-        //Deeplink handle
-        handleIntent(intent)
+    private fun showSettingDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Notification Permission")
+            .setMessage("Notification permission is required, Please allow notification permission from setting")
+            .setPositiveButton("OK") { _, _ ->
+                startActivity(
+                    Intent(
+                        ACTION_APPLICATION_DETAILS_SETTINGS,
+                    ).apply {
+                        data = Uri.parse("package:$packageName")
+                    }
+                )
+            }
+            .setNegativeButton("No", null)
+            .show()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -399,6 +447,9 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun onStop() {
         Log.d(TAG, "onStop: ")
         super.onStop()
+        if (mediaBrowser?.isConnected != true) {
+            exoPlayerManager.exoPlayer?.stop()
+        }
     }
     override fun onStart() {
         Log.d(TAG, "onStart: ")
@@ -408,6 +459,7 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
     override fun onDestroy() {
         Log.d(TAG, "onDestroy: ")
         super.onDestroy()
+        mediaBrowser?.disconnect()
     }
 
     override fun onPause() {

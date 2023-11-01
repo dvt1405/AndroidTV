@@ -4,11 +4,11 @@ import android.app.Notification
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Binder
 import android.os.Build
 import android.os.Bundle
 import android.support.v4.media.MediaBrowserCompat
 import android.support.v4.media.MediaDescriptionCompat
-import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
@@ -17,20 +17,13 @@ import androidx.core.os.bundleOf
 import androidx.media.MediaBrowserServiceCompat
 import androidx.media.utils.MediaConstants
 import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
-import com.google.android.exoplayer2.util.Util
 import com.kt.apps.core.GlideApp
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
-import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.model.TVChannel
-import com.kt.apps.core.tv.model.TVChannelGroup
-import com.kt.apps.core.tv.model.TVDataSourceFrom
-import com.kt.apps.core.tv.usecase.GetListTVChannel
-import com.kt.apps.media.mobile.App
 import com.kt.apps.media.mobile.R
 import dagger.android.AndroidInjection
 import dagger.android.AndroidInjector
@@ -41,11 +34,6 @@ import javax.inject.Inject
 class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
     private val disposable by lazy {
         CompositeDisposable()
-    }
-    private val tvDataSource: GetListTVChannel by lazy {
-        App.get()
-            .tvComponents
-            .getListTVChannel()
     }
     private val packageValidator by lazy {
         PackageValidator(this, R.xml.allowed_media_browser_callers)
@@ -87,66 +75,6 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
 
     @Inject
     lateinit var exoPlayerManager: ExoPlayerManagerMobile
-
-    private val exoPlayerEventListener by lazy {
-        object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                super.onPlaybackStateChanged(playbackState)
-                when (playbackState) {
-                    Player.STATE_BUFFERING,
-                    Player.STATE_READY -> {
-                        exoPlayerManager.exoPlayer?.let {
-                            notificationManager.showNotificationForPlayer(exoPlayer = it)
-                        }
-                        if (playbackState == Player.STATE_READY) {
-                            saveRecentSongToStorage()
-
-                            if (exoPlayerManager.exoPlayer?.playWhenReady == false) {
-                                stopForeground(false)
-                                isForegroundService = false
-                            }
-                        }
-                    }
-                    else -> {
-                        notificationManager.hideNotification()
-                    }
-                }
-            }
-
-
-            override fun onEvents(player: Player, events: Player.Events) {
-                if (events.contains(Player.EVENT_POSITION_DISCONTINUITY)
-                    || events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)
-                    || events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED)
-                ) {
-                    currentMediaItemIndex = if (currentPlaylistItems.isNotEmpty()) {
-                        Util.constrainValue(
-                            player.currentMediaItemIndex,
-                            0,
-                            currentPlaylistItems.size - 1
-                        )
-                    } else {
-                        0
-                    }
-                }
-            }
-
-            override fun onPlayerError(error: PlaybackException) {
-                if (error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
-                    || error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
-                ) {
-                    Logger.e(
-                        this@IMediaSessionService, message = "Player error:{" +
-                                "${error.errorCode}, " +
-                                "${error.message}" +
-                                "}"
-                    )
-                }
-
-            }
-        }
-    }
-
     private var isForegroundService = false
     private lateinit var mediaSession: MediaSessionCompat
     private lateinit var mediaSessionConnector: MediaSessionConnector
@@ -164,7 +92,7 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
                         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
                 } else {
-                    PendingIntent.getActivity(this, 2, sessionIntent, 0)
+                    PendingIntent.getActivity(this, 2, sessionIntent, PendingIntent.FLAG_IMMUTABLE)
                 }
             }
 
@@ -209,13 +137,6 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
         mediaSessionConnector.setPlayer(exoPlayerManager.exoPlayer)
 
         currentPlaylistItems.clear()
-        val loadChannelTask = tvDataSource.invoke(false, TVDataSourceFrom.GG)
-            .subscribe({ channelList ->
-                currentPlaylistItems.addAll(channelList)
-            }, {
-            }, {
-            })
-        disposable.add(loadChannelTask)
 
         exoPlayerManager.registerPlayerAttachedObserver("IMediaSessionService") {
             mediaSessionConnector.setPlayer(exoPlayerManager.exoPlayer)
@@ -227,8 +148,6 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
             }
         }
     }
-
-
     override fun onDestroy() {
         super.onDestroy()
         exoPlayerManager.unRegisterPlayerAttachedObserver("IMediaSessionService")
@@ -284,111 +203,6 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
             result.sendResult(mutableListOf<MediaBrowserCompat.MediaItem>())
             return
         }
-        val finalMediaItemList = mutableListOf<MediaBrowserCompat.MediaItem>()
-        when (parentId) {
-            MEDIA_RECENT_ROOT -> {
-                val loadChannelTask = tvDataSource.invoke(false, TVDataSourceFrom.GG)
-                    .subscribe({ channelList ->
-                        finalMediaItemList.addAll(channelList.mapToMediaItems(this))
-                        result.sendResult(finalMediaItemList)
-                    }, {
-                    }, {
-                        result.sendResult(finalMediaItemList)
-                    })
-
-                disposable.add(loadChannelTask)
-            }
-
-            MEDIA_RADIO_ROOT -> {
-                val rootList = mutableListOf<MediaBrowserCompat.MediaItem>()
-                rootList.add(
-                    MediaBrowserCompat.MediaItem(
-                        MediaDescriptionCompat.Builder()
-                            .setMediaId("VOV")
-                            .setTitle("VOV")
-                            .setDescription("Kên VOV Việt Nam")
-                            .setIconBitmap(
-                                GlideApp.with(this)
-                                    .asBitmap()
-                                    .load(com.kt.apps.core.R.drawable.icon_channel_vovtv_1656559082882)
-                                    .diskCacheStrategy(DiskCacheStrategy.DATA)
-                                    .submit()
-                                    .get()
-                            )
-                            .build(),
-                        MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
-                    ),
-
-                    )
-                MediaMetadataCompat.Builder()
-
-                    .build()
-                rootList.add(
-                    MediaBrowserCompat.MediaItem(
-                        MediaDescriptionCompat.Builder()
-                            .setMediaId("VOH")
-                            .setTitle("VOH")
-                            .setDescription("Kênh VOH Việt Nam")
-                            .setIconBitmap(
-                                GlideApp.with(this)
-                                    .asBitmap()
-                                    .load(com.kt.apps.core.R.drawable.icon_channel_voh)
-                                    .diskCacheStrategy(DiskCacheStrategy.DATA)
-                                    .submit()
-                                    .get()
-                            )
-                            .build(),
-                        MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
-                    ),
-
-                    )
-
-                result.sendResult(rootList)
-            }
-
-            "VOV" -> {
-                currentPlaylistItems.clear()
-                val loadChannelTask = tvDataSource.invoke(false, TVDataSourceFrom.GG)
-                    .map {
-                        currentPlaylistItems.addAll(it)
-                        it.filter {
-                            it.tvGroup == TVChannelGroup.VOV.name
-                        }
-                    }
-                    .subscribe({ channelList ->
-                        finalMediaItemList.addAll(channelList.mapToMediaItems(this))
-                        result.sendResult(finalMediaItemList)
-                    }, {
-                    }, {
-                        result.sendResult(finalMediaItemList)
-                    })
-                disposable.add(loadChannelTask)
-            }
-
-            "VOH" -> {
-                currentPlaylistItems.clear()
-                val loadChannelTask = tvDataSource.invoke(false, TVDataSourceFrom.GG)
-                    .map {
-                        currentPlaylistItems.addAll(it)
-                        it.filter {
-                            it.tvGroup == TVChannelGroup.VOH.name
-                        }
-                    }
-                    .subscribe({ channelList ->
-                        finalMediaItemList.addAll(channelList.mapToMediaItems(this))
-                        result.sendResult(finalMediaItemList)
-                    }, {
-                    }, {
-                        result.sendResult(finalMediaItemList)
-                    })
-                disposable.add(loadChannelTask)
-            }
-
-            else -> {
-
-            }
-        }
-
     }
 
     override fun onSearch(
@@ -435,6 +249,12 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
 
     override fun androidInjector(): AndroidInjector<Any> {
         return (application as CoreApp).androidInjector()
+    }
+
+    inner class LocalBinder : Binder() {
+        val service
+            get() = this@IMediaSessionService
+
     }
 
 }

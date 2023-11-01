@@ -38,8 +38,6 @@ class ExoPlayerManagerMobile @Inject constructor(
         headers: Map<String, String>?
     ) {
         super.playVideo(linkStreams, isHls, itemMetaData, playerListener, headers)
-//        mExoPlayer?.removeListener(internalPlayerListener)
-//        mExoPlayer?.addListener(internalPlayerListener)
         mExoPlayer?.play()
 
     }
@@ -56,7 +54,7 @@ class ExoPlayerManagerMobile @Inject constructor(
     }
 
     fun registerPlayerAttachedObserver(id: String, listener: () -> Unit) {
-        _playerListenerObserver[id] = listener
+//        _playerListenerObserver[id] = listener
     }
 
     fun unRegisterPlayerAttachedObserver(id: String) {

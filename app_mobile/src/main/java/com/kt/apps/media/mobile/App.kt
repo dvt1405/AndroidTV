@@ -8,7 +8,12 @@ import android.os.Build
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
-import androidx.work.*
+import androidx.work.Configuration
+import androidx.work.Data
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.base.CoreApp
@@ -85,20 +90,20 @@ class App : CoreApp(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         app = this
-        (applicationInjector() as AppComponents).inject(this)
-        voiceSelectorManager.registerLifeCycle()
         NotificationManagerCompat.from(this)
             .createNotificationChannelsCompat(
                 listOf(
                     NotificationChannelCompat.Builder(
                         NOW_PLAYING_CHANNEL_ID,
-                        NotificationManagerCompat.IMPORTANCE_LOW
+                        NotificationManagerCompat.IMPORTANCE_HIGH
                     )
                         .setName("iMedia")
                         .setDescription("iMedia Description")
                         .build()
                 )
             )
+        (applicationInjector() as AppComponents).inject(this)
+        voiceSelectorManager.registerLifeCycle()
     }
 
     override fun onRemoteConfigReady() {
