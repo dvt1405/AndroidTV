@@ -13,6 +13,8 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentActivity
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.logging.FirebaseActionLoggerImpl
+import com.kt.apps.core.logging.IActionLogger
+import com.kt.apps.core.repository.IVoiceSearchManager
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
 import com.kt.apps.voiceselector.log.VoiceSelectorLog
@@ -48,7 +50,7 @@ class VoiceSelectorManager @Inject constructor(
     private val app: CoreApp,
     private val sharedPreferences: SharedPreferences,
     private val logger: FirebaseActionLoggerImpl
-) {
+): IVoiceSearchManager {
     private lateinit var lastActivity: WeakReference<Activity>
 
     private val _event: PublishSubject<Event> = PublishSubject.create()
@@ -89,11 +91,11 @@ class VoiceSelectorManager @Inject constructor(
                 executeFetchedData(it)
             }
     }
-    fun openVoiceAssistant(extraData: Bundle = bundleOf()): Maybe<Boolean> {
+    override fun openVoiceAssistant(extraData: Bundle): Maybe<Boolean> {
         Log.d(TAG, "openVoiceAssistant: ")
         VoiceSelectorLog.cachedExtraData = bundleOf()
         return queryAndExecute()
-            .map { it.appInfo != null }
+            .map { it?.appInfo != null }
             .doOnDispose {
                 VoiceSelectorLog.cachedExtraData = bundleOf()
             }

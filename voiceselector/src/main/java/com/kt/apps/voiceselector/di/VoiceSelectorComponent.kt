@@ -5,6 +5,7 @@ import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.logging.FirebaseActionLoggerImpl
 import com.kt.apps.core.logging.IActionLogger
+import com.kt.apps.core.repository.IVoiceSearchManager
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.models.VoicePackage
 import com.kt.apps.voiceselector.usecase.AppQuery
@@ -15,7 +16,8 @@ import dagger.android.support.AndroidSupportInjectionModule
 
 @Component(
     modules = [
-        VoiceSelectorModule::class, ],
+        VoiceSelectorModule::class,
+        VoiceSelectorManagerModule::class],
     dependencies = [CoreComponents::class]
 )
 @VoiceSelectorScope
@@ -25,5 +27,6 @@ interface VoiceSelectorComponent {
     fun actionLogger(): FirebaseActionLoggerImpl
     fun checkVoiceInput(): CheckVoiceInput
     fun appQuery(): AppQuery
+    fun iVoiceSelectorManager(): IVoiceSearchManager
 
 }
