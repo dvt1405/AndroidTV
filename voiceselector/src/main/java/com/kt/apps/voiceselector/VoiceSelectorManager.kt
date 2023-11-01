@@ -13,7 +13,6 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentActivity
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.logging.FirebaseActionLoggerImpl
-import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
 import com.kt.apps.voiceselector.log.VoiceSelectorLog
@@ -152,7 +151,7 @@ class VoiceSelectorManager @Inject constructor(
             logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchStartGGAuto)
             voiceGGSearch()
         } else if (sharedPreferences.getBoolean(GG_LAST_TIME, false)) {
-            val modal = GGVoiceSelectorFragment.newInstance()
+            val modal = GGVoiceSelectorFragment.newInstance(infor?.appInfo?.launchIntent)
             state = State.ShowDialog
             logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchShowDialog)
             modal.show(activity.supportFragmentManager, GGVoiceSelectorFragment.TAG)
