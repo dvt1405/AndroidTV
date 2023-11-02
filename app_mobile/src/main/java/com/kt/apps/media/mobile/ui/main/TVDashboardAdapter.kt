@@ -1,45 +1,35 @@
 package com.kt.apps.media.mobile.ui.main
 
-import android.graphics.Rect
 import android.util.Log
-import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.flexbox.JustifyContent
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.logging.Logger
-import com.kt.apps.core.storage.local.databaseviews.ExtensionsChannelDBWithCategoryViews
-import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
-import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
-import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
 import com.kt.apps.media.mobile.utils.channelItemDecoration
 
-interface IChannelElement {
-    val name: String
-    val logoChannel: String
+abstract class IChannelElement {
+    abstract val name: String
+    abstract val logoChannel: String
+    open val isUseDrawable: Boolean
+        get() = true
 }
 
 sealed class ChannelElement {
-    class TVChannelElement(val model: TVChannel): IChannelElement {
+    class TVChannelElement(val model: TVChannel) : IChannelElement() {
         override val name: String
             get() = model.tvChannelName
 
@@ -47,29 +37,36 @@ sealed class ChannelElement {
             get() = model.logoChannel
     }
 
-    class ExtensionChannelElement(val model: ExtensionsChannel): IChannelElement {
+    class ExtensionChannelElement(val model: ExtensionsChannel) : IChannelElement() {
         override val name: String
             get() = model.tvChannelName
 
         override val logoChannel: String
             get() = model.logoChannel
+
+        override val isUseDrawable: Boolean
+            get() = false
     }
 
-    class SearchExtension(val model: SearchForText.SearchResult.ExtensionsChannelWithCategory): IChannelElement {
+    class SearchExtension(val model: SearchForText.SearchResult.ExtensionsChannelWithCategory) :
+        IChannelElement() {
         override val name: String
             get() = model.data.tvChannelName
         override val logoChannel: String
             get() = model.data.logoChannel
+
+        override val isUseDrawable: Boolean
+            get() = false
     }
 
-    class SearchHistory(val model: SearchForText.SearchResult.History): IChannelElement {
+    class SearchHistory(val model: SearchForText.SearchResult.History) : IChannelElement() {
         override val name: String
             get() = model.data.displayName
         override val logoChannel: String
             get() = model.data.thumb
     }
 
-    class SearchTV(val model: SearchForText.SearchResult.TV): IChannelElement {
+    class SearchTV(val model: SearchForText.SearchResult.TV) : IChannelElement() {
         override val name: String
             get() = model.data.tvChannelName
         override val logoChannel: String
@@ -77,7 +74,7 @@ sealed class ChannelElement {
 
     }
 
-    class FavoriteVideo(val model: VideoFavoriteDTO): IChannelElement {
+    class FavoriteVideo(val model: VideoFavoriteDTO) : IChannelElement() {
         override val name: String
             get() = model.title
         override val logoChannel: String

@@ -415,6 +415,7 @@ abstract class AbstractExoPlayerManager(
         const val EXTRA_MEDIA_REFERER = "extra:referer"
         const val EXTRA_MEDIA_IS_LIVE = "extra:is_live"
         const val EXTRA_MEDIA_IS_HLS = "extra:is_hls"
+        const val EXTRA_MEDIA_IS_INTERNAL = "extra:is_internal"
     }
 
 

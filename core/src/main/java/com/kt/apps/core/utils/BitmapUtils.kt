@@ -15,22 +15,20 @@ import androidx.annotation.RawRes
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.*
+import androidx.core.graphics.drawable.toBitmapOrNull
 import androidx.palette.graphics.Palette
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.engine.GlideException
-import com.bumptech.glide.load.resource.bitmap.CenterInside
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestListener
-import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
 import com.kt.apps.core.GlideApp
 import com.kt.apps.core.GlideRequest
-import com.kt.apps.resources.R
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.blurry.Blur
 import com.kt.apps.core.utils.blurry.BlurFactor
+import com.kt.apps.resources.R
 import java.util.concurrent.Executors
 
 private val BITMAP_THREAD_POOL = Executors.newCachedThreadPool()
@@ -194,14 +192,23 @@ fun loadImgBitmapByResName(context: Context, name: String): Bitmap? {
             "drawable",
             context.packageName
         )
-        val drawable = ContextCompat.getDrawable(context, id)
-        return GlideApp.with(context)
+        return ContextCompat.getDrawable(context, id)?.toBitmapOrNull()
+    } catch (e: Throwable) {
+        return loadBitmapByUrl(context, name)
+    }
+}
+
+fun loadBitmapByUrl(context: Context, url: String): Bitmap? {
+    try {
+        val bitmap = GlideApp.with(context)
             .asBitmap()
-            .load(drawable)
+            .load(url.trim())
             .error(R.drawable.app_banner)
+            .fitCenter()
             .submit()
             .get()
-    } catch (e: Exception) {
+        return bitmap
+    } catch (e: Throwable) {
         return null
     }
 }
@@ -211,9 +218,11 @@ fun <TranscodeType> GlideRequest<TranscodeType>.scaleType(scaleType: ScaleType):
         ScaleType.FIT_XY -> {
             this.optionalFitCenter()
         }
+
         ScaleType.CENTER_CROP -> {
             this.optionalCenterCrop()
         }
+
         else -> {
             this.optionalCenterInside()
         }

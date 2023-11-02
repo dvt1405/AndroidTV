@@ -3,39 +3,20 @@ package com.kt.apps.media.mobile.ui.view
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
-import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.LinearLayout
-import androidx.core.view.doOnPreDraw
-import androidx.core.view.updateLayoutParams
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.OnScrollListener
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
-import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.flexbox.JustifyContent
-import com.kt.apps.core.GlideApp
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
-import com.kt.apps.media.mobile.App
+import com.kt.apps.core.utils.loadImgByUrl
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.GridAutoFitLayoutManager
 import com.kt.apps.media.mobile.utils.channelItemDecoration
-import com.kt.apps.media.mobile.utils.fastSmoothScrollToPosition
-import com.kt.skeleton.KunSkeleton
-import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -127,7 +108,12 @@ class RowItemChannelAdapter: BaseAdapter<IChannelElement, ItemChannelBinding>() 
         Log.d(TAG, "bindItem: $position ${item.name} ${item.logoChannel}")
         binding.item = item
         binding.title.isSelected = true
-        binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)
+        if (item.isUseDrawable) {
+            binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)
+        } else {
+            binding.logo.loadImgByUrl(item.logoChannel)
+        }
+
     }
 
     override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {

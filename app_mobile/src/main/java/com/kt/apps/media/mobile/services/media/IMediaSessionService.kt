@@ -138,14 +138,23 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
 
         currentPlaylistItems.clear()
 
-        exoPlayerManager.registerPlayerAttachedObserver("IMediaSessionService") {
-            mediaSessionConnector.setPlayer(exoPlayerManager.exoPlayer)
+        exoPlayerManager.registerPlayerAttachedObserver("IMediaSessionService") { playbackState ->
+            when (playbackState) {
+                Player.STATE_READY -> {
+                    mediaSessionConnector.setPlayer(exoPlayerManager.exoPlayer)
+                    exoPlayerManager.exoPlayer?.run {
+                        notificationManager.showNotificationForPlayer(this)
+                    } ?: kotlin.run {
+                        notificationManager.hideNotification()
+                    }
+                }
 
-            exoPlayerManager.exoPlayer?.run {
-                notificationManager.showNotificationForPlayer(this)
-            } ?: kotlin.run {
-                notificationManager.hideNotification()
+                else -> {
+                    mediaSessionConnector.setPlayer(null)
+                    notificationManager.hideNotification()
+                }
             }
+
         }
     }
     override fun onDestroy() {

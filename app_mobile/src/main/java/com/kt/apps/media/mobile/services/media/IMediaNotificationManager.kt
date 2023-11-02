@@ -4,10 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.media.MediaSession2Service.MediaNotification
 import android.net.Uri
-import android.os.Build.VERSION
-import android.os.Build.VERSION_CODES
 import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
@@ -22,9 +19,9 @@ import com.google.android.exoplayer2.ui.PlayerNotificationManager.MediaDescripti
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.loadImgBitmapByResName
 import com.kt.apps.media.mobile.R
+import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 
 class IMediaNotificationManager(
@@ -56,11 +53,17 @@ class IMediaNotificationManager(
                     }
 
                     override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                        return null
+                        val intent = Intent(context, ComplexActivity::class.java)
+                        return PendingIntent.getActivity(
+                            context,
+                            0,
+                            intent,
+                            PendingIntent.FLAG_IMMUTABLE
+                        )
                     }
 
                     override fun getCurrentContentText(player: Player): CharSequence? {
-                        return null
+                        return player.mediaMetadata.albumTitle
                     }
 
                     override fun getCurrentLargeIcon(

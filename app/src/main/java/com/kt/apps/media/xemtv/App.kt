@@ -8,9 +8,6 @@ import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.google.assistant.appactions.suggestions.client.AppShortcutIntent
-import com.google.assistant.appactions.suggestions.client.AppShortcutSuggestion
-import com.google.assistant.appactions.suggestions.client.AssistantShortcutSuggestionsClient
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.autoupdate.di.DaggerAppUpdateComponent

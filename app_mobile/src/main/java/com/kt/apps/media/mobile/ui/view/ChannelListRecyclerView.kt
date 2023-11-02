@@ -7,18 +7,13 @@ import android.widget.FrameLayout
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.flexbox.FlexDirection
-import com.google.android.flexbox.FlexWrap
-import com.google.android.flexbox.FlexboxLayoutManager
-import com.google.android.flexbox.JustifyContent
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.utils.loadImgByDrawableIdResName
+import com.kt.apps.core.utils.loadImgByUrl
 import com.kt.apps.media.mobile.R
-import com.kt.apps.media.mobile.databinding.FootballItemRowChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemChannelBinding
 import com.kt.apps.media.mobile.databinding.ItemRowChannelBinding
-import com.kt.apps.media.mobile.ui.fragments.football.list.FootballAdapterType
 import com.kt.apps.media.mobile.ui.main.IChannelElement
 import com.kt.apps.media.mobile.utils.GridAutoFitLayoutManager
 import com.kt.apps.media.mobile.utils.channelItemDecoration
@@ -193,7 +188,11 @@ class ChannelListAdapter: BaseAdapter<ChannelListData, ItemRowChannelBinding>() 
         ) {
             binding.item = item
             binding.title.isSelected = true
-            binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)
+            if (item.isUseDrawable) {
+                binding.logo.loadImgByDrawableIdResName(item.logoChannel, item.logoChannel)
+            } else {
+                binding.logo.loadImgByUrl(item.logoChannel)
+            }
         }
 
         override fun onViewRecycled(holder: BaseViewHolder<IChannelElement, ItemChannelBinding>) {

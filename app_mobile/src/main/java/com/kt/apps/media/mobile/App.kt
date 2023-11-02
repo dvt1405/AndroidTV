@@ -5,6 +5,8 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.os.Bundle
+import android.util.Log
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
@@ -21,6 +23,7 @@ import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVComponents
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.workers.TVEpgWorkers
 import com.kt.apps.football.di.DaggerFootballComponents
 import com.kt.apps.football.di.FootballComponents
@@ -95,7 +98,7 @@ class App : CoreApp(), Configuration.Provider {
                 listOf(
                     NotificationChannelCompat.Builder(
                         NOW_PLAYING_CHANNEL_ID,
-                        NotificationManagerCompat.IMPORTANCE_HIGH
+                        NotificationManagerCompat.IMPORTANCE_LOW
                     )
                         .setName("iMedia")
                         .setDescription("iMedia Description")
@@ -104,6 +107,36 @@ class App : CoreApp(), Configuration.Provider {
             )
         (applicationInjector() as AppComponents).inject(this)
         voiceSelectorManager.registerLifeCycle()
+        registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+                Log.d(TAG, "onActivityCreated: $activity")
+            }
+
+            override fun onActivityStarted(activity: Activity) {
+                Log.d(TAG, "onActivityStarted: $activity")
+            }
+
+            override fun onActivityResumed(activity: Activity) {
+                Log.d(TAG, "onActivityResumed: $activity")
+            }
+
+            override fun onActivityPaused(activity: Activity) {
+                Log.d(TAG, "onActivityPaused: $activity")
+            }
+
+            override fun onActivityStopped(activity: Activity) {
+                Log.d(TAG, "onActivityStopped: $activity")
+            }
+
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
+                Log.d(TAG, "onActivitySaveInstanceState: $activity")
+            }
+
+            override fun onActivityDestroyed(activity: Activity) {
+                Log.d(TAG, "onActivityDestroyed: $activity")
+            }
+
+        })
     }
 
     override fun onRemoteConfigReady() {

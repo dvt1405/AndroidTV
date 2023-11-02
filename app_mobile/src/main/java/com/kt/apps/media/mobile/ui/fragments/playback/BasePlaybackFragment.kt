@@ -44,6 +44,7 @@ import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
+import com.kt.apps.media.mobile.services.media.MediaSessionContainer
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.*
@@ -94,6 +95,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     @Inject
     lateinit var voiceSelectorManager: VoiceSelectorManager
+
+    @Inject
+    lateinit var mediaSessionContainer: MediaSessionContainer
 
     private var _cachePlayingState: Boolean = false
 

@@ -15,7 +15,7 @@ class ExoPlayerManagerMobile @Inject constructor(
 ) : AbstractExoPlayerManager(_application, _audioFocusManager, historyManager) {
 
     private val _playerListenerObserver by lazy {
-        mutableMapOf<String, () -> Unit>()
+        mutableMapOf<String, (Int) -> Unit>()
     }
 
     override fun prepare() {
@@ -24,9 +24,14 @@ class ExoPlayerManagerMobile @Inject constructor(
             mExoPlayer?.release()
             mExoPlayer = buildExoPlayer()
 
-            _playerListenerObserver.values.forEach {
-                it.invoke()
-            }
+            mExoPlayer?.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    super.onPlaybackStateChanged(playbackState)
+                    _playerListenerObserver.values.forEach { action ->
+                        action(playbackState)
+                    }
+                }
+            })
         }
     }
 
@@ -53,8 +58,8 @@ class ExoPlayerManagerMobile @Inject constructor(
 
     }
 
-    fun registerPlayerAttachedObserver(id: String, listener: () -> Unit) {
-//        _playerListenerObserver[id] = listener
+    fun registerPlayerAttachedObserver(id: String, listener: (Int) -> Unit) {
+        _playerListenerObserver[id] = listener
     }
 
     fun unRegisterPlayerAttachedObserver(id: String) {
