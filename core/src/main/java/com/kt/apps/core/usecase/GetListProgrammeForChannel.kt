@@ -55,15 +55,17 @@ class GetListProgrammeForChannel @Inject constructor(
             is TVChannelDTO -> {
                 val related = parser.getRelatedProgram(channel)
                 if (related == null) {
-                    parser.getListProgramForTVChannel(channel)
+                    parser.getListProgramForTVChannel(channel.channelId)
                 } else {
-                    parser.getListProgramForTVChannel(channel)
+                    parser.getListProgramForTVChannel(channel.channelId)
                         .mergeWith(related)
                         .reduce { t1, t2 ->
                             val t = t1.toMutableList()
                             t.addAll(t2)
                             t.distinctBy {
-                                it.title
+                                it.title + it.start
+                            }.sortedBy {
+                                it.startTimeMilli()
                             }
                         }.toObservable()
                 }

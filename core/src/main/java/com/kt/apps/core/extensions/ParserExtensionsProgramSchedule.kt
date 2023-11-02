@@ -23,7 +23,6 @@ import okhttp3.Request
 import org.json.JSONArray
 import org.simpleframework.xml.stream.InputNode
 import org.simpleframework.xml.stream.NodeBuilder
-import java.lang.Exception
 import java.util.Calendar
 import java.util.Locale
 import java.util.zip.GZIPInputStream
@@ -60,7 +59,7 @@ class ParserExtensionsProgramSchedule @Inject constructor(
         mutableMapOf<String, String>()
     }
     fun getRelatedProgram(channel: TVChannelDTO) = getMappingEpgChannelId()[channel.channelId]?.split("|")?.map { newId ->
-        getListProgramForTVChannel(channel)
+        getListProgramForTVChannel(newId, true)
             .map {
                 it.map {
                     TVScheduler.Programme(
@@ -112,9 +111,10 @@ class ParserExtensionsProgramSchedule @Inject constructor(
     }
 
     fun getListProgramForTVChannel(
-        tvChannel: TVChannelDTO
+        tvChannelId: String,
+        useAbsoluteId: Boolean = false
     ): Observable<List<TVScheduler.Programme>> {
-        return getListProgramForChannel(tvChannel.channelId, false)
+        return getListProgramForChannel(tvChannelId, useAbsoluteId)
     }
 
     private fun getListProgramForChannel(

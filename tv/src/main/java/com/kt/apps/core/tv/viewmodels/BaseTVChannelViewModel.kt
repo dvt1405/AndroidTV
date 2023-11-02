@@ -203,6 +203,9 @@ open class BaseTVChannelViewModel constructor(
         Logger.d(this, message = "getListProgramForChannel: ${Gson().toJson(tvChannel)}")
         add(
             interactors.getListProgrammeForChannel(tvChannel.toChannelDto())
+                .filter {
+                    it.isNotEmpty()
+                }
                 .map { oldProgramList ->
                     Logger.d(this@BaseTVChannelViewModel, message = "Thread oldProgramList: $oldProgramList")
                     if (oldProgramList.isEmpty()) {
@@ -212,13 +215,17 @@ open class BaseTVChannelViewModel constructor(
                         it.channel.remoAllSpecialCharsAndPrefix() == tvChannel.channelIdWithoutSpecialChars
                                 && it.isToday()
                     }.toMutableList()
-                    val currentProgramme = oldProgramList.first {
-                        it.isCurrentProgram()
+                    val currentProgramme = try {
+                        newList.first {
+                            it.isCurrentProgram()
+                        }
+                    } catch (e: Exception) {
+                        null
                     }
                     synchronized(newList) {
                         oldProgramList.forEach {
                             if (it.isCurrentProgram() &&
-                                (it.start != currentProgramme.start ||
+                                (it.start != currentProgramme?.start ||
                                         it.title != currentProgramme.title)
                             ) {
                                 newList.remove(it)
@@ -229,8 +236,12 @@ open class BaseTVChannelViewModel constructor(
                 }
                 .subscribe({
                     Logger.d(this, message = "getListProgramForChannel: ${Gson().toJson(it)}")
-                    val currentProgramme = it.first {
-                        it.isCurrentProgram()
+                    val currentProgramme = try {
+                        it.first {
+                            it.isCurrentProgram()
+                        }
+                    } catch (e: Exception) {
+                        tvChannel.toDefaultProgramme()
                     }
                     Logger.d(this, message = "current program: $currentProgramme")
                     _programmeForChannelLiveData.postValue(DataState.Success(currentProgramme))
