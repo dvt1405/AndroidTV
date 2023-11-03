@@ -36,6 +36,7 @@ class IMediaNotificationManager(
 
     fun showNotificationForPlayer(exoPlayer: ExoPlayer) {
         notificationManager.setPlayer(exoPlayer)
+
     }
 
     private var notificationManager: PlayerNotificationManager
@@ -74,7 +75,7 @@ class IMediaNotificationManager(
                         CoroutineScope(Dispatchers.Default).launch {
                             val bitmap = uri?.let {
                                 loadImgBitmapByResName(context, it)
-                            } ?:  Glide
+                            } ?: Glide
                                 .with(context)
                                 .asBitmap()
                                 .load(R.mipmap.ic_launcher)
@@ -86,13 +87,16 @@ class IMediaNotificationManager(
                     }
 
                 })
+                .setPlayActionIconResourceId(R.drawable.ic_play)
+                .setPauseActionIconResourceId(R.drawable.ic_pause)
+                .setStopActionIconResourceId(R.drawable.ic_clear_24)
                 .setCustomActionReceiver(object : PlayerNotificationManager.CustomActionReceiver {
-                override fun createCustomActions(
-                    context: Context,
-                    instanceId: Int
-                ): MutableMap<String, NotificationCompat.Action> {
-                    Logger.d(this@IMediaNotificationManager, message = "createCustomActions")
-                    return mutableMapOf(
+                    override fun createCustomActions(
+                        context: Context,
+                        instanceId: Int
+                    ): MutableMap<String, NotificationCompat.Action> {
+                        Logger.d(this@IMediaNotificationManager, message = "createCustomActions")
+                        return mutableMapOf(
 //                        "VoiceAssistant" to NotificationCompat.Action(
 //                            androidx.leanback.R.drawable.lb_ic_search_mic,
 //                            "VoiceAssistant",
@@ -109,21 +113,21 @@ class IMediaNotificationManager(
 //                                }
 //                            )
 //                        )
-                    )
-                }
+                        )
+                    }
 
-                override fun getCustomActions(player: Player): MutableList<String> {
-                    Log.e("TAG", "getCustomActions")
-                    return mutableListOf(
+                    override fun getCustomActions(player: Player): MutableList<String> {
+                        Log.e("TAG", "getCustomActions")
+                        return mutableListOf(
 //                        "VoiceAssistant"
-                    )
-                }
+                        )
+                    }
 
-                override fun onCustomAction(player: Player, action: String, intent: Intent) {
-                    Log.e("TAG", "onCustomAction $action")
-                }
+                    override fun onCustomAction(player: Player, action: String, intent: Intent) {
+                        Log.e("TAG", "onCustomAction $action")
+                    }
 
-            })
+                })
                 .setNotificationListener(notificationListener)
                 .build()
 
@@ -133,9 +137,9 @@ class IMediaNotificationManager(
         notificationManager.setUsePreviousAction(false)
         notificationManager.setUseFastForwardAction(false)
         notificationManager.setUseRewindAction(false)
+        notificationManager.setUseStopAction(true)
 
     }
-
     private inner class DescriptionAdapter(private val controller: MediaControllerCompat) :
         PlayerNotificationManager.MediaDescriptionAdapter {
 

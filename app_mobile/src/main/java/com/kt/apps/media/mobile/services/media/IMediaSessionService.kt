@@ -38,7 +38,6 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
     private val packageValidator by lazy {
         PackageValidator(this, R.xml.allowed_media_browser_callers)
     }
-    private var currentMediaItemIndex: Int = 0
     private var currentPlaylistItems: MutableList<TVChannel> = mutableListOf()
     private val notificationManager: IMediaNotificationManager by lazy {
         IMediaNotificationManager(
@@ -160,11 +159,6 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
     override fun onDestroy() {
         super.onDestroy()
         exoPlayerManager.unRegisterPlayerAttachedObserver("IMediaSessionService")
-    }
-
-
-    private fun saveRecentSongToStorage() {
-
     }
 
     override fun onGetRoot(

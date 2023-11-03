@@ -1,5 +1,9 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -11,6 +15,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
@@ -27,6 +32,7 @@ import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
+import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.ui.StyledPlayerView
 import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.video.VideoSize
@@ -74,15 +80,16 @@ interface IPlaybackControl {
 }
 
 sealed class LayoutState {
-    data class FULLSCREEN(val shouldRedraw: Boolean): LayoutState()
-    object MINIMAL: LayoutState()
-    object PIP: LayoutState()
-    object SHOW_CHANNEL: LayoutState()
-    object MOVE_CHANNEL: LayoutState()
+    data class FULLSCREEN(val shouldRedraw: Boolean) : LayoutState()
+    object MINIMAL : LayoutState()
+    object PIP : LayoutState()
+    object SHOW_CHANNEL : LayoutState()
+    object MOVE_CHANNEL : LayoutState()
 }
 
 data class ScreenState(val playbackState: PlaybackState, val isInPIPMode: Boolean)
-abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>(), IPlaybackControl, Player.Listener {
+abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>(),
+    IPlaybackControl, Player.Listener {
 
     override val screenName: String
         get() = "Fragment Playback"
@@ -190,10 +197,13 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected abstract val interactor: BasePlaybackInteractor
 
     private val marginBottomSize by lazy {
-        ( resources.getDimensionPixelSize(R.dimen.item_channel_height) + resources.getDimensionPixelSize(R.dimen.item_channel_decoration)) * 2 / 3
+        (resources.getDimensionPixelSize(R.dimen.item_channel_height) + resources.getDimensionPixelSize(
+            R.dimen.item_channel_decoration
+        )) * 2 / 3
     }
 
-    protected var lastPlayerControllerConfig: PlayerControllerConfig = PlayerControllerConfig(true, 3000)
+    protected var lastPlayerControllerConfig: PlayerControllerConfig =
+        PlayerControllerConfig(true, 3000)
 
     private lateinit var informationDialog: AlertDialog
 
@@ -211,12 +221,23 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         showErrorDialog(content = "${ex.message}") { }
     }
 
+    private val broadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == PlayerNotificationManager.ACTION_STOP) {
+                exit()
+            }
+        }
+    }
+
+    private var registeredBroadcastReceiver: Boolean = false
+
     override fun initView(savedInstanceState: Bundle?) {
         Log.d(TAG, "initView:")
         liveLabel?.visibility = View.GONE
         exoPlayer?.apply {
             player = exoPlayerManager.exoPlayer
-            lastPlayerControllerConfig = PlayerControllerConfig(controllerHideOnTouch, controllerShowTimeoutMs)
+            lastPlayerControllerConfig =
+                PlayerControllerConfig(controllerHideOnTouch, controllerShowTimeoutMs)
             showController()
             player?.stop()
 
@@ -229,7 +250,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
 
-        favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24, context?.theme)
+        favoriteButton?.icon = ResourcesCompat.getDrawable(
+            resources,
+            com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24,
+            context?.theme
+        )
         favoriteButton?.setOnClickListener { view ->
             Log.d(TAG, "toggleFavorite: ")
             toggleFavorite()
@@ -237,7 +262,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         favoriteButton?.gone()
         Log.d(TAG, "favoriteButton?.invisible(): ${Thread.currentThread()}")
 
-        informationButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.core.R.drawable.ic_round_error_outline_24, context?.theme)
+        informationButton?.icon = ResourcesCompat.getDrawable(
+            resources,
+            com.kt.apps.core.R.drawable.ic_round_error_outline_24,
+            context?.theme
+        )
         informationButton?.setOnClickListener { showInformationDialog() }
         informationButton?.inVisible()
 
@@ -250,16 +279,30 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
         progressBar?.isEnabled = false
 
-        backButton?.icon = ResourcesCompat.getDrawable(resources, if (isLandscape) {
-            R.drawable.ic_arrow_back
-        } else {
-            R.drawable.ic_clear
-        }, context?.theme)
+        backButton?.icon = ResourcesCompat.getDrawable(
+            resources, if (isLandscape) {
+                R.drawable.ic_arrow_back
+            } else {
+                R.drawable.ic_clear
+            }, context?.theme
+        )
 
         fullScreenButton?.visibility = View.VISIBLE
-        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
+        fullScreenButton?.setImageDrawable(
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.exo_ic_fullscreen_exit,
+                context?.theme
+            )
+        )
 
-        aspectRatioButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_aspect_ratio, context?.theme))
+        aspectRatioButton?.setImageDrawable(
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.ic_aspect_ratio,
+                context?.theme
+            )
+        )
         aspectRatioButton?.setOnClickListener { changeNextResizeMode() }
         aspectRatioButton?.visibility = if (isLandscape) {
             View.VISIBLE
@@ -268,24 +311,31 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
 
         toggleChannelListVisibility(shouldShow = true)
-        channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
+        channelListRecyclerView?.addOnScrollListener(object : OnScrollListener() {
             var isChanged: Boolean = false
             var baseConfig = lastPlayerControllerConfig
 
             fun avoidChangeHide() {
                 val exoPlayer = exoPlayer ?: return
-                val shouldConfig = exoPlayer.controllerHideOnTouch && exoPlayer.controllerShowTimeoutMs > 0
-                if (!shouldConfig) { return }
+                val shouldConfig =
+                    exoPlayer.controllerHideOnTouch && exoPlayer.controllerShowTimeoutMs > 0
+                if (!shouldConfig) {
+                    return
+                }
                 exoPlayer.apply {
-                    baseConfig = PlayerControllerConfig(hideOnTouch = controllerHideOnTouch, controllerShowTimeoutMs)
+                    baseConfig = PlayerControllerConfig(
+                        hideOnTouch = controllerHideOnTouch,
+                        controllerShowTimeoutMs
+                    )
 
                     controllerShowTimeoutMs = -1
                     controllerHideOnTouch = false
                 }
                 isChanged = true
             }
+
             override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                when(newState) {
+                when (newState) {
                     SCROLL_STATE_IDLE -> {
                         Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_IDLE")
                         if (isChanged) {
@@ -296,10 +346,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                             isChanged = false
                         }
                     }
+
                     SCROLL_STATE_SETTLING -> {
                         Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_SETTLING")
                         avoidChangeHide()
                     }
+
                     SCROLL_STATE_DRAGGING -> {
                         Log.d(TAG, "onScrollStateChanged: SCROLL_STATE_DRAGGING")
                         avoidChangeHide()
@@ -308,6 +360,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         })
     }
+
     fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
             exoPlayerManager.exoPlayer?.pause()
@@ -319,6 +372,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
         return false
     }
+
     @OptIn(FlowPreview::class)
     override fun initAction(savedInstanceState: Bundle?) {
 
@@ -326,9 +380,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             launch {
                 merge(
                     if (!isLandscape)
-                        backButton?.clicks()  ?: emptyFlow()
+                        backButton?.clicks() ?: emptyFlow()
                     else emptyFlow(),
-                    exitButton?.clicks() ?: emptyFlow())
+                    exitButton?.clicks() ?: emptyFlow()
+                )
                     .collectLatest {
                         delay(250)
                         exit()
@@ -338,9 +393,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             launch {
                 merge(
                     if (isLandscape)
-                        backButton?.clicks()  ?: emptyFlow()
+                        backButton?.clicks() ?: emptyFlow()
                     else emptyFlow(),
-                    fullScreenButton?.clicks() ?: emptyFlow())
+                    fullScreenButton?.clicks() ?: emptyFlow()
+                )
                     .collectLatest {
                         changeToFullscreen()
                     }
@@ -373,13 +429,14 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 interactor.state.shareIn(lifecycleScope, SharingStarted.WhileSubscribed(), 0)
                     .collectLatest { state ->
                         Log.d(TAG, "initAction: state $state ${this@BasePlaybackFragment}")
-                        when(state) {
+                        when (state) {
                             is PlaybackViewModel.State.LOADING -> preparePlayView(state.data)
                             is PlaybackViewModel.State.PLAYING -> {
                                 retryTimes = MAX_RETRY_TIME
                                 executingIndex = -1
                                 playVideo(state.data)
                             }
+
                             is PlaybackViewModel.State.ERROR -> onError(state.error)
                             else -> {}
                         }
@@ -391,10 +448,16 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     MainScope().launch {
                         if (it != null) {
                             favoriteButton?.visible()
-                            Log.d(TAG, "favoriteButton?.visible() $it ${favoriteButton?.visibility}: ${favoriteButton?.icon}")
+                            Log.d(
+                                TAG,
+                                "favoriteButton?.visible() $it ${favoriteButton?.visibility}: ${favoriteButton?.icon}"
+                            )
                         } else {
                             favoriteButton?.inVisible()
-                            Log.d(TAG, "favoriteButton?.invisible() $it ${favoriteButton?.visibility}: ${Thread.currentThread()}")
+                            Log.d(
+                                TAG,
+                                "favoriteButton?.invisible() $it ${favoriteButton?.visibility}: ${Thread.currentThread()}"
+                            )
                         }
                     }
                 }
@@ -412,10 +475,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     if (state.isInPIPMode) {
                         currentLayout.emit(LayoutState.PIP)
                     } else {
-                        when(state.playbackState) {
+                        when (state.playbackState) {
                             PlaybackState.Fullscreen -> {
                                 currentLayout.emit(LayoutState.FULLSCREEN(shouldRedraw = false))
                             }
+
                             PlaybackState.Minimal -> currentLayout.emit(LayoutState.MINIMAL)
                             else -> {
                                 exoPlayer?.keepScreenOn = false
@@ -426,37 +490,42 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
 
             launch {
-                interactor.listFavorite.collectLatest {
-                    Log.d(TAG, "toggleFavoriteCurrent listFavorite: ${it}")
-                }
-            }
-
-            launch {
-                combine(interactor.listFavorite, currentPlayingMediaItem, transform = { listFavorite, currentPlay ->
-                    Log.d(TAG, "toggleFavoriteCurrent combine: ${listFavorite}")
-                    listFavorite.any { videoFavoriteDTO ->
-                        videoFavoriteDTO.id == currentPlay?.mediaId && videoFavoriteDTO.title == currentPlay.mediaMetadata.title
-                    }
-                }).collectLatest {
+                combine(
+                    interactor.listFavorite,
+                    currentPlayingMediaItem,
+                    transform = { listFavorite, currentPlay ->
+                        Log.d(TAG, "toggleFavoriteCurrent combine: ${listFavorite}")
+                        listFavorite.any { videoFavoriteDTO ->
+                            videoFavoriteDTO.id == currentPlay?.mediaId && videoFavoriteDTO.title == currentPlay.mediaMetadata.title
+                        }
+                    }).collectLatest {
                     Log.d(TAG, "toggleFavoriteCurrent combine: ${it}")
 //                    favoriteButton?.icon = ResourcesCompat.getDrawable(resources, R.drawable.ic_bookmark_selector, context?.theme)
                     favoriteButton?.isSelected = it
                     favoriteButton?.icon = if (it) {
-                        ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_round_bookmark_24, context?.theme)
+                        ResourcesCompat.getDrawable(
+                            resources,
+                            com.kt.apps.resources.R.drawable.ic_round_bookmark_24,
+                            context?.theme
+                        )
                     } else {
-                        ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24, context?.theme)
+                        ResourcesCompat.getDrawable(
+                            resources,
+                            com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24,
+                            context?.theme
+                        )
                     }
                 }
             }
 
             launch {
                 currentLayout.collectLatest {
-                    when(it) {
+                    when (it) {
                         is LayoutState.FULLSCREEN -> changeFullScreenLayout(it.shouldRedraw)
                         is LayoutState.SHOW_CHANNEL -> changeFullScreenLayout(false)
                         is LayoutState.PIP -> togglePIPLayout(true)
                         is LayoutState.MINIMAL -> changeMinimalLayout()
-                        is LayoutState.MOVE_CHANNEL -> { }
+                        is LayoutState.MOVE_CHANNEL -> {}
                     }
                 }
             }
@@ -472,6 +541,20 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             }
+        }
+
+        context?.run {
+            ContextCompat.registerReceiver(
+                this,
+                broadcastReceiver,
+                IntentFilter().apply {
+                    addAction(PlayerNotificationManager.ACTION_PAUSE)
+                    addAction(PlayerNotificationManager.ACTION_PLAY)
+                    addAction(PlayerNotificationManager.ACTION_STOP)
+                },
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+            registeredBroadcastReceiver = true
         }
 
         interactor.loadFavorite()
@@ -518,12 +601,16 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 }
                 findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
                     "${player.videoSize.width}x${player.videoSize.height}"
-                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
-                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
-                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
-                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
-                    !it?.trim().isNullOrEmpty()
-                } ?: "NoValue"
+                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text =
+                    "${player.videoFormat?.colorInfo ?: "NoValue"}"
+                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text =
+                    player.videoFormat?.codecs
+                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text =
+                    "${player.videoFormat?.frameRate}"
+                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text =
+                    player.audioFormat?.codecs.takeIf {
+                        !it?.trim().isNullOrEmpty()
+                    } ?: "NoValue"
 
                 this.findTextViewsInView().forEach {
                     it.apply {
@@ -552,12 +639,16 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 }
                 findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
                     "${player.videoSize.width}x${player.videoSize.height}"
-                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
-                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
-                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
-                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
-                    !it?.trim().isNullOrEmpty()
-                } ?: "NoValue"
+                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text =
+                    "${player.videoFormat?.colorInfo ?: "NoValue"}"
+                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text =
+                    player.videoFormat?.codecs
+                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text =
+                    "${player.videoFormat?.frameRate}"
+                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text =
+                    player.audioFormat?.codecs.takeIf {
+                        !it?.trim().isNullOrEmpty()
+                    } ?: "NoValue"
 
                 this.findTextViewsInView().forEach {
                     it.apply {
@@ -575,11 +666,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         exoPlayerManager.exoPlayer?.stop()
         callback?.onExitMinimal()
     }
+
     override fun onStop() {
         super.onStop()
         Log.d(TAG, "onStop: ")
         _cachePlayingState = exoPlayerManager.exoPlayer?.isPlaying ?: false
-//        exoPlayerManager.pause()
         exoPlayer?.keepScreenOn = false
 
         if (this::informationDialog.isInitialized) {
@@ -593,6 +684,9 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         super.onDestroy()
         Log.d(TAG, "onDestroy: ")
         exoPlayerManager.detach(this)
+        if (registeredBroadcastReceiver) {
+            context?.unregisterReceiver(broadcastReceiver)
+        }
     }
 
     override fun onResume() {
@@ -603,6 +697,10 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             false
         } else false
         exoPlayer?.keepScreenOn = true
+
+        if (!isLandscape && (currentLayout.value is LayoutState.MINIMAL || currentLayout.value is LayoutState.FULLSCREEN)) {
+            exoPlayer?.useController = true
+        }
     }
 
     protected fun coroutineError(): (CoroutineContext, Throwable) -> Unit {
@@ -616,16 +714,18 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         Log.d(TAG, "onError: ${Throwable().stackTraceToString()}")
         showErrorDialog(
             content = "Xin lỗi, mở nội dung không thành công. Vui lòng thử lại sau.\nMã lỗi: $errorCode",
-            cancellable = false)
+            cancellable = false
+        )
     }
 
-    protected open fun onRedraw() { }
+    protected open fun onRedraw() {}
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
         Log.d(TAG, "Playback onIsPlayingChanged: $isPlaying")
         isPlayingState.value = isPlaying
     }
+
     override fun onPlaybackStateChanged(playbackState: Int) {
         if (playbackState == ExoPlayer.STATE_READY) {
             isProgressing.value = false
@@ -656,6 +756,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 interactor.playbackError(PlaybackThrowable(error.errorCode, error))
             }
         }
+
         val executingData = interactor.state.value
             .let { (it as? PlaybackViewModel.State.PLAYING)?.data }
             ?: kotlin.run {
@@ -743,6 +844,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             Log.d(TAG, "voiceSelector: $result")
         }.trackJob(voiceSearchProgress)
     }
+
     private fun toggleChannelListVisibility(shouldShow: Boolean) {
         channelListRecyclerView?.visibility = if (shouldShow) {
             channelListVisibility
@@ -750,8 +852,15 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             View.GONE
         }
     }
+
     private fun changeFullScreenLayout(shouldRedraw: Boolean = true) {
-        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
+        fullScreenButton?.setImageDrawable(
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.exo_ic_fullscreen_exit,
+                context?.theme
+            )
+        )
         exoPlayer?.apply {
             useController = true
             controllerShowTimeoutMs = lastPlayerControllerConfig.showTimeout
@@ -762,8 +871,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                 showController()
             }
         }
-        safeLet(motionLayout, provideFullScreenLayout()) {
-            layout, constrainSet ->
+        safeLet(motionLayout, provideFullScreenLayout()) { layout, constrainSet ->
             performTransition(layout, constrainSet, transition = AutoTransition(), onEnd = {
                 if (shouldRedraw) {
                     onRedraw()
@@ -778,7 +886,13 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
 
     private fun changeMinimalLayout() {
-        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_enter, context?.theme))
+        fullScreenButton?.setImageDrawable(
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.exo_ic_fullscreen_enter,
+                context?.theme
+            )
+        )
         if (isLandscape) {
             exoPlayer?.apply {
                 hideController()
@@ -793,11 +907,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
 
-        safeLet(motionLayout, provideMinimalLayout()) {
-                mainLayout, constraintSet ->
+        safeLet(motionLayout, provideMinimalLayout()) { mainLayout, constraintSet ->
             performTransition(mainLayout, constraintSet)
         }
     }
+
     protected open suspend fun preparePlayView(data: PrepareStreamLinkData) {
         exoPlayerManager.exoPlayer?.stop()
         exoPlayerManager.detach()
@@ -826,7 +940,13 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         currentPlayingMediaItem.value = exoPlayerManager.exoPlayer?.currentMediaItem
     }
 
-    private fun performTransition(layout: ConstraintLayout, set: ConstraintSet, transition: Transition = Fade(), onStart: (() -> Unit)? = null, onEnd: (() -> Unit)? = null) {
+    private fun performTransition(
+        layout: ConstraintLayout,
+        set: ConstraintSet,
+        transition: Transition = Fade(),
+        onStart: (() -> Unit)? = null,
+        onEnd: (() -> Unit)? = null
+    ) {
         Log.d(TAG, "performTransition: ${set.TAG}")
         set.applyTo(layout)
         MainScope().launch {
@@ -878,28 +998,40 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     open fun provideFullScreenLayout(): ConstraintSet? {
         Log.d(TAG, "provideFullScreenLayout: ")
         if (isLandscape) {
-            return safeLet(exoPlayer, minimalLayout, channelListRecyclerView ) {
-                    exoplayer,  minimal, list ->
+            return safeLet(
+                exoPlayer,
+                minimalLayout,
+                channelListRecyclerView
+            ) { exoplayer, minimal, list ->
                 ConstraintSet().apply {
                     arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
                         clear(it)
                     }
 
-                    arrayListOf(ConstraintSet.END, ConstraintSet.BOTTOM, ConstraintSet.START, ConstraintSet.TOP).forEach {
+                    arrayListOf(
+                        ConstraintSet.END,
+                        ConstraintSet.BOTTOM,
+                        ConstraintSet.START,
+                        ConstraintSet.TOP
+                    ).forEach {
                         connect(exoplayer.id, it, ConstraintSet.PARENT_ID, it)
                     }
                     setVisibility(minimal.id, View.GONE)
                     setVisibility(list.id, View.VISIBLE)
                     matchParentWidth(list.id)
-                    connect(list.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+                    connect(
+                        list.id,
+                        ConstraintSet.BOTTOM,
+                        ConstraintSet.PARENT_ID,
+                        ConstraintSet.BOTTOM
+                    )
                     setMargin(list.id, ConstraintSet.BOTTOM, -marginBottomSize)
                     constrainHeight(list.id, ConstraintSet.WRAP_CONTENT)
 
                 }
             }
         }
-        return safeLet(exoPlayer, channelListRecyclerView ) {
-                exoplayer,  list ->
+        return safeLet(exoPlayer, channelListRecyclerView) { exoplayer, list ->
             ConstraintSet().apply {
                 arrayListOf(exoplayer.id).forEach {
                     clear(it)
@@ -913,8 +1045,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     open fun provideInPIPModeLayout(): ConstraintSet? {
 
         Log.d(TAG, "provideInPIPModeLayout: ")
-        return safeLet(exoPlayer, minimalLayout, channelListRecyclerView ) {
-                exoplayer,  minimal, list ->
+        return safeLet(
+            exoPlayer,
+            minimalLayout,
+            channelListRecyclerView
+        ) { exoplayer, minimal, list ->
             ConstraintSet().apply {
                 clone(this)
                 arrayListOf(exoplayer.id, minimal.id, list.id).forEach {
