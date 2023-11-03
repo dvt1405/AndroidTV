@@ -4,21 +4,16 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.os.Build
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.lifecycle.lifecycleScope
 import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.base.leanback.RowsSupportFragment.TAG
 import com.kt.apps.voiceselector.R
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.databinding.ActivityVoiceSearchBinding
 import com.kt.apps.voiceselector.models.Event
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class VoiceSearchActivity : BaseActivity<ActivityVoiceSearchBinding>() {
@@ -47,6 +42,7 @@ class VoiceSearchActivity : BaseActivity<ActivityVoiceSearchBinding>() {
     private val launchForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
         result ->
         Log.d(TAG, "result: $result")
+//        Toast.makeText(this, "launchForResult ${result.resultCode}", Toast.LENGTH_LONG).show()
         when(result.resultCode) {
             Activity.RESULT_OK -> {
                 val resultList = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
@@ -56,7 +52,15 @@ class VoiceSearchActivity : BaseActivity<ActivityVoiceSearchBinding>() {
                 this@VoiceSearchActivity.finish()
                 overridePendingTransition(0, 0)
             }
+
             Activity.RESULT_CANCELED -> {
+                voiceSelectorManager.emitEvent(Event.Cancel)
+
+                this@VoiceSearchActivity.finish()
+                overridePendingTransition(0, 0)
+            }
+
+            else -> {
                 voiceSelectorManager.emitEvent(Event.Cancel)
 
                 this@VoiceSearchActivity.finish()
