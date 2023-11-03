@@ -24,6 +24,7 @@ object Constants {
     const val HOST_FOOTBALL = "bongda"
     const val HOST_RADIO = "radio"
     const val HOST_IPTV = "iptv"
+    const val HOST_VOICE = "voice_search"
     const val SCHEME_DEFAULT = "xemtv"
 
     const val PATH_CHANNEL = "channel"

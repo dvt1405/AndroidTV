@@ -5,17 +5,15 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
-import android.support.v4.media.session.MediaControllerCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.ui.PlayerNotificationManager.MediaDescriptionAdapter
+import com.kt.apps.core.Constants
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.loadImgBitmapByResName
 import com.kt.apps.media.mobile.R
@@ -23,6 +21,9 @@ import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
+const val NOW_PLAYING_CHANNEL_ID = "iMedia"
+const val NOW_PLAYING_NOTIFICATION_ID = 1234
 
 class IMediaNotificationManager(
     private val context: Context,
@@ -97,29 +98,26 @@ class IMediaNotificationManager(
                     ): MutableMap<String, NotificationCompat.Action> {
                         Logger.d(this@IMediaNotificationManager, message = "createCustomActions")
                         return mutableMapOf(
-//                        "VoiceAssistant" to NotificationCompat.Action(
-//                            androidx.leanback.R.drawable.lb_ic_search_mic,
-//                            "VoiceAssistant",
-//                            PendingIntent.getBroadcast(
-//                                context,
-//                                0,
-//                                Intent("kiki").apply {
-//                                    this.`package` = context.packageName
-//                                },
-//                                if (VERSION.SDK_INT >= VERSION_CODES.M) {
-//                                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//                                } else {
-//                                    0
-//                                }
-//                            )
-//                        )
+                            "VoiceAssistant" to NotificationCompat.Action(
+                                androidx.leanback.R.drawable.lb_ic_search_mic,
+                                "VoiceAssistant",
+                                PendingIntent.getActivity(
+                                    context,
+                                    1,
+                                    Intent(context, ComplexActivity::class.java).apply {
+                                        data =
+                                            Uri.parse("${Constants.SCHEME_DEFAULT}://${Constants.HOST_VOICE}/search")
+                                    },
+                                    PendingIntent.FLAG_IMMUTABLE
+                                )
+                            )
                         )
                     }
 
                     override fun getCustomActions(player: Player): MutableList<String> {
                         Log.e("TAG", "getCustomActions")
                         return mutableListOf(
-//                        "VoiceAssistant"
+                            "VoiceAssistant"
                         )
                     }
 
@@ -140,54 +138,5 @@ class IMediaNotificationManager(
         notificationManager.setUseStopAction(true)
 
     }
-    private inner class DescriptionAdapter(private val controller: MediaControllerCompat) :
-        PlayerNotificationManager.MediaDescriptionAdapter {
-
-        var currentIconUri: Uri? = null
-        var currentBitmap: Bitmap? = null
-
-        override fun createCurrentContentIntent(player: Player): PendingIntent? {
-            return controller.sessionActivity
-        }
-
-        override fun getCurrentContentText(player: Player): String {
-            return controller.metadata.description.subtitle.toString()
-        }
-
-        override fun getCurrentContentTitle(player: Player): String {
-            return controller.metadata.description.title.toString()
-        }
-
-        override fun getCurrentLargeIcon(
-            player: Player,
-            callback: PlayerNotificationManager.BitmapCallback
-        ): Bitmap? {
-            val iconUri = controller.metadata.description.iconUri ?: return Glide
-                .with(context)
-                .asBitmap()
-                .load(R.mipmap.ic_launcher)
-                .submit()
-                .get()
-            return if (currentIconUri != iconUri || currentBitmap == null) {
-                currentIconUri = iconUri
-                resolveUriAsBitmap(iconUri)
-                null
-            } else {
-                currentBitmap
-            }
-        }
-
-        private fun resolveUriAsBitmap(uri: Uri): Bitmap? {
-            return Glide.with(context).applyDefaultRequestOptions(glideOptions)
-                .asBitmap()
-                .load(uri)
-                .submit()
-                .get()
-        }
-    }
-
-    private val glideOptions = RequestOptions()
-        .fallback(R.mipmap.ic_launcher)
-        .diskCacheStrategy(DiskCacheStrategy.DATA)
 
 }

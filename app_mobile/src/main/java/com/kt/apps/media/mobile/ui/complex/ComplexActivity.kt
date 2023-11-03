@@ -53,6 +53,7 @@ import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
+import com.kt.apps.media.mobile.utils.toCoroutine
 import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
 import com.kt.apps.voiceselector.VoiceSelectorManager
@@ -483,9 +484,13 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
                 viewModel.loadChannelDeepLinkJob(deeplink)
             }.trackJob(viewModel.loadingDeepLink)
         } else if (deeplink.host == Constants.HOST_IPTV && deeplink.lastPathSegment == "search") {
-            lifecycleScope.launch(CoroutineExceptionHandler { _, _ ->  showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
+            lifecycleScope.launch(CoroutineExceptionHandler { _, _ -> showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
                 layoutHandler?.onCloseMinimal()
                 viewModel.openSearch(deeplink)
+            }
+        } else if (deeplink.host == Constants.HOST_VOICE && deeplink.lastPathSegment == "search") {
+            lifecycleScope.launch(CoroutineExceptionHandler { _, _ -> showErrorDialog(titleText = "Đã xảy ra lỗi vui lòng thử lại sau") }) {
+                voiceSelectorManager.openVoiceAssistant().toCoroutine()
             }
         }
         intent?.data = null

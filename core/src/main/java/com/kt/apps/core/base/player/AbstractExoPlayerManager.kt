@@ -113,7 +113,7 @@ abstract class AbstractExoPlayerManager(
 
             override fun onPlayerError(error: PlaybackException) {
                 super.onPlayerError(error)
-                mExoPlayer = null
+//                mExoPlayer = null
                 Logger.d(
                     this@AbstractExoPlayerManager,
                     message = error.message?.plus(error.errorCodeName) ?: error.errorCodeName

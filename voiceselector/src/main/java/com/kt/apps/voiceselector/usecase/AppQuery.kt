@@ -9,15 +9,11 @@ import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import com.kt.apps.core.base.rxjava.BaseUseCase
 import com.kt.apps.core.base.rxjava.MaybeUseCase
 import com.kt.apps.core.utils.TAG
-import com.kt.apps.voiceselector.di.VoiceSelectorScope
 import com.kt.apps.voiceselector.models.AppInfo
 import io.reactivex.rxjava3.core.Maybe
-import io.reactivex.rxjava3.core.Observable
 import javax.inject.Inject
-import javax.inject.Singleton
 
 class AppQuery @Inject constructor(
     private val context: Context
@@ -29,7 +25,7 @@ class AppQuery @Inject constructor(
         Log.d(TAG, "prepareExecute AppQuery: $params")
         return Maybe.create { emitter ->
             val apps = context.getAllApps(action, category)
-//                .union(context.queryByLaunchData(action, launchData))
+                .union(context.queryByLaunchData(action, launchData))
             apps.forEach {
                 Log.d(TAG, "query app : ${it.packageName} ")
             }

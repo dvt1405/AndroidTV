@@ -24,6 +24,7 @@ import com.kt.apps.core.GlideApp
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.media.mobile.R
 import dagger.android.AndroidInjection
 import dagger.android.AndroidInjector
@@ -121,6 +122,7 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
         mediaSessionConnector.setQueueNavigator(IMediaSessionQueueNavigator(mediaSession, currentPlaylistItems))
         mediaSessionConnector.setCustomActionProviders(object : MediaSessionConnector.CustomActionProvider {
             override fun onCustomAction(player: Player, action: String, extras: Bundle?) {
+                Log.d(TAG, "onCustomAction: $action $extras")
             }
 
             override fun getCustomAction(player: Player): PlaybackStateCompat.CustomAction? {
@@ -148,7 +150,7 @@ class IMediaSessionService : MediaBrowserServiceCompat(), HasAndroidInjector {
                     }
                 }
 
-                else -> {
+                Player.STATE_ENDED -> {
                     mediaSessionConnector.setPlayer(null)
                     notificationManager.hideNotification()
                 }
