@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 import com.kt.apps.core.base.player.AbstractExoPlayerManager
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.model.TVScheduler
+import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.storage.local.dto.TVChannelEntity
 import com.kt.apps.core.storage.local.dto.TVChannelWithUrls
@@ -70,7 +71,8 @@ class TVChannel(
         AbstractExoPlayerManager.EXTRA_MEDIA_DESCRIPTION to (currentProgramme?.getProgramDescription() ?: ""),
         AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_TITLE to tvGroup,
         AbstractExoPlayerManager.EXTRA_MEDIA_THUMB to logoChannel,
-        AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_ARTIST to sourceFrom
+        AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_ARTIST to sourceFrom,
+        AbstractExoPlayerManager.EXTRA_MEDIA_SOURCE_TYPE to HistoryMediaItemDTO.Type.TV.name
     )
     fun toChannelDto() = TVChannelDTO(
         tvGroup = tvGroup,

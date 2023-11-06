@@ -1,6 +1,7 @@
 package com.kt.apps.core.tv.datasource.impl
 
 import android.content.Context
+import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -15,7 +16,10 @@ import com.kt.apps.core.storage.local.dto.TVChannelWithUrls
 import com.kt.apps.core.tv.datasource.ITVDataSource
 import com.kt.apps.core.tv.datasource.needRefreshData
 import com.kt.apps.core.tv.di.TVScope
-import com.kt.apps.core.tv.model.*
+import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelGroup
+import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
@@ -24,6 +28,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import org.json.JSONObject
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Provider
 
@@ -56,9 +61,9 @@ class MainTVDataSource @Inject constructor(
 
     override fun getTvList(): Observable<List<TVChannel>> {
         val onlineSource = if (context.packageName.contains("mobile")) {
-            getFireStoreSource().onErrorResumeNext { getFirebaseSource() }
+            getFireStoreSource().onErrorResumeNext { newGetFirebaseSource() }
         } else {
-            getFirebaseSource()
+            newGetFirebaseSource()
         }.reduce { t1, t2 ->
             t1.toMutableList().let {
                 it.addAll(t2)
@@ -191,6 +196,92 @@ class MainTVDataSource @Inject constructor(
         }.retry { t1, t2 ->
             t1 < 3
         }
+
+    private fun newGetFirebaseSource(): Observable<List<TVChannel>> =
+        Observable.create<List<TVChannel>> { emitter ->
+            Logger.d(this@MainTVDataSource, message = "getFirebaseSource")
+            val totalGroupChannels = supportGroups.toMutableList()
+            if (!allowInternational) {
+                totalGroupChannels.remove(TVChannelGroup.Intenational)
+                totalGroupChannels.remove(TVChannelGroup.Kid)
+            }
+            var dataSnapshot: DataSnapshot? = null
+            val isSuccess = AtomicBoolean(false)
+            firebaseDatabase.reference.child(ALL_CHANNEL_NAME)
+                .ref.get()
+                .addOnSuccessListener {
+                    dataSnapshot = it
+                    isSuccess.set(true)
+                }
+                .addOnFailureListener {
+                    isSuccess.set(true)
+                    emitter.onError(it)
+                }
+            while (!isSuccess.get()) {
+                Thread.sleep(500)
+                if (emitter.isDisposed) {
+                    return@create
+                }
+            }
+
+            if (dataSnapshot == null) {
+                emitter.onError(Throwable("EmptyData"))
+                return@create
+            }
+
+            val totalList = totalGroupChannels.mapNotNull {
+                dataSnapshot?.child(it.name)?.getValue<List<TVChannelFromDB?>>()
+                    ?.filterNotNull()
+                    ?.mapToListChannel()
+            }
+                .flatten()
+                .sortedBy(ITVDataSource.sortTVChannel())
+            saveToRoomDB(totalList)
+            tvStorage.get().saveRefreshInVersion(
+                Constants.EXTRA_KEY_VERSION_NEED_REFRESH,
+                versionNeedRefresh
+            )
+            emitter.onNext(totalList)
+            emitter.onComplete()
+        }.retry { t1, t2 ->
+            Logger.d(this@MainTVDataSource, message = "Retry: $t1, $t2")
+            Thread.sleep(1_500)
+            t1 < 3
+        }
+
+    private fun getFirebaseSourceVip(): Observable<List<TVChannel>> = Observable.create { emitter ->
+        var dataSnapshot: DataSnapshot? = null
+        val isSuccess = AtomicBoolean(false)
+        firebaseDatabase.reference.child("AllChannels")
+            .ref.get()
+            .addOnSuccessListener {
+                dataSnapshot = it
+                isSuccess.set(true)
+            }
+            .addOnFailureListener {
+                isSuccess.set(true)
+                emitter.onError(it)
+            }
+        while (!isSuccess.get()) {
+            Thread.sleep(500)
+            if (emitter.isDisposed) {
+                return@create
+            }
+        }
+        val childValue = dataSnapshot!!.getValue<List<TVChannelFromDB?>>()
+        val tvList = childValue!!.filterNotNull()
+            .mapToListChannel()
+            .sortedBy(ITVDataSource.sortTVChannel())
+        saveToRoomDB(tvList)
+        tvStorage.get().saveRefreshInVersion(
+            Constants.EXTRA_KEY_VERSION_NEED_REFRESH,
+            versionNeedRefresh
+        )
+        emitter.onNext(tvList)
+        emitter.onComplete()
+    }.retry { t1, t2 ->
+        t1 < 3
+    }
 
     private fun saveToRoomDB(tvDetails: List<TVChannel>) {
         val tvUrl = mutableListOf<TVChannelDTO.TVChannelUrl>()
