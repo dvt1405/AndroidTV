@@ -28,3 +28,27 @@ fun IKeyValueStorage.getLastRefreshExtensions(config: ExtensionsConfig): Long {
         0L
     }
 }
+
+fun IKeyValueStorage.saveFCMToken(token: String) {
+    this.save("FcmToken", token)
+}
+
+fun IKeyValueStorage.getFCMToken(): String {
+    return try {
+        this.get("FcmToken", String::class.java)
+    } catch (e: Exception) {
+        ""
+    }
+}
+
+fun IKeyValueStorage.saveDefaultEpgUrl(url: String) {
+    this.save("DefaultEpgUrl", url)
+}
+
+fun IKeyValueStorage.getDefaultEpgUrl(): String {
+    return try {
+        this.get("DefaultEpgUrl", String::class.java)
+    } catch (e: Exception) {
+        ""
+    }
+}

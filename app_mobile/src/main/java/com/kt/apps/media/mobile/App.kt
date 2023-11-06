@@ -6,15 +6,19 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.core.os.bundleOf
-import androidx.work.*
+import androidx.work.Configuration
+import androidx.work.Data
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
-import com.kt.apps.core.logging.Logger
+import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.tv.di.DaggerTVComponents
-import com.kt.apps.core.tv.di.TVChannelModule
 import com.kt.apps.core.tv.di.TVComponents
 import com.kt.apps.core.workers.TVEpgWorkers
 import com.kt.apps.football.di.DaggerFootballComponents
@@ -29,7 +33,6 @@ import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
 import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -75,6 +78,11 @@ class App : CoreApp(), Configuration.Provider {
             .voiceSelectorModule(MobileVoiceSelectorModule())
             .build()
     }
+
+    override fun actionLogger(): IActionLogger {
+        return (applicationInjector() as AppComponents).actionLogger()
+    }
+
 
     @Inject
     lateinit var workManager: WorkManager

@@ -3,6 +3,7 @@ package com.kt.apps.media.xemtv.di.main
 import com.kt.apps.autoupdate.ui.AppUpdateActivity
 import com.kt.apps.autoupdate.ui.FragmentInfo
 import com.kt.apps.autoupdate.ui.FragmentQrCode
+import com.kt.apps.core.service.CloudMessagingService
 import com.kt.apps.media.xemtv.di.viewmodels.ViewModelModule
 import com.kt.apps.media.xemtv.ui.DialogActivity
 import com.kt.apps.media.xemtv.ui.details.DetailsActivity
@@ -37,6 +38,9 @@ abstract class MainTVModule {
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun mainActivity(): MainActivity
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun cloudMsgService(): CloudMessagingService
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun detailActivity(): DetailsActivity

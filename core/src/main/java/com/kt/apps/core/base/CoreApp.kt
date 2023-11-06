@@ -6,16 +6,21 @@ import android.content.Context
 import android.os.Bundle
 import androidx.multidex.MultiDex
 import androidx.work.Configuration
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.initialize
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.Constants
 import com.kt.apps.core.di.CoreComponents
+import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.logging.Logger
 import dagger.android.DaggerApplication
 
 abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks, Configuration.Provider {
     abstract val coreComponents: CoreComponents
+
+    abstract fun actionLogger(): IActionLogger
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
@@ -32,6 +37,16 @@ abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks, Config
             ))
         fetchAndActivateRemoteConfig(3)
         Firebase.remoteConfig.fetch(20)
+        FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Logger.d(this, tag = "FCM", message = "Fetching FCM registration token failed")
+                Logger.e(this, tag = "FCM", exception = task.exception ?: Throwable("Fetching FCM registration token failed"))
+                return@OnCompleteListener
+            }
+            val token = task.result
+            Logger.d(this, tag = "FCM", "FCM token: $token")
+
+        })
         registerActivityLifecycleCallbacks(this)
     }
 
@@ -62,6 +77,8 @@ abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks, Config
                 backStack.addLast(componentName)
             }
         }
+        Logger.d(this, tag = "Activity", message = "onActivityCreated: $componentName," +
+                " activityCount: $activityCount")
     }
 
     override fun onActivityStopped(activity: Activity) {
@@ -74,6 +91,10 @@ abstract class CoreApp : DaggerApplication(), ActivityLifecycleCallbacks, Config
                 backStack.remove(componentName)
             }
         }
+        Logger.d(
+            this@CoreApp, tag = "Activity", message = "onActivityStopped: $componentName," +
+                    " activityCount: $activityCount"
+        )
     }
 
     override fun onActivityDestroyed(activity: Activity) {
