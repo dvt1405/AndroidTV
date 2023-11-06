@@ -17,6 +17,7 @@ import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.utils.removeAllSpecialChars
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -234,6 +235,7 @@ open class BaseTVChannelViewModel constructor(
                     }
                     newList
                 }
+                .switchIfEmpty(Observable.error(Throwable("Empty data")))
                 .subscribe({
                     Logger.d(this, message = "getListProgramForChannel: ${Gson().toJson(it)}")
                     val currentProgramme = try {
@@ -311,6 +313,7 @@ open class BaseTVChannelViewModel constructor(
             val currentList = (_listProgramForChannel.value as DataState.Success).data
             val isCurrentChannel = currentList.firstOrNull()?.channel
                 ?.remoAllSpecialCharsAndPrefix() == channel.channelIdWithoutSpecialChars
+            Logger.d(this, message = "isCurrentChannel: $isCurrentChannel")
             if (!isCurrentChannel) {
                 getListProgramForChannel(channel)
                 return
@@ -325,6 +328,7 @@ open class BaseTVChannelViewModel constructor(
                 }
             }
         } else {
+            Logger.d(this, message = "List program is not ready")
             getListProgramForChannel(channel)
         }
     }
