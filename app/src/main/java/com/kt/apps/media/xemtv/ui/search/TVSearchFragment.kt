@@ -509,7 +509,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         Logger.d(this, message = "onBackPressed view focused $viewFocus")
         _searchView?.searchEdtAutoComplete?.let {
             if (_btnVoice?.isFocused == true && activity is TVSearchActivity) {
-                activity?.finish()
+                finishActivityIfNeeded()
             } else if (_searchView?.isFocused == true) {
                 finishActivityIfNeeded()
             } else {
@@ -520,7 +520,7 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
     private fun finishActivityIfNeeded() {
         if (activity is TVSearchActivity) {
-            if (CoreApp.activityCount == 1) {
+            if (CoreApp.activityCount <= 1) {
                 startActivity(Intent().apply {
                     this.data = Uri.parse("xemtv://tv/dashboard/")
                     this.flags = Intent.FLAG_ACTIVITY_NEW_TASK
