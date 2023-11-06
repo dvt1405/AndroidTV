@@ -309,27 +309,33 @@ open class BaseTVChannelViewModel constructor(
         private set
 
     fun loadProgramForChannel(channel: TVChannel, silentUpdate: Boolean = false) {
-        if (_listProgramForChannel.value is DataState.Success) {
-            val currentList = (_listProgramForChannel.value as DataState.Success).data
-            val isCurrentChannel = currentList.firstOrNull()?.channel
-                ?.remoAllSpecialCharsAndPrefix() == channel.channelIdWithoutSpecialChars
-            Logger.d(this, message = "isCurrentChannel: $isCurrentChannel")
-            if (!isCurrentChannel) {
+        val currentListProgram = when (val data = _listProgramForChannel.value) {
+            is DataState.Success -> {
+                Logger.d(this, message = "List program is success: ${data.data.size}")
+                data.data
+            }
+
+            else -> {
                 getListProgramForChannel(channel)
-                return
+                null
             }
-            currentList.firstOrNull {
-                it.isCurrentProgram()
-            }?.let {
-                if (silentUpdate) {
-                    _programmeForChannelLiveData.postValue(DataState.Update(it))
-                } else {
-                    _programmeForChannelLiveData.postValue(DataState.Success(it))
-                }
-            }
-        } else {
-            Logger.d(this, message = "List program is not ready")
+        }
+        val isCurrentChannel = currentListProgram?.firstOrNull()?.channel
+            ?.remoAllSpecialCharsAndPrefix() == channel.channelIdWithoutSpecialChars
+        Logger.d(this, message = "isCurrentChannel: $isCurrentChannel")
+        if (!isCurrentChannel) {
             getListProgramForChannel(channel)
+            return
+        }
+        currentListProgram?.firstOrNull {
+            it.isCurrentProgram()
+        }?.let {
+            lastGetProgramme = System.currentTimeMillis()
+            if (silentUpdate) {
+                _programmeForChannelLiveData.postValue(DataState.Update(it))
+            } else {
+                _programmeForChannelLiveData.postValue(DataState.Success(it))
+            }
         }
     }
 
