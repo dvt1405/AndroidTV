@@ -10,6 +10,8 @@ import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.usecase.search.SearchForText
 import com.kt.apps.media.xemtv.R
 import com.kt.apps.media.xemtv.databinding.ActivityTvSearchBinding
+import com.kt.apps.media.xemtv.ui.main.MainActivity
+import com.kt.apps.voiceselector.ui.VoiceSearchActivity
 import javax.inject.Inject
 
 
@@ -37,8 +39,20 @@ class TVSearchActivity : BaseActivity<ActivityTvSearchBinding>() {
 
     private fun executeSearchFromIntent(searchIntent: Intent) {
         if (Intent.ACTION_SEARCH == searchIntent.action) {
-            searchIntent.getStringExtra(SearchManager.QUERY)?.also { query ->
-                viewModel.querySearch(query)
+            if (searchIntent.extras?.getString(VoiceSearchActivity.EXTRA_CALLING_CLASS_NAME)
+                    ?.contains("MainActivity") == true
+            ) {
+                startActivity(Intent(this, MainActivity::class.java).apply {
+                    this.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    this.action = Intent.ACTION_SEARCH
+                    this.putExtras(searchIntent.extras ?: bundleOf())
+                })
+                finish()
+                return
+            } else {
+                searchIntent.getStringExtra(SearchManager.QUERY)?.also { query ->
+                    viewModel.querySearch(query)
+                }
             }
         } else if (searchIntent.data?.lastPathSegment == "search") {
             val filter = searchIntent.data?.getQueryParameter("filter")

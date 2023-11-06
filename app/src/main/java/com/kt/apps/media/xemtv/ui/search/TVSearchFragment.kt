@@ -3,6 +3,7 @@ package com.kt.apps.media.xemtv.ui.search
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Bundle
@@ -14,11 +15,8 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.AutoCompleteTextView
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.ProgressBar
-import androidx.appcompat.widget.AppCompatImageButton
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.RecyclerView
@@ -38,6 +36,7 @@ import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import com.kt.apps.core.base.leanback.SearchView
 import com.kt.apps.core.extensions.ExtensionsChannelAndConfig
 import com.kt.apps.core.logging.Logger
+import com.kt.apps.core.repository.IVoiceSearchManager
 import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.usecase.search.SearchForText
@@ -58,6 +57,9 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
 
     @Inject
     lateinit var voiceSelectorManager: VoiceSelectorManager
+
+    @Inject
+    lateinit var sharedPreferences: SharedPreferences
 
     private val viewModel: SearchViewModels by lazy {
         ViewModelProvider(requireActivity(), factory)[SearchViewModels::class.java]
@@ -302,6 +304,18 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         viewModel.selectedItemLiveData.observe(viewLifecycleOwner, handleSelectedItem())
         viewModel.searchQueryLiveData.observe(this, handleSearchResult(autoCompleteView))
 
+        _btnVoice?.isLongClickable = true
+        _btnVoice?.setOnLongClickListener {
+            disposable.add(
+                voiceSelectorManager.openVoiceAssistant(
+                    bundleOf(
+                        IVoiceSearchManager.EXTRA_RESET_SETTING to true
+                    )
+                ).subscribe {
+                }
+            )
+            return@setOnLongClickListener false
+        }
         _btnVoice?.setOnClickListener {
             disposable.add(
                 voiceSelectorManager.openVoiceAssistant().subscribe {
@@ -334,6 +348,11 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
                     mRowsAdapter.clear()
                     val childPresenter = SearchPresenter()
                     childPresenter.filterString = autoCompleteView?.text?.toString()
+                    if (_searchView?.searchEdtAutoComplete?.text.isNullOrEmpty()
+                        || _searchView?.searchEdtAutoComplete?.text?.toString() != viewModel.lastSearchQuery
+                    ) {
+                        _searchView?.searchEdtAutoComplete?.setText(viewModel.lastSearchQuery)
+                    }
                     for ((group, channelList) in channelWithCategory) {
                         val headerItem = try {
                             val gr = TVChannelGroup.valueOf(group)
@@ -540,6 +559,10 @@ class TVSearchFragment : BaseRowSupportFragment(), IKeyCodeHandler {
         _emptySearchIcon = null
         autoCompleteView = null
         super.onDestroyView()
+    }
+
+    fun requestFocusDefaultView() {
+        _btnVoice?.requestFocus()
     }
 
     companion object {

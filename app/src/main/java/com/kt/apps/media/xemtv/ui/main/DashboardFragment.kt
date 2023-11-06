@@ -6,20 +6,27 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
-import androidx.leanback.app.*
+import androidx.leanback.app.BackgroundManager
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.material.tabs.TabLayout
 import com.kt.apps.autoupdate.ui.FragmentQrCode
 import com.kt.apps.core.Constants
 import com.kt.apps.core.R
 import com.kt.apps.core.base.IKeyCodeHandler
-import com.kt.apps.core.base.leanback.*
+import com.kt.apps.core.base.leanback.ArrayObjectAdapter
+import com.kt.apps.core.base.leanback.BrowseFrameLayout
 import com.kt.apps.core.base.leanback.BrowseSupportFragment
+import com.kt.apps.core.base.leanback.DashboardIconHeaderPresenterSelector
+import com.kt.apps.core.base.leanback.ListRowPresenter
 import com.kt.apps.core.base.leanback.NavDrawerView.INavDrawerItemSelected
+import com.kt.apps.core.base.leanback.OnItemViewSelectedListener
+import com.kt.apps.core.base.leanback.PageRow
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.RoomDataBase
@@ -299,7 +306,7 @@ class DashboardFragment : BrowseSupportFragment(), HasAndroidInjector, IKeyCodeH
                     .requestFocusChildContent()
                     ?.requestFocus()
             } else if (mMainFragment is TVSearchFragment) {
-                (mMainFragment as TVSearchFragment).verticalGridView.requestFocus()
+                (mMainFragment as TVSearchFragment).requestFocusDefaultView()
             }
             if (mMainFragment !is TVSearchFragment) {
                 searchViewModels.queryDefaultSearch()

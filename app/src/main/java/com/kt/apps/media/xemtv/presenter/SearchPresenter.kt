@@ -87,12 +87,18 @@ class SearchPresenter : Presenter() {
                 cardView.contentText = item.data.category
                 cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT)
                 updateCardBackgroundColor(cardView, false)
+                item.data.type
                 cardView.let { imgView ->
+                    val name = Constants.mapChannel[
+                        item.data
+                            .displayName
+                            .getKeyForLocalLogo()
+                    ]
                     imgView.mainImageView.scaleType = ImageView.ScaleType.FIT_CENTER
-                    imgView.mainImageView.loadImgByUrl(
-                        item.data.thumb.trim(),
-                        ImageView.ScaleType.FIT_CENTER
-                    )
+                    name?.let {
+                        imgView.mainImageView
+                            .loadImgByDrawableIdResName(it, item.data.thumb.trim())
+                    } ?: imgView.mainImageView.loadImgByUrl(item.data.thumb.trim())
                 }
             }
 
