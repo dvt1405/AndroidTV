@@ -3617,6 +3617,71 @@
           "url": "https://stream.vovmedia.vn/vovgthcm"
         }
       ]
+    },
+    {
+      "group": "Radio",
+      "id": "joy-fm",
+      "isRadio": true,
+      "name": "Joy fm",
+      "thumb": "icon_channel_vtv_can_tho_166537074507.jpg",
+      "urls": [
+        {
+          "type": "streaming",
+          "url": "http://live-on-v2-akm.akamaized.net/manifest/joyfm/playlist_360p.m3u8"
+        },
+        {
+          "type": "streaming",
+          "url": "https://live-on-v2-cdnetwork.sigmaott.com/manifest/joyfm/playlist_720p.m3u8"
+        },
+        {
+          "type": "streaming",
+          "url": "https://live-on-v2-cdnetwork.sigmaott.com/manifest/joyfm/playlist_480p.m3u8"
+        },
+        {
+          "type": "streaming",
+          "url": "https://live-on-v2-cdnetwork.sigmaott.com/manifest/joyfm/playlist_360p.m3u8"
+        }
+      ]
+    },
+    {
+      "group": "VOH",
+      "id": "cherry-fm",
+      "isRadio": true,
+      "name": "Cherry fm",
+      "thumb": "icon_channel_vtv_can_tho_166537074507.jpg",
+      "urls": [
+        {
+          "type": "streaming",
+          "src": "radio-vietnam",
+          "url": "https://radio-vietnam.com/streams/cherry-radio-3368"
+        },
+        {
+          "type": "streaming",
+          "url": "https://node-02.zeno.fm/9ca113gfgrruv"
+        },
+        {
+          "type": "streaming",
+          "url": "http://node-02.zeno.fm/9ca113gfgrruv"
+        }
+      ]
+    },
+    {
+      "group": "VOH",
+      "id": "m-radio",
+      "isRadio": false,
+      "name": "M Radio Giải Trí",
+      "thumb": "icon_channel_vtv_can_tho_166537074507.jpg",
+      "urls": [
+        {
+          "type": "streaming",
+          "url": "https://radio-vietnam.com/streams/m-radio-giai-tri-viet-nam-92627",
+          "src": "radio-vietnam"
+        },
+        {
+          "type": "streaming",
+          "url": "https://stream-37.zeno.fm/4q7y9hvkp2zuv?zs=nXdB3cFjR2O65YXQ-_HiTw&aw_0_req_lsid=8196d2c78a734f244852a3f8bbbecbcb"
+        }
+      ]
     }
   ]
 }
