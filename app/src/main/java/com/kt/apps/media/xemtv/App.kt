@@ -1,6 +1,7 @@
 package com.kt.apps.media.xemtv
 
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.os.bundleOf
@@ -8,15 +9,15 @@ import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.google.assistant.appactions.suggestions.client.AppShortcutIntent
-import com.google.assistant.appactions.suggestions.client.AppShortcutSuggestion
-import com.google.assistant.appactions.suggestions.client.AssistantShortcutSuggestionsClient
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.gson.Gson
 import com.kt.apps.autoupdate.di.DaggerAppUpdateComponent
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
+import com.kt.apps.core.logging.IActionLogger
+import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVComponents
 import com.kt.apps.core.workers.AutoRefreshExtensionsChannelWorker
@@ -32,7 +33,8 @@ import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
 import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
-import java.time.Duration
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class App : CoreApp() {
@@ -76,6 +78,10 @@ class App : CoreApp() {
     override val coreComponents: CoreComponents
         get() = _coreComponents
 
+    override fun actionLogger(): IActionLogger {
+        return (applicationInjector() as AppComponents).actionLogger()
+    }
+
     val tvComponents: TVComponents
         get() = _tvComponents
 
@@ -97,6 +103,17 @@ class App : CoreApp() {
         } catch (_: Exception) {
         }
         voiceSelectorManager.registerLifeCycle()
+        CompositeDisposable().add(
+            RoomDataBase.getInstance(this)
+                .extensionsChannelDao()
+                .getConfigAndChannelByStreamLink("https://www.youtube.com/watch?v=F9n407O3xNk&ab_channel=BWFTV")
+                .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
+                .subscribe({
+                    Log.e("TAG", "Success: ${Gson().toJson(it)}")
+                }, {
+                    Log.e("TAG", "failed")
+                })
+        )
     }
 
     private fun addShortcuts() {
@@ -122,10 +139,11 @@ class App : CoreApp() {
             ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequestBuilder<AutoRefreshExtensionsChannelWorker>(
                 if (BuildConfig.DEBUG) {
-                    Duration.ofMinutes(15L)
+                    15
                 } else {
-                    Duration.ofMinutes(15L)
-                }
+                    60
+                },
+                TimeUnit.MINUTES
             )
                 .setInputData(
                     Data.Builder()
@@ -140,10 +158,11 @@ class App : CoreApp() {
             ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequestBuilder<TVEpgWorkers>(
                 if (BuildConfig.DEBUG) {
-                    Duration.ofMinutes(15L)
+                    15
                 } else {
-                    Duration.ofHours(1L)
-                }
+                    60
+                },
+                TimeUnit.MINUTES
             ).setInputData(
                 Data.Builder()
                     .putString(TVEpgWorkers.EXTRA_DEFAULT_URL, Firebase.remoteConfig

@@ -153,6 +153,7 @@ class NavDrawerView @JvmOverloads constructor(
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             childItemView.isFocusedByDefault = true
                         } else {
+                            childItemView.requestFocus()
                             preApi26.setDefaultFocus(this, childItemView)
                         }
                         firstInit = false
@@ -357,8 +358,13 @@ class NavDrawerView @JvmOverloads constructor(
 
         init {
             preApi26Check()
-            preFocusByDefaultMethod = ViewGroup::class.java
-                .getDeclaredMethod("setDefaultFocus", View::class.java)
+            preFocusByDefaultMethod = try {
+                ViewGroup::class.java
+                    .getDeclaredMethod("setDefaultFocus", View::class.java)
+            } catch (e: Exception) {
+                Logger.e(this@PreAndroidApi26Reflection, exception = e)
+                null
+            }
         }
 
         fun setDefaultFocus(parentView: ViewGroup, chilView: View) {

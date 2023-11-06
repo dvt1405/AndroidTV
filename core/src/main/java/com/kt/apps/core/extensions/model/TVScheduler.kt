@@ -1,16 +1,18 @@
 package com.kt.apps.core.extensions.model
 
+import android.os.Parcelable
 import android.text.format.DateUtils
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
 import com.kt.apps.core.utils.DATE_TIME_FORMAT
 import com.kt.apps.core.utils.DATE_TIME_FORMAT_0700
 import com.kt.apps.core.utils.toDate
+import kotlinx.parcelize.Parcelize
 import java.util.Calendar
 import java.util.Locale
 
 @Entity
+@Parcelize
 class TVScheduler @JvmOverloads constructor(
     var date: String = "",
     var sourceInfoName: String = "",
@@ -19,7 +21,7 @@ class TVScheduler @JvmOverloads constructor(
     var extensionsConfigId: String = "",
     @PrimaryKey
     var epgUrl: String = ""
-) {
+) : Parcelable {
 
     class Channel @JvmOverloads constructor(
         var id: String = "",
@@ -38,6 +40,7 @@ class TVScheduler @JvmOverloads constructor(
     }
 
     @Entity(primaryKeys = ["channel", "title", "start"])
+    @Parcelize
     class Programme @JvmOverloads constructor(
         var channel: String = "",
         var channelNumber: String = "",
@@ -47,7 +50,7 @@ class TVScheduler @JvmOverloads constructor(
         var description: String = "",
         var extensionsConfigId: String = "",
         var extensionEpgUrl: String = ""
-    ) {
+    ): Parcelable {
         fun getProgramDescription(): String {
             return description.let {
                 var newDesc = it
