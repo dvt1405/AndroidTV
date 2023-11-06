@@ -12,8 +12,8 @@ import androidx.core.content.edit
 import androidx.core.os.bundleOf
 import androidx.fragment.app.FragmentActivity
 import com.kt.apps.core.base.CoreApp
-import com.kt.apps.core.logging.FirebaseActionLoggerImpl
 import com.kt.apps.core.logging.IActionLogger
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.repository.IVoiceSearchManager
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.voiceselector.di.VoiceSelectorScope
@@ -49,8 +49,10 @@ class VoiceSelectorManager @Inject constructor(
     private val voicePackage: VoicePackage,
     private val app: CoreApp,
     private val sharedPreferences: SharedPreferences,
-    private val logger: FirebaseActionLoggerImpl
-): IVoiceSearchManager {
+) : IVoiceSearchManager {
+    private val logger: IActionLogger by lazy {
+        app.actionLogger()
+    }
     private lateinit var lastActivity: WeakReference<Activity>
 
     private val _event: PublishSubject<Event> = PublishSubject.create()
@@ -85,16 +87,23 @@ class VoiceSelectorManager @Inject constructor(
             override fun onActivityDestroyed(activity: Activity) {}
         })
     }
-    private fun queryAndExecute(): Maybe<VoiceInputInfo?> {
-        return interactor.checkVoiceInput()
+    private fun queryAndExecute(extraData: Bundle): Maybe<VoiceInputInfo?> {
+        return interactor.checkVoiceInput(extraData)
             .doOnSuccess {
                 executeFetchedData(it)
             }
     }
     override fun openVoiceAssistant(extraData: Bundle): Maybe<Boolean> {
+        if (extraData.getBoolean(IVoiceSearchManager.EXTRA_RESET_SETTING, false)) {
+            sharedPreferences.edit()
+                .putBoolean(GG_ALWAYS, false)
+                .putBoolean(GG_LAST_TIME, false)
+                .remove(ACTIVE_VOICE_PACKAGE)
+                .apply()
+        }
         Log.d(TAG, "openVoiceAssistant: ")
         VoiceSelectorLog.cachedExtraData = bundleOf()
-        return queryAndExecute()
+        return queryAndExecute(extraData)
             .map { it?.appInfo != null }
             .doOnDispose {
                 VoiceSelectorLog.cachedExtraData = bundleOf()
@@ -102,6 +111,7 @@ class VoiceSelectorManager @Inject constructor(
     }
 
     private fun executeFetchedData(infor: VoiceInputInfo?) {
+        Logger.d(TAG, message = "executeFetchedData: $infor")
         val appInfor = infor?.appInfo ?: kotlin.run {
             presentSelector(null)
             return
@@ -150,14 +160,17 @@ class VoiceSelectorManager @Inject constructor(
         }
 
         if (sharedPreferences.getBoolean(GG_ALWAYS, false)) {
+            Logger.d(TAG, message = "presentSelector GG_ALWAYS: show dialog ${infor?.appInfo?.launchIntent}")
             logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchStartGGAuto)
             voiceGGSearch()
         } else if (sharedPreferences.getBoolean(GG_LAST_TIME, false)) {
             val modal = GGVoiceSelectorFragment.newInstance(infor?.appInfo?.launchIntent)
             state = State.ShowDialog
             logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchShowDialog)
+            Logger.d(TAG, message = "presentSelector GG_LAST_TIME: show dialog ${infor?.appInfo?.launchIntent}")
             modal.show(activity.supportFragmentManager, GGVoiceSelectorFragment.TAG)
         } else {
+            Logger.d(TAG, message = "presentSelector: show dialogL ${infor?.appInfo?.launchIntent}")
             state = State.ShowDialog
             val modal = VoicePackageInstallDialogFragment.newInstance(infor?.appInfo?.launchIntent)
             logger.logVoiceSelector(VoiceSelectorLog.VoiceSearchShowDialog)
@@ -206,9 +219,10 @@ class VoiceSelectorManager @Inject constructor(
     fun voiceGGSearch() {
         state = State.LaunchIntent
         app.applicationContext.startActivity(
-            Intent(app.applicationContext, VoiceSearchActivity::class.java).apply {
-                flags = FLAG_ACTIVITY_NEW_TASK
-            }
+            VoiceSearchActivity.getLaunchIntent(
+                app,
+                lastActivity.get()
+            )
         )
         sharedPreferences.edit(true) {
             putBoolean(GG_LAST_TIME, true   )

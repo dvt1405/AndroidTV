@@ -1,6 +1,9 @@
 package com.kt.apps.voiceselector.ui
 
 import android.app.Activity
+import android.app.PendingIntent
+import android.app.SearchManager
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -71,16 +74,44 @@ class VoiceSearchActivity : BaseActivity<ActivityVoiceSearchBinding>() {
 
     private val voiceAppSearchIntent by lazy {
         Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_WEB_SEARCH)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            val searchManager = (getSystemService(Context.SEARCH_SERVICE)) as SearchManager
+            val searchableInfo = searchManager.getSearchableInfo(componentName)
+            val queryIntent = Intent(Intent.ACTION_SEARCH)
+            queryIntent.component = searchableInfo.searchActivity
+            intent.extras?.let { queryIntent.putExtras(it) }
+            val pending = PendingIntent.getActivity(
+                this@VoiceSearchActivity, 0, queryIntent,
+                PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_MUTABLE
+            )
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "vi-VN")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "Tìm kiếm trên iMedia")
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this@VoiceSearchActivity.componentName.flattenToShortString())
+            // Add the values that configure forwarding the results
+            putExtra(RecognizerIntent.EXTRA_RESULTS_PENDINGINTENT, pending)
 //            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 //                putExtra(RecognizerIntent.EXTRA_SEGMENTED_SESSION, RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS)
 //            }
+//            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 200)
 //            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 100)
 //            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 250)
             putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 1)
         }
+    }
+
+    companion object {
+        const val EXTRA_CALLING_PACKAGE = "extra:calling_package_name"
+        const val EXTRA_CALLING_CLASS_NAME = "extra:calling_class_name"
+        fun getLaunchIntent(context: Context, lastActivity: Activity? = null) =
+            Intent(context, VoiceSearchActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                lastActivity?.componentName?.let {
+                    putExtra(EXTRA_CALLING_PACKAGE, it.packageName)
+                    putExtra(EXTRA_CALLING_CLASS_NAME, it.className)
+                }
+            }
     }
 
 }

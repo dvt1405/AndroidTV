@@ -1,5 +1,6 @@
 package com.kt.apps.voiceselector.usecase
 
+import android.os.Bundle
 import android.util.Log
 import com.kt.apps.core.base.rxjava.MaybeUseCase
 import com.kt.apps.core.utils.TAG
@@ -19,9 +20,16 @@ class CheckVoiceInput @Inject constructor(
             val appInfor = it.firstOrNull { appInfo ->
                 appInfo.packageName == voicePackage.packageName
             }
+            Log.d(TAG, "appInfor: $appInfor")
             return@map VoiceInputInfo(appInfor)
         }
     }
 
     operator fun invoke() = execute(mapOf())
+
+    operator fun invoke(bundle: Bundle) = execute(
+        mapOf(
+            "bundle" to bundle
+        )
+    )
 }
