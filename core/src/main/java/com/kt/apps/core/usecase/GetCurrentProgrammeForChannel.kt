@@ -100,7 +100,7 @@ class GetCurrentProgrammeForChannel @Inject constructor(
     companion object {
         private const val EXTRA_CHANNEL = "extra:channel"
         private const val EXTRA_CHANNEL_TYPE = "extra:channel_type"
-        private val mapping by lazy {
+        val mapping by lazy {
             mapOf(
                 "thvl1-hd" to "vinhlong1hd",
                 "thvl2-hd" to "vinhlong2hd",

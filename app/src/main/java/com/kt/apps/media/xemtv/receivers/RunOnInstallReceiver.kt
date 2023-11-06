@@ -3,17 +3,15 @@ package com.kt.apps.media.xemtv.receivers
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.tvprovider.media.tv.TvContractCompat
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.kt.apps.core.logging.Logger
-import com.kt.apps.media.xemtv.workers.TVRecommendationWorkers
 
 class RunOnInstallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Logger.d(this, message = intent.action ?: "")
+        intent.extras?.keySet()?.forEach {
+            Logger.d(this, message = "$it - ${intent.extras?.get(it)}")
+        }
         when (intent.action) {
             TvContractCompat.ACTION_INITIALIZE_PROGRAMS -> {
 

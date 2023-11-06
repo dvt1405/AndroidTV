@@ -520,4 +520,19 @@ class ParserExtensionsProgramSchedule @Inject constructor(
         override val message: String? = ""
     ) : Throwable(message) {
     }
+
+    fun clearCache() {
+        mappingEpgId.clear()
+    }
+
+    init {
+        instance = this
+    }
+
+    companion object {
+        private var instance: ParserExtensionsProgramSchedule? = null
+
+        @Synchronized
+        fun getInstance(): ParserExtensionsProgramSchedule? = instance
+    }
 }

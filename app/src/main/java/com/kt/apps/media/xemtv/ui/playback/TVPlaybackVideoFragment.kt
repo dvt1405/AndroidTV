@@ -255,35 +255,30 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     }
 
     override fun updateProgress(player: Player?) {
-        val currentProgram = when (tvChannelViewModel.programmeForChannelLiveData.value) {
-            is DataState.Success -> {
-                (tvChannelViewModel.programmeForChannelLiveData.value as DataState.Success<TVScheduler.Programme>).data
-            }
-
-            is DataState.Update -> {
-                (tvChannelViewModel.programmeForChannelLiveData.value as DataState.Update<TVScheduler.Programme>).data
-            }
-
-            else -> {
-                null
-            }
-        }
+        val currentProgram = getCurrentProgram()
         currentProgram?.let {
-            val startTime = hourMinuteFormatter.format(it.startTimeMilli())
-            val endTime = hourMinuteFormatter.format(it.endTimeMilli())
-            val programTime = "$startTime - $endTime"
-            if (it.startTimeMilli() == it.endTimeMilli()) {
-                seekBar?.max = 1
-                seekBar?.progress = 1
-            } else {
+            if (it.start.isNotEmpty() && it.stop.isNotEmpty()) {
+                val startTime = hourMinuteFormatter.format(it.startTimeMilli())
+                val endTime = hourMinuteFormatter.format(it.endTimeMilli())
+                playbackLiveProgramDuration?.text = "$startTime - $endTime"
+                playbackLiveProgramDuration?.visible()
                 seekBar?.max = (it.endTimeMilli() - it.startTimeMilli()).toInt()
                 seekBar?.progress = (System.currentTimeMillis() - it.startTimeMilli()).toInt()
+            } else {
+                playbackLiveProgramDuration?.gone()
+                seekBar?.max = 1
+                seekBar?.progress = 1
             }
             seekBar?.isSeekAble = false
-            playbackLiveProgramDuration?.text = programTime
-            playbackLiveProgramDuration?.visible()
             contentPositionView?.gone()
             contentDurationView?.gone()
+        } ?: run {
+            seekBar?.max = 1
+            seekBar?.progress = 1
+            playbackLiveProgramDuration?.text = tvChannelViewModel.lastWatchedChannel?.channel?.tvGroup
+            playbackLiveProgramDuration?.visible()
+            contentDurationView?.gone()
+            contentPositionView?.gone()
         }
     }
     private fun getLinkStreamAndProgramForChannel(item: TVChannel) {
@@ -445,6 +440,24 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             } ?: 0
         }
 
+    }
+
+    override fun getCurrentProgram(): TVScheduler.Programme? {
+        return tvChannelViewModel.programmeForChannelLiveData.value?.let {
+            when (it) {
+                is DataState.Success -> {
+                    it.data
+                }
+
+                is DataState.Update -> {
+                    it.data
+                }
+
+                else -> {
+                    null
+                }
+            }
+        }
     }
 
     override fun onRefreshProgram() {

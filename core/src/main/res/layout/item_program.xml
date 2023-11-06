@@ -3,22 +3,23 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="54dp"
+    android:layout_height="wrap_content"
+    android:minHeight="54dp"
     android:background="@drawable/background_selector_item_program"
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:focusedByDefault="true"
     android:gravity="center_vertical"
     android:orientation="horizontal"
+    android:paddingVertical="16dp"
     android:paddingHorizontal="24dp">
 
-    <androidx.appcompat.widget.AppCompatTextView
+    <TextView
         android:id="@+id/time"
         android:layout_width="80dp"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_centerVertical="true"
-        android:drawableStart="@drawable/vertical_divider"
         android:textSize="13sp"
         tools:text="10:00" />
 
@@ -30,6 +31,7 @@
         android:layout_toStartOf="@id/is_live_text"
         android:layout_toEndOf="@+id/time"
         android:gravity="center_vertical"
+        android:layout_marginEnd="@dimen/common_padding_8dp"
         android:orientation="vertical">
 
         <TextView

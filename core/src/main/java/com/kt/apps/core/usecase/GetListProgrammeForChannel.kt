@@ -47,9 +47,9 @@ class GetListProgrammeForChannel @Inject constructor(
             Logger.d(
                 this, message = "Get cache for channel: $channelId," +
                         " lastGetListProgram: $lastGetListProgram," +
-                        " cache: ${cache?.size}"
+                        " cache: ${cache.size}"
             )
-            return Observable.just(cache!!)
+            return Observable.just(cache)
         }
         return when (channel) {
             is TVChannelDTO -> {

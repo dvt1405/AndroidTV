@@ -13,7 +13,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.PersistableBundle
 import android.os.StrictMode
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -102,7 +101,7 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
             )
             StrictMode.setVmPolicy(
                 StrictMode.VmPolicy.Builder()
-//                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedSqlLiteObjects()
 //                    .detectLeakedClosableObjects()
                     .penaltyLog()
                     .penaltyDeath()
@@ -318,6 +317,13 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
 
             }
 
+            KeyEvent.KEYCODE_GUIDE -> {
+                if (iKeyCodeHandler is ITVGuideKeycodeHandler) {
+                    iKeyCodeHandler.onKeyCodeProgram()
+                    return true
+                }
+            }
+
             KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> {
                 iKeyCodeHandler.takeIf {
                     it is IMediaKeycodeHandler
@@ -358,7 +364,7 @@ abstract class BaseActivity<T : ViewDataBinding> : FragmentActivity(), HasAndroi
                         "activityCount: ${CoreApp.activityCount}" +
                         "}"
             )
-            if (this.componentName.flattenToString().contains("PlaybackActivity") && CoreApp.activityCount == 1) {
+            if (this.componentName.flattenToString().contains("PlaybackActivity") && CoreApp.activityCount <= 1) {
                 startActivity(Intent().apply {
                     this.data = Uri.parse("xemtv://tv/dashboard")
                     this.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK

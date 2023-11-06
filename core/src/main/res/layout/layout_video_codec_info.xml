@@ -41,7 +41,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="0dp"
                     android:layout_weight="1"
-                    android:text="Title" />
+                    android:text="Tiêu đề" />
 
                 <TextView
                     android:id="@+id/video_title"
@@ -68,7 +68,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Duration" />
+                    android:text="Thời lượng" />
 
                 <TextView
                     android:id="@+id/video_duration"
@@ -94,7 +94,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Video Resolution" />
+                    android:text="Độ phân giải" />
 
                 <TextView
                     android:id="@+id/video_resolution"
@@ -121,7 +121,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Frames per seconds" />
+                    android:text="Frame rate" />
 
                 <TextView
                     android:id="@+id/video_frame_rate"
@@ -202,15 +202,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Color" />
+                    android:text="Byte rate" />
 
                 <TextView
-                    android:id="@+id/color_info"
+                    android:id="@+id/byte_rate"
                     style="@style/TextViewDescriptionVideoInfo"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="NoValue" />
+                    tools:text="opus (251)" />
+
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>

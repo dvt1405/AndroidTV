@@ -40,7 +40,9 @@
                 android:focusedByDefault="true"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingStart="75dp" />
+                android:paddingStart="75dp"
+                tools:targetApi="o"
+                tools:ignore="RtlSymmetry" />
 
         </com.kt.apps.core.base.leanback.BrowseRowsFrameLayout>
 

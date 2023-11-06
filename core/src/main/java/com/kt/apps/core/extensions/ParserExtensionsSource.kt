@@ -12,12 +12,11 @@ import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.storage.local.dto.ExtensionChannelCategory
 import com.kt.apps.core.storage.saveLastRefreshExtensions
 import com.kt.apps.core.utils.trustEveryone
-import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import io.reactivex.rxjava3.schedulers.Schedulers
-import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.internal.http.HTTP_MOVED_PERM

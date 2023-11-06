@@ -21,3 +21,7 @@ interface IMediaKeycodeHandler : IKeyCodeHandler {
     fun onKeyCodeForward()
     fun onKeyCodeRewind()
 }
+
+interface ITVGuideKeycodeHandler : IKeyCodeHandler {
+    fun onKeyCodeProgram()
+}

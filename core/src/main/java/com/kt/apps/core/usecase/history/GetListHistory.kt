@@ -15,6 +15,12 @@ class GetListHistory @Inject constructor(
 
     override fun prepareExecute(params: Map<String, Any>): Maybe<List<HistoryMediaItemDTO>> {
         return historyDao.getAll()
+            .map {
+                val newList = it.filter {
+                    it.type != HistoryMediaItemDTO.Type.TV
+                }
+                newList
+            }
             .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
             .toMaybe()
     }

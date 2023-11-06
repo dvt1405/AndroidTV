@@ -35,6 +35,8 @@ object Constants {
     const val EXTRA_KEY_VERSION_NEED_REFRESH = "version_need_refresh"
     const val EXTRA_KEY_USE_ONLINE = "use_online_data"
     const val EXTRA_KEY_ALLOW_INTERNATIONAL = "allow_international"
+    const val EXTRA_KEY_SCTV_CONFIG = "sctv_config"
+
     val mapping by lazy {
         mapOf(
             "thvl1-hd" to "vinhlong1hd",

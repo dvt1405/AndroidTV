@@ -8,6 +8,7 @@ import androidx.room.Entity
 import androidx.room.Ignore
 import com.kt.apps.core.base.player.AbstractExoPlayerManager
 import com.kt.apps.core.extensions.model.TVScheduler
+import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
@@ -57,7 +58,8 @@ data class ExtensionsChannel(
         } ?: tvGroup),
         AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_TITLE to tvGroup,
         AbstractExoPlayerManager.EXTRA_MEDIA_THUMB to logoChannel,
-        AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_ARTIST to extensionSourceId
+        AbstractExoPlayerManager.EXTRA_MEDIA_ALBUM_ARTIST to extensionSourceId,
+        AbstractExoPlayerManager.EXTRA_MEDIA_SOURCE_TYPE to HistoryMediaItemDTO.Type.IPTV.name
     )
 
     override fun toString(): String {

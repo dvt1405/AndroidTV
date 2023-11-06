@@ -76,7 +76,8 @@ abstract class AbstractExoPlayerManager(
                         val historyMediaItemDTO = HistoryMediaItemDTO.mapFromMediaItem(
                             mediaItem,
                             player.contentPosition,
-                            player.contentDuration
+                            player.contentDuration,
+                            type = getMediaSourceTypeFromExtras(mediaItem)
                         )
                         _historyManager.saveHistoryItem(historyMediaItemDTO)
                     }
@@ -121,6 +122,25 @@ abstract class AbstractExoPlayerManager(
             }
 
         }
+    }
+
+    private fun getMediaSourceTypeFromExtras(mediaItem: MediaItem): HistoryMediaItemDTO.Type {
+        mediaItem.mediaMetadata.extras?.let { bundel ->
+            bundel.keySet().forEach {
+                Logger.d(this, message = "key: $it, value: ${bundel[it]}")
+            }
+        }
+        val type = try {
+            HistoryMediaItemDTO.Type.valueOf(
+                mediaItem.mediaMetadata.extras?.getString(
+                    EXTRA_MEDIA_SOURCE_TYPE,
+                    HistoryMediaItemDTO.Type.IPTV.name
+                ) ?: HistoryMediaItemDTO.Type.IPTV.name
+            )
+        } catch (e: Exception) {
+            HistoryMediaItemDTO.Type.IPTV
+        }
+        return type
     }
 
     init {
@@ -172,20 +192,20 @@ abstract class AbstractExoPlayerManager(
         }
         dfSource.setUserAgent(defaultHeader["user-agent"])
         dfSource.setDefaultRequestProperties(defaultHeader)
-        return data.map {
-            if (isHls || it.m3u8Link.contains(".m3u8")) {
-                Logger.d(this, "HlsMediaSource", "HlsMediaSource: $it")
+        return data.map { linkStream ->
+            if (isHls || linkStream.m3u8Link.contains(".m3u8")) {
+                Logger.d(this, "HlsMediaSource", "HlsMediaSource: $linkStream")
                 HlsMediaSource.Factory(dfSource)
                     .createMediaSource(
-                        createMediaItem(it, itemMetaData, defaultHeader)
+                        createMediaItem(linkStream, itemMetaData, defaultHeader)
                     )
-            } else if (it.m3u8Link.contains(".mpd")) {
-                Logger.d(this, "MediaSource", "DashMediaSource: $it")
+            } else if (linkStream.m3u8Link.contains(".mpd")) {
+                Logger.d(this, "MediaSource", "DashMediaSource: $linkStream")
                 val licenseUriStr = headers?.get("inputstream.adaptive.license_key")?.ifEmpty {
-                    it.m3u8Link
+                    linkStream.m3u8Link
                 }.also {
                     Logger.d(this@AbstractExoPlayerManager, message = "license_key: $it")
-                } ?: it.m3u8Link
+                } ?: linkStream.m3u8Link
                 val licenseUri = Uri.parse(licenseUriStr)
                 val mediaDrmCallback = object : MediaDrmCallback {
                     override fun executeProvisionRequest(
@@ -238,19 +258,19 @@ abstract class AbstractExoPlayerManager(
                                 )
                                 .build()
                         )
-                        .setUri(it.m3u8Link)
+                        .setUri(linkStream.m3u8Link)
                         .build()
                 )
-            } else if (it.m3u8Link.contains(".mp4")) {
+            } else if (linkStream.m3u8Link.contains(".mp4")) {
                 DefaultMediaSourceFactory(dfSource)
                     .createMediaSource(
-                        createMediaItem(it, itemMetaData, defaultHeader)
+                        createMediaItem(linkStream, itemMetaData, defaultHeader)
                     )
             } else {
-                Logger.d(this, "MediaSource", "ProgressiveMediaSource: $it")
+                Logger.d(this, "MediaSource", "ProgressiveMediaSource: $linkStream")
                 ProgressiveMediaSource.Factory(dfSource)
                     .createMediaSource(
-                        createMediaItem(it, itemMetaData, defaultHeader)
+                        createMediaItem(linkStream, itemMetaData, defaultHeader)
                     )
             }
         }
@@ -293,7 +313,7 @@ abstract class AbstractExoPlayerManager(
             }
         }
         val requestMetadata = MediaItem.RequestMetadata.Builder()
-            .setMediaUri(Uri.parse(linkStream.m3u8Link.trim()))
+            .setMediaUri(Uri.parse("https://live-on-v2-cdnetwork.sigmaott.com/manifest/joyfm/playlist_720p.m3u8"))
             .setExtras(requestMetadataBundle)
             .build()
 
@@ -304,6 +324,22 @@ abstract class AbstractExoPlayerManager(
             .setArtworkUri(Uri.parse(mediaData?.get(EXTRA_MEDIA_THUMB) ?: ""))
             .setDescription(mediaData?.get(EXTRA_MEDIA_DESCRIPTION))
             .setDisplayTitle(mediaData?.get(EXTRA_MEDIA_TITLE))
+            .setExtras(
+                bundleOf(
+                    EXTRA_MEDIA_ID to (mediaData?.get(EXTRA_MEDIA_ID) ?: linkStream.streamId),
+                    EXTRA_MEDIA_TITLE to mediaData?.get(EXTRA_MEDIA_TITLE),
+                    EXTRA_MEDIA_ALBUM_ARTIST to mediaData?.get(EXTRA_MEDIA_ALBUM_ARTIST),
+                    EXTRA_MEDIA_ALBUM_TITLE to mediaData?.get(EXTRA_MEDIA_ALBUM_TITLE),
+                    EXTRA_MEDIA_THUMB to mediaData?.get(EXTRA_MEDIA_THUMB),
+                    EXTRA_MEDIA_DESCRIPTION to mediaData?.get(EXTRA_MEDIA_DESCRIPTION),
+                    EXTRA_MEDIA_DURATION to mediaData?.get(EXTRA_MEDIA_DURATION),
+                    EXTRA_MEDIA_CURRENT_POSITION to mediaData?.get(EXTRA_MEDIA_CURRENT_POSITION),
+                    EXTRA_MEDIA_SOURCE_TYPE to mediaData?.get(EXTRA_MEDIA_SOURCE_TYPE),
+                    EXTRA_MEDIA_LAST_PLAY_TIME to mediaData?.get(EXTRA_MEDIA_LAST_PLAY_TIME),
+                    EXTRA_MEDIA_REFERER to referer,
+                    EXTRA_MEDIA_IS_HLS to linkStream.isHls
+                )
+            )
             .setIsPlayable(true)
             .build()
 
@@ -350,7 +386,8 @@ abstract class AbstractExoPlayerManager(
             val historyMediaItemDTO = HistoryMediaItemDTO.mapFromMediaItem(
                 mediaItem,
                 exoPlayer!!.contentPosition,
-                exoPlayer!!.contentDuration
+                exoPlayer!!.contentDuration,
+                type = getMediaSourceTypeFromExtras(mediaItem)
             )
             _historyManager.saveHistoryItem(historyMediaItemDTO, 0L)
         }
@@ -411,6 +448,7 @@ abstract class AbstractExoPlayerManager(
         const val EXTRA_MEDIA_DURATION = "extra:media_duration"
         const val EXTRA_MEDIA_CURRENT_POSITION = "extra:media_current_position"
         const val EXTRA_MEDIA_THUMB = "extra:media_thumb"
+        const val EXTRA_MEDIA_SOURCE_TYPE = "extra:media_source_type"
         const val EXTRA_MEDIA_LAST_PLAY_TIME = "extra:media_last_play_time"
         const val EXTRA_MEDIA_REFERER = "extra:referer"
         const val EXTRA_MEDIA_IS_LIVE = "extra:is_live"

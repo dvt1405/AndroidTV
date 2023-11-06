@@ -4,11 +4,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.view.setPadding
+import com.kt.apps.core.R
 import com.kt.apps.core.base.leanback.RowPresenter
 import com.kt.apps.core.extensions.model.TVScheduler
-import com.kt.apps.core.R
 import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.visible
+import com.kt.skeleton.dpToPx
 import java.util.Calendar
 
 class ProgramSchedulePresenter : RowPresenter() {
@@ -38,9 +40,12 @@ class ProgramSchedulePresenter : RowPresenter() {
                 description.visible()
             }
             if (programSchedule.isCurrentProgram()) {
-                isLiveProgram.visibility = View.VISIBLE
+                isLiveProgram.setText(com.kt.apps.resources.R.string.program_is_live_title)
+                isLiveProgram.setPadding((4.dpToPx(isLiveProgram.context)))
+                isLiveProgram.visible()
             } else {
-                isLiveProgram.visibility = View.INVISIBLE
+                isLiveProgram.setText(null)
+                isLiveProgram.setPadding(0)
             }
             if (programSchedule.startTimeMilli() <= Calendar.getInstance().timeInMillis) {
                 view.alpha = 1f
