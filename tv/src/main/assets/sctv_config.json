@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "baseBackendUrl": "https://apicdn.sctvonline.vn/",
+  "paths": [
+    {
+      "key": "linkStream",
+      "value": "tenants/sctv/contents/{channel_slug}/view?select={\"Content\":[\"current_season\",\"id\",\"slug\",\"is_watchable\",\"progress\",\"youtube_video_id\",\"link_play\",\"play_info\",\"payment_infors\",\"is_favorite\",\"drm_session_info\"]}",
+      "replacePathOrQueryKeys": [
+        "{channel_slug}"
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "key": "Origin",
+      "value": "https://sctvonline.vn"
+    },
+    {
+      "key": "Referer",
+      "value": "https://sctvonline.vn/"
+    },
+    {
+      "key": "User-Agent",
+      "value": "Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36"
+    },
+    {
+      "key": "Accept",
+      "value": "*/*"
+    },
+    {
+      "key": "Connection",
+      "value": "keep-alive"
+    }
+  ]
+}
