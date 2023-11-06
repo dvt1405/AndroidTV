@@ -30,6 +30,7 @@ import androidx.core.view.isVisible
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
+import cn.pedant.SweetAlert.SweetAlertDialog
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
@@ -138,6 +139,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
     private var btnVideoCodecInfo: ImageView? = null
     private var btnFavouriteVideo: ImageView? = null
     private var btnVoiceSearch: ImageView? = null
+    protected var errorDialog: SweetAlertDialog? = null
     protected open var allowDpadUpToOpenSearch = false
     protected var onItemClickedListener: OnItemViewClickedListener? = null
     private val mChildLaidOutListener = OnChildLaidOutListener { _, _, _, _ ->
@@ -315,7 +317,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             view?.findViewById<TextView>(R.id.video_codec)?.text = it
         }
         view?.findViewById<TextView>(R.id.video_frame_rate)?.text =
-            "${player.videoFormat?.frameRate}"
+            "${player.videoFormat?.frameRate?.takeIf { 
+                it > 0.0
+            } ?: "No Value"}"
         view?.findViewById<TextView>(R.id.byte_rate)?.text =
             "${player.videoDecoderCounters?.renderedOutputBufferCount}"
         view?.findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
@@ -1109,6 +1113,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         isLive: Boolean,
         forceShowVideoInfoContainer: Boolean
     ) {
+        errorDialog?.dismissWithAnimation()
         if (!progressManager.isShowing) {
             progressManager.show()
         }
@@ -1125,13 +1130,19 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
         mTransportControlGlue.isSeekEnabled = true
         mTransportControlGlue.playWhenPrepared()
         increaseAutoHideTimeout()
-        if (forceShowVideoInfoContainer && !isProgramScheduleShowing()) {
-            setVideoInfo(
-                playItemMetaData[AbstractExoPlayerManager.EXTRA_MEDIA_TITLE],
-                playItemMetaData[AbstractExoPlayerManager.EXTRA_MEDIA_DESCRIPTION],
-                isLive
-            )
-            showAllOverlayElements(false)
+        when {
+            forceShowVideoInfoContainer && !isProgramScheduleShowing() -> {
+                setVideoInfo(
+                    playItemMetaData[AbstractExoPlayerManager.EXTRA_MEDIA_TITLE],
+                    playItemMetaData[AbstractExoPlayerManager.EXTRA_MEDIA_DESCRIPTION],
+                    isLive
+                )
+                showAllOverlayElements(false)
+            }
+
+            !forceShowVideoInfoContainer && overlaysUIState == OverlayUIState.STATE_ONLY_GRID_CONTENT -> {
+                showAllOverlayElements(true)
+            }
         }
         seekBarContainer?.visible()
         changeNextFocus()
@@ -1515,7 +1526,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
             return
         }
         playPauseBtn?.isActivated = true
-        showErrorDialog(
+        errorDialog = showErrorDialog(
             content = errorMessage ?: getString(
                 com.kt.apps.resources.R.string.error_playback_popup_content_text,
                 errorCode

@@ -9,15 +9,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Parcelable
-import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
+import cn.pedant.SweetAlert.SweetAlertDialog
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.base.BasePlaybackFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.logging.Logger
-import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.football.model.FootballMatchWithStreamLink
 import com.kt.apps.media.xemtv.R
@@ -28,7 +27,6 @@ import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import com.kt.apps.media.xemtv.ui.football.FootballPlaybackFragment
 import com.kt.apps.media.xemtv.ui.football.FootballViewModel
 import com.kt.apps.media.xemtv.ui.main.MainActivity
-import dagger.android.AndroidInjection
 import dagger.android.HasAndroidInjector
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
@@ -40,6 +38,8 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
 
     override fun initView(savedInstanceState: Bundle?) {
     }
+
+    private var errorDialog: SweetAlertDialog? = null
 
     private val _timeReceiver by lazy {
         object : BroadcastReceiver() {
@@ -120,7 +120,7 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
 
                     Handler(Looper.getMainLooper()).postDelayed({
                         if (!this.isDestroyed) {
-                            showErrorDialog(
+                            errorDialog = showErrorDialog(
                                 content = dataState.throwable.message,
                                 autoDismiss = false
                             )
@@ -259,6 +259,7 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
 
     override fun onPause() {
         super.onPause()
+        errorDialog?.dismissWithAnimation()
         tvChannelViewModel.clearCurrentPlayingChannelState()
         footballViewModel.clearState()
     }

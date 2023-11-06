@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.view.ContextThemeWrapper
 import android.view.inputmethod.InputMethodManager
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -19,10 +18,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import cn.pedant.SweetAlert.SweetAlertDialog
-import com.kt.apps.core.R
 import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.logging.Logger
-import java.util.*
+import java.util.Locale
 
 fun Context.updateLocale(language: String = "vi"): Context {
     val config = Configuration()
@@ -62,9 +60,9 @@ fun Fragment.showErrorDialog(
     cancellable: Boolean = true,
     onDismissListener: (() -> Unit)? = null,
     onShowListener: (() -> Unit)? = null,
-) {
+): SweetAlertDialog? {
     if (this.isDetached || this.isHidden || this.context == null) {
-        return
+        return null
     }
     val successAlert = SweetAlertDialog(requireContext(), SweetAlertDialog.NORMAL_TYPE)
         .showCancelButton(false)
@@ -132,6 +130,7 @@ fun Fragment.showErrorDialog(
         }
     })
     Handler(Looper.getMainLooper()).postDelayed({ onSuccessListener?.let { it() } }, (delayMillis ?: 1900).toLong())
+    return successAlert
 }
 
 fun Activity.showSuccessDialog(
@@ -159,9 +158,9 @@ fun Activity.showErrorDialog(
     cancellable: Boolean = true,
     onDismissListener: (() -> Unit)? = null,
     onShowListener: (() -> Unit)? = null,
-) {
+): SweetAlertDialog? {
         if (this.isDestroyed || this.isFinishing) {
-            return
+            return null
         }
         val successAlert = SweetAlertDialog(this, SweetAlertDialog.NORMAL_TYPE)
             .showCancelButton(false)
@@ -213,6 +212,7 @@ fun Activity.showErrorDialog(
             { onSuccessListener?.let { it() } },
             (delayMillis ?: 1900).toLong()
         )
+    return successAlert
 }
 @JvmOverloads
 fun Activity.showSweetDialog(
