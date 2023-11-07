@@ -38,6 +38,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            versionNameSuffix ".Dev"
+        }
         release {
             minifyEnabled true
             signingConfig signingConfigs.release
@@ -60,6 +63,7 @@ android {
 
         modBeta {
             dimension "version"
+            versionNameSuffix ".Beta"
             buildConfigField "boolean", "isBeta", "true"
         }
 
