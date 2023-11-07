@@ -9,6 +9,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import dagger.Module
 import dagger.Provides
+import javax.inject.Named
 
 @Module
 class FirebaseModule {
@@ -16,6 +17,13 @@ class FirebaseModule {
     @Provides
     @CoreScope
     fun providesFirebaseDataBase(): FirebaseDatabase = FirebaseDatabase.getInstance()
+
+    @Provides
+    @CoreScope
+    @Named(FIREBASE_VIP)
+    fun providesFirebaseDataBaseVip(): FirebaseDatabase = FirebaseDatabase.getInstance(
+        "https://xemtv-e551b-vip.asia-southeast1.firebasedatabase.app/"
+    )
 
     @Provides
     @CoreScope
@@ -28,5 +36,9 @@ class FirebaseModule {
     @Provides
     @CoreScope
     fun providesAnalytics(): FirebaseAnalytics = Firebase.analytics
+
+    companion object {
+        const val FIREBASE_VIP = "FirebaseDatabaseVip"
+    }
 
 }

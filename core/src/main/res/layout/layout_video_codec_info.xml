@@ -193,6 +193,7 @@
                 android:layout_marginHorizontal="24dp"
                 android:background="@drawable/background_selector_item_program"
                 android:orientation="horizontal"
+                android:visibility="gone"
                 android:paddingHorizontal="@dimen/common_padding"
                 android:paddingVertical="@dimen/common_padding"
                 android:weightSum="2">

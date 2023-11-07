@@ -52,3 +52,15 @@ fun IKeyValueStorage.getDefaultEpgUrl(): String {
         ""
     }
 }
+
+fun IKeyValueStorage.saveIsVipDb(value: Boolean) {
+    this.save("IsVipDb", value)
+}
+
+fun IKeyValueStorage.getIsVipDb(): Boolean {
+    return try {
+        this.get("IsVipDb", Boolean::class.java)
+    } catch (e: Exception) {
+        false
+    }
+}

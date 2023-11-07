@@ -23,6 +23,7 @@ import dagger.BindsInstance
 import dagger.Component
 import io.reactivex.rxjava3.disposables.DisposableContainer
 import okhttp3.OkHttpClient
+import javax.inject.Named
 
 @Component(
     modules = [
@@ -39,6 +40,8 @@ interface CoreComponents {
     fun roomDatabase(): RoomDataBase
     fun firebaseRemoteConfig(): FirebaseRemoteConfig
     fun firebaseDatabase(): FirebaseDatabase
+    @Named(FirebaseModule.FIREBASE_VIP)
+    fun firebaseDatabaseVip(): FirebaseDatabase
     fun fireStore(): FirebaseFirestore
     fun firebaseAnalytics(): FirebaseAnalytics
     fun sharedPreferences(): SharedPreferences

@@ -2742,6 +2742,24 @@
     "VOH": [
       {
         "group": "VOH",
+        "id": "joyfmmhz",
+        "isRadio": true,
+        "name": "Joy FM",
+        "thumb": "icon_channel_joyfm.png",
+        "urls": [
+          {
+            "type": "web",
+            "url": "https://play.onlive.vn/joyfmmhz",
+            "src": "on_live"
+          },
+          {
+            "type": "streaming",
+            "url": "https://stream-37.zeno.fm/4q7y9hvkp2zuv?zs=nXdB3cFjR2O65YXQ-_HiTw&aw_0_req_lsid=8196d2c78a734f244852a3f8bbbecbcb"
+          }
+        ]
+      },
+      {
+        "group": "VOH",
         "id": "cherry-fm",
         "isRadio": true,
         "name": "Cherry fm",
@@ -2856,6 +2874,10 @@
         "urls": [
           {
             "type": "streaming",
+            "url": "https://str.vov.gov.vn/vovlive/vov1vov5Vietnamese.sdp_aac/playlist.m3u8"
+          },
+          {
+            "type": "streaming",
             "url": "https://stream.vovmedia.vn/vov1"
           }
         ]
@@ -2867,6 +2889,10 @@
         "name": "VOV2",
         "thumb": "icon_channel_vov2.png",
         "urls": [
+          {
+            "type": "streaming",
+            "url": "https://stream.vov.vn/{uuid}{time_stamp}/vov2-audio/playlist.m3u8"
+          },
           {
             "type": "streaming",
             "url": "https://stream.vovmedia.vn/vov2"

@@ -1,7 +1,6 @@
 package com.kt.apps.media.xemtv
 
 import android.content.Intent
-import android.util.Log
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.os.bundleOf
@@ -11,13 +10,11 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
-import com.google.gson.Gson
 import com.kt.apps.autoupdate.di.DaggerAppUpdateComponent
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
 import com.kt.apps.core.logging.IActionLogger
-import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVComponents
 import com.kt.apps.core.workers.AutoRefreshExtensionsChannelWorker
@@ -33,7 +30,6 @@ import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
 import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -103,17 +99,6 @@ class App : CoreApp() {
         } catch (_: Exception) {
         }
         voiceSelectorManager.registerLifeCycle()
-        CompositeDisposable().add(
-            RoomDataBase.getInstance(this)
-                .extensionsChannelDao()
-                .getConfigAndChannelByStreamLink("https://www.youtube.com/watch?v=F9n407O3xNk&ab_channel=BWFTV")
-                .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
-                .subscribe({
-                    Log.e("TAG", "Success: ${Gson().toJson(it)}")
-                }, {
-                    Log.e("TAG", "failed")
-                })
-        )
     }
 
     private fun addShortcuts() {

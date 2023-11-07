@@ -29,6 +29,7 @@ class GetListTVChannel @Inject constructor(
             when (source as TVDataSourceFrom) {
                 TVDataSourceFrom.GG -> return (tvDataSources[source]!!.getTvList())
                     .onErrorResumeNext {
+                        isLoadingData.set(false)
                         invoke(
                             params[EXTRA_REFRESH_DATA] as Boolean,
                             TVDataSourceFrom.V
@@ -37,6 +38,7 @@ class GetListTVChannel @Inject constructor(
 
                 TVDataSourceFrom.V -> return (tvDataSources[source]!!.getTvList())
                     .onErrorResumeNext {
+                        isLoadingData.set(false)
                         Observable.concat(
                             tvDataSources[TVDataSourceFrom.VTV_BACKUP]?.getTvList()
                                 ?: error("Null data sources ${source.name} provider"),
@@ -49,12 +51,13 @@ class GetListTVChannel @Inject constructor(
                 else -> {
                     tvDataSources[source]?.getTvList()
                         ?.onErrorResumeNext {
+                            isLoadingData.set(false)
                             invoke(
                                 params[EXTRA_REFRESH_DATA] as Boolean,
                                 TVDataSourceFrom.V
                             )
                         }
-                        ?: Observable.error(Throwable(""))
+                        ?: Observable.error(Throwable("Empty data sources"))
                 }
             }
         } ?: Observable.concat(
@@ -109,7 +112,6 @@ class GetListTVChannel @Inject constructor(
                 isLoadingData.compareAndSet(true, false)
                 cacheData = null
             }
-            .onErrorResumeNext { Observable.just(emptyList()) }
     }
 
     companion object {

@@ -2006,6 +2006,11 @@
       "thumb": "icon_channel_btv5.png",
       "urls": [
         {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/onsportsact"
+        },
+        {
           "type": "streaming",
           "url": "https://liveh34.vtvcab.vn/hls/ACTION/01.m3u8"
         }
@@ -3619,27 +3624,20 @@
       ]
     },
     {
-      "group": "Radio",
-      "id": "joy-fm",
+      "group": "VOH",
+      "id": "joyfmmhz",
       "isRadio": true,
-      "name": "Joy fm",
-      "thumb": "icon_channel_vtv_can_tho_166537074507.jpg",
+      "name": "Joy FM",
+      "thumb": "icon_channel_joyfm.png",
       "urls": [
         {
-          "type": "streaming",
-          "url": "http://live-on-v2-akm.akamaized.net/manifest/joyfm/playlist_360p.m3u8"
+          "type": "web",
+          "url": "https://play.onlive.vn/joyfmmhz",
+          "src": "on_live"
         },
         {
           "type": "streaming",
-          "url": "https://live-on-v2-cdnetwork.sigmaott.com/manifest/joyfm/playlist_720p.m3u8"
-        },
-        {
-          "type": "streaming",
-          "url": "https://live-on-v2-cdnetwork.sigmaott.com/manifest/joyfm/playlist_480p.m3u8"
-        },
-        {
-          "type": "streaming",
-          "url": "https://live-on-v2-cdnetwork.sigmaott.com/manifest/joyfm/playlist_360p.m3u8"
+          "url": "https://stream-37.zeno.fm/4q7y9hvkp2zuv?zs=nXdB3cFjR2O65YXQ-_HiTw&aw_0_req_lsid=8196d2c78a734f244852a3f8bbbecbcb"
         }
       ]
     },
@@ -3648,11 +3646,11 @@
       "id": "cherry-fm",
       "isRadio": true,
       "name": "Cherry fm",
-      "thumb": "icon_channel_vtv_can_tho_166537074507.jpg",
+      "thumb": "icon_channel_cherryradio.png",
       "urls": [
         {
-          "type": "streaming",
           "src": "radio-vietnam",
+          "type": "streaming",
           "url": "https://radio-vietnam.com/streams/cherry-radio-3368"
         },
         {
@@ -3670,16 +3668,142 @@
       "id": "m-radio",
       "isRadio": false,
       "name": "M Radio Giải Trí",
-      "thumb": "icon_channel_vtv_can_tho_166537074507.jpg",
+      "thumb": "icon_channel_joyfm.png",
       "urls": [
         {
+          "src": "radio-vietnam",
           "type": "streaming",
-          "url": "https://radio-vietnam.com/streams/m-radio-giai-tri-viet-nam-92627",
-          "src": "radio-vietnam"
+          "url": "https://radio-vietnam.com/streams/m-radio-giai-tri-viet-nam-92627"
         },
         {
           "type": "streaming",
           "url": "https://stream-37.zeno.fm/4q7y9hvkp2zuv?zs=nXdB3cFjR2O65YXQ-_HiTw&aw_0_req_lsid=8196d2c78a734f244852a3f8bbbecbcb"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "onsportsnews",
+      "isRadio": false,
+      "name": "OnSportsNews",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/onsportsnews/"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "onsports",
+      "isRadio": false,
+      "name": "OnSports",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/onsports/"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "onsportsplus",
+      "isRadio": false,
+      "name": "OnSportsPlus",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/onsportsplus/"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "onfootball",
+      "isRadio": false,
+      "name": "OnFootball",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/onfootball/"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "onstyle",
+      "isRadio": false,
+      "name": "OnStyle",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/onstyle/"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "ongolf",
+      "isRadio": false,
+      "name": "OnGolf",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/ongolf/"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "o2tvvtvcab",
+      "isRadio": false,
+      "name": "ON O2TV",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/o2tvvtvcab/"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "viegiaitri",
+      "isRadio": false,
+      "name": "Vie Giải Trí",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/viegiaitri/"
+        }
+      ]
+    },
+    {
+      "group": "VTVCabOn",
+      "id": "onmovies",
+      "isRadio": false,
+      "name": "On Movies",
+      "thumb": "icon_channel_joyfm.png",
+      "urls": [
+        {
+          "src": "on_live",
+          "type": "web",
+          "url": "https://play.onlive.vn/viegiaitri/"
         }
       ]
     }

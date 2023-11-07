@@ -29,7 +29,7 @@ class RoomDataBaseTest {
         testDb = Room.inMemoryDatabaseBuilder(
             context, RoomDataBase::class.java
         ).build()
-        val str = testReadJsonFile(context, "test_channel_list_tv.json")
+        val str = testReadJsonFile(context, "new_firebase_database_channel_list_tv.json")
         serverJson = JSONObject(str)
         val allChannel = serverJson.getJSONArray("AllChannels")
         val listChannel = mutableListOf<TVChannelDTO>()

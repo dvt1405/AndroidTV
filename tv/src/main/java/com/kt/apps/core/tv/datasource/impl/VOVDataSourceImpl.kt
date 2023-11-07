@@ -1,16 +1,17 @@
 package com.kt.apps.core.tv.datasource.impl
 
 import com.kt.apps.core.tv.datasource.ITVDataSource
-import com.kt.apps.core.tv.model.*
+import com.kt.apps.core.tv.model.ChannelSourceConfig
+import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelGroup
+import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
-import com.kt.apps.core.utils.buildCookie
-import com.kt.apps.core.utils.doOnSuccess
 import com.kt.apps.core.utils.removeAllSpecialChars
 import io.reactivex.rxjava3.core.Observable
-import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
-import java.io.IOException
 import java.util.regex.Pattern
 import javax.inject.Inject
 
@@ -36,10 +37,17 @@ class VOVDataSourceImpl @Inject constructor(
     override fun getTvList(): Observable<List<TVChannel>> {
         return Observable.create {
             val listChannel = mutableListOf<TVChannel>()
-            val connection = Jsoup.connect(config.baseUrl).execute()
+            val connection = try {
+                Jsoup.connect(config.baseUrl)
+                    .cookies(cookie)
+                    .execute()
+            } catch (e: Exception) {
+                it.onError(e)
+                return@create
+            }
             cookie.putAll(connection.cookies())
             val body = connection.parse().body()
-            body.getElementsByClass("col-md-3 col-sm-4 p-2 radiologo").forEach {
+            body.select(".row .col").forEach {
                 try {
                     val link = it.getElementsByTag("a")[0].attr("href")
                     val name = link.toHttpUrl().pathSegments.last()
@@ -68,7 +76,7 @@ class VOVDataSourceImpl @Inject constructor(
         tvChannel: TVChannel,
         isBackup: Boolean
     ): Observable<TVChannelLinkStream> {
-        if (true) {
+        if (cookie.isEmpty() || isBackup) {
             return getTvList().flatMap {
                 mapToBackupKenhDetail(it, tvChannel)?.let { it1 ->
                     getTvLinkFromDetail(
@@ -81,38 +89,28 @@ class VOVDataSourceImpl @Inject constructor(
         }
 
         return Observable.create { emitter ->
-            val request = Request.Builder()
-                .url(tvChannel.tvChannelWebDetailPage)
-                .header("cookie", cookie.buildCookie())
-                .build()
-
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    emitter.onError(e)
+            try {
+                val connection = Jsoup.connect(tvChannel.tvChannelWebDetailPage).execute()
+                cookie.putAll(connection.cookies())
+                val body = connection.parse().body()
+                val listUrl = mutableListOf<String>()
+                body.select("script").forEach {
+                    val regex = "(?<=url: \").*?(?=\")"
+                    val pattern = Pattern.compile(regex)
+                    val matcher = pattern.matcher(it.html())
+                    while (matcher.find()) {
+                        matcher.group(0)?.let { it1 -> listUrl.add(it1) }
+                    }
                 }
-
-                override fun onResponse(call: Call, response: Response) {
-                    response.doOnSuccess({
-                        val resStr = it.string()
-                        val regex = "(?<=mp3:\\s\").*?(?=\")"
-                        val pattern = Pattern.compile(regex)
-                        val matcher = pattern.matcher(resStr)
-                        val listUrl = mutableListOf<String>()
-                        while (matcher.find()) {
-                            matcher.group(0)?.let { it1 -> listUrl.add(it1) }
-                        }
-                        emitter.onNext(
-                            TVChannelLinkStream(tvChannel, listUrl.map {
-                                TVChannel.Url.fromUrl(it)
-                            })
-                        )
-                        emitter.onComplete()
-                    }, {
-                        emitter.onError(it)
+                emitter.onNext(
+                    TVChannelLinkStream(tvChannel, listUrl.map {
+                        TVChannel.Url.fromUrl(it)
                     })
-                }
-
-            })
+                )
+                emitter.onComplete()
+            } catch (e: Exception) {
+                emitter.onError(e)
+            }
         }
     }
 

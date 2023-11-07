@@ -11,21 +11,26 @@ open class KeyValueStorageImpl @Inject constructor(
 
     override fun <T> get(key: String, clazz: Class<T>): T {
         return when (clazz) {
-            String::class.java -> {
+            String::class.javaObjectType,
+            String::class.javaPrimitiveType -> {
                 sharedPreferences.getString(key, "") as T
             }
 
-            Boolean::class.java -> {
+            Boolean::class.javaObjectType,
+            Boolean::class.javaPrimitiveType -> {
                 sharedPreferences.getBoolean(key, false) as T
             }
 
-            Int::class.java -> {
+            Int::class.javaObjectType,
+            Int::class.javaPrimitiveType -> {
                 sharedPreferences.getInt(key, -1) as T
             }
 
-            Float::class.java -> sharedPreferences.getFloat(key, -1f) as T
+            Float::class.javaObjectType,
+            Float::class.javaPrimitiveType -> sharedPreferences.getFloat(key, -1f) as T
 
-            Long::class.java -> sharedPreferences.getLong(key, -1) as T
+            Long::class.javaObjectType,
+            Long::class.javaPrimitiveType -> sharedPreferences.getLong(key, -1) as T
             else -> {
                 val strValue = sharedPreferences.getString(key, "")
                 Gson().fromJson(strValue, clazz)

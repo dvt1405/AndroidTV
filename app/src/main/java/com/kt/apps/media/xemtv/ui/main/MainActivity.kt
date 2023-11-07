@@ -14,7 +14,10 @@ import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.autoupdate.ui.FragmentInfo
 import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.logging.Logger
+import com.kt.apps.core.storage.IKeyValueStorage
+import com.kt.apps.core.storage.getIsVipDb
 import com.kt.apps.core.storage.local.RoomDataBase
+import com.kt.apps.core.storage.saveIsVipDb
 import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.R
 import com.kt.apps.media.xemtv.databinding.ActivityMainBinding
@@ -34,6 +37,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
 
     @Inject
     lateinit var roomDataBase: RoomDataBase
+
+    @Inject
+    lateinit var keyValueStorage: IKeyValueStorage
 
     private val tvChannelViewModel by lazy {
         ViewModelProvider(this, factory)[TVChannelViewModel::class.java]
@@ -60,6 +66,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Logger.d("TAG", "ONCreate", "${intent.action} - ${intent.extras}")
+        if (BuildConfig.isBeta && !keyValueStorage.getIsVipDb()) {
+            keyValueStorage.saveIsVipDb(true)
+        }
         askNotificationPermission()
     }
     // Declare the launcher at the top of your Activity/Fragment:

@@ -1,5 +1,6 @@
 package com.kt.apps.core.tv.datasource.impl
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
@@ -9,7 +10,9 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.kt.apps.core.Constants
+import com.kt.apps.core.di.FirebaseModule
 import com.kt.apps.core.logging.Logger
+import com.kt.apps.core.storage.getIsVipDb
 import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.storage.local.dto.TVChannelDTO
 import com.kt.apps.core.storage.local.dto.TVChannelWithUrls
@@ -28,8 +31,11 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import org.json.JSONObject
+import java.util.UUID
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Provider
 
 @TVScope
@@ -38,7 +44,13 @@ class MainTVDataSource @Inject constructor(
     private val vDataSourceImpl: VDataSourceImpl,
     private val hyDataSourceImpl: HYDataSourceImpl,
     private val vtvDataSourceImpl: VTVBackupDataSourceImpl,
+    private val vtcDataSourceImpl: VtcBackupDataSourceImpl,
+    private val vovDataSourceImpl: VOVDataSourceImpl,
+    private val htvDataSourceImpl: HTVBackUpDataSourceImpl,
+    private val onLiveDataSourceImpl: OnLiveDataSourceImpl,
     private val firebaseDatabase: FirebaseDatabase,
+    @Named(FirebaseModule.FIREBASE_VIP)
+    private val firebaseDatabaseVip: FirebaseDatabase,
     private val firebaseRemoteConfig: FirebaseRemoteConfig,
     private val fireStoreDataBase: FirebaseFirestore,
     private val tvStorage: Provider<TVStorage>,
@@ -58,12 +70,19 @@ class MainTVDataSource @Inject constructor(
     private val allowInternational: Boolean
         get() = firebaseRemoteConfig.getBoolean(Constants.EXTRA_KEY_ALLOW_INTERNATIONAL)
 
+    private var isVipDb: Boolean = false
 
+    private fun checkVipDb() {
+        isVipDb = tvStorage.get().getIsVipDb()
+    }
     override fun getTvList(): Observable<List<TVChannel>> {
+        if (!isVipDb) {
+            checkVipDb()
+        }
         val onlineSource = if (context.packageName.contains("mobile")) {
-            getFireStoreSource().onErrorResumeNext { newGetFirebaseSource() }
+            getFireStoreSource().onErrorResumeNext { getFirebaseSource() }
         } else {
-            newGetFirebaseSource()
+            getFirebaseSource()
         }.reduce { t1, t2 ->
             t1.toMutableList().let {
                 it.addAll(t2)
@@ -77,6 +96,9 @@ class MainTVDataSource @Inject constructor(
                 if (it.isEmpty()) {
                     onlineSource
                 } else {
+                    if (it.first().tvChannel.searchKey.isEmpty()) {
+                        saveToRoomDB(it.mapToTVChannel())
+                    }
                     Logger.d(this@MainTVDataSource, message = "Offline source: ${Gson().toJson(it)}")
                     Observable.just(it.mapToTVChannel()
                         .sortedBy(ITVDataSource.sortTVChannel()))
@@ -130,6 +152,9 @@ class MainTVDataSource @Inject constructor(
                         }
                     }
                     saveToRoomDB(totalList)
+                    if (emitter.isDisposed) {
+                        return@addOnSuccessListener
+                    }
                     fireStoreDataBase.clearPersistence()
                     emitter.onNext(totalList)
                     emitter.onComplete()
@@ -144,61 +169,16 @@ class MainTVDataSource @Inject constructor(
         }
     }
 
-    private fun getFirebaseSource(): Observable<List<TVChannel>> =
-        Observable.create<List<TVChannel>> { emitter ->
-            val totalGroupChannels = supportGroups.toMutableList()
-            if (!allowInternational) {
-                totalGroupChannels.remove(TVChannelGroup.Intenational)
-                totalGroupChannels.remove(TVChannelGroup.Kid)
-            }
-            val totalGroup = totalGroupChannels.size
-            val totalList = mutableListOf<TVChannel>()
-            var totalCount = 0
-            Logger.d(this@MainTVDataSource, message = "getFirebaseSource")
+    private fun getFirebaseSource(): Observable<List<TVChannel>> = if (isVipDb) {
+        getFirebaseSourceVip()
+    } else {
+        newGetFirebaseSource()
+    }
 
-            totalGroupChannels.forEach { group ->
-                firebaseDatabase.reference
-                    .child(ALL_CHANNEL_NAME)
-                    .ref
-                    .child(group.name)
-                    .get()
-                    .addOnSuccessListener {
-                        totalCount++
-                        val value = it.getValue<List<TVChannelFromDB?>>() ?: return@addOnSuccessListener
-                        val tvList = value.filterNotNull()
-                            .mapToListChannel()
-                            .sortedBy(ITVDataSource.sortTVChannel())
-
-                        totalList.addAll(tvList)
-                        emitter.onNext(tvList)
-                        saveToRoomDB(tvList)
-                        Logger.d(this@MainTVDataSource, message = "Counter: $totalCount, $totalGroup")
-                        if (totalCount == totalGroup) {
-                            emitter.onComplete()
-                            tvStorage.get().saveRefreshInVersion(
-                                Constants.EXTRA_KEY_VERSION_NEED_REFRESH,
-                                versionNeedRefresh
-                            )
-                        }
-                    }
-                    .addOnFailureListener {
-                        Logger.e(this@MainTVDataSource, exception = it)
-                        totalCount++
-                        if (totalCount == totalGroup && totalList.isEmpty()) {
-                            emitter.onNext(totalList)
-                            emitter.onComplete()
-                        } else {
-                            emitter.onError(it)
-                        }
-                    }
-
-            }
-        }.retry { t1, t2 ->
-            t1 < 3
-        }
-
+    @SuppressLint("RestrictedApi")
     private fun newGetFirebaseSource(): Observable<List<TVChannel>> =
         Observable.create<List<TVChannel>> { emitter ->
+            val countDownLatch = CountDownLatch(1)
             Logger.d(this@MainTVDataSource, message = "getFirebaseSource")
             val totalGroupChannels = supportGroups.toMutableList()
             if (!allowInternational) {
@@ -212,16 +192,16 @@ class MainTVDataSource @Inject constructor(
                 .addOnSuccessListener {
                     dataSnapshot = it
                     isSuccess.set(true)
+                    countDownLatch.countDown()
                 }
                 .addOnFailureListener {
-                    isSuccess.set(true)
+                    isSuccess.set(false)
                     emitter.onError(it)
+                    countDownLatch.countDown()
                 }
-            while (!isSuccess.get()) {
-                Thread.sleep(500)
-                if (emitter.isDisposed) {
-                    return@create
-                }
+            countDownLatch.await()
+            if (emitter.isDisposed || !isSuccess.get()) {
+                return@create
             }
 
             if (dataSnapshot == null) {
@@ -241,6 +221,9 @@ class MainTVDataSource @Inject constructor(
                 Constants.EXTRA_KEY_VERSION_NEED_REFRESH,
                 versionNeedRefresh
             )
+            if (emitter.isDisposed) {
+                return@create
+            }
             emitter.onNext(totalList)
             emitter.onComplete()
         }.retry { t1, t2 ->
@@ -251,22 +234,23 @@ class MainTVDataSource @Inject constructor(
 
     private fun getFirebaseSourceVip(): Observable<List<TVChannel>> = Observable.create { emitter ->
         var dataSnapshot: DataSnapshot? = null
-        val isSuccess = AtomicBoolean(false)
-        firebaseDatabase.reference.child("AllChannels")
+        val countDownLatch = CountDownLatch(1)
+        val mStartTime = System.currentTimeMillis()
+        Logger.d(this@MainTVDataSource, message = "getFirebaseSourceVip: $mStartTime")
+        firebaseDatabaseVip.reference.child("AllChannels")
             .ref.get()
             .addOnSuccessListener {
                 dataSnapshot = it
-                isSuccess.set(true)
+                countDownLatch.countDown()
             }
             .addOnFailureListener {
-                isSuccess.set(true)
+                countDownLatch.countDown()
                 emitter.onError(it)
             }
-        while (!isSuccess.get()) {
-            Thread.sleep(500)
-            if (emitter.isDisposed) {
-                return@create
-            }
+        countDownLatch.await()
+        Logger.d(this@MainTVDataSource, message = "getFirebaseSourceVipSuccess: ${System.currentTimeMillis() - mStartTime}")
+        if (emitter.isDisposed) {
+            return@create
         }
         val childValue = dataSnapshot!!.getValue<List<TVChannelFromDB?>>()
         val tvList = childValue!!.filterNotNull()
@@ -347,6 +331,12 @@ class MainTVDataSource @Inject constructor(
                 it.type.lowercase() == TVChannelUrlType.STREAM.value
             }
             .map {
+                val newUrl = it.url.replace("{uuid}", UUID.randomUUID().toString().replace("-", ""))
+                    .replace("{time_stamp}", "${System.currentTimeMillis()}")
+                    .replace("{time_stamp_second}", "${System.currentTimeMillis() / 1000}")
+                it.copy(url = newUrl)
+            }
+            .map {
                 if (it.url.contains("|Referer")) {
                     val refererIndex = it.url.indexOf("|Referer")
                     val newUrl = it.url.substring(0, refererIndex)
@@ -423,6 +413,22 @@ class MainTVDataSource @Inject constructor(
                 vtvDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
             }
 
+            TVChannelURLSrc.ON_LIVE.value -> {
+                onLiveDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+
+            TVChannelURLSrc.VOV.value -> {
+                vovDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+
+            TVChannelURLSrc.HTV.value -> {
+                htvDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+
+            TVChannelURLSrc.VTC.value -> {
+                vtcDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+            }
+
             TVChannelURLSrc.HY.value -> {
                 hyDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
             }
@@ -468,7 +474,8 @@ class MainTVDataSource @Inject constructor(
     }
 
     enum class TVChannelURLSrc(val value: String) {
-        V("vieon"), SCTV("sctv"), HY("hy"), VTV("vtv")
+        V("vieon"), SCTV("sctv"), HY("hy"), VTV("vtv"),
+        ON_LIVE("on_live"), VOV("vov"), HTV("htv"), VTC("vtc")
     }
 
     companion object {
