@@ -483,6 +483,8 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                         is LayoutState.PIP -> togglePIPLayout(true)
                         is LayoutState.MINIMAL -> changeMinimalLayout()
                         is LayoutState.MOVE_CHANNEL -> {}
+                        is LayoutState.MOVE_CHANNEL -> { }
+                        else -> {}
                     }
                 }
             }
