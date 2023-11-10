@@ -190,21 +190,27 @@ class MainTVDataSource @Inject constructor(
             firebaseDatabase.reference.child(ALL_CHANNEL_NAME)
                 .ref.get()
                 .addOnSuccessListener {
+                    if (emitter.isDisposed) {
+                        return@addOnSuccessListener
+                    }
                     dataSnapshot = it
                     isSuccess.set(true)
                     countDownLatch.countDown()
                 }
                 .addOnFailureListener {
+                    if (emitter.isDisposed) {
+                        return@addOnFailureListener
+                    }
                     isSuccess.set(false)
                     emitter.onError(it)
                     countDownLatch.countDown()
                 }
             countDownLatch.await()
-            if (emitter.isDisposed || !isSuccess.get()) {
+            if (emitter.isDisposed) {
                 return@create
             }
 
-            if (dataSnapshot == null) {
+            if (dataSnapshot == null || !isSuccess.get()) {
                 emitter.onError(Throwable("EmptyData"))
                 return@create
             }

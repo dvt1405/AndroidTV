@@ -29,7 +29,7 @@ ext {
     ]
     buildVersionNumberInDay = [
             mobile: 1,
-            tv    : 3
+            tv    : 1
     ]
     extVersionCode = [
             mobile: getVersionCode(buildVersionNumberInDay['mobile']),

@@ -205,9 +205,13 @@ class ParserExtensionsSource @Inject constructor(
         }
 
     fun parseFromRemoteRxStream(extension: ExtensionsConfig): Observable<List<ExtensionsChannel>> {
-        val parserSource = Observable.fromCallable {
+        val parserSource = Observable.create {
+            if (it.isDisposed) {
+                return@create
+            }
             trustEveryone()
-            return@fromCallable executeHttpCall(extension)
+            it.onNext(executeHttpCall(extension))
+            it.onComplete()
         }.flatMap {
             this@ParserExtensionsSource.parseInputStreamToListIPTVChannel(extension, it)
         }.retry { time, throwable ->

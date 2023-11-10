@@ -16,7 +16,6 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.plugins.RxJavaPlugins
 import io.reactivex.rxjava3.schedulers.Schedulers
 import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import org.junit.Before
 import org.junit.Test
@@ -106,7 +105,8 @@ class ParserExtensionsSourceTest(
             "https://gg.gg/vn360sport",
             "https://gg.gg/90phuttv",
             "http://m3u.at/SamsungTV",
-            "http://nxtxone.com:8080/get.php?username=gUSmpbgq&password=fB981Kt&type=m3u_plus&output=ts"
+            "https://bom.to/beartv",
+            "https://hqth.me/phimvip"
         )
 
         @Parameters

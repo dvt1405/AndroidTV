@@ -177,7 +177,7 @@ abstract class RoomDataBase : RoomDatabase() {
         private val MIGRATE_11_12 by lazy {
             object : Migration(11, 12) {
                 override fun migrate(database: SupportSQLiteDatabase) {
-                    database.execSQL("ALERT TABLE `TVChannelDTO` ADD COLUMN `searchKey` TEXT NOT NULL DEFAULT ''")
+                    database.execSQL("ALTER TABLE `TVChannelDTO` ADD COLUMN `searchKey` TEXT NOT NULL DEFAULT ''")
                     database.execSQL("CREATE VIRTUAL TABLE IF NOT EXISTS `TVChannelFts4` USING FTS4(`tvGroup` TEXT NOT NULL, `logoChannel` TEXT NOT NULL, `tvChannelName` TEXT NOT NULL, `sourceFrom` TEXT NOT NULL, `channelId` TEXT NOT NULL, `searchKey` TEXT NOT NULL, tokenize=unicode61, content=`TVChannelDTO`)")
                     database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_TVChannelFts4_BEFORE_UPDATE BEFORE UPDATE ON `TVChannelDTO` BEGIN DELETE FROM `TVChannelFts4` WHERE `docid`=OLD.`rowid`; END")
                     database.execSQL("CREATE TRIGGER IF NOT EXISTS room_fts_content_sync_TVChannelFts4_BEFORE_DELETE BEFORE DELETE ON `TVChannelDTO` BEGIN DELETE FROM `TVChannelFts4` WHERE `docid`=OLD.`rowid`; END")
