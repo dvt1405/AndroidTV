@@ -1,7 +1,5 @@
 package com.kt.apps.media.mobile.ui.fragments.playback
 
-import android.content.pm.ActivityInfo
-import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -14,7 +12,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
-import androidx.core.view.allViews
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.*
 import androidx.recyclerview.widget.RecyclerView
@@ -36,11 +33,9 @@ import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textview.MaterialTextView
-import com.kt.apps.core.base.player.ExoPlayerManager
 import com.kt.apps.core.base.player.ExoPlayerManagerMobile
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.gone
-import com.kt.apps.core.utils.dpToPx
 import com.kt.apps.core.utils.inVisible
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.visible
@@ -51,7 +46,6 @@ import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
-import com.kt.apps.media.mobile.ui.fragments.dialog.CustomDialogFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
 import com.kt.apps.media.mobile.viewmodels.features.loadFavorite
@@ -59,7 +53,6 @@ import com.kt.apps.media.mobile.viewmodels.features.toggleFavoriteCurrent
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import org.w3c.dom.Text
 import java.util.Formatter
 import java.util.Locale
 import javax.inject.Inject
@@ -232,7 +225,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             }
         }
 
-        favoriteButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24, context?.theme)
+        favoriteButton?.icon = ResourcesCompat.getDrawable(
+            resources,
+            com.kt.apps.resources.R.drawable.ic_round_bookmark_border_24,
+            context?.theme
+        )
         favoriteButton?.setOnClickListener { view ->
             Log.d(TAG, "toggleFavorite: ")
             toggleFavorite()
@@ -240,10 +237,16 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         favoriteButton?.gone()
         Log.d(TAG, "favoriteButton?.invisible(): ${Thread.currentThread()}")
 
-        informationButton?.icon = ResourcesCompat.getDrawable(resources, com.kt.apps.core.R.drawable.ic_round_error_outline_24, context?.theme)
+        informationButton?.icon = ResourcesCompat.getDrawable(
+            resources,
+            com.kt.apps.core.R.drawable.ic_round_error_outline_24,
+            context?.theme
+        )
         informationButton?.setOnClickListener { showInformationDialog() }
         informationButton?.inVisible()
 
+        voiceSearchLoading?.gone()
+        voiceSearchButton?.gone()
         voiceSearchButton?.setOnClickListener {
             toggleVoiceSearch()
         }
@@ -253,16 +256,30 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
         progressBar?.isEnabled = false
 
-        backButton?.icon = ResourcesCompat.getDrawable(resources, if (isLandscape) {
-            R.drawable.ic_arrow_back
-        } else {
-            R.drawable.ic_clear
-        }, context?.theme)
+        backButton?.icon = ResourcesCompat.getDrawable(
+            resources, if (isLandscape) {
+                R.drawable.ic_arrow_back
+            } else {
+                R.drawable.ic_clear
+            }, context?.theme
+        )
 
         fullScreenButton?.visibility = View.VISIBLE
-        fullScreenButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.exo_ic_fullscreen_exit, context?.theme))
+        fullScreenButton?.setImageDrawable(
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.exo_ic_fullscreen_exit,
+                context?.theme
+            )
+        )
 
-        aspectRatioButton?.setImageDrawable(ResourcesCompat.getDrawable(resources, R.drawable.ic_aspect_ratio, context?.theme))
+        aspectRatioButton?.setImageDrawable(
+            ResourcesCompat.getDrawable(
+                resources,
+                R.drawable.ic_aspect_ratio,
+                context?.theme
+            )
+        )
         aspectRatioButton?.setOnClickListener { changeNextResizeMode() }
         aspectRatioButton?.visibility = if (isLandscape) {
             View.VISIBLE
@@ -271,16 +288,22 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
 
         toggleChannelListVisibility(shouldShow = true)
-        channelListRecyclerView?.addOnScrollListener(object: OnScrollListener() {
+        channelListRecyclerView?.addOnScrollListener(object : OnScrollListener() {
             var isChanged: Boolean = false
             var baseConfig = lastPlayerControllerConfig
 
             fun avoidChangeHide() {
                 val exoPlayer = exoPlayer ?: return
-                val shouldConfig = exoPlayer.controllerHideOnTouch && exoPlayer.controllerShowTimeoutMs > 0
-                if (!shouldConfig) { return }
+                val shouldConfig =
+                    exoPlayer.controllerHideOnTouch && exoPlayer.controllerShowTimeoutMs > 0
+                if (!shouldConfig) {
+                    return
+                }
                 exoPlayer.apply {
-                    baseConfig = PlayerControllerConfig(hideOnTouch = controllerHideOnTouch, controllerShowTimeoutMs)
+                    baseConfig = PlayerControllerConfig(
+                        hideOnTouch = controllerHideOnTouch,
+                        controllerShowTimeoutMs
+                    )
 
                     controllerShowTimeoutMs = -1
                     controllerHideOnTouch = false
@@ -454,27 +477,27 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
             launch {
                 currentLayout.collectLatest {
-                    when(it) {
+                    when (it) {
                         is LayoutState.FULLSCREEN -> changeFullScreenLayout(it.shouldRedraw)
                         is LayoutState.SHOW_CHANNEL -> changeFullScreenLayout(false)
                         is LayoutState.PIP -> togglePIPLayout(true)
                         is LayoutState.MINIMAL -> changeMinimalLayout()
-                        is LayoutState.MOVE_CHANNEL -> { }
+                        is LayoutState.MOVE_CHANNEL -> {}
                     }
                 }
             }
 
-            launch {
-                voiceSearchProgress.isLoading.collectLatest {
-                    if (it) {
-                        voiceSearchLoading?.visible()
-                        voiceSearchButton?.inVisible()
-                    } else {
-                        voiceSearchLoading?.gone()
-                        voiceSearchButton?.visible()
-                    }
-                }
-            }
+//            launch {
+//                voiceSearchProgress.isLoading.collectLatest {
+//                    if (it) {
+//                        voiceSearchLoading?.visible()
+//                        voiceSearchButton?.inVisible()
+//                    } else {
+//                        voiceSearchLoading?.gone()
+//                        voiceSearchButton?.visible()
+//                    }
+//                }
+//            }
         }
 
         interactor.loadFavorite()
@@ -501,51 +524,17 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
 
     private fun showInformationDialog() {
         val player = exoPlayerManager.exoPlayer ?: return
-        val builder = MaterialAlertDialogBuilder(requireContext())
-            .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
-                findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
-                    text = player.mediaMetadata.title
-                }
-                if (player.contentDuration < 120_000) {
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.gone()
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.gone()
-                } else {
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.visible()
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.apply {
-                        visible()
-                        val builder = StringBuilder()
-                        val formatter = Formatter(builder, Locale.getDefault())
-                        text = Util.getStringForTime(builder, formatter, player.contentDuration)
-                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
-                    }
-                }
-                findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
-                    "${player.videoSize.width}x${player.videoSize.height}"
-                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
-                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
-                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
-                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
-                    !it?.trim().isNullOrEmpty()
-                } ?: "NoValue"
-
-                this.findTextViewsInView().forEach {
-                    it.apply {
-                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
-                    }
-                }
-            })
-
         informationDialog = MaterialAlertDialogBuilder(requireContext())
             .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
-                findViewById<TextView>(com.kt.apps.core.R.id.video_title).apply {
+                findViewById<TextView>(R.id.video_title).apply {
                     text = player.mediaMetadata.title
                 }
                 if (player.contentDuration < 120_000) {
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.gone()
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.gone()
+                    findViewById<TextView>(R.id.video_duration)?.gone()
+                    findViewById<TextView>(R.id.video_duration_title)?.gone()
                 } else {
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration_title)?.visible()
-                    findViewById<TextView>(com.kt.apps.core.R.id.video_duration)?.apply {
+                    findViewById<TextView>(R.id.video_duration_title)?.visible()
+                    findViewById<TextView>(R.id.video_duration)?.apply {
                         visible()
                         val builder = StringBuilder()
                         val formatter = Formatter(builder, Locale.getDefault())
@@ -553,12 +542,12 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                         setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
                     }
                 }
-                findViewById<TextView>(com.kt.apps.core.R.id.video_resolution)?.text =
+                findViewById<TextView>(R.id.video_resolution)?.text =
                     "${player.videoSize.width}x${player.videoSize.height}"
-                findViewById<TextView>(com.kt.apps.core.R.id.color_info)?.text = "${player.videoFormat?.colorInfo ?: "NoValue"}"
-                findViewById<TextView>(com.kt.apps.core.R.id.video_codec)?.text = player.videoFormat?.codecs
-                findViewById<TextView>(com.kt.apps.core.R.id.video_frame_rate)?.text = "${player.videoFormat?.frameRate}"
-                findViewById<TextView>(com.kt.apps.core.R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
+                findViewById<TextView>(R.id.video_codec)?.text = player.videoFormat?.codecs
+                findViewById<TextView>(R.id.video_frame_rate)?.text =
+                    "${player.videoFormat?.frameRate}"
+                findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
                     !it?.trim().isNullOrEmpty()
                 } ?: "NoValue"
 

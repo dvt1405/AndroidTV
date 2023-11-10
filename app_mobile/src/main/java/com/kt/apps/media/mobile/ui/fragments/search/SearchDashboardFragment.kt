@@ -6,29 +6,25 @@ import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.content.ContextCompat
-import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.textfield.TextInputLayout
 import com.kt.apps.core.base.adapter.BaseAdapter
 import com.kt.apps.core.base.adapter.BaseViewHolder
 import com.kt.apps.core.base.adapter.OnItemRecyclerViewCLickListener
 import com.kt.apps.core.utils.TAG
+import com.kt.apps.core.utils.gone
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.FragmentSearchDashboardBinding
 import com.kt.apps.media.mobile.databinding.TextviewItemBinding
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.PaddingItemDecoration
-import com.kt.apps.media.mobile.utils.avoidExceptionLaunch
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
-import com.kt.apps.media.mobile.utils.showKeyboard
 import com.kt.apps.media.mobile.utils.textChanges
 import com.kt.apps.media.mobile.utils.toCoroutine
-import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.SearchDashboardViewModel
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import kotlinx.coroutines.*
@@ -70,6 +66,7 @@ class SearchDashboardFragment : BaseMobileFragment<FragmentSearchDashboardBindin
             addItemDecoration(PaddingItemDecoration(PaddingItemDecoration.Edge(0, 12, 0, 0)))
         }
 
+        binding.voiceButton?.gone()
         binding.voiceButton?.icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_voice_search)
         binding.voiceButton?.setOnClickListener {
             lifecycleScope.launch(CoroutineExceptionHandler { _, throwable ->

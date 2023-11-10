@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.core.view.updateLayoutParams
 import androidx.core.widget.doAfterTextChanged
+import androidx.core.widget.doBeforeTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -131,7 +132,9 @@ class AddExtensionFragment: BindingDialogFragment<AddExtensionDialogBinding>() {
                     sourceLinkEditText.error = "Đường dẫn không hợp lệ! Đường dẫn phải phải bắt đầu bằng: \"http\""
                 }
                 if (!isUserEditName && sourceLinkEditText.isFocused) {
-                    sourceNameEditText.setText(Uri.parse(sourceLinkEditText.text.toString()).pathSegments.filter { t -> t.trim().isNotEmpty() }.lastOrNull() ?: "")
+                    sourceNameEditText.setText(Uri.parse(sourceLinkEditText.text.toString()).pathSegments.filter { t ->
+                        t.trim().isNotEmpty()
+                    }.lastOrNull() ?: "")
                 }
             }
         }
@@ -142,12 +145,16 @@ class AddExtensionFragment: BindingDialogFragment<AddExtensionDialogBinding>() {
             }
         }
 
+        sourceLinkEditText.doBeforeTextChanged { text, start, count, after ->
+
+        }
+
         processState
-            .distinctUntilChanged {
-                new, old ->  new == old
+            .distinctUntilChanged { new, old ->
+                new == old
             }
             .onEach { state ->
-                when(state) {
+                when (state) {
                     State.EDITING -> {
                         animationQueue.submit(coroutineContext) {
                             saveButton.visibility = View.VISIBLE
