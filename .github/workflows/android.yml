@@ -69,7 +69,7 @@ jobs:
         git pull --rebase
         git add .
         git commit -m "Add APK file"
-        git push
+        git push https://x-access-token:${{ secrets.PAT }}@github.com/dvt1405/iMediaReleasePages.git
 
     - name: Upload APK
       uses: actions/upload-artifact@v2
