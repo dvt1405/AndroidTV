@@ -55,16 +55,18 @@ jobs:
       with:
         repository: dvt1405/iMediaReleasePages
         path: ./gh-pages
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Copy APK file to other GitHub Pages repository
       run: |
-        cp steps.apk.outputs.apk_file ./gh-pages/${{steps.apk.outputs.apk_file_name}}.apk
+        cp ${{steps.apk.outputs.apk_file}} ./gh-pages/${{steps.apk.outputs.apk_file_name}}.apk
 
     - name: Commit and push APK file
       run: |
         cd ./gh-pages
         git config user.name "GitHub Actions"
         git config user.email "dvt1405@github.com"
+        git pull --rebase
         git add .
         git commit -m "Add APK file"
         git push
