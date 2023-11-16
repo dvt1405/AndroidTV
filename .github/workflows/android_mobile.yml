@@ -1,0 +1,57 @@
+name: Build APK Mobile
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '18'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Get date
+        id: date
+        run: echo "::set-output name=date::$(date +'%y%m%d')"
+        shell: bash
+
+      - name: Check Gradle version
+        run: ./gradlew --version
+
+      - name: Build with Gradle
+        run: ./gradlew app_mobile:assembleModBetaRelease
+
+      - name: Get APK file
+        id: apk
+        run: |
+          ls app_mobile/build/outputs/apk/modBeta/release/*.apk | head -n 1
+          apk_file=$(ls app_mobile/build/outputs/apk/modBeta/release/*.apk | head -n 1)
+          apk_file_name=$(echo "$apk_file" | sed -r "s/.+\/(.+)\..+/\1/")
+          echo "apk_file=$apk_file"
+          echo "apk_file_name=$apk_file_name"
+          echo "::set-output name=apk_file::$apk_file"
+          echo "::set-output name=apk_file_name::$apk_file_name"
+        shell: bash
+
+      - name: Check APK file
+        run: |
+          echo "APK file: ${{ steps.apk.outputs.apk_file }}"
+        shell: bash
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{steps.apk.outputs.apk_file_name}}
+          path: ${{steps.apk.outputs.apk_file}}

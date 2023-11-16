@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK TV
 
 on:
   push:
@@ -49,6 +49,25 @@ jobs:
       run: |
         echo "APK file: ${{ steps.apk.outputs.apk_file }}"
       shell: bash
+
+    - name: Checkout other GitHub Pages repository
+      uses: actions/checkout@v2
+      with:
+        repository: dvt1405/iMediaReleasePages
+        path: ./gh-pages
+
+    - name: Copy APK file to other GitHub Pages repository
+      run: |
+        cp steps.apk.outputs.apk_file ./gh-pages/${{steps.apk.outputs.apk_file_name}}.apk
+
+    - name: Commit and push APK file
+      run: |
+        cd ./gh-pages
+        git config user.name "GitHub Actions"
+        git config user.email "dvt1405@github.com"
+        git add .
+        git commit -m "Add APK file"
+        git push
 
     - name: Upload APK
       uses: actions/upload-artifact@v2
