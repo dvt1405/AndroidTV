@@ -251,10 +251,16 @@ class ParserExtensionsSource @Inject constructor(
                 Request.Builder()
                     .url(extension.sourceUrl)
                     .addHeader(
-                        "User-agent", Constants.TV_MATE_USER_AGENT_BUILD
-                            .replace(Constants.TV_MATE_MANUFACTURER_REPLACE, Build.MANUFACTURER)
+                        "user-agent", Constants.TV_MATE_USER_AGENT_BUILD
+                            .replace(
+                                Constants.TV_MATE_MANUFACTURER_REPLACE,
+                                Build.MANUFACTURER
+                            )
                             .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
-                            .replace(Constants.TV_MATE_OS_VERSION_REPLACE, Build.VERSION.RELEASE)
+                            .replace(
+                                Constants.TV_MATE_OS_VERSION_REPLACE,
+                                Build.VERSION.RELEASE
+                            )
                     )
                     .apply {
                         Uri.parse(extension.sourceUrl).host?.takeIf { it.isNotEmpty() }
