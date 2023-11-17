@@ -80,18 +80,28 @@ class FragmentInfo : BaseFragment<FragmentInfoBinding>(), BrowseSupportFragment.
                 .commit()
         }
 
+        binding.imediaLink.setOnClickListener {
+            requireActivity().supportFragmentManager
+                .beginTransaction()
+                .add(android.R.id.content, FragmentQrCode.newInstance(binding.imediaLink.text.trim().toString()))
+                .addToBackStack(null)
+                .commit()
+        }
+
         (binding.root as BrowseFrameLayout).setOnFocusSearchListener { focused, direction ->
             if (direction == View.FOCUS_LEFT) {
                 return@setOnFocusSearchListener null
             }
             if (direction == View.FOCUS_DOWN) {
                 when (focused) {
-                    binding.btnCheckUpdate -> return@setOnFocusSearchListener binding.fbGroupLink
+                    binding.btnCheckUpdate -> return@setOnFocusSearchListener binding.imediaLink
+                    binding.imediaLink -> return@setOnFocusSearchListener binding.fbGroupLink
                     binding.fbGroupLink -> return@setOnFocusSearchListener binding.zaloGroupLink
                 }
             } else if (direction == View.FOCUS_UP) {
                 when (focused) {
-                    binding.fbGroupLink -> return@setOnFocusSearchListener binding.btnCheckUpdate
+                    binding.imediaLink -> return@setOnFocusSearchListener binding.btnCheckUpdate
+                    binding.fbGroupLink -> return@setOnFocusSearchListener binding.imediaLink
                     binding.zaloGroupLink -> return@setOnFocusSearchListener binding.fbGroupLink
                 }
             }
@@ -128,6 +138,12 @@ class FragmentInfo : BaseFragment<FragmentInfoBinding>(), BrowseSupportFragment.
                     }?.let {
                         binding.zaloGroupLink.text = it
                     }
+                    jsonGroups.optString("imedia").takeIf {
+                        it.isNotEmpty() && it.isNotBlank()
+                    }?.let {
+                        binding.imediaLink.text = it
+                    }
+
                 } catch (_: Exception) {
                 }
             }

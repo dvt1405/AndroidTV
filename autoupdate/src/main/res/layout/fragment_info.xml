@@ -40,7 +40,7 @@
                 android:focusable="true"
                 android:focusedByDefault="true"
                 android:minWidth="200dp"
-                android:nextFocusDown="@id/fb_group_link"
+                android:nextFocusDown="@id/imedia_link"
                 android:text="Kiểm tra cập nhật"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
@@ -54,35 +54,58 @@
                 app:strokeColor="#99FFFFFF"
                 app:strokeWidth="1.5dp" />
 
-            <TextView
-                android:id="@+id/fb_group_link"
+            <LinearLayout
+                android:theme="@style/Theme.AppCompat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/background_corners_4dp"
-                android:backgroundTint="@color/background_tint_color"
-                android:focusable="true"
-                android:minWidth="200dp"
-                android:nextFocusUp="@id/btn_check_update"
-                android:nextFocusDown="@id/zalo_group_link"
-                android:paddingHorizontal="10dp"
-                android:text="https://fb.com/groups/imediaapp/"
-                android:textColor="@color/white"
-                android:textSize="16sp" />
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/zalo_group_link"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/common_padding"
-                android:background="@drawable/background_corners_4dp"
-                android:backgroundTint="@color/background_tint_color"
-                android:focusable="true"
-                android:minWidth="200dp"
-                android:nextFocusUp="@id/fb_group_link"
-                android:paddingHorizontal="10dp"
-                android:text="https://zalo.me/g/bcdftf650"
-                android:textColor="@color/white"
-                android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/imedia_link"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/background_corners_4dp_no_solid_color"
+                    android:backgroundTint="@color/background_tint_color"
+                    android:focusable="true"
+                    android:minWidth="260dp"
+                    android:nextFocusUp="@id/btn_check_update"
+                    android:nextFocusDown="@id/zalo_group_link"
+                    android:paddingHorizontal="10dp"
+                    android:text="https://imedia.wiki"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/fb_group_link"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/common_padding"
+                    android:background="@drawable/background_corners_4dp_no_solid_color"
+                    android:backgroundTint="@color/background_tint_color"
+                    android:focusable="true"
+                    android:minWidth="260dp"
+                    android:nextFocusUp="@id/btn_check_update"
+                    android:nextFocusDown="@id/zalo_group_link"
+                    android:paddingHorizontal="10dp"
+                    android:text="https://fb.com/groups/imediaapp"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/zalo_group_link"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/common_padding"
+                    android:background="@drawable/background_corners_4dp_no_solid_color"
+                    android:backgroundTint="@color/background_tint_color"
+                    android:focusable="true"
+                    android:minWidth="260dp"
+                    android:nextFocusUp="@id/fb_group_link"
+                    android:paddingHorizontal="10dp"
+                    android:text="https://zalo.me/g/bcdftf650"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+            </LinearLayout>
 
         </LinearLayout>
     </com.kt.apps.core.base.leanback.BrowseFrameLayout>
