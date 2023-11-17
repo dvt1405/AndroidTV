@@ -110,12 +110,11 @@ class ImageViewGradientBackground(
                 alpha
             ).toColorInt()
         } else {
-            val reflection = APiUnder26Reflection(color)
             Color.argb(
                 (alpha * 256).toInt(),
-                reflection.red().toInt(),
-                reflection.green().toInt(),
-                reflection.blue().toInt()
+                (color.component1() * 256).toInt(),
+                (color.component2() * 256).toInt(),
+                (color.component3() * 256).toInt(),
             )
         }
     }

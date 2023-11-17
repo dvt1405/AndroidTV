@@ -2,6 +2,7 @@ package com.kt.apps.media.xemtv.presenter
 
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -78,12 +79,21 @@ class FootballPresenter(private val showLeagueTitle: Boolean = true) : Presenter
     private fun getColorForGradient(it: Bitmap): Long {
         val mainColorIntValue = it.getMainColor()
         val mainColor = mainColorIntValue.toColor()
-        return Color.pack(
-            mainColor.component1(),
-            mainColor.component2(),
-            mainColor.component3(),
-            0.4f
-        )
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Color.pack(
+                mainColor.component1(),
+                mainColor.component2(),
+                mainColor.component3(),
+                0.4f
+            )
+        } else {
+            Color.argb(
+                (0.4f * 256).toInt(),
+                (mainColor.component1() * 256).toInt(),
+                (mainColor.component2() * 256).toInt(),
+                (mainColor.component3() * 256).toInt(),
+            ).toLong()
+        }
     }
 
     override fun onUnbindViewHolder(viewHolder: ViewHolder?) {
