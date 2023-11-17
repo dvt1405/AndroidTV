@@ -1,27 +1,16 @@
 package com.kt.apps.media.mobile.viewmodels.features
 
 import android.net.Uri
-import android.util.Log
-import com.google.firebase.inject.Deferred
-import com.kt.apps.core.extensions.model.TVScheduler
 import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
-import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.model.TVChannelLinkStream
-import com.kt.apps.core.utils.TAG
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
 import com.kt.apps.media.mobile.ui.fragments.models.TVChannelViewModel
 import com.kt.apps.media.mobile.ui.fragments.playback.PlaybackViewModel
 import com.kt.apps.media.mobile.ui.main.ChannelElement
-import com.kt.apps.media.mobile.utils.asUpdateFlow
 import com.kt.apps.media.mobile.utils.await
 import com.kt.apps.media.mobile.viewmodels.FavoriteViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 interface IFetchDataControl {
     val playbackViewModel: PlaybackViewModel
@@ -40,6 +29,13 @@ interface IFetchTVChannelControl: IFetchDataControl {
         tvChannelViewModel.loadLinkStreamForChannel(element.model)
         val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await(tag = "TV")
         val data = mapSuccessValue(linkStream)
+        playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
+    }
+
+    suspend fun retryGetLinkStreamAction() {
+        tvChannelViewModel.retryGetLastWatchedChannel()
+        val linkStream = tvChannelViewModel.tvWithLinkStreamLiveData.await(tag = "TV")
+        val data = StreamLinkData.TVStreamLinkData(linkStream)
         playbackViewModel.changeProcessState(PlaybackViewModel.State.PLAYING(data))
     }
 

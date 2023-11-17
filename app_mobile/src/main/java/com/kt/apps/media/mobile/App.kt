@@ -18,6 +18,9 @@ import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
 import com.kt.apps.core.logging.IActionLogger
+import com.kt.apps.core.storage.IKeyValueStorage
+import com.kt.apps.core.storage.getIsVipDb
+import com.kt.apps.core.storage.saveIsVipDb
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVComponents
 import com.kt.apps.core.workers.TVEpgWorkers
@@ -89,12 +92,17 @@ class App : CoreApp(), Configuration.Provider {
 
     @Inject
     lateinit var voiceSelectorManager: VoiceSelectorManager
+    @Inject
+    lateinit var keyValueStorage: IKeyValueStorage
 
     override fun onCreate() {
         super.onCreate()
         app = this
         (applicationInjector() as AppComponents).inject(this)
         voiceSelectorManager.registerLifeCycle()
+        if (BuildConfig.isBeta && !keyValueStorage.getIsVipDb()) {
+            keyValueStorage.saveIsVipDb(true)
+        }
     }
 
     override fun onRemoteConfigReady() {

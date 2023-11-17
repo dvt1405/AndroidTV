@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.exoplayer2.PlaybackException
 import com.kt.apps.core.base.BasePlaybackFragment
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logPlaybackRetryGetStreamLink
 import com.kt.apps.core.logging.logPlaybackRetryPlayVideo
 import com.kt.apps.core.tv.model.TVChannel
@@ -125,7 +126,10 @@ class TVPlaybackFragment: ChannelPlaybackFragment() {
             }
 
             else -> {
-                _playbackInteractor.tvChannelViewModel.retryGetLastWatchedChannel()
+                Logger.d(this@TVPlaybackFragment, message = "Retry get stream link")
+                lifecycleScope.launch {
+                    _playbackInteractor.retryGetLinkStreamAction()
+                }
                 _playbackInteractor.tvChannelViewModel.actionLogger.logPlaybackRetryGetStreamLink(
                     error,
                     _playbackInteractor.tvChannelViewModel.lastWatchedChannel?.channel?.tvChannelName ?: "Unknown"

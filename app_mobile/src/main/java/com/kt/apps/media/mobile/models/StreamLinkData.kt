@@ -15,7 +15,7 @@ sealed class StreamLinkData(
 ) {
     data class TVStreamLinkData(val data: TVChannelLinkStream): StreamLinkData(
         data.channel.tvChannelName,
-        data.linkStream.map { LinkStream(it.url, data.channel.tvChannelWebDetailPage, data.channel.tvChannelWebDetailPage) },
+        data.inputExoPlayerLink.map { LinkStream(it.m3u8Link, it.referer, it.m3u8Link) },
         data.channel.channelId,
         data.channel.isHls,
         data.channel.getMapData()
