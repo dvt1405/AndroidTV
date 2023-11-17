@@ -64,9 +64,9 @@ jobs:
         git config user.name "GitHub Actions"
         git config user.email "dvt1405@github.com"
         git pull --rebase
-        cp ${{steps.apk.outputs.apk_file}} ./gh-pages/${{steps.apk.outputs.apk_file_name}}.apk
+        cp /${{steps.apk.outputs.apk_file}} ./gh-pages/${{steps.apk.outputs.apk_file_name}}.apk
         git add .
-        git commit -m "Add APK file: $"
+        git commit -m "Add APK file: ${{steps.apk.outputs.apk_file}}"
         git push https://x-access-token:${{ secrets.PAT }}@github.com/dvt1405/iMediaReleasePages.git
 
     - name: Upload APK
