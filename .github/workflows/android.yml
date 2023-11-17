@@ -66,6 +66,7 @@ jobs:
         cd ./gh-pages
         git config user.name "GitHub Actions"
         git config user.email "dvt1405@github.com"
+        git checkout gh-pages
         git pull --rebase
         git add .
         git commit -m "Add APK file"
