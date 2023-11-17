@@ -67,7 +67,7 @@ jobs:
         cd ./gh-pages
         git config user.name "GitHub Actions"
         git config user.email "dvt1405@github.com"
-        git pull --rebase
+        git rebase --continue
         git add .
         git commit -m "Add APK file"
         git push https://x-access-token:${{ secrets.PAT }}@github.com/dvt1405/iMediaReleasePages.git
