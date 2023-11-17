@@ -39,12 +39,11 @@ jobs:
         ls app/build/outputs/apk/modBeta/release/*.apk | head -n 1
         apk_file=$(ls app/build/outputs/apk/modBeta/release/*.apk | head -n 1)
         apk_file_name=$(echo "$apk_file" | sed -r "s/.+\/(.+)\..+/\1/")
-
         ls app_mobile/build/outputs/apk/modBeta/release/*.apk | head -n 1
-        apk_file_mobile=$(ls app/build/outputs/apk/modBeta/release/*.apk | head -n 1)
-        apk_file_mobile_name=$(echo "$apk_file" | sed -r "s/.+\/(.+)\..+/\1/")
+        apk_file_mobile=$(ls app_mobile/build/outputs/apk/modBeta/release/*.apk | head -n 1)
+        apk_file_mobile_name=$(echo "$apk_file_mobile" | sed -r "s/.+\/(.+)\..+/\1/")
+        echo "apk_file=$apk_file_mobile"
         echo "apk_file_mobile=$apk_file_mobile"
-        echo "apk_file_mobile_name=$apk_file_mobile_name"
         echo "::set-output name=apk_file::$apk_file"
         echo "::set-output name=apk_file_name::$apk_file_name"
         echo "::set-output name=apk_file_mobile::$apk_file_mobile"
