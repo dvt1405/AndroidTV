@@ -72,6 +72,10 @@ abstract class AbstractExoPlayerManager(
                     )
                 ) {
                     val mediaItem = player.currentMediaItem ?: return
+                    Logger.d(
+                        this@AbstractExoPlayerManager,
+                        message = "currentMediaItem: ${player.currentMediaItem?.requestMetadata
+                            ?.mediaUri}")
                     if (player.contentDuration > 2 * 60_000 && player.contentPosition > 60_000) {
                         val historyMediaItemDTO = HistoryMediaItemDTO.mapFromMediaItem(
                             mediaItem,
@@ -180,19 +184,22 @@ abstract class AbstractExoPlayerManager(
         isHls: Boolean,
         headers: Map<String, String>? = null
     ): List<MediaSource> {
-        val dfSource: DefaultHttpDataSource.Factory = DefaultHttpDataSource.Factory()
-        val defaultHeader = getDefaultHeaders(data.first().referer.ifEmpty {
-            data.first().m3u8Link.getBaseUrl()
-        }, data.first())
-        headers?.let { prop -> defaultHeader.putAll(prop) }
-        dfSource.setKeepPostFor302Redirects(true)
-        dfSource.setAllowCrossProtocolRedirects(true)
-        if (!defaultHeader.contains("user-agent")) {
-            defaultHeader["user-agent"] = _application.getString(R.string.user_agent)
-        }
-        dfSource.setUserAgent(defaultHeader["user-agent"])
-        dfSource.setDefaultRequestProperties(defaultHeader)
         return data.map { linkStream ->
+            val dfSource: DefaultHttpDataSource.Factory = DefaultHttpDataSource.Factory()
+            val defaultHeader = getDefaultHeaders((linkStream.referer.ifEmpty {
+                data.first().referer
+            }).ifEmpty {
+                data.first().m3u8Link.getBaseUrl()
+            }, linkStream)
+            headers?.let { prop -> defaultHeader.putAll(prop) }
+            dfSource.setKeepPostFor302Redirects(true)
+            dfSource.setAllowCrossProtocolRedirects(true)
+            if (!defaultHeader.contains("user-agent")) {
+                defaultHeader["user-agent"] = _application.getString(R.string.user_agent)
+            }
+            dfSource.setUserAgent(defaultHeader["user-agent"])
+            dfSource.setDefaultRequestProperties(defaultHeader)
+
             if (isHls || linkStream.m3u8Link.contains(".m3u8")) {
                 Logger.d(this, "HlsMediaSource", "HlsMediaSource: $linkStream")
                 HlsMediaSource.Factory(dfSource)
@@ -306,14 +313,16 @@ abstract class AbstractExoPlayerManager(
             linkStream.m3u8Link.getBaseUrl()
         }
         val requestMetadataBundle = bundleOf()
-        requestMetadataBundle.putString(EXTRA_MEDIA_REFERER, referer)
         headers?.let {
             for ((key, value) in headers) {
                 requestMetadataBundle.putString(key, value)
             }
         }
+        if (referer.isNotEmpty()) {
+            requestMetadataBundle.putString(EXTRA_MEDIA_REFERER, referer)
+        }
         val requestMetadata = MediaItem.RequestMetadata.Builder()
-            .setMediaUri(Uri.parse("https://live-on-v2-cdnetwork.sigmaott.com/manifest/joyfm/playlist_720p.m3u8"))
+            .setMediaUri(Uri.parse(linkStream.m3u8Link.trim()))
             .setExtras(requestMetadataBundle)
             .build()
 

@@ -18,6 +18,7 @@ import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
+import com.kt.apps.core.utils.getBaseUrl
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.trustEveryone
 import io.reactivex.rxjava3.core.Observable
@@ -208,23 +209,34 @@ class SCTVDataSourceImpl @Inject constructor(
                 }
                 val linkPlay = json.optString("link_play")
 
-                val hlsInplayInfo = json.optJSONObject("play_info")
+                val hlsInplayInfo: String? = json.optJSONObject("play_info")
                     ?.optJSONObject("data")
-                    ?.optString("hls_link_play")
-                Logger.d(this, "playInfo", message = hlsInplayInfo ?: "Empty")
+                    ?.getString("hls_link_play")
+                    ?.takeIf {
+                        it != "null" && it.isNotEmpty()
+                    }
+                Logger.d(this, "playInfo", message = "$linkPlay, $hlsInplayInfo")
                 it.onNext(
                     TVChannelLinkStream(
                         tvChannel.apply {
                             this.referer = WEB_PAGE_BASE_URL
                         },
-                        if (hlsInplayInfo.isNullOrEmpty()) {
+                        (if (hlsInplayInfo.isNullOrEmpty()) {
                             listOf(linkPlay)
                         } else {
                             listOf(linkPlay, hlsInplayInfo)
+                        }).filter {
+                            it.isNotEmpty()
                         }.map {
-                            TVChannel.Url.fromUrl(it)
+                            TVChannel.Url.fromUrl(
+                                url = it,
+                                referer = tvChannel.tvChannelWebDetailPage,
+                                origin = tvChannel.tvChannelWebDetailPage.getBaseUrl()
+                            )
                         }
-                    )
+                    ).also {
+                        Logger.d(this, "TVChannelLinkStream", message = it.toString())
+                    }
                 )
                 it.onComplete()
             } else {

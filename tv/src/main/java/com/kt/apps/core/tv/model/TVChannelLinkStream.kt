@@ -1,7 +1,9 @@
 package com.kt.apps.core.tv.model
 
+import android.net.Uri
 import android.os.Parcelable
 import com.google.gson.Gson
+import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.tv.datasource.impl.MainTVDataSource
 import kotlinx.parcelize.Parcelize
 
@@ -16,6 +18,23 @@ data class TVChannelLinkStream(
                 it.type == MainTVDataSource.TVChannelUrlType.STREAM.value
             }
         }
+
+    val inputExoPlayerLink: List<LinkStream>
+        get() = linkStream
+            .filter {
+                it.type == MainTVDataSource.TVChannelUrlType.STREAM.value
+            }
+            .filter {
+                Uri.parse(it.url).host != null
+            }.map {
+                LinkStream(
+                    it.url,
+                    it.referer ?: channel.referer ?: channel.tvChannelWebDetailPage,
+                    streamId = channel.channelId,
+                    isHls = it.url.contains("m3u8")
+                )
+            }
+
     override fun toString(): String {
         return "{" +
                 "channel: $channel," +

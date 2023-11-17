@@ -4,14 +4,24 @@ import com.kt.apps.core.Constants
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.tv.datasource.ITVDataSource
-import com.kt.apps.core.tv.model.*
+import com.kt.apps.core.tv.model.ChannelSourceConfig
+import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelGroup
+import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
 import com.kt.apps.core.utils.buildCookie
 import com.kt.apps.core.utils.doOnSuccess
 import com.kt.apps.core.utils.findFirstNumber
+import com.kt.apps.core.utils.getBaseUrl
 import io.reactivex.rxjava3.core.Observable
-import okhttp3.*
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.jsoup.Jsoup
 import java.io.IOException
 import javax.inject.Inject
@@ -137,7 +147,11 @@ class VtcBackupDataSourceImpl @Inject constructor(
                         TVChannelLinkStream(
                             tvChannel,
                             listOf(realChunks).map {
-                                TVChannel.Url.fromUrl(it)
+                                TVChannel.Url.fromUrl(
+                                    url = it,
+                                    referer = tvChannel.tvChannelWebDetailPage,
+                                    origin = tvChannel.tvChannelWebDetailPage.getBaseUrl()
+                                )
                             }
                         )
                     )

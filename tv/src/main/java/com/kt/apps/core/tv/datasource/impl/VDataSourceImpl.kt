@@ -208,7 +208,11 @@ class VDataSourceImpl @Inject constructor(
                     TVChannelLinkStream(
                         tvChannel,
                         listStreamLink.map {
-                            TVChannel.Url.fromUrl(it)
+                            TVChannel.Url.fromUrl(
+                                url = it,
+                                referer = tvChannel.tvChannelWebDetailPage,
+                                origin = tvChannel.tvChannelWebDetailPage.getBaseUrl()
+                            )
                         }
                     )
                 )

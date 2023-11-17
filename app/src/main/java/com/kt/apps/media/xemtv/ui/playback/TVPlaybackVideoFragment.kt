@@ -20,7 +20,6 @@ import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.leanback.ArrayObjectAdapter
 import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import com.kt.apps.core.base.leanback.PresenterSelector
-import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.model.TVScheduler
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logPlaybackRetryGetStreamLink
@@ -407,23 +406,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
 
     private fun playVideo(tvChannelLinkStream: TVChannelLinkStream, showVideoInfo: Boolean = true) {
         playVideo(
-            linkStreams = tvChannelLinkStream.linkStream
-                .filter {
-                    it.type == MainTVDataSource.TVChannelUrlType.STREAM.value
-                }
-                .map {
-                    it.url
-                }
-                .filter {
-                    Uri.parse(it).host != null
-                }.map {
-                    LinkStream(
-                        it,
-                        tvChannelLinkStream.channel.referer,
-                        streamId = tvChannelLinkStream.channel.channelId,
-                        isHls = it.contains("m3u8")
-                    )
-                },
+            linkStreams = tvChannelLinkStream.inputExoPlayerLink,
             playItemMetaData = tvChannelLinkStream.channel.getMapData(),
             isHls = tvChannelLinkStream.channel.isHls,
             headers = null,

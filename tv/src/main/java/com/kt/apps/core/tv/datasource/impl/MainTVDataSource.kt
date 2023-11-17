@@ -5,6 +5,7 @@ import android.content.Context
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.getValue
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
@@ -26,10 +27,12 @@ import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
+import com.kt.apps.core.utils.toOrigin
 import io.reactivex.rxjava3.core.Completable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import org.json.JSONObject
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
@@ -80,7 +83,7 @@ class MainTVDataSource @Inject constructor(
             checkVipDb()
         }
         val onlineSource = if (context.packageName.contains("mobile")) {
-            getFireStoreSource().onErrorResumeNext { getFirebaseSource() }
+            newGetFireStoreSource().onErrorResumeNext { getFirebaseSource() }
         } else {
             getFirebaseSource()
         }.reduce { t1, t2 ->
@@ -121,9 +124,12 @@ class MainTVDataSource @Inject constructor(
     }
 
     private fun getFireStoreSource(): Observable<List<TVChannel>> {
+        if (isVipDb) {
+            return getFirebaseSourceVip()
+        }
         return Observable.create<List<TVChannel>> { emitter ->
             fireStoreDataBase.collection("tv_channels_by_version")
-                .document("1")
+                .document("2")
                 .get()
                 .addOnSuccessListener {
                     val jsonObject = JSONObject(it.data!!["alls"]!!.toString())
@@ -168,6 +174,72 @@ class MainTVDataSource @Inject constructor(
             t1 < 3
         }
     }
+    private fun newGetFireStoreSource() = if (isVipDb) {
+        getFirebaseSourceVip()
+    } else {
+        Observable.create<List<TVChannel>> { emitter ->
+            val countDownLatch = CountDownLatch(1)
+            var documentSnapshot: DocumentSnapshot? = null
+            val isSuccess = AtomicBoolean(false)
+            fireStoreDataBase.collection("tv_channels_by_version")
+                .document("2")
+                .get()
+                .addOnSuccessListener {
+                    documentSnapshot = it
+                    isSuccess.set(true)
+                    countDownLatch.countDown()
+                }
+                .addOnFailureListener {
+                    if (emitter.isDisposed) {
+                        return@addOnFailureListener
+                    }
+                    isSuccess.set(false)
+                    emitter.onError(it)
+                    countDownLatch.countDown()
+                }
+            if (!Thread.currentThread().isInterrupted) {
+                countDownLatch.await()
+            }
+            if (emitter.isDisposed && !isSuccess.get()) {
+                return@create
+            }
+            val jsonArray = JSONObject(documentSnapshot!!.data!!["alls"]!!.toString())
+                .optJSONArray(ALL_CHANNEL_NAME)
+            val totalList = mutableListOf<TVChannel>()
+            if (jsonArray != null && jsonArray.length() > 0) {
+                val list = Gson().fromJson<List<TVChannelFromDB?>>(
+                    jsonArray.toString(),
+                    TypeToken.getParameterized(
+                        List::class.java,
+                        TVChannelFromDB::class.java
+                    ).type
+                ).filterNotNull()
+                if (list.isNotEmpty()) {
+                    totalList.addAll(
+                        list.mapToListChannel()
+                            .sortedBy(ITVDataSource.sortTVChannel())
+                            .filter {
+                                if (!isVipDb && !allowInternational) {
+                                    it.tvGroup != TVChannelGroup.Intenational.name &&
+                                            (it.tvGroup != TVChannelGroup.Kid.name)
+                                } else {
+                                    true
+                                }
+                            }
+                    )
+                }
+            }
+            if (emitter.isDisposed) {
+                return@create
+            }
+            saveToRoomDB(totalList)
+            fireStoreDataBase.clearPersistence()
+            emitter.onNext(totalList)
+            emitter.onComplete()
+        }.retry { t1, t2 ->
+            t1 < 3
+        }
+    }
 
     private fun getFirebaseSource(): Observable<List<TVChannel>> = if (isVipDb) {
         getFirebaseSourceVip()
@@ -205,7 +277,10 @@ class MainTVDataSource @Inject constructor(
                     emitter.onError(it)
                     countDownLatch.countDown()
                 }
-            countDownLatch.await()
+
+            if (!Thread.currentThread().isInterrupted) {
+                countDownLatch.await()
+            }
             if (emitter.isDisposed) {
                 return@create
             }
@@ -243,17 +318,25 @@ class MainTVDataSource @Inject constructor(
         val countDownLatch = CountDownLatch(1)
         val mStartTime = System.currentTimeMillis()
         Logger.d(this@MainTVDataSource, message = "getFirebaseSourceVip: $mStartTime")
-        firebaseDatabaseVip.reference.child("AllChannels")
+        firebaseDatabaseVip.reference.child(ALL_CHANNEL_NAME)
             .ref.get()
             .addOnSuccessListener {
+                if (emitter.isDisposed) {
+                    return@addOnSuccessListener
+                }
                 dataSnapshot = it
                 countDownLatch.countDown()
             }
             .addOnFailureListener {
+                if (emitter.isDisposed) {
+                    return@addOnFailureListener
+                }
                 countDownLatch.countDown()
                 emitter.onError(it)
             }
-        countDownLatch.await()
+        if (!Thread.currentThread().isInterrupted) {
+            countDownLatch.await()
+        }
         Logger.d(this@MainTVDataSource, message = "getFirebaseSourceVipSuccess: ${System.currentTimeMillis() - mStartTime}")
         if (emitter.isDisposed) {
             return@create
@@ -363,92 +446,113 @@ class MainTVDataSource @Inject constructor(
                 Observable.just(webUrl.first())
                     .flatMap {
                         getStreamUrlByWebUrlAndSrc(it, tvChannel, false)
-                    }.map { finalTVWithLinkStream ->
-                        if (streamingUrl.isNotEmpty()) {
-                            val newListStreaming = finalTVWithLinkStream.linkStream.toMutableList()
-                            newListStreaming.addAll(streamingUrl.map {
-                                TVChannel.Url.fromUrl(it.url, type = TVChannelUrlType.STREAM.value)
-                            })
-                            webUrl.removeAt(0)
-                            newListStreaming.addAll(webUrl)
-                            return@map TVChannelLinkStream(
-                                finalTVWithLinkStream.channel,
-                                newListStreaming.distinct()
-                            )
-                        }
-                        return@map finalTVWithLinkStream
+                    }.switchIfEmpty {
+                        it.onError(Throwable("EmptyData"))
+                    }.retry(1)
+                    .onErrorResumeNext {
+                        val newWebUrl = tvChannel.urls.toMutableList()
+                        newWebUrl.remove(webUrl.first())
+
+                        getTvLinkFromDetail(
+                            tvChannel.copy(
+                                urls = newWebUrl
+                            ), true
+                        )
                     }
             } else {
                 if (webUrl.size > 1) {
-                    webUrl.removeAt(0)
-                    Observable.fromIterable(webUrl)
-                        .flatMap {
+                    if (streamingUrl.isNotEmpty()) {
+                        webUrl.addAll(streamingUrl)
+                    }
+
+                    Observable.fromIterable(webUrl).flatMap {
+                        if (it.type == TVChannelUrlType.WEB_PAGE.value) {
                             getStreamUrlByWebUrlAndSrc(it, tvChannel, false)
+                        } else {
+                            Observable.just(streamingUrl.mapToLinkStream(tvChannel))
+                        }
+                    }.reduce { left, right ->
+                        val finalStreamList = left.linkStream.toMutableList()
+                        if (right.linkStream.isNotEmpty()) {
+                            finalStreamList.addAll(right.linkStream)
+                        }
+                        return@reduce left.copy(
+                            linkStream = finalStreamList.distinct()
+                        )
+                    }.toObservable()
+                        .doOnNext {
+                            Logger.d(this@MainTVDataSource, message = "getTVFromDetail: $it")
                         }
 
                 } else {
-                    Observable.just(
-                        TVChannelLinkStream(
-                            tvChannel,
-                            streamingUrl.map {
-                                TVChannel.Url.fromUrl(it.url, type = TVChannelUrlType.STREAM.value)
-                            }
-                        )
-                    )
+                    Observable.just(streamingUrl.mapToLinkStream(tvChannel))
                 }
             }
         }
 
         return Observable.just(
-            TVChannelLinkStream(
-                tvChannel,
-                streamingUrl.map {
-                    TVChannel.Url.fromUrl(it.url, type = TVChannelUrlType.STREAM.value)
-                }
-            )
+            streamingUrl.mapToLinkStream(tvChannel)
         )
     }
 
-    fun getStreamUrlByWebUrlAndSrc(
+    private fun List<TVChannel.Url>.mapToLinkStream(channel: TVChannel): TVChannelLinkStream {
+        return TVChannelLinkStream(
+            channel,
+            this.map {
+                TVChannel.Url.fromUrl(
+                    it.url,
+                    type = TVChannelUrlType.STREAM.value,
+                    referer = it.referer ?: it.url.toHttpUrlOrNull()?.toOrigin() ?: it.url
+                )
+            }
+        )
+    }
+
+    private fun getStreamUrlByWebUrlAndSrc(
         url: TVChannel.Url,
-        tvChannel: TVChannel, isBackup: Boolean
+        tvChannel: TVChannel,
+        isBackup: Boolean
     ): Observable<TVChannelLinkStream> {
-        tvChannel.tvChannelWebDetailPage = url.url
+        val backupChannel = tvChannel.copy(
+            tvChannelWebDetailPage = url.url,
+            referer = url.url
+        )
+        Logger.d(this@MainTVDataSource, message = "getStreamUrlByWebUrlAndSrc: $backupChannel")
         return when (url.dataSource) {
             TVChannelURLSrc.VTV.value -> {
-                vtvDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                vtvDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
 
             TVChannelURLSrc.ON_LIVE.value -> {
-                onLiveDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                onLiveDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
 
             TVChannelURLSrc.VOV.value -> {
-                vovDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                vovDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
 
             TVChannelURLSrc.HTV.value -> {
-                htvDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                htvDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
 
             TVChannelURLSrc.VTC.value -> {
-                vtcDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                vtcDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
 
             TVChannelURLSrc.HY.value -> {
-                hyDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                hyDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
 
             TVChannelURLSrc.SCTV.value -> {
-                sctvDataSource.getTvLinkFromDetail(tvChannel, isBackup)
+                sctvDataSource.getTvLinkFromDetail(backupChannel, isBackup)
             }
 
             TVChannelURLSrc.V.value -> {
-                vDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                vDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
 
             else -> {
-                vDataSourceImpl.getTvLinkFromDetail(tvChannel, isBackup)
+                vDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
         }.onErrorResumeNext {
             Observable.just(

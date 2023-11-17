@@ -17,7 +17,7 @@ import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-class TVChannel(
+data class TVChannel(
     var tvGroup: String,
     var logoChannel: String,
     var tvChannelName: String,
@@ -38,7 +38,11 @@ class TVChannel(
     data class Url(
         val dataSource: String? = null,
         val type: String,
-        var url: String
+        var url: String,
+        @Ignore
+        val referer: String? = null,
+        @Ignore
+        val origin: String? = null
     ) : Parcelable {
         val isHls: Boolean
             get() = url.contains("m3u8")
@@ -47,11 +51,15 @@ class TVChannel(
             fun fromUrl(
                 url: String,
                 type: String = MainTVDataSource.TVChannelUrlType.STREAM.value,
-                dataSource: String? = null
+                dataSource: String? = null,
+                referer: String? = null,
+                origin: String? = null
             ) = Url(
                 type = type,
                 url = url,
-                dataSource = dataSource
+                dataSource = dataSource,
+                origin = origin,
+                referer = referer
             )
         }
     }

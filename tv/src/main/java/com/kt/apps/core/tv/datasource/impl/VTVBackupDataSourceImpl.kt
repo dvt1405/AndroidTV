@@ -1,21 +1,29 @@
 package com.kt.apps.core.tv.datasource.impl
 
-import android.os.Parcelable
 import com.google.gson.Gson
 import com.kt.apps.core.Constants
 import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.storage.local.dto.MapChannel
 import com.kt.apps.core.tv.datasource.ITVDataSource
-import com.kt.apps.core.tv.model.*
+import com.kt.apps.core.tv.model.ChannelSourceConfig
+import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelGroup
+import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
+import com.kt.apps.core.utils.getBaseUrl
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.toOrigin
 import com.kt.apps.core.utils.trustEveryone
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
-import kotlinx.parcelize.Parcelize
-import okhttp3.*
+import okhttp3.Call
+import okhttp3.Callback
+import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import org.jsoup.Jsoup
 import java.io.IOException
 import java.util.regex.Pattern
@@ -243,7 +251,11 @@ class VTVBackupDataSourceImpl @Inject constructor(
                             TVChannelLinkStream(
                                 channel = kenhTvDetail,
                                 linkStream = vtvStream.stream_url.map {
-                                    TVChannel.Url.fromUrl(it)
+                                    TVChannel.Url.fromUrl(
+                                        url = it,
+                                        referer = kenhTvDetail.tvChannelWebDetailPage,
+                                        origin = kenhTvDetail.tvChannelWebDetailPage.getBaseUrl()
+                                    )
                                 }
                             )
                         )
@@ -254,26 +266,6 @@ class VTVBackupDataSourceImpl @Inject constructor(
                 } ?: onError(Throwable("Null body"))
             }
 
-        })
-    }
-
-    private fun getRealChunks(
-        vtvStream: VtvStream,
-        onSuccess: (data: TVChannelLinkStream) -> Unit,
-        kenhTvDetail: TVChannel,
-        onError: (t: Throwable) -> Unit
-    ) {
-        getRealChunks(vtvStream.stream_url, {
-            onSuccess(
-                TVChannelLinkStream(
-                    channel = kenhTvDetail,
-                    linkStream = it.map {
-                        TVChannel.Url.fromUrl(it)
-                    }
-                )
-            )
-        }, {
-            onError(it)
         })
     }
 

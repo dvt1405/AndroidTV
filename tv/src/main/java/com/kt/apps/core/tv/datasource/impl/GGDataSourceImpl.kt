@@ -11,8 +11,13 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.storage.local.dto.MapChannel
 import com.kt.apps.core.tv.datasource.ITVDataSource
-import com.kt.apps.core.tv.model.*
+import com.kt.apps.core.tv.model.DataFromFirebase
+import com.kt.apps.core.tv.model.TVChannel
+import com.kt.apps.core.tv.model.TVChannelGroup
+import com.kt.apps.core.tv.model.TVChannelLinkStream
+import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
+import com.kt.apps.core.utils.getBaseUrl
 import com.kt.apps.core.utils.removeAllSpecialChars
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.DisposableContainer
@@ -65,7 +70,11 @@ class GGDataSourceImpl @Inject constructor(
             TVChannelLinkStream(
                 tvChannel,
                 listOf(tvChannel.tvChannelWebDetailPage).map {
-                    TVChannel.Url.fromUrl(it)
+                    TVChannel.Url.fromUrl(
+                        url = it,
+                        referer = tvChannel.tvChannelWebDetailPage,
+                        origin = tvChannel.tvChannelWebDetailPage.getBaseUrl()
+                    )
                 }
             )
         )
