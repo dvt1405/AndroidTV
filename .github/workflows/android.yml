@@ -55,7 +55,7 @@ jobs:
       with:
         repository: dvt1405/iMediaReleasePages
         path: ./gh-pages
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT }}
 
     - name: Copy APK file to other GitHub Pages repository
       run: |
