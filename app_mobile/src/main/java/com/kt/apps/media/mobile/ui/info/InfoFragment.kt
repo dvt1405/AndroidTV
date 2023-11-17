@@ -41,6 +41,9 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
         binding.zaloBtn.setOnClickListener {
             openURL(zlLink)
         }
+        binding.imediaLink.setOnClickListener {
+            openURL(binding.imediaLink.contentDescription.toString())
+        }
         binding.updateCheck.setOnClickListener {
             openURL(playstoreLink)
         }
@@ -75,6 +78,11 @@ class InfoFragment : BaseFragment<FragmentInfoBinding>() {
                         it.isNotEmpty() && it.isNotBlank()
                     }?.let {
                         zlLink = it
+                    }
+                    jsonGroups.optString("imedia").takeIf {
+                        it.isNotEmpty() && it.isNotBlank()
+                    }?.let {
+                        binding.imediaLink.contentDescription = it
                     }
                 } catch (_: Exception) {
                 }

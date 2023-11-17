@@ -91,6 +91,19 @@
                 app:iconGravity="textStart"
                 />
             <com.google.android.material.button.MaterialButton
+                android:id="@+id/imedia_link"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@color/transparent"
+                app:icon="@drawable/component_3"
+                app:iconTint="@null"
+                app:iconSize="32dp"
+                android:layout_weight="1"
+                style="@style/Widget.Material3.Button.IconButton"
+                app:iconGravity="textStart"
+                android:contentDescription="https://imedia.wiki"
+                tools:ignore="HardcodedText" />
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/zalo_btn"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
