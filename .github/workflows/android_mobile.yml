@@ -70,8 +70,6 @@ jobs:
           git add .
           git commit -m "Commit before rebase"
           git pull --rebase
-          git add .
-          git commit -m "Add APK file ${{steps.apk.outputs.apk_file_name}}"
           git push https://x-access-token:${{ secrets.PAT }}@github.com/dvt1405/iMediaReleasePages.git
 
       - name: Upload APK
