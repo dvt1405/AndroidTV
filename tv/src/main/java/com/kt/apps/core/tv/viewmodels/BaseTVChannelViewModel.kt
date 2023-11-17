@@ -238,15 +238,17 @@ open class BaseTVChannelViewModel constructor(
                 .switchIfEmpty(Observable.error(Throwable("Empty data")))
                 .subscribe({
                     Logger.d(this, message = "getListProgramForChannel: ${Gson().toJson(it)}")
-                    val currentProgramme = try {
-                        it.first {
-                            it.isCurrentProgram()
-                        }
+                    try {
+                        _programmeForChannelLiveData.postValue(DataState.Success(
+                            it.first {
+                                it.isCurrentProgram()
+                            }
+                        ))
                     } catch (e: Exception) {
-                        tvChannel.toDefaultProgramme()
+                        _programmeForChannelLiveData.postValue(
+                            DataState.Update(tvChannel.toDefaultProgramme())
+                        )
                     }
-                    Logger.d(this, message = "current program: $currentProgramme")
-                    _programmeForChannelLiveData.postValue(DataState.Success(currentProgramme))
                     _listProgramForChannel.postValue(DataState.Success(it))
                 }, {
                     Logger.e(this, exception = it)
