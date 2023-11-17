@@ -2,11 +2,13 @@ package com.kt.apps.core.tv.datasource.impl
 
 import android.annotation.SuppressLint
 import android.content.Context
+import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -198,7 +200,11 @@ class MainTVDataSource @Inject constructor(
                     countDownLatch.countDown()
                 }
             if (!Thread.currentThread().isInterrupted) {
-                countDownLatch.await()
+                try {
+                    countDownLatch.await()
+                } catch (e: Exception) {
+                    Firebase.crashlytics.recordException(e)
+                }
             }
             if (emitter.isDisposed && !isSuccess.get()) {
                 return@create
@@ -279,7 +285,11 @@ class MainTVDataSource @Inject constructor(
                 }
 
             if (!Thread.currentThread().isInterrupted) {
-                countDownLatch.await()
+                try {
+                    countDownLatch.await()
+                } catch (e: Exception) {
+                    Firebase.crashlytics.recordException(e)
+                }
             }
             if (emitter.isDisposed) {
                 return@create
@@ -335,7 +345,11 @@ class MainTVDataSource @Inject constructor(
                 emitter.onError(it)
             }
         if (!Thread.currentThread().isInterrupted) {
-            countDownLatch.await()
+            try {
+                countDownLatch.await()
+            } catch (e: Exception) {
+                Firebase.crashlytics.recordException(e)
+            }
         }
         Logger.d(this@MainTVDataSource, message = "getFirebaseSourceVipSuccess: ${System.currentTimeMillis() - mStartTime}")
         if (emitter.isDisposed) {

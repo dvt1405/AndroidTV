@@ -196,11 +196,18 @@ class VDataSourceImpl @Inject constructor(
                     ?.also {
                         Logger.d(this@VDataSourceImpl, message = "token: $it")
                     }
-                val listStreamLink = getTVLinkStream(
-                    token = token ?: buildJWT(),
-                    tvChannel = tvChannel,
-                    slug = tvChannel.tvChannelWebDetailPage.removePrefix("https://vieon.vn")
-                )
+                val listStreamLink = try {
+                    getTVLinkStream(
+                        token = token ?: buildJWT(),
+                        tvChannel = tvChannel,
+                        slug = tvChannel.tvChannelWebDetailPage.removePrefix("https://vieon.vn")
+                    )
+                } catch (e: Exception) {
+                    if (!emitter.isDisposed) {
+                        emitter.onError(e)
+                    }
+                    return@create
+                }
                 if (emitter.isDisposed) {
                     return@create
                 }

@@ -210,8 +210,20 @@ class ParserExtensionsSource @Inject constructor(
                 return@create
             }
             trustEveryone()
-            it.onNext(executeHttpCall(extension))
-            it.onComplete()
+            try {
+                val result = executeHttpCall(extension)
+                if (it.isDisposed) {
+                    return@create
+                }
+                it.onNext(result)
+                it.onComplete()
+            } catch (e: Exception) {
+                if (it.isDisposed) {
+                    return@create
+                }
+                Logger.e(this@ParserExtensionsSource, "ParseStreaming", exception = e)
+                it.onError(e)
+            }
         }.flatMap {
             this@ParserExtensionsSource.parseInputStreamToListIPTVChannel(extension, it)
         }.retry { time, throwable ->

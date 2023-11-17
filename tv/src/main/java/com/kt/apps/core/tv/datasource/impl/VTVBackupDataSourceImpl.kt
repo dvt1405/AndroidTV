@@ -1,5 +1,7 @@
 package com.kt.apps.core.tv.datasource.impl
 
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import com.kt.apps.core.Constants
 import com.kt.apps.core.storage.local.RoomDataBase
@@ -55,9 +57,22 @@ class VTVBackupDataSourceImpl @Inject constructor(
         val homepage = "${config.baseUrl.removeSuffix("/")}/${config.mainPagePath}"
         trustEveryone()
         return Observable.create { emitter ->
-            val document = Jsoup.connect(homepage)
-                .cookies(_cookie)
-                .execute()
+            val document = try {
+                Jsoup.connect(homepage)
+                    .cookies(_cookie)
+                    .execute()
+            } catch (e: Exception) {
+                if (emitter.isDisposed) {
+                    return@create
+                }
+                Firebase.crashlytics.recordException(e)
+                if (e is IOException) {
+                    emitter.onError(e)
+                } else {
+                    emitter.onError(Throwable("Error when connect to $homepage"))
+                }
+                return@create
+            }
             _cookie.clear()
             _cookie.putAll(document.cookies())
             val body = document.parse().body()
@@ -144,11 +159,25 @@ class VTVBackupDataSourceImpl @Inject constructor(
         kenhTvDetail: TVChannel
     ) = Observable.create { emitter ->
         val channel = mapFromChannelDetail(cache, kenhTvDetail)
-        getLinkStream(channel, {
-            emitter.onNext(it)
-            emitter.onComplete()
-        }) {
-            emitter.onError(it)
+        try {
+            getLinkStream(channel, {
+                if (emitter.isDisposed) {
+                    return@getLinkStream
+                }
+                emitter.onNext(it)
+                emitter.onComplete()
+            }) {
+                if (emitter.isDisposed) {
+                    return@getLinkStream
+                }
+                emitter.onError(it)
+            }
+        } catch (e: Exception) {
+            if (emitter.isDisposed) {
+                return@create
+            }
+            Firebase.crashlytics.recordException(e)
+            emitter.onError(e)
         }
     }
 
