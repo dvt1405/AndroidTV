@@ -350,6 +350,7 @@ class ParserExtensionsSource @Inject constructor(
         var channelLink = ""
         var props = mutableMapOf<String, String>()
         val sourceFrom = config.sourceName
+        var isHls = false
         while (line != null) {
             if (line.trim().isBlank()) {
                 line = reader.readLine()?.trimStart()
@@ -364,7 +365,7 @@ class ParserExtensionsSource @Inject constructor(
                     sourceFrom = sourceFrom,
                     channelId = channelId,
                     channelPreviewProviderId = -1,
-                    isHls = false,
+                    isHls = isHls,
                     extensionSourceId = config.sourceUrl,
                     props = props,
                     userAgent = userAgent,
@@ -393,6 +394,7 @@ class ParserExtensionsSource @Inject constructor(
                 userAgent = ""
                 referer = ""
                 channelLink = ""
+                isHls = false
                 props = mutableMapOf()
             }
 
@@ -413,7 +415,7 @@ class ParserExtensionsSource @Inject constructor(
                 props[REFERER] = referer
             }
 
-            if (line.removePrefix("#").startsWith("http")) {
+            if (line.removePrefix("#").startsWith("http") && channelLink.isEmpty()) {
                 channelLink = line.trim()
                     .removePrefix("#")
                     .trim()
@@ -460,6 +462,19 @@ class ParserExtensionsSource @Inject constructor(
 
                     if (line.contains(TITLE_PREFIX)) {
                         channelGroup = getByRegex(CHANNEL_GROUP_TITLE_REGEX, line)
+                    }
+
+                    if (line.contains(TYPE_REGEX)) {
+                        TYPE_REGEX.find(line)?.groupValues
+                            ?.takeIf {
+                                it.isNotEmpty()
+                            }?.let {
+                                when (it[0]) {
+                                    "stream" -> {
+                                        isHls = true
+                                    }
+                                }
+                            }
                     }
 
                     val lastCommaIndex = line.lastIndexOf(",")
@@ -698,6 +713,7 @@ class ParserExtensionsSource @Inject constructor(
         private val CHANNEL_ID_REGEX = Pattern.compile("(?<=tvg-id=\").*?(?=\")")
         private val CHANNEL_LOGO_REGEX = Pattern.compile("(?<=tvg-logo=\").*?(?=\")")
         private val CHANNEL_GROUP_TITLE_REGEX = Pattern.compile("(?<=group-title=\").*?(?=\")")
+        private val TYPE_REGEX = Regex("(?<=type=\").*?(?=\")")
         private val CHANNEL_CATCH_UP_SOURCE_REGEX = Pattern.compile("(?<=catchup-source=\").*?(?=\")")
         private val REFERER_REGEX = Pattern.compile("(?<=\\|Referer=).*")
         private val CHANNEL_TYPE_REGEX = Pattern.compile("(?<=type=\").*?(?=\")")

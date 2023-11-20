@@ -11,13 +11,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
-import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import androidx.lifecycle.ViewModelProvider
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.util.Util
 import com.kt.apps.core.base.BasePlaybackFragment
 import com.kt.apps.core.base.DataState
+import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import com.kt.apps.core.base.player.LinkStream
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
@@ -26,7 +26,6 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.logging.logStreamingTV
 import com.kt.apps.core.utils.expandUrl
 import com.kt.apps.core.utils.isShortLink
-import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.presenter.TVChannelPresenterSelector
 import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import com.kt.apps.media.xemtv.ui.playback.FragmentProgramSchedule
@@ -334,11 +333,11 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
                     linkToPlay,
                     extensionsChannel.referer,
                     streamId = extensionsChannel.channelId,
-                    isHls = linkToPlay.contains("m3u8")
+                    isHls = extensionsChannel.isHls || linkToPlay.contains("m3u8")
                 )
             ),
             playItemMetaData = extensionsChannel.getMapData(),
-            isHls = linkToPlay.contains("m3u8"),
+            isHls = extensionsChannel.isHls || linkToPlay.contains("m3u8"),
             headers = extensionsChannel.props,
             isLive = extension.type == ExtensionsConfig.Type.FOOTBALL,
             forceShowVideoInfoContainer = false
