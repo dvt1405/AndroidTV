@@ -1,20 +1,13 @@
 package com.kt.apps.media.xemtv.presenter
 
-import android.graphics.Bitmap
 import android.graphics.Color
-import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.graphics.component1
-import androidx.core.graphics.component2
-import androidx.core.graphics.component3
-import androidx.core.graphics.toColor
 import com.kt.apps.core.base.leanback.Presenter
-import com.kt.apps.core.utils.getMainColor
 import com.kt.apps.core.utils.loadImageBitmap
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.xemtv.R
@@ -73,26 +66,6 @@ class FootballPresenter(private val showLeagueTitle: Boolean = true) : Presenter
                     0
                 }
             ) {}
-        }
-    }
-
-    private fun getColorForGradient(it: Bitmap): Long {
-        val mainColorIntValue = it.getMainColor()
-        val mainColor = mainColorIntValue.toColor()
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Color.pack(
-                mainColor.component1(),
-                mainColor.component2(),
-                mainColor.component3(),
-                0.4f
-            )
-        } else {
-            Color.argb(
-                (0.4f * 256).toInt(),
-                (mainColor.component1() * 256).toInt(),
-                (mainColor.component2() * 256).toInt(),
-                (mainColor.component3() * 256).toInt(),
-            ).toLong()
         }
     }
 

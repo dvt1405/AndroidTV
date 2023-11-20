@@ -20,6 +20,7 @@ import android.graphics.ColorFilter;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.ActionMode;
 import android.view.KeyEvent;
@@ -127,12 +128,15 @@ public class GuidedActionEditText extends EditText implements ImeKeyMonitor,
         }
     }
 
-    @RequiresApi(26)
     @Override
     public int getAutofillType() {
         // make it always autofillable as Guided fragment switches InputType when user clicks
         // on the field.
-        return AUTOFILL_TYPE_TEXT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return AUTOFILL_TYPE_TEXT;
+        } else  {
+            return 0;
+        }
     }
 
     @Override
@@ -152,6 +156,7 @@ public class GuidedActionEditText extends EditText implements ImeKeyMonitor,
      * See
      * {@link TextViewCompat#setCustomSelectionActionModeCallback(TextView, ActionMode.Callback)}
      */
+    @SuppressLint("RestrictedApi")
     @Override
     public void setCustomSelectionActionModeCallback(ActionMode.Callback actionModeCallback) {
         super.setCustomSelectionActionModeCallback(TextViewCompat

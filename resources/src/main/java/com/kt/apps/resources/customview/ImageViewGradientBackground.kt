@@ -57,16 +57,26 @@ class ImageViewGradientBackground(
     override fun setImageBitmap(bm: Bitmap?) {
         super.setImageBitmap(bm)
         bm ?: return
-        val mainColor = bm.getMainColor()
-        this.background = getBackgroundGradient(mainColor)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val mainColor = bm.getMainColor()
+            this.background = getBackgroundGradient26AndLater(mainColor)
+        } else {
+            this.background = getBackgroundGradientApiUnder26(
+                bm.getMainColorApiUnder26()
+            )
+        }
     }
 
     override fun setImageDrawable(drawable: Drawable?) {
         super.setImageDrawable(drawable)
-        this.background = getBackgroundGradient(
-            ContextCompat.getColor(context, R.color.color_text_highlight)
-                .toColor()
-        )
+        val color = ContextCompat.getColor(context, R.color.color_text_highlight)
+        this.background = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getBackgroundGradient26AndLater(
+                Color.valueOf(color)
+            )
+        } else {
+            getBackgroundGradientApiUnder26(color)
+        }
     }
 
     private val gradientOrientation = when (_bound) {
@@ -82,7 +92,30 @@ class ImageViewGradientBackground(
         else -> floatArrayOf()
     }
 
-    private fun getBackgroundGradient(color: Color): Drawable {
+    private fun getBackgroundGradientApiUnder26(color: Int): Drawable {
+        val r = (color shr 16 and 0xff)
+        val g = (color shr 8 and 0xff)
+        val b = (color and 0xff)
+        val a = (color shr 24 and 0xff)
+        val gradientColor = intArrayOf(
+            Color.argb(
+                a,
+                r,
+                g,
+                b,
+            ),
+            Color.TRANSPARENT,
+            Color.TRANSPARENT
+        )
+        return GradientDrawable(
+            gradientOrientation,
+            gradientColor
+        ).apply {
+            this.cornerRadii = gradientCornerBound
+        }
+    }
+
+    private fun getBackgroundGradient26AndLater(color: Color): Drawable {
         val gradientColor = intArrayOf(
             changeWithAlpha(color, 0.4f),
             Color.TRANSPARENT,
@@ -95,6 +128,10 @@ class ImageViewGradientBackground(
             this.cornerRadii = gradientCornerBound
         }
     }
+
+    private fun Bitmap.getMainColorApiUnder26() = Palette.from(this)
+        .generate()
+        .getDarkVibrantColor(ContextCompat.getColor(context, R.color.black))
 
     private fun Bitmap.getMainColor(): Color = Palette.from(this)
         .generate()
