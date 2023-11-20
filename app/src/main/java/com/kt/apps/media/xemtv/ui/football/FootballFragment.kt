@@ -4,18 +4,24 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Parcelable
 import android.view.View
-import com.kt.apps.core.base.leanback.*
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.base.BaseRowSupportFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.adapter.leanback.applyLoading
+import com.kt.apps.core.base.leanback.ArrayObjectAdapter
+import com.kt.apps.core.base.leanback.HeaderItem
+import com.kt.apps.core.base.leanback.ListRow
+import com.kt.apps.core.base.leanback.ListRowPresenter
+import com.kt.apps.core.base.leanback.OnItemViewClickedListener
+import com.kt.apps.core.base.leanback.OnItemViewSelectedListener
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.football.model.FootballMatch
 import com.kt.apps.media.xemtv.presenter.FootballPresenter
 import com.kt.apps.media.xemtv.ui.playback.PlaybackActivity
-import java.util.*
+import java.util.Calendar
+import java.util.Locale
 import javax.inject.Inject
 
 class FootballFragment : BaseRowSupportFragment() {
@@ -43,7 +49,9 @@ class FootballFragment : BaseRowSupportFragment() {
         }
 
         onItemViewClickedListener = OnItemViewClickedListener { itemViewHolder, item, rowViewHolder, row ->
-            footballViewModel.getLinkStreamFor(item as FootballMatch)
+            if (item is FootballMatch) {
+                footballViewModel.getLinkStreamFor(item)
+            }
         }
     }
 

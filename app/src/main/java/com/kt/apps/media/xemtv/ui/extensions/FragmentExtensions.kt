@@ -5,11 +5,15 @@ import android.os.Parcelable
 import android.view.View
 import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
-import com.kt.apps.core.base.leanback.*
 import androidx.lifecycle.ViewModelProvider
 import com.kt.apps.core.base.BaseRowSupportFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.adapter.leanback.applyLoading
+import com.kt.apps.core.base.leanback.ArrayObjectAdapter
+import com.kt.apps.core.base.leanback.HeaderItem
+import com.kt.apps.core.base.leanback.ListRow
+import com.kt.apps.core.base.leanback.ListRowPresenter
+import com.kt.apps.core.base.leanback.OnItemViewClickedListener
 import com.kt.apps.core.extensions.ExtensionsChannel
 import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.extensions.ParserExtensionsSource
@@ -52,25 +56,27 @@ class FragmentExtensions : BaseRowSupportFragment() {
     override fun initView(rootView: View) {
         onItemViewClickedListener =
             OnItemViewClickedListener { _, item, _, _ ->
-                startActivity(
-                    Intent(
-                        requireContext(),
-                        PlaybackActivity::class.java
-                    ).apply {
-                        putExtra(
-                            PlaybackActivity.EXTRA_PLAYBACK_TYPE,
-                            PlaybackActivity.Type.EXTENSION as Parcelable
-                        )
-                        putExtra(
-                            PlaybackActivity.EXTRA_ITEM_TO_PLAY,
-                            item as ExtensionsChannel
-                        )
-                        putExtra(
-                            PlaybackActivity.EXTRA_EXTENSIONS_ID,
-                            extensions
-                        )
-                    }
-                )
+                if (item is ExtensionsChannel) {
+                    startActivity(
+                        Intent(
+                            requireContext(),
+                            PlaybackActivity::class.java
+                        ).apply {
+                            putExtra(
+                                PlaybackActivity.EXTRA_PLAYBACK_TYPE,
+                                PlaybackActivity.Type.EXTENSION as Parcelable
+                            )
+                            putExtra(
+                                PlaybackActivity.EXTRA_ITEM_TO_PLAY,
+                                item
+                            )
+                            putExtra(
+                                PlaybackActivity.EXTRA_EXTENSIONS_ID,
+                                extensions
+                            )
+                        }
+                    )
+                }
             }
     }
 
