@@ -210,8 +210,8 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             setBackgroundByStreamingType(it)
 //            tvChannelViewModel.loadProgramForChannel(it.channel)
             tvChannelViewModel.getListProgramForChannel(it.channel)
-            playVideo(tvChannel)
             tvChannelViewModel.markLastWatchedChannel(it)
+            playVideo(tvChannel)
         }
         onItemClickedListener = OnItemViewClickedListener { itemViewHolder, item, rowViewHolder, row ->
             onRemoveProgramSchedule()
