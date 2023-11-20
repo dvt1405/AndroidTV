@@ -5,6 +5,7 @@ import android.app.Application
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Base64
 import androidx.core.os.bundleOf
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
@@ -14,16 +15,14 @@ import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.drm.DefaultDrmSessionManager
-import com.google.android.exoplayer2.drm.ExoMediaDrm
 import com.google.android.exoplayer2.drm.FrameworkMediaDrm
-import com.google.android.exoplayer2.drm.MediaDrmCallback
+import com.google.android.exoplayer2.drm.HttpMediaDrmCallback
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.kt.apps.core.Constants
 import com.kt.apps.core.R
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.logging.Logger
@@ -32,7 +31,7 @@ import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.utils.getBaseUrl
 import com.kt.apps.core.utils.trustEveryone
 import okhttp3.HttpUrl.Companion.toHttpUrl
-import java.util.UUID
+import org.json.JSONObject
 
 abstract class AbstractExoPlayerManager(
     private val _application: CoreApp,
@@ -208,64 +207,60 @@ abstract class AbstractExoPlayerManager(
                     )
             } else if (linkStream.m3u8Link.contains(".mpd")) {
                 Logger.d(this, "MediaSource", "DashMediaSource: $linkStream")
-                val licenseUriStr = headers?.get("inputstream.adaptive.license_key")?.ifEmpty {
-                    linkStream.m3u8Link
-                }.also {
-                    Logger.d(this@AbstractExoPlayerManager, message = "license_key: $it")
-                } ?: linkStream.m3u8Link
-                val licenseUri = Uri.parse(licenseUriStr)
-                val mediaDrmCallback = object : MediaDrmCallback {
-                    override fun executeProvisionRequest(
-                        uuid: UUID,
-                        request: ExoMediaDrm.ProvisionRequest
-                    ): ByteArray {
-                        return byteArrayOf()
+                val licenseUriStr = headers?.get("inputstream.adaptive.license_key")
+                var drmSessionManager: DefaultDrmSessionManager? = null
+                var licenseUri: String? = null
+                var isMultiSession = false
+                var scheme = C.WIDEVINE_UUID
+                if (!licenseUriStr.isNullOrEmpty()) {
+                    licenseUri = try {
+                        val keysJson = JSONObject(licenseUriStr)
+                        val keysEncoded =
+                            Base64.encodeToString(
+                                licenseUriStr.toByteArray(Charsets.UTF_8),
+                                Base64.DEFAULT
+                            )
+                        isMultiSession = (keysJson.optJSONArray("keys")?.length() ?: 0) > 1
+                        scheme = C.CLEARKEY_UUID
+                        "data:application/json;base64,$keysEncoded"
+                    } catch (e: Exception) {
+                        licenseUriStr
                     }
 
-                    override fun executeKeyRequest(
-                        uuid: UUID,
-                        request: ExoMediaDrm.KeyRequest
-                    ): ByteArray {
-                        return byteArrayOf()
-                    }
+                    drmSessionManager = DefaultDrmSessionManager.Builder()
+                        .setUuidAndExoMediaDrmProvider(
+                            scheme,
+                            FrameworkMediaDrm.DEFAULT_PROVIDER
+                        )
+                        .build(HttpMediaDrmCallback(licenseUri, dfSource))
                 }
-
-                val drmSessionManager = DefaultDrmSessionManager.Builder()
-                    .setUuidAndExoMediaDrmProvider(
-                        C.WIDEVINE_UUID,
-                        FrameworkMediaDrm.DEFAULT_PROVIDER
-                    )
-                    .build(mediaDrmCallback)
 
                 val mediaSourceFactory: DashMediaSource.Factory = DashMediaSource.Factory(dfSource)
-                mediaSourceFactory.setDrmSessionManagerProvider {
-                    drmSessionManager
+
+                drmSessionManager?.let {
+                    mediaSourceFactory.setDrmSessionManagerProvider {
+                        drmSessionManager
+                    }
                 }
+
                 mediaSourceFactory.createMediaSource(
-                    MediaItem.Builder()
-                        .setDrmConfiguration(
-                            MediaItem.DrmConfiguration.Builder(C.CLEARKEY_UUID)
-                                .setForceDefaultLicenseUri(true)
-                                .setScheme(C.CLEARKEY_UUID)
-                                .setLicenseUri(licenseUri)
-                                .setLicenseRequestHeaders(
-                                    mapOf(
-                                        "user-agent" to (defaultHeader["user-agent"] ?: Constants.USER_AGENT),
-                                        "Host" to "${licenseUri.host}",
-                                        "Origin" to "${licenseUri.scheme}://${licenseUri.host}",
-                                        "Referer" to "${licenseUri.scheme}://${licenseUri.host}/",
-                                        "Sec-Fetch-Dest" to "empty",
-                                        "Sec-Fetch-Mode" to "cors",
-                                        "Sec-Fetch-Site" to "cross-site",
-                                        "Accept" to "*/*",
-                                        "Accept-Encoding" to "gzip, deflate, br",
-                                        "Accept-Language" to "en-US,en;q=0.9,vi;q=0.8",
-                                        "Connection" to "keep-alive"
-                                    )
+                    createMediaItem(linkStream, itemMetaData, defaultHeader)
+                        .buildUpon()
+                        .apply {
+                            if (drmSessionManager != null) {
+                                this.setDrmConfiguration(
+                                    MediaItem.DrmConfiguration.Builder(scheme)
+                                        .setForceDefaultLicenseUri(true)
+                                        .apply {
+                                            if (!licenseUri.isNullOrEmpty()) {
+                                                setLicenseUri(licenseUri)
+                                                setMultiSession(isMultiSession)
+                                            }
+                                        }
+                                        .build()
                                 )
-                                .build()
-                        )
-                        .setUri(linkStream.m3u8Link)
+                            }
+                        }
                         .build()
                 )
             } else if (linkStream.m3u8Link.contains(".mp4")) {
@@ -293,6 +288,15 @@ abstract class AbstractExoPlayerManager(
         prepare()
         trustEveryone()
         val mediaSources = getMediaSource(linkStreams, itemMetaData, isHls, headers)
+        if (mediaSources.isEmpty()) {
+            val error = PlaybackException(
+                "No media source found",
+                Throwable("No media source found"),
+                PlaybackException.ERROR_CODE_IO_UNSPECIFIED
+            )
+            playerListener?.onPlayerError(error) ?: this.playerListener.onPlayerError(error)
+            return
+        }
         mExoPlayer?.setMediaSources(mediaSources)
         mExoPlayer?.removeListener(this.playerListener)
         mExoPlayer?.addListener(this.playerListener)
