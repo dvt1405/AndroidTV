@@ -6,23 +6,16 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.core.os.bundleOf
-import androidx.work.Configuration
-import androidx.work.Data
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.work.*
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.di.CoreComponents
 import com.kt.apps.core.di.DaggerCoreComponents
-import com.kt.apps.core.logging.IActionLogger
-import com.kt.apps.core.storage.IKeyValueStorage
-import com.kt.apps.core.storage.getIsVipDb
-import com.kt.apps.core.storage.saveIsVipDb
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVComponents
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.workers.TVEpgWorkers
 import com.kt.apps.football.di.DaggerFootballComponents
 import com.kt.apps.football.di.FootballComponents
@@ -183,11 +176,12 @@ class App : CoreApp(), Configuration.Provider {
     override fun getWorkManagerConfiguration(): Configuration {
         return Configuration.Builder()
             .setDefaultProcessName("com.kt.apps")
+            .setWorkerFactory(appComponents.workerFactory())
             .build()
     }
 
     private fun enqueuePreloadData() {
-        workManager.enqueue(OneTimeWorkRequestBuilder<PreloadDataWorker>()
+        workManager.enqueue(OneTimeWorkRequestBuilder<com.kt.apps.core.workers.PreloadDataWorker>()
             .build())
     }
 
