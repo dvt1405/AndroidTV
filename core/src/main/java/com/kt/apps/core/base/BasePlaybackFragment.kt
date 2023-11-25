@@ -291,6 +291,7 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                     "LIVE"
                 }
         } else {
+            view?.findViewById<TextView>(R.id.video_title)?.text = player.mediaMetadata.title
             if (player.contentDuration < 120_000) {
                 view?.findViewById<TextView>(R.id.video_duration)?.text = "LIVE"
                 view?.findViewById<TextView>(R.id.video_duration_title)?.visible()
@@ -1140,7 +1141,9 @@ abstract class BasePlaybackFragment : PlaybackSupportFragment(),
                 showAllOverlayElements(false)
             }
 
-            !forceShowVideoInfoContainer && overlaysUIState == OverlayUIState.STATE_ONLY_GRID_CONTENT -> {
+            overlaysUIState == OverlayUIState.STATE_ONLY_GRID_CONTENT -> {}
+
+            !forceShowVideoInfoContainer && overlaysUIState != OverlayUIState.STATE_HIDDEN -> {
                 showAllOverlayElements(true)
             }
         }
