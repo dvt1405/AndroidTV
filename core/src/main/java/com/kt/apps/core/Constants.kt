@@ -1,5 +1,7 @@
 package com.kt.apps.core
 
+import android.os.Build
+
 object Constants {
     const val SHARE_PREF_NAME = "extra:default_share_pref_name"
     const val SHARE_PREF_DEFAULT = "extra:default_share_pref"
@@ -12,6 +14,9 @@ object Constants {
     const val TV_MATE_MODEL_REPLACE = "{Model}"
     const val TV_MATE_OS_VERSION_REPLACE = "{OS_Version}"
     const val TV_MATE_USER_AGENT_BUILD = "TiviMate/4.7.0 ($TV_MATE_MANUFACTURER_REPLACE " +
+            "$TV_MATE_MODEL_REPLACE; Android $TV_MATE_OS_VERSION_REPLACE)"
+
+    const val IMEDIA_USER_AGENT_BUILD = "iMedia ($TV_MATE_MANUFACTURER_REPLACE " +
             "$TV_MATE_MODEL_REPLACE; Android $TV_MATE_OS_VERSION_REPLACE)"
 
     const val KEY_ACCESS_TOKEN = "key:access_token"
@@ -386,5 +391,18 @@ object Constants {
     const val REGEX_VN_U = "[úùủũụưứừửữựu]"
     val regexHttp by lazy {
         Regex("(https?:\\/\\/(?:www\\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|www\\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|https?:\\/\\/(?:www\\.|(?!www))[a-zA-Z0-9]+\\.[^\\s]{2,}|www\\.[a-zA-Z0-9]+\\.[^\\s]{2,})")
+    }
+
+    fun getUserAgent(): String {
+        return IMEDIA_USER_AGENT_BUILD
+            .replace(
+                TV_MATE_MANUFACTURER_REPLACE,
+                Build.MANUFACTURER
+            )
+            .replace(TV_MATE_MODEL_REPLACE, Build.MODEL)
+            .replace(
+                Constants.TV_MATE_OS_VERSION_REPLACE,
+                Build.VERSION.RELEASE
+            )
     }
 }
