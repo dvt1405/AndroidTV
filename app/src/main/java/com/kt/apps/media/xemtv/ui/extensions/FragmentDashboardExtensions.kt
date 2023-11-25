@@ -149,16 +149,18 @@ class FragmentDashboardExtensions : BaseTabLayoutFragment() {
             for (i in 0 until tabLayout!!.tabCount) {
                 tabLayout!!.getTabAt(i)?.view?.setOnLongClickListener {
                     val data = (extensionsViewModel.totalExtensionsConfig.value as? DataState.Success)?.data
-                        ?: return@setOnLongClickListener false
+                            ?: return@setOnLongClickListener false
                     val deleteSourceFragment = DeleteSourceFragment(
                         data[i],
                         progressManager,
                         disposable,
-                        RoomDataBase.getInstance(requireContext())
-                    ) {
-                        extensionsViewModel.deleteExtensionConfig(data[i])
-                        extensionsViewModel.loadAllListExtensionsChannelConfig(true)
-                    }
+                        RoomDataBase.getInstance(requireContext()), {
+                            extensionsViewModel.deleteExtensionConfig(data[i])
+                            extensionsViewModel.loadAllListExtensionsChannelConfig(true)
+                        }, {
+                            extensionsViewModel.loadAllListExtensionsChannelConfig(true)
+                        }
+                    )
                     GuidedStepSupportFragment.addAsRoot(
                         requireActivity(),
                         deleteSourceFragment,

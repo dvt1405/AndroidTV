@@ -8,6 +8,7 @@ import com.kt.apps.media.xemtv.di.viewmodels.ViewModelModule
 import com.kt.apps.media.xemtv.ui.DialogActivity
 import com.kt.apps.media.xemtv.ui.details.DetailsActivity
 import com.kt.apps.media.xemtv.ui.details.VideoDetailsFragment
+import com.kt.apps.media.xemtv.ui.extensions.DeleteSourceFragment
 import com.kt.apps.media.xemtv.ui.extensions.FragmentAddExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentDashboardExtensions
 import com.kt.apps.media.xemtv.ui.extensions.FragmentExtensions
@@ -112,6 +113,9 @@ abstract class MainTVModule {
     internal abstract fun fragmentQrCode(): FragmentQrCode
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun fragmentProgramSchedule(): FragmentProgramSchedule
+
+    @ContributesAndroidInjector(modules = [ViewModelModule::class])
+    internal abstract fun fragmentDeleteSource(): DeleteSourceFragment
 
     @ContributesAndroidInjector(modules = [ViewModelModule::class])
     internal abstract fun voiceSearchActivity(): VoiceSearchActivity
