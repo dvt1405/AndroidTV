@@ -290,7 +290,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
 
         if (linkToPlay.isShortLink()) {
             lastExpandUrlTask = Observable.fromCallable {
-                linkToPlay.expandUrl()
+                linkToPlay.expandUrl(extensionsChannel.props)
             }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -307,7 +307,7 @@ class FragmentExtensionsPlayback : BasePlaybackFragment() {
             playWhenReady(extensionsChannel, linkToPlay)
         } else {
             disposable.add(Observable.fromCallable {
-                linkToPlay.expandUrl()
+                linkToPlay.expandUrl(extensionsChannel.props)
             }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
