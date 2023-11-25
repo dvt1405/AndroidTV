@@ -20,7 +20,6 @@ import com.bumptech.glide.request.target.Target
 import com.kt.apps.core.GlideApp
 import com.kt.apps.core.GlideRequest
 import com.kt.apps.core.base.CoreApp
-import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.blurry.Blur
 import com.kt.apps.core.utils.blurry.BlurFactor
 import com.kt.apps.resources.R
@@ -166,7 +165,6 @@ fun ImageView.loadImgByDrawableIdResName(
             .error(R.drawable.app_banner)
             .into(this)
     } catch (e: Exception) {
-        Logger.e(this, name, e)
         backupUrl?.let { url ->
             loadImgByUrl(url.trim(), scaleType)
         } ?: loadDrawableRes(R.drawable.app_banner, scaleType)
