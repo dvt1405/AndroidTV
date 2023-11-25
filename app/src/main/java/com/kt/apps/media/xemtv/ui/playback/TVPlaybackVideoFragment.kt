@@ -54,6 +54,9 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
     private val retryTimes by lazy {
         mutableMapOf<String, Int>()
     }
+    private val firstTimePlayVideo by lazy {
+        mutableMapOf<String, Boolean>()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -216,6 +219,10 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
         onItemClickedListener = OnItemViewClickedListener { itemViewHolder, item, rowViewHolder, row ->
             onRemoveProgramSchedule()
             tvChannelViewModel.markLastWatchedChannel(item as TVChannel)
+            synchronized(firstTimePlayVideo) {
+                firstTimePlayVideo.clear()
+                firstTimePlayVideo[item.channelId] = true
+            }
             getLinkStreamAndProgramForChannel(item)
             (mAdapter as ArrayObjectAdapter).indexOf(item)
                 .takeIf {
@@ -337,7 +344,15 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
                 } else {
                     getBackgroundView()?.background = ColorDrawable(Color.TRANSPARENT)
                 }
-                playVideo(tvChannel, false)
+                synchronized(firstTimePlayVideo) {
+                    if (firstTimePlayVideo[tvChannel.channel.channelId] == true) {
+                        firstTimePlayVideo[tvChannel.channel.channelId] = false
+                        tvChannelViewModel.loadProgramForChannel(tvChannel.channel)
+                        playVideo(tvChannel, true)
+                    } else {
+                        playVideo(tvChannel, false)
+                    }
+                }
                 Logger.d(this, message = "Play media source")
             }
 
@@ -393,7 +408,7 @@ class TVPlaybackVideoFragment : BasePlaybackFragment() {
             it.trim().isNotBlank()
         }?.trim() ?: ""
 
-        return if (channelTitle.isEmpty()) {
+        return if (channelTitle.trim().isEmpty()) {
             description
         } else {
             channelTitle + if (description.isEmpty()) {
