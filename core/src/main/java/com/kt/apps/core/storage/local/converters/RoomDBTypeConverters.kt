@@ -8,6 +8,7 @@ import com.kt.apps.core.extensions.ExtensionsConfig
 import com.kt.apps.core.storage.local.dto.FootballTeamEntity
 import com.kt.apps.core.storage.local.dto.HistoryMediaItemDTO
 import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
+import org.json.JSONObject
 
 class RoomDBTypeConverters {
 
@@ -45,10 +46,12 @@ class RoomDBTypeConverters {
         null
     } else {
         try {
-            Gson().fromJson(
-                map,
-                typeToken
-            )
+            val jsonObject = JSONObject(map)
+            val maps = mutableMapOf<String, String>()
+            jsonObject.keys().forEach {
+                maps[it] = jsonObject.getString(it)
+            }
+            maps
         } catch (e: Exception) {
             null
         }
