@@ -25,6 +25,7 @@ import org.simpleframework.xml.stream.InputNode
 import org.simpleframework.xml.stream.NodeBuilder
 import java.util.Calendar
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPInputStream
 import javax.inject.Inject
 import javax.inject.Named
@@ -329,12 +330,15 @@ class ParserExtensionsProgramSchedule @Inject constructor(
         config: ExtensionsConfig,
         programScheduleUrl: String
     ) = Observable.create<Any> { emitter ->
-        val networkCall = client.newCall(
-            Request.Builder()
-                .url(programScheduleUrl)
-                .addHeader("Content-Type", "text/xml")
-                .build()
-        ).execute()
+        val networkCall = client.newBuilder()
+            .callTimeout(5, TimeUnit.MINUTES)
+            .build()
+            .newCall(
+                Request.Builder()
+                    .url(programScheduleUrl)
+                    .addHeader("Content-Type", "text/xml")
+                    .build()
+            ).execute()
 
         Logger.d(this@ParserExtensionsProgramSchedule, "Url", programScheduleUrl)
 
