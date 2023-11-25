@@ -21,9 +21,11 @@ import com.google.android.exoplayer2.source.DefaultMediaSourceFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.source.dash.DashMediaSource
+import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
-import com.kt.apps.core.R
+import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy
+import com.kt.apps.core.Constants
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.repository.IMediaHistoryRepository
@@ -185,16 +187,32 @@ abstract class AbstractExoPlayerManager(
     ): List<MediaSource> {
         return data.map { linkStream ->
             val dfSource: DefaultHttpDataSource.Factory = DefaultHttpDataSource.Factory()
+                .setUserAgent(headers?.get("user-agent") ?: Constants.getUserAgent())
+                .setDefaultRequestProperties(
+                    mapOf(
+                        "Host" to linkStream.m3u8Link.toHttpUrl().host
+                    )
+                )
+                .apply {
+                    this.setAllowCrossProtocolRedirects(true)
+                    this.setKeepPostFor302Redirects(true)
+                }
             val defaultHeader = getDefaultHeaders((linkStream.referer.ifEmpty {
                 data.first().referer
             }).ifEmpty {
                 data.first().m3u8Link.getBaseUrl()
             }, linkStream)
-            headers?.let { prop -> defaultHeader.putAll(prop) }
+            headers?.let { prop ->
+                prop["user-agent"]?.let {
+                    defaultHeader["user-agent"] = it
+                } ?: prop["http-user-agent"]?.let {
+                    defaultHeader["user-agent"] = it
+                }
+            }
             dfSource.setKeepPostFor302Redirects(true)
             dfSource.setAllowCrossProtocolRedirects(true)
             if (!defaultHeader.contains("user-agent")) {
-                defaultHeader["user-agent"] = _application.getString(R.string.user_agent)
+                defaultHeader["user-agent"] = Constants.USER_AGENT
             }
             dfSource.setUserAgent(defaultHeader["user-agent"])
             dfSource.setDefaultRequestProperties(defaultHeader)
@@ -207,12 +225,16 @@ abstract class AbstractExoPlayerManager(
                     )
             } else if (linkStream.m3u8Link.contains(".mpd")) {
                 Logger.d(this, "MediaSource", "DashMediaSource: $linkStream")
+                Logger.d(this, "MediaSource", "defaultHeader: $defaultHeader")
+                Logger.d(this, "MediaSource", "headers: $headers")
+                Logger.d(this, "MediaSource", "itemMetaData: $itemMetaData")
                 val licenseUriStr = headers?.get("inputstream.adaptive.license_key")
                 var drmSessionManager: DefaultDrmSessionManager? = null
                 var licenseUri: String? = null
                 var isMultiSession = false
                 var scheme = C.WIDEVINE_UUID
                 if (!licenseUriStr.isNullOrEmpty()) {
+                    Logger.d(this, "MediaSource", "licenseUriStr: $licenseUriStr")
                     licenseUri = try {
                         val keysJson = JSONObject(licenseUriStr)
                         val keysEncoded =
@@ -224,43 +246,74 @@ abstract class AbstractExoPlayerManager(
                         scheme = C.CLEARKEY_UUID
                         "data:application/json;base64,$keysEncoded"
                     } catch (e: Exception) {
+                        scheme = C.CLEARKEY_UUID
                         licenseUriStr
                     }
-
                     drmSessionManager = DefaultDrmSessionManager.Builder()
                         .setUuidAndExoMediaDrmProvider(
                             scheme,
                             FrameworkMediaDrm.DEFAULT_PROVIDER
                         )
-                        .build(HttpMediaDrmCallback(licenseUri, dfSource))
+                        .build(
+                            HttpMediaDrmCallback(licenseUri, true, DefaultHttpDataSource.Factory()
+                                .setAllowCrossProtocolRedirects(true)
+                                .setUserAgent(
+                                    defaultHeader["user-agent"] ?: Constants.getUserAgent()
+                                )
+                                .apply {
+                                    this.setAllowCrossProtocolRedirects(true)
+                                    this.setKeepPostFor302Redirects(true)
+                                })
+                        )
                 }
 
-                val mediaSourceFactory: DashMediaSource.Factory = DashMediaSource.Factory(dfSource)
+                val mediaSourceFactory: DashMediaSource.Factory = DashMediaSource.Factory(
+                    DefaultDashChunkSource.Factory(dfSource), dfSource
+                )
+                    .apply {
+                        this.setLoadErrorHandlingPolicy(
+                            object : DefaultLoadErrorHandlingPolicy() {
+                                override fun getMinimumLoadableRetryCount(dataType: Int): Int {
+                                    Logger.d(
+                                        this@AbstractExoPlayerManager,
+                                        "getMinimumLoadableRetryCount",
+                                        "dataType: $dataType"
+                                    )
+                                    return 10
+                                }
+                            })
+                    }
 
                 drmSessionManager?.let {
                     mediaSourceFactory.setDrmSessionManagerProvider {
                         drmSessionManager
                     }
                 }
-
                 mediaSourceFactory.createMediaSource(
                     createMediaItem(linkStream, itemMetaData, defaultHeader)
                         .buildUpon()
-                        .apply {
-                            if (drmSessionManager != null) {
-                                this.setDrmConfiguration(
-                                    MediaItem.DrmConfiguration.Builder(scheme)
-                                        .setForceDefaultLicenseUri(true)
-                                        .apply {
-                                            if (!licenseUri.isNullOrEmpty()) {
-                                                setLicenseUri(licenseUri)
-                                                setMultiSession(isMultiSession)
-                                            }
-                                        }
-                                        .build()
-                                )
-                            }
-                        }
+                        .setDrmUuid(null)
+                        .setDrmConfiguration(
+                            MediaItem.DrmConfiguration.Builder(C.CLEARKEY_UUID)
+                                .setPlayClearContentWithoutKey(false)
+                                .setForceDefaultLicenseUri(false)
+                                .setForceSessionsForAudioAndVideoTracks(false)
+                                .apply {
+                                    if (!licenseUri.isNullOrEmpty()) {
+                                        setLicenseUri(licenseUri)
+                                        setLicenseRequestHeaders(
+                                            mapOf(
+                                                "Host" to licenseUri.toHttpUrl().host,
+                                                "user-agent" to (defaultHeader["user-agent"]
+                                                    ?: Constants.getUserAgent()),
+                                                "content-type" to "application/json",
+                                            )
+                                        )
+                                        setMultiSession(false)
+                                    }
+                                }
+                                .build()
+                        )
                         .build()
                 )
             } else if (linkStream.m3u8Link.contains(".mp4")) {
@@ -372,12 +425,8 @@ abstract class AbstractExoPlayerManager(
             ""
         }
         return mutableMapOf(
-            "Accept" to "*/*",
-            "accept-encoding" to "gzip, deflate, br",
-            "origin" to referer.getBaseUrl(),
-            "referer" to referer.trim(),
-            "sec-fetch-dest" to "empty",
-            "sec-fetch-site" to "cross-site",
+            "Origin" to referer.getBaseUrl(),
+            "Referer" to referer.trim(),
         ).apply {
             if (needHost) {
                 this["Host"] = host
