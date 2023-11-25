@@ -27,7 +27,7 @@ import okhttp3.internal.http.HTTP_SEE_OTHER
 import okhttp3.internal.http.HTTP_TEMP_REDIRECT
 import okhttp3.internal.http.HTTP_USE_PROXY
 import org.json.JSONArray
-import java.io.InputStream
+import java.io.BufferedReader
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -77,7 +77,15 @@ class ParserExtensionsSource @Inject constructor(
         DISPOSED
     }
 
-    fun parseFromRemoteRx(extension: ExtensionsConfig): Maybe<List<ExtensionsChannel>> {
+    fun parseFromRemoteRx(
+        extension: ExtensionsConfig,
+        forceRefreshChannel: Boolean = false
+    ): Maybe<List<ExtensionsChannel>> {
+        if (forceRefreshChannel) {
+            return getListIptvFromOnline(extension).also {
+                pendingSource[extension.sourceUrl] = it
+            }
+        }
         if (pendingSource.containsKey(extension.sourceUrl)) {
             return pendingSource[extension.sourceUrl]!!
         }
@@ -205,13 +213,14 @@ class ParserExtensionsSource @Inject constructor(
         }
 
     fun parseFromRemoteRxStream(extension: ExtensionsConfig): Observable<List<ExtensionsChannel>> {
+        var isBackup = false
         val parserSource = Observable.create {
             if (it.isDisposed) {
                 return@create
             }
             trustEveryone()
             try {
-                val result = executeHttpCall(extension)
+                val result = executeHttpCall(extension, false, isBackup)
                 if (it.isDisposed) {
                     return@create
                 }
@@ -232,6 +241,9 @@ class ParserExtensionsSource @Inject constructor(
             if (throwable is ParserIPTVThrowable) {
                 canRetry = throwable.canRetry
             }
+            if (time > 1) {
+                isBackup = true
+            }
             return@retry time < 3 && canRetry
         }.doOnComplete {
             Logger.d(this@ParserExtensionsSource, "ParseStreaming", "Complete ${extension.sourceUrl}")
@@ -250,7 +262,11 @@ class ParserExtensionsSource @Inject constructor(
         return parserSource
     }
 
-    private fun executeHttpCall(extension: ExtensionsConfig): InputStream {
+    private fun executeHttpCall(
+        extension: ExtensionsConfig,
+        isFollowRedirect: Boolean,
+        isBackup: Boolean
+    ): BufferedReader {
         val response = client
             .newBuilder()
             .callTimeout(600, TimeUnit.SECONDS)
@@ -262,18 +278,35 @@ class ParserExtensionsSource @Inject constructor(
             .newCall(
                 Request.Builder()
                     .url(extension.sourceUrl)
-                    .addHeader(
-                        "user-agent", Constants.TV_MATE_USER_AGENT_BUILD
-                            .replace(
-                                Constants.TV_MATE_MANUFACTURER_REPLACE,
-                                Build.MANUFACTURER
+                    .apply {
+                        if (isBackup) {
+                            this.addHeader(
+                                "user-agent", Constants.TV_MATE_USER_AGENT_BUILD
+                                    .replace(
+                                        Constants.TV_MATE_MANUFACTURER_REPLACE,
+                                        Build.MANUFACTURER
+                                    )
+                                    .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
+                                    .replace(
+                                        Constants.TV_MATE_OS_VERSION_REPLACE,
+                                        Build.VERSION.RELEASE
+                                    )
                             )
-                            .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
-                            .replace(
-                                Constants.TV_MATE_OS_VERSION_REPLACE,
-                                Build.VERSION.RELEASE
+                        } else {
+                            this.addHeader(
+                                "user-agent", Constants.IMEDIA_USER_AGENT_BUILD
+                                    .replace(
+                                        Constants.TV_MATE_MANUFACTURER_REPLACE,
+                                        Build.MANUFACTURER
+                                    )
+                                    .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
+                                    .replace(
+                                        Constants.TV_MATE_OS_VERSION_REPLACE,
+                                        Build.VERSION.RELEASE
+                                    )
                             )
-                    )
+                        }
+                    }
                     .apply {
                         Uri.parse(extension.sourceUrl).host?.takeIf { it.isNotEmpty() }
                             ?.let {
@@ -284,7 +317,7 @@ class ParserExtensionsSource @Inject constructor(
             ).execute()
 
         if (response.code in 200..299) {
-            val stream = response.body.byteStream()
+            val stream = response.body.charStream().buffered()
             Logger.d(
                 this@ParserExtensionsSource,
                 message = "${extension.sourceUrl} - Streaming - Content Length: $${response.body.contentLength()}"
@@ -309,13 +342,15 @@ class ParserExtensionsSource @Inject constructor(
                     sourceUrl = newUrl.toString(),
                     sourceName = extension.sourceName,
                     type = extension.type
-                )
+                ),
+                true, isBackup
             )
         }
         if (response.code >= 500 || response.code == 404 || response.code == 403) {
             throw ParserIPTVThrowable(false)
+        } else {
+            throw Throwable("Retry")
         }
-        throw Throwable("Retry")
     }
 
     private fun getKeyValueByRegex(regex: Pattern, finder: String): Pair<String, String> {
@@ -333,10 +368,9 @@ class ParserExtensionsSource @Inject constructor(
 
     private fun parseInputStreamToListIPTVChannel(
         config: ExtensionsConfig,
-        stream: InputStream
+        bufferedReader: BufferedReader
     ): Observable<List<ExtensionsChannel>> = Observable.create<List<ExtensionsChannel>> { emitter ->
-        val reader = stream.bufferedReader()
-        var line = reader.readLine()?.trimStart()
+        var line = bufferedReader.readLine()?.trimStart()
         var extensionsChannel: ExtensionsChannel?
         var listChannel = mutableListOf<ExtensionsChannel>()
         var totalChannel = 0
@@ -352,8 +386,9 @@ class ParserExtensionsSource @Inject constructor(
         val sourceFrom = config.sourceName
         var isHls = false
         while (line != null) {
+            Logger.d(this@ParserExtensionsSource, "execute", line)
             if (line.trim().isBlank()) {
-                line = reader.readLine()?.trimStart()
+                line = bufferedReader.readLine()?.trimStart()
                 continue
             }
             if (line.startsWith(TAG_EXT_INFO) || line.startsWith("EXTINF:")) {
@@ -512,7 +547,7 @@ class ParserExtensionsSource @Inject constructor(
                 }
             }
 
-            line = reader.readLine()?.trimStart()
+            line = bufferedReader.readLine()?.trimStart()
         }
         if (listChannel.isNotEmpty() && !emitter.isDisposed) {
             emitter.onNext(listChannel)
