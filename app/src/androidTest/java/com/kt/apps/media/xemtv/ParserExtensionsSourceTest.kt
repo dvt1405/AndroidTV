@@ -102,11 +102,13 @@ class ParserExtensionsSourceTest(
             "https://s.id/phimiptv",
             "https://s.id/ziptvvn",
             "https://gg.gg/phimiptv",
-            "https://gg.gg/vn360sport",
             "https://gg.gg/90phuttv",
             "http://m3u.at/SamsungTV",
             "https://bom.to/beartv",
-            "https://hqth.me/phimvip"
+            "https://hqth.me/phimvip",
+            "https://hqth.me/ophim",
+            "https://antmediatv.xyz",
+            "https://hqth.me/iphimbohay",
         )
 
         @Parameters
