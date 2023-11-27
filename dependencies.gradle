@@ -24,8 +24,8 @@ ext {
             tv    : 21
     ]
     buildVersionNameNumberInMonth = [
-            mobile: 2,
-            tv    : 2
+            mobile: 3,
+            tv    : 3
     ]
     buildVersionNumberInDay = [
             mobile: 2,
@@ -146,7 +146,8 @@ ext {
             ima         : 'com.google.android.exoplayer:extension-ima:2.18.1',
             dash        : 'com.google.android.exoplayer:exoplayer-dash:2.18.1',
             mediaSession: 'com.google.android.exoplayer:extension-mediasession:2.18.1',
-            rtsp        : 'com.google.android.exoplayer:exoplayer-rtsp:2.18.1'
+            rtsp        : 'com.google.android.exoplayer:exoplayer-rtsp:2.18.1',
+//            ffmpeg      : 'com.google.android.exoplayer:extension-ffmpeg:2.18.1'
     ]
 
     authen = [
