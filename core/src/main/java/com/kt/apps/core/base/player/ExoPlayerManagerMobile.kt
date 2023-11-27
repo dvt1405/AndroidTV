@@ -1,6 +1,5 @@
 package com.kt.apps.core.base.player
 
-import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.repository.IMediaHistoryRepository
@@ -31,7 +30,27 @@ class ExoPlayerManagerMobile @Inject constructor(
         playerListener: Player.Listener?,
         headers: Map<String, String>?
     ) {
-        super.playVideo(linkStreams, isHls, itemMetaData, playerListener, headers)
+        val newHeaders = if (itemMetaData.containsKey("inputstream.adaptive.license_key")) {
+            mutableMapOf(
+                "inputstream.adaptive.license_key" to itemMetaData["inputstream.adaptive.license_key"]!!
+            ).apply {
+                if (itemMetaData.containsKey("inputstream.adaptive.manifest_type")) {
+                    put(
+                        "inputstream.adaptive.manifest_type",
+                        itemMetaData["inputstream.adaptive.manifest_type"]!!
+                    )
+                }
+                if (itemMetaData.containsKey("inputstream.adaptive.license_type")) {
+                    put(
+                        "inputstream.adaptive.license_type",
+                        itemMetaData["inputstream.adaptive.license_type"]!!
+                    )
+                }
+            }
+        } else {
+            headers
+        }
+        super.playVideo(linkStreams, isHls, itemMetaData, playerListener, newHeaders)
 //        mExoPlayer?.removeListener(internalPlayerListener)
 //        mExoPlayer?.addListener(internalPlayerListener)
         mExoPlayer?.play()

@@ -224,10 +224,6 @@ abstract class AbstractExoPlayerManager(
                         createMediaItem(linkStream, itemMetaData, defaultHeader)
                     )
             } else if (linkStream.m3u8Link.contains(".mpd")) {
-                Logger.d(this, "MediaSource", "DashMediaSource: $linkStream")
-                Logger.d(this, "MediaSource", "defaultHeader: $defaultHeader")
-                Logger.d(this, "MediaSource", "headers: $headers")
-                Logger.d(this, "MediaSource", "itemMetaData: $itemMetaData")
                 val licenseUriStr = headers?.get("inputstream.adaptive.license_key")
                 var drmSessionManager: DefaultDrmSessionManager? = null
                 var licenseUri: String? = null

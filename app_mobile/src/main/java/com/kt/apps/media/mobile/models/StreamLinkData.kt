@@ -26,7 +26,15 @@ sealed class StreamLinkData(
         listOf(LinkStream(streamLink, data.referer, streamLink)),
         data.channelId,
         data.isHls,
-        data.getMapData()
+        data.getMapData().let {
+            if (!data.props.isNullOrEmpty()) {
+                val newProps = it.toMutableMap()
+                newProps.putAll(data.props!!)
+                newProps
+            } else {
+                it
+            }
+        }
     )
 
     data class FootballStreamLinkData(val match: FootballMatch, val matchWithStreamLink: FootballMatchWithStreamLink): StreamLinkData(
