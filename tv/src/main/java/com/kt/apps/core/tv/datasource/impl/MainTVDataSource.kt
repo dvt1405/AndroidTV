@@ -206,11 +206,20 @@ class MainTVDataSource @Inject constructor(
                     Firebase.crashlytics.recordException(e)
                 }
             }
-            if (emitter.isDisposed && !isSuccess.get()) {
+            if (emitter.isDisposed) {
                 return@create
             }
-            val jsonArray = JSONObject(documentSnapshot!!.data!!["alls"]!!.toString())
-                .optJSONArray(ALL_CHANNEL_NAME)
+            if (!isSuccess.get()) {
+                emitter.onError(Throwable("EmptyData"))
+                return@create
+            }
+            val jsonArray = try {
+                JSONObject(documentSnapshot!!.data!!["alls"]!!.toString())
+                    .optJSONArray(ALL_CHANNEL_NAME)
+            } catch (e: Exception) {
+                emitter.onError(e)
+                return@create
+            }
             val totalList = mutableListOf<TVChannel>()
             if (jsonArray != null && jsonArray.length() > 0) {
                 val list = Gson().fromJson<List<TVChannelFromDB?>>(
