@@ -40,11 +40,11 @@ import com.kt.apps.core.utils.inVisible
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.visible
 import com.kt.apps.media.mobile.R
+import com.kt.apps.media.mobile.models.ChannelInfo
 import com.kt.apps.media.mobile.models.PlaybackState
 import com.kt.apps.media.mobile.models.PlaybackThrowable
 import com.kt.apps.media.mobile.models.PrepareStreamLinkData
 import com.kt.apps.media.mobile.models.StreamLinkData
-import com.kt.apps.media.mobile.ui.complex.ComplexActivity
 import com.kt.apps.media.mobile.ui.fragments.BaseMobileFragment
 import com.kt.apps.media.mobile.utils.*
 import com.kt.apps.media.mobile.viewmodels.BasePlaybackInteractor
@@ -180,6 +180,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     protected val isPlayingState = MutableStateFlow(false)
     protected val voiceSearchProgress = ActivityIndicator()
     protected val currentPlayingMediaItem = MutableStateFlow<MediaItem?>(null)
+    protected val currentVideoInfo = MutableStateFlow<ChannelInfo?>(null)
     protected var retryTimes: Int = 3
     protected var executingIndex: Int = -1
 
@@ -483,8 +484,18 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                         is LayoutState.PIP -> togglePIPLayout(true)
                         is LayoutState.MINIMAL -> changeMinimalLayout()
                         is LayoutState.MOVE_CHANNEL -> {}
-                        is LayoutState.MOVE_CHANNEL -> { }
+                        is LayoutState.MOVE_CHANNEL -> {}
                         else -> {}
+                    }
+                }
+            }
+
+            launch {
+                currentVideoInfo.collectLatest {
+                    if (it != null) {
+                        informationButton?.visible()
+                    } else {
+                        informationButton?.inVisible()
                     }
                 }
             }
@@ -525,31 +536,30 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
     }
 
     private fun showInformationDialog() {
-        val player = exoPlayerManager.exoPlayer ?: return
+//        val player = exoPlayerManager.exoPlayer ?: return
+        val infor = currentVideoInfo.value ?: return
         informationDialog = MaterialAlertDialogBuilder(requireContext())
             .setView(layoutInflater.inflate(R.layout.dialog_video_info, null).apply {
                 findViewById<TextView>(R.id.video_title).apply {
-                    text = player.mediaMetadata.title
+                    text = infor.title
                 }
-                if (player.contentDuration < 120_000) {
-                    findViewById<TextView>(R.id.video_duration)?.gone()
-                    findViewById<TextView>(R.id.video_duration_title)?.gone()
-                } else {
+                if (infor.duration.isNotBlank()) {
                     findViewById<TextView>(R.id.video_duration_title)?.visible()
                     findViewById<TextView>(R.id.video_duration)?.apply {
                         visible()
-                        val builder = StringBuilder()
-                        val formatter = Formatter(builder, Locale.getDefault())
-                        text = Util.getStringForTime(builder, formatter, player.contentDuration)
-                        setTextColor(ResourcesCompat.getColor(resources, R.color.white, null))
+                        text = infor.duration
                     }
+                } else {
+                    findViewById<TextView>(R.id.video_duration_title)?.gone()
+                    findViewById<TextView>(R.id.video_duration)?.gone()
                 }
+
                 findViewById<TextView>(R.id.video_resolution)?.text =
-                    "${player.videoSize.width}x${player.videoSize.height}"
-                findViewById<TextView>(R.id.video_codec)?.text = player.videoFormat?.codecs
+                    "${infor.videoSize.width}x${infor.videoSize.height}"
+                findViewById<TextView>(R.id.video_codec)?.text = infor.videoFormat?.codecs
                 findViewById<TextView>(R.id.video_frame_rate)?.text =
-                    "${player.videoFormat?.frameRate}"
-                findViewById<TextView>(R.id.audio_codec)?.text = player.audioFormat?.codecs.takeIf {
+                    "${infor.videoFormat?.frameRate}"
+                findViewById<TextView>(R.id.audio_codec)?.text = infor.audioFormat?.codecs.takeIf {
                     !it?.trim().isNullOrEmpty()
                 } ?: "NoValue"
 
@@ -559,9 +569,6 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
                     }
                 }
             })
-            .setOnDismissListener {
-                (activity as? ComplexActivity)?.toggleHideSystemBar()
-            }
             .show()
     }
 
@@ -625,13 +632,11 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
             isProgressing.value = false
             exoPlayer?.keepScreenOn = true
             progressBar?.isEnabled = true
-            informationButton?.visible()
-
+            currentVideoInfo.value = exoPlayerManager.exoPlayer?.getChannelInfo()
             retryTimes = MAX_RETRY_TIME
             executingIndex = -1
         } else {
             progressBar?.isEnabled = false
-            informationButton?.inVisible()
         }
         if (playbackState == ExoPlayer.STATE_ENDED) {
             exoPlayer?.keepScreenOn = false
@@ -793,6 +798,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         }
     }
     protected open suspend fun preparePlayView(data: PrepareStreamLinkData) {
+        currentVideoInfo?.value = null
         exoPlayerManager.exoPlayer?.stop()
         exoPlayerManager.detach()
         isProgressing.emit(true)
@@ -809,6 +815,7 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         } else {
             executingIndex += 1
         }
+        currentVideoInfo?.value = null
         exoPlayerManager.playVideo(data.linkStream, data.isHls, data.itemMetaData , this)
         exoPlayer?.player = exoPlayerManager.exoPlayer
         title.emit(data.title)
@@ -933,4 +940,20 @@ abstract class BasePlaybackFragment<T : ViewDataBinding> : BaseMobileFragment<T>
         )
         private val RATIO_VALUES = RATIO_VALUES_MAP.keys.toIntArray()
     }
+}
+
+fun ExoPlayer.getChannelInfo(): ChannelInfo? {
+    return ChannelInfo(
+        title = mediaMetadata.title.toString(),
+        duration = if (contentDuration < 120_000) {
+            ""
+        } else {
+            val builder = StringBuilder()
+            val formatter = Formatter(builder, Locale.getDefault())
+            Util.getStringForTime(builder, formatter, contentDuration)
+        },
+        videoSize = videoSize,
+        videoFormat = videoFormat,
+        audioFormat = audioFormat
+    )
 }

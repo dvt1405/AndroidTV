@@ -14,9 +14,6 @@ import android.view.View
 import android.view.Window
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -26,14 +23,17 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.exoplayer2.video.VideoSize
 import com.google.android.material.textview.MaterialTextView
 import com.kt.apps.core.Constants
-import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.mobile.R
 import com.kt.apps.media.mobile.databinding.ActivityComplexBinding
-import com.kt.apps.media.mobile.models.*
+import com.kt.apps.media.mobile.models.NoNetworkException
+import com.kt.apps.media.mobile.models.PlaybackFailException
+import com.kt.apps.media.mobile.models.PlaybackState
+import com.kt.apps.media.mobile.models.PrepareStreamLinkData
+import com.kt.apps.media.mobile.ui.BaseMobileActivity
 import com.kt.apps.media.mobile.ui.fragments.models.AddSourceState
 import com.kt.apps.media.mobile.ui.fragments.playback.BasePlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.FootballPlaybackFragment
@@ -42,7 +42,6 @@ import com.kt.apps.media.mobile.ui.fragments.playback.IPTVPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.IPlaybackAction
 import com.kt.apps.media.mobile.ui.fragments.playback.RadioPlaybackFragment
 import com.kt.apps.media.mobile.ui.fragments.playback.TVPlaybackFragment
-import com.kt.apps.media.mobile.ui.fragments.search.SearchDashboardFragment
 import com.kt.apps.media.mobile.utils.repeatLaunchesOnLifeCycle
 import com.kt.apps.media.mobile.utils.trackJob
 import com.kt.apps.media.mobile.viewmodels.ComplexInteractors
@@ -52,9 +51,7 @@ import com.kt.apps.voiceselector.models.State
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -63,7 +60,7 @@ import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 
 
-class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
+class ComplexActivity : BaseMobileActivity<ActivityComplexBinding>() {
     @Inject
     lateinit var factory: ViewModelProvider.Factory
 
@@ -144,32 +141,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
         binding.fragmentContainerPlayback.getFragment<BasePlaybackFragment<*>>()?.apply {
             this.callback = playbackAction
-        }
-
-        toggleHideSystemBar()
-      }
-
-    fun toggleHideSystemBar() {
-        if (resources.getBoolean(R.bool.is_landscape)) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowCompat.setDecorFitsSystemWindows(window, false)
-                WindowInsetsControllerCompat(window, binding.root).let {
-                    it.hide(WindowInsetsCompat.Type.systemBars())
-                    it.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                }
-            } else {
-                window.decorView.apply {
-                    systemUiVisibility = FULLSCREEN_FLAGS
-                }
-            }
-
-            window.decorView.fitsSystemWindows = true
-        } else {
-            WindowCompat.setDecorFitsSystemWindows(window, true)
-            WindowInsetsControllerCompat(window, binding.root).let {
-                it.show(WindowInsetsCompat.Type.systemBars())
-            }
-            actionBar?.show()
         }
     }
 
@@ -396,24 +367,6 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
         handleIntent(intent)
     }
 
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-
-        toggleHideSystemBar()
-    }
-
-    override fun onDialogShowing() {
-        super.onDialogShowing()
-        Log.d(TAG, "onDialogShowing: ")
-        toggleHideSystemBar()
-    }
-
-    override fun onDialogDismiss() {
-        super.onDialogDismiss()
-        Log.d(TAG, "onDialogDismiss: ")
-        toggleHideSystemBar()
-    }
-
     private fun handleIntent(intent: Intent?) {
         val deeplink = intent?.data ?: return
 
@@ -485,11 +438,13 @@ class ComplexActivity : BaseActivity<ActivityComplexBinding>() {
 
     companion object {
         const val LAST_ORIENTATION = "LAST_ORIENTATION"
-        const val FULLSCREEN_FLAGS = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        const val TEST_FLAGS = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        const val FULLSCREEN_FLAGS =
+//                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+//                View.SYSTEM_UI_FLAG_FULLSCREEN or
+//                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+//                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+//            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
     }
 }

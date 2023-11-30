@@ -1,6 +1,8 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
     <style name="Theme.XemTv" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/material_blue_grey_95</item>
         <item name="colorPrimaryVariant">@color/white</item>
