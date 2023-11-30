@@ -10,7 +10,7 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.core.view.updateLayoutParams
 import androidx.core.widget.doAfterTextChanged
-import androidx.core.widget.doBeforeTextChanged
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -33,13 +33,15 @@ import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
 
-class AddExtensionFragment: BindingDialogFragment<AddExtensionDialogBinding>() {
+class
+AddExtensionFragment : BindingDialogFragment<AddExtensionDialogBinding>() {
     sealed class State {
-        object EDITING: State()
-        object PROCESSING: State()
+        object EDITING : State()
+        object PROCESSING : State()
         data class ERROR(val errorText: String) : State()
-        object SUCCESS: State()
+        object SUCCESS : State()
     }
+
     @Inject
     lateinit var factory: ViewModelProvider.Factory
 
@@ -145,8 +147,14 @@ class AddExtensionFragment: BindingDialogFragment<AddExtensionDialogBinding>() {
             }
         }
 
-        sourceLinkEditText.doBeforeTextChanged { text, start, count, after ->
+        sourceLinkEditText.doOnTextChanged { text, _, _, _ ->
+            Log.d(TAG, "doOnTextChanged: $text")
 
+            if (text?.contains("http://") == true || text?.contains("https://") == true) {
+                val newText = text?.replace(Regex("http://"), "")
+                    ?.replace(Regex("https://"), "")
+                sourceLinkEditText?.setText(newText)
+            }
         }
 
         processState
