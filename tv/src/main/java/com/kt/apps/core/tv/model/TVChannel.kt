@@ -27,7 +27,8 @@ data class TVChannel(
     val channelId: String,
     val urls: List<Url> = listOf(),
     var isFreeContent: Boolean = true,
-    var referer: String = ""
+    var referer: String = "",
+    var isSourceRadio: Boolean = false
 ) : Parcelable {
 
     @Ignore
@@ -65,7 +66,7 @@ data class TVChannel(
     }
 
     val isRadio: Boolean
-        get() = radioGroup.contains(tvGroup)
+        get() = radioGroup.contains(tvGroup) || isSourceRadio
 
     val tvGroupLocalName: String
         get() = TVChannelGroup.valueOf(tvGroup).value

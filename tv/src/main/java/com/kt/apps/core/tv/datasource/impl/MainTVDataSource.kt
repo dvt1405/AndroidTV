@@ -12,6 +12,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.kt.apps.core.BuildConfig
 import com.kt.apps.core.Constants
 import com.kt.apps.core.di.FirebaseModule
 import com.kt.apps.core.logging.Logger
@@ -131,7 +132,13 @@ class MainTVDataSource @Inject constructor(
         }
         return Observable.create<List<TVChannel>> { emitter ->
             fireStoreDataBase.collection("tv_channels_by_version")
-                .document("2")
+                .document(
+                    if (BuildConfig.DEBUG) {
+                        "dev"
+                    } else {
+                        "2"
+                    }
+                )
                 .get()
                 .addOnSuccessListener {
                     val jsonObject = JSONObject(it.data!!["alls"]!!.toString())
@@ -184,7 +191,13 @@ class MainTVDataSource @Inject constructor(
             var documentSnapshot: DocumentSnapshot? = null
             val isSuccess = AtomicBoolean(false)
             fireStoreDataBase.collection("tv_channels_by_version")
-                .document("2")
+                .document(
+                    if (BuildConfig.DEBUG) {
+                        "dev"
+                    } else {
+                        "2"
+                    }
+                )
                 .get()
                 .addOnSuccessListener {
                     documentSnapshot = it
@@ -678,7 +691,8 @@ class MainTVDataSource @Inject constructor(
                     },
                 sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
                 logoChannel = this.thumb,
-                channelId = this.id
+                channelId = this.id,
+                isSourceRadio = this.isRadio ?: false
             )
         }
     }
