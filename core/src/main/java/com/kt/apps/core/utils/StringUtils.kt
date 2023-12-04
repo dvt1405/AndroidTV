@@ -85,7 +85,10 @@ fun String.expandUrl(
         val inputURL = URL(this)
         conn = inputURL.openConnection() as HttpURLConnection?
         conn?.addRequestProperty(
-            "User-Agent", props?.get("user-agent") ?: Constants.USER_AGENT,
+            "User-Agent",
+            props?.get("user-agent")
+                ?: props?.get("http-user-agent")
+                ?: Constants.USER_AGENT,
         )
         conn?.addRequestProperty(
             "Host", Uri.parse(this).host

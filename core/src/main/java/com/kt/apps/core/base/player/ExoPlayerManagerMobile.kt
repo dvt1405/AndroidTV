@@ -48,7 +48,13 @@ class ExoPlayerManagerMobile @Inject constructor(
                 }
             }
         } else {
-            headers
+            headers?.toMutableMap() ?: mutableMapOf()
+        }
+        if (itemMetaData.containsKey("user-agent")) {
+            newHeaders["user-agent"] = itemMetaData["user-agent"]!!
+        }
+        if (itemMetaData.containsKey("http-user-agent")) {
+            newHeaders["http-user-agent"] = itemMetaData["http-user-agent"]!!
         }
         super.playVideo(linkStreams, isHls, itemMetaData, playerListener, newHeaders)
 //        mExoPlayer?.removeListener(internalPlayerListener)
