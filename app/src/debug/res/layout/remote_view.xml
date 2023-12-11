@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data></data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/up_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UP"
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Button
+            android:id="@+id/left_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LEFT"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/ok_btn" />
+
+        <Button
+            android:id="@+id/ok_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OK"
+
+            app:layout_constraintStart_toEndOf="@+id/left_btn"
+            app:layout_constraintTop_toBottomOf="@+id/up_btn" />
+
+        <Button
+            android:id="@+id/right_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RIGHT"
+
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/ok_btn"
+            app:layout_constraintTop_toTopOf="@id/ok_btn" />
+
+        <Button
+            android:id="@+id/down_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DOWN"
+
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/ok_btn" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

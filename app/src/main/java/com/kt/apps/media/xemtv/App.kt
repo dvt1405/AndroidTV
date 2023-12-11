@@ -1,6 +1,8 @@
 package com.kt.apps.media.xemtv
 
+import android.app.Activity
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.os.bundleOf
@@ -17,6 +19,7 @@ import com.kt.apps.core.di.DaggerCoreComponents
 import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.tv.di.DaggerTVComponents
 import com.kt.apps.core.tv.di.TVComponents
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.workers.AutoRefreshExtensionsChannelWorker
 import com.kt.apps.core.workers.TVEpgWorkers
 import com.kt.apps.football.di.DaggerFootballComponents
@@ -30,6 +33,7 @@ import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
 import com.kt.apps.voiceselector.di.VoiceSelectorComponent
 import dagger.android.AndroidInjector
 import dagger.android.DaggerApplication
+import java.lang.ref.WeakReference
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -90,6 +94,10 @@ class App : CoreApp() {
     @Inject
     lateinit var voiceSelectorManager: VoiceSelectorManager
 
+    private var _currentActivity = WeakReference<Activity>(null)
+    val currentActivity: Activity?
+        get() = _currentActivity.get()
+
     override fun onCreate() {
         super.onCreate()
         app = this
@@ -101,18 +109,34 @@ class App : CoreApp() {
         voiceSelectorManager.registerLifeCycle()
     }
 
+    override fun onActivityResumed(activity: Activity) {
+        super.onActivityResumed(activity)
+        Log.d(TAG, "onActivityResumed: $activity")
+        _currentActivity = WeakReference(activity)
+    }
+
+    override fun onActivityStopped(activity: Activity) {
+        super.onActivityStopped(activity)
+        Log.d(TAG, "onActivityStopped: $activity")
+        val current = _currentActivity.get()?.taskId ?: return
+        if (activity.taskId == current) {
+            _currentActivity.clear()
+        }
+    }
+
     private fun addShortcuts() {
         val intent = Intent(this, MainActivity::class.java)
         intent.setPackage("com.kt.apps.media.xemtv")
         intent.action = Intent.ACTION_VIEW
 
-        val shortcutInfo: ShortcutInfoCompat = ShortcutInfoCompat.Builder(this, "com.kt.apps.media.xemtv.2")
-            .setShortLabel(getString(R.string.shortcut_short_label1))
-            .setLongLabel(getString(R.string.shortcut_long_label1))
-            .setAlwaysBadged()
-            .addCapabilityBinding("actions.intent.OPEN_APP_FEATURE")
-            .setIntent(intent)
-            .build()
+        val shortcutInfo: ShortcutInfoCompat =
+            ShortcutInfoCompat.Builder(this, "com.kt.apps.media.xemtv.2")
+                .setShortLabel(getString(R.string.shortcut_short_label1))
+                .setLongLabel(getString(R.string.shortcut_long_label1))
+                .setAlwaysBadged()
+                .addCapabilityBinding("actions.intent.OPEN_APP_FEATURE")
+                .setIntent(intent)
+                .build()
 
 
         ShortcutManagerCompat.pushDynamicShortcut(this, shortcutInfo)

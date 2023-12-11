@@ -7,6 +7,7 @@ plugins {
     id 'com.google.firebase.crashlytics'
 }
 
+
 android {
     namespace 'com.kt.apps.media.xemtv'
     compileSdk extCompileSdkVersion.tv
@@ -137,5 +138,6 @@ dependencies {
     implementation project(":voiceselector")
     implementation otherLibs.values()
     implementation rxJavaDependencies.values()
+    debugImplementation 'com.github.princekin-f:EasyFloat:2.0.4'
 
 }

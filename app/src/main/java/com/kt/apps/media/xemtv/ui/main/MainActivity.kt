@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.SearchManager
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
@@ -21,6 +22,7 @@ import com.kt.apps.core.storage.saveIsVipDb
 import com.kt.apps.media.xemtv.BuildConfig
 import com.kt.apps.media.xemtv.R
 import com.kt.apps.media.xemtv.databinding.ActivityMainBinding
+import com.kt.apps.media.xemtv.services.FloatingRemoteService
 import com.kt.apps.media.xemtv.ui.TVChannelViewModel
 import com.kt.apps.media.xemtv.ui.extensions.ExtensionsViewModel
 import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
@@ -70,6 +72,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             keyValueStorage.saveIsVipDb(true)
         }
         askNotificationPermission()
+
+        if (BuildConfig.DEBUG) {
+            val uiMode = resources.configuration.uiMode
+            if (uiMode and Configuration.UI_MODE_TYPE_MASK != Configuration.UI_MODE_TYPE_TELEVISION)
+                startService(
+                    Intent(this@MainActivity, FloatingRemoteService::class.java)
+                )
+        }
     }
     // Declare the launcher at the top of your Activity/Fragment:
     private val requestPermissionLauncher = registerForActivityResult(
