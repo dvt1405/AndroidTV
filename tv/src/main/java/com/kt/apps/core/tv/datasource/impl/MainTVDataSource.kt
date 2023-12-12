@@ -2,6 +2,7 @@ package com.kt.apps.core.tv.datasource.impl
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.FirebaseDatabase
@@ -12,7 +13,6 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import com.kt.apps.core.BuildConfig
 import com.kt.apps.core.Constants
 import com.kt.apps.core.di.FirebaseModule
 import com.kt.apps.core.logging.Logger
@@ -28,6 +28,7 @@ import com.kt.apps.core.tv.model.TVChannelGroup
 import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
+import com.kt.apps.core.utils.TAG
 import com.kt.apps.core.utils.removeAllSpecialChars
 import com.kt.apps.core.utils.replaceVNCharsToLatinChars
 import com.kt.apps.core.utils.toOrigin
@@ -57,6 +58,8 @@ class MainTVDataSource @Inject constructor(
     private val firebaseDatabase: FirebaseDatabase,
     @Named(FirebaseModule.FIREBASE_VIP)
     private val firebaseDatabaseVip: FirebaseDatabase,
+    @Named(FirebaseModule.FIREBASE_DEBUG)
+    private val firebaseDatabaseDebug: FirebaseDatabase,
     private val firebaseRemoteConfig: FirebaseRemoteConfig,
     private val fireStoreDataBase: FirebaseFirestore,
     private val tvStorage: Provider<TVStorage>,
@@ -132,13 +135,7 @@ class MainTVDataSource @Inject constructor(
         }
         return Observable.create<List<TVChannel>> { emitter ->
             fireStoreDataBase.collection("tv_channels_by_version")
-                .document(
-                    if (BuildConfig.DEBUG) {
-                        "dev"
-                    } else {
-                        "2"
-                    }
-                )
+                .document("2")
                 .get()
                 .addOnSuccessListener {
                     val jsonObject = JSONObject(it.data!!["alls"]!!.toString())
@@ -192,11 +189,7 @@ class MainTVDataSource @Inject constructor(
             val isSuccess = AtomicBoolean(false)
             fireStoreDataBase.collection("tv_channels_by_version")
                 .document(
-                    if (BuildConfig.DEBUG) {
-                        "dev"
-                    } else {
-                        "2"
-                    }
+                    "2"
                 )
                 .get()
                 .addOnSuccessListener {
@@ -345,52 +338,62 @@ class MainTVDataSource @Inject constructor(
             t1 < 3
         }
 
-    private fun getFirebaseSourceVip(): Observable<List<TVChannel>> = Observable.create { emitter ->
-        var dataSnapshot: DataSnapshot? = null
-        val countDownLatch = CountDownLatch(1)
-        val mStartTime = System.currentTimeMillis()
-        Logger.d(this@MainTVDataSource, message = "getFirebaseSourceVip: $mStartTime")
-        firebaseDatabaseVip.reference.child(ALL_CHANNEL_NAME)
-            .ref.get()
-            .addOnSuccessListener {
-                if (emitter.isDisposed) {
-                    return@addOnSuccessListener
+    private fun getFirebaseSourceVip(): Observable<List<TVChannel>> =
+        Observable.create<List<TVChannel>> { emitter ->
+            var dataSnapshot: DataSnapshot? = null
+            val countDownLatch = CountDownLatch(1)
+            val mStartTime = System.currentTimeMillis()
+            Logger.d(this@MainTVDataSource, message = "getFirebaseSourceVip: $mStartTime")
+            firebaseDatabaseVip
+                .reference.child(ALL_CHANNEL_NAME)
+                .ref.get()
+                .addOnSuccessListener {
+                    if (emitter.isDisposed) {
+                        return@addOnSuccessListener
+                    }
+                    dataSnapshot = it
+                    countDownLatch.countDown()
                 }
-                dataSnapshot = it
-                countDownLatch.countDown()
-            }
-            .addOnFailureListener {
-                if (emitter.isDisposed) {
-                    return@addOnFailureListener
+                .addOnFailureListener {
+                    if (emitter.isDisposed) {
+                        return@addOnFailureListener
+                    }
+                    countDownLatch.countDown()
+                    emitter.onError(it)
                 }
-                countDownLatch.countDown()
-                emitter.onError(it)
+            if (!Thread.currentThread().isInterrupted) {
+                try {
+                    countDownLatch.await()
+                } catch (e: Exception) {
+                    Firebase.crashlytics.recordException(e)
+                }
             }
-        if (!Thread.currentThread().isInterrupted) {
-            try {
-                countDownLatch.await()
-            } catch (e: Exception) {
-                Firebase.crashlytics.recordException(e)
+            Logger.d(
+                this@MainTVDataSource,
+                message = "getFirebaseSourceVipSuccess: ${System.currentTimeMillis() - mStartTime}"
+            )
+            if (emitter.isDisposed) {
+                return@create
             }
+            val childValue = dataSnapshot!!.getValue<List<TVChannelFromDB?>>()
+            Log.d(TAG, "getFirebaseSourceVip: ${childValue}")
+            val tvList = childValue!!.filterNotNull()
+                .mapToListChannel()
+                .sortedBy(ITVDataSource.sortTVChannel())
+            saveToRoomDB(tvList)
+            tvStorage.get().saveRefreshInVersion(
+                Constants.EXTRA_KEY_VERSION_NEED_REFRESH,
+                versionNeedRefresh
+            )
+            emitter.onNext(tvList)
+            emitter.onComplete()
         }
-        Logger.d(this@MainTVDataSource, message = "getFirebaseSourceVipSuccess: ${System.currentTimeMillis() - mStartTime}")
-        if (emitter.isDisposed) {
-            return@create
-        }
-        val childValue = dataSnapshot!!.getValue<List<TVChannelFromDB?>>()
-        val tvList = childValue!!.filterNotNull()
-            .mapToListChannel()
-            .sortedBy(ITVDataSource.sortTVChannel())
-        saveToRoomDB(tvList)
-        tvStorage.get().saveRefreshInVersion(
-            Constants.EXTRA_KEY_VERSION_NEED_REFRESH,
-            versionNeedRefresh
-        )
-        emitter.onNext(tvList)
-        emitter.onComplete()
-    }.retry { t1, t2 ->
-        t1 < 3
-    }
+            .doOnError {
+                Log.e(TAG, "getFirebaseSourceVip: Error $it")
+            }
+            .retry { t1, t2 ->
+                t1 < 3
+            }
 
     private fun saveToRoomDB(tvDetails: List<TVChannel>) {
         val tvUrl = mutableListOf<TVChannelDTO.TVChannelUrl>()
@@ -417,7 +420,8 @@ class MainTVDataSource @Inject constructor(
                     channel.channelId,
                     channel.tvChannelName.lowercase()
                         .replaceVNCharsToLatinChars()
-                        .removeAllSpecialChars()
+                        .removeAllSpecialChars(),
+                    isRadio = channel.isRadio
                 )
             )
         }
@@ -603,7 +607,8 @@ class MainTVDataSource @Inject constructor(
     data class TVChannelFromDB @JvmOverloads constructor(
         var group: String = "",
         var id: String = "",
-        var isRadio: Boolean? = false,
+        var isRadio: Boolean = false,
+        var radiochannel: Boolean = false,
         var name: String = "",
         var thumb: String = "",
         var urls: List<Url?> = listOf()
@@ -670,7 +675,8 @@ class MainTVDataSource @Inject constructor(
                 },
                 sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
                 logoChannel = this.tvChannel.logoChannel,
-                channelId = this.tvChannel.channelId
+                channelId = this.tvChannel.channelId,
+                isSourceRadio = this.tvChannel.isRadio
             )
         }
         fun TVChannelFromDB.mapToTVChannel(): TVChannel {
@@ -692,7 +698,7 @@ class MainTVDataSource @Inject constructor(
                 sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
                 logoChannel = this.thumb,
                 channelId = this.id,
-                isSourceRadio = this.isRadio ?: false
+                isSourceRadio = this.radiochannel
             )
         }
     }

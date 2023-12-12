@@ -40,8 +40,12 @@ interface CoreComponents {
     fun roomDatabase(): RoomDataBase
     fun firebaseRemoteConfig(): FirebaseRemoteConfig
     fun firebaseDatabase(): FirebaseDatabase
+
     @Named(FirebaseModule.FIREBASE_VIP)
     fun firebaseDatabaseVip(): FirebaseDatabase
+
+    @Named(FirebaseModule.FIREBASE_DEBUG)
+    fun firebaseDatabaseDebug(): FirebaseDatabase
     fun fireStore(): FirebaseFirestore
     fun firebaseAnalytics(): FirebaseAnalytics
     fun sharedPreferences(): SharedPreferences

@@ -16,7 +16,8 @@ class TVChannelDTO(
     var sourceFrom: String,
     @PrimaryKey
     val channelId: String,
-    val searchKey: String
+    val searchKey: String,
+    val isRadio: Boolean
 ) {
     @Entity(
         primaryKeys = [
@@ -47,6 +48,7 @@ class TVChannelDTO(
                 "\"sourceFrom\": \"$sourceFrom\", " +
                 "\"channelId\": \"$channelId\", " +
                 "\"searchKey\": \"$searchKey\"" +
+                "\"isRadio\": \"$isRadio\""
                 "}"
     }
 }

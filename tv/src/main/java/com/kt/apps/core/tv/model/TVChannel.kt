@@ -91,7 +91,8 @@ data class TVChannel(
         channelId = channelId,
         searchKey = tvChannelName.lowercase()
             .replaceVNCharsToLatinChars()
-            .removeAllSpecialChars()
+            .removeAllSpecialChars(),
+        isRadio = isRadio
     )
 
     val channelIdWithoutSpecialChars: String
@@ -179,7 +180,8 @@ data class TVChannel(
                 },
                 sourceFrom = TVDataSourceFrom.MAIN_SOURCE.name,
                 logoChannel = this.tvChannel.logoChannel,
-                channelId = this.tvChannel.channelId
+                channelId = this.tvChannel.channelId,
+                isSourceRadio = this.tvChannel.isRadio
             )
         }
     }

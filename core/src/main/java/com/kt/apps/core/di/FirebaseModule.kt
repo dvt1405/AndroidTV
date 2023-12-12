@@ -27,6 +27,13 @@ class FirebaseModule {
 
     @Provides
     @CoreScope
+    @Named(FIREBASE_DEBUG)
+    fun providesFirebaseDatabaseDebug(): FirebaseDatabase = FirebaseDatabase.getInstance(
+        "https://xemtv-e551b-dev.asia-southeast1.firebasedatabase.app/"
+    )
+
+    @Provides
+    @CoreScope
     fun providesFirebaseFireStore(): FirebaseFirestore = Firebase.firestore
 
     @Provides
@@ -39,6 +46,7 @@ class FirebaseModule {
 
     companion object {
         const val FIREBASE_VIP = "FirebaseDatabaseVip"
+        const val FIREBASE_DEBUG = "FirebaseDatabaseDebug"
     }
 
 }

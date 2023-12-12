@@ -39,7 +39,7 @@ import com.kt.apps.core.storage.local.dto.*
         TVChannelFts4::class,
         VideoFavoriteDTO::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = true,
     views = [
         ExtensionChannelDatabaseViews::class,
@@ -196,6 +196,15 @@ abstract class RoomDataBase : RoomDatabase() {
             }
         }
 
+        private val MIGRATE_13_14 by lazy {
+            object : Migration(13, 14) {
+                override fun migrate(database: SupportSQLiteDatabase) {
+                    database.execSQL("ALTER TABLE `TVChannelDTO` ADD COLUMN `isRadio` INTEGER NOT NULL DEFAULT 0")
+                }
+
+            }
+        }
+
         @Volatile
         var INSTANCE: RoomDataBase? = null
         fun getInstance(context: Context) = INSTANCE ?: synchronized(this) {
@@ -204,7 +213,7 @@ abstract class RoomDataBase : RoomDatabase() {
                     MIGRATE_1_2, MIGRATE_2_3, MIGRATE_3_4,
                     MIGRATE_4_5, MIGRATE_5_6, MIGRATE_6_7,
                     MIGRATE_7_8, MIGRATE_8_9, MIGRATE_9_10,
-                    MIGRATE_10_11, MIGRATE_11_12, MIGRATE_12_13
+                    MIGRATE_10_11, MIGRATE_11_12, MIGRATE_12_13, MIGRATE_13_14
                 )
                 .addCallback(object : Callback() {
                     override fun onOpen(db: SupportSQLiteDatabase) {
