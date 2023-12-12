@@ -3412,7 +3412,7 @@
       "urls": [
         {
           "type": "streaming",
-          "url": "https://stream.vovmedia.vn/vov1"
+          "url": "http://media.kythuatvov.vn:7001/;stream/"
         }
       ]
     },
@@ -3566,10 +3566,6 @@
       "name": "VOV Mekong",
       "thumb": "icon_channel_vov_mekong.png",
       "urls": [
-        {
-          "type": "streaming",
-          "url": "https://radio.vovgiaothong.vn/vovmekong/chunklist.m3u8"
-        },
         {
           "type": "streaming",
           "url": "https://stream.vovmedia.vn/vovmekong"

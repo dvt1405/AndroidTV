@@ -2748,9 +2748,9 @@
         "thumb": "icon_channel_joyfm.png",
         "urls": [
           {
+            "src": "on_live",
             "type": "web",
-            "url": "https://play.onlive.vn/joyfmmhz",
-            "src": "on_live"
+            "url": "https://play.onlive.vn/joyfmmhz"
           },
           {
             "type": "streaming",
@@ -2883,6 +2883,10 @@
           {
             "type": "streaming",
             "url": "https://stream.vovmedia.vn/vov1"
+          },
+          {
+            "type": "streaming",
+            "url": "http://113.164.229.226:7001/stream"
           }
         ]
       },
@@ -2900,6 +2904,10 @@
           {
             "type": "streaming",
             "url": "https://stream.vovmedia.vn/vov2"
+          },
+          {
+            "type": "streaming",
+            "url": "http://113.164.229.226:7003/stream"
           }
         ]
       },
@@ -3073,6 +3081,10 @@
           {
             "type": "streaming",
             "url": "https://stream.vovmedia.vn/vovgthn"
+          },
+          {
+            "type": "streaming",
+            "url": "https://str.vov.gov.vn/vovlive/vovGTHN.sdp_aac/playlist.m3u8"
           }
         ]
       },
@@ -3090,6 +3102,10 @@
           {
             "type": "streaming",
             "url": "https://stream.vovmedia.vn/vovgthcm"
+          },
+          {
+            "type": "streaming",
+            "url": "https://str.vov.gov.vn/vovlive/vovGTHCM.sdp_aac/playlist.m3u8"
           }
         ]
       }
