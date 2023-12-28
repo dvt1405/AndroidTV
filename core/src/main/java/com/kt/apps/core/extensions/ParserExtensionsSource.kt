@@ -28,6 +28,7 @@ import okhttp3.internal.http.HTTP_TEMP_REDIRECT
 import okhttp3.internal.http.HTTP_USE_PROXY
 import org.json.JSONArray
 import java.io.BufferedReader
+import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import javax.inject.Inject
@@ -267,54 +268,71 @@ class ParserExtensionsSource @Inject constructor(
         isFollowRedirect: Boolean,
         isBackup: Boolean
     ): BufferedReader {
-        val response = client
-            .newBuilder()
-            .callTimeout(600, TimeUnit.SECONDS)
-            .readTimeout(600, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .followRedirects(false)
-            .followSslRedirects(false)
-            .build()
-            .newCall(
-                Request.Builder()
-                    .url(extension.sourceUrl)
-                    .apply {
-                        if (isBackup) {
-                            this.addHeader(
-                                "user-agent", Constants.TV_MATE_USER_AGENT_BUILD
-                                    .replace(
-                                        Constants.TV_MATE_MANUFACTURER_REPLACE,
-                                        Build.MANUFACTURER
-                                    )
-                                    .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
-                                    .replace(
-                                        Constants.TV_MATE_OS_VERSION_REPLACE,
-                                        Build.VERSION.RELEASE
-                                    )
-                            )
-                        } else {
-                            this.addHeader(
-                                "user-agent", Constants.IMEDIA_USER_AGENT_BUILD
-                                    .replace(
-                                        Constants.TV_MATE_MANUFACTURER_REPLACE,
-                                        Build.MANUFACTURER
-                                    )
-                                    .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
-                                    .replace(
-                                        Constants.TV_MATE_OS_VERSION_REPLACE,
-                                        Build.VERSION.RELEASE
-                                    )
-                            )
-                        }
-                    }
-                    .apply {
-                        Uri.parse(extension.sourceUrl).host?.takeIf { it.isNotEmpty() }
-                            ?.let {
-                                this.addHeader("Host", it)
+        val response = try {
+            client
+                .newBuilder()
+                .callTimeout(600, TimeUnit.SECONDS)
+                .readTimeout(600, TimeUnit.SECONDS)
+                .writeTimeout(60, TimeUnit.SECONDS)
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build()
+                .newCall(
+                    Request.Builder()
+                        .url(extension.sourceUrl)
+                        .apply {
+                            if (isBackup) {
+                                this.addHeader(
+                                    "user-agent", Constants.TV_MATE_USER_AGENT_BUILD
+                                        .replace(
+                                            Constants.TV_MATE_MANUFACTURER_REPLACE,
+                                            Build.MANUFACTURER
+                                        )
+                                        .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
+                                        .replace(
+                                            Constants.TV_MATE_OS_VERSION_REPLACE,
+                                            Build.VERSION.RELEASE
+                                        )
+                                )
+                            } else {
+                                this.addHeader(
+                                    "user-agent", Constants.IMEDIA_USER_AGENT_BUILD
+                                        .replace(
+                                            Constants.TV_MATE_MANUFACTURER_REPLACE,
+                                            Build.MANUFACTURER
+                                        )
+                                        .replace(Constants.TV_MATE_MODEL_REPLACE, Build.MODEL)
+                                        .replace(
+                                            Constants.TV_MATE_OS_VERSION_REPLACE,
+                                            Build.VERSION.RELEASE
+                                        )
+                                )
                             }
-                    }
-                    .build()
-            ).execute()
+                        }
+                        .apply {
+                            Uri.parse(extension.sourceUrl).host?.takeIf { it.isNotEmpty() }
+                                ?.let {
+                                    this.addHeader("Host", it)
+                                }
+                        }
+                        .build()
+                ).execute()
+        } catch (e: Exception) {
+            if (e is java.security.cert.CertificateException || e.cause is java.security.cert.CertificateException
+                || e is java.security.cert.CertPathValidatorException || e.cause is java.security.cert.CertPathValidatorException
+            ) {
+                val useHttp = ExtensionsConfig(
+                    sourceUrl = extension.sourceUrl.replace("https", "http"),
+                    sourceName = extension.sourceName,
+                    type = extension.type
+                )
+                return executeHttpCall(useHttp, isFollowRedirect, isBackup)
+            } else if (e is UnknownHostException) {
+                throw ParserIPTVThrowable(true, message = "Http call error ${e.message}")
+            } else {
+                throw ParserIPTVThrowable(true, message = "Http call error ${e.message}")
+            }
+        }
 
         if (response.code in 200..299) {
             val stream = response.body.charStream().buffered()
