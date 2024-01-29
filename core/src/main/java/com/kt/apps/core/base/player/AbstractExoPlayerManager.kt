@@ -200,9 +200,15 @@ abstract class AbstractExoPlayerManager(
                     this.setAllowCrossProtocolRedirects(true)
                     this.setKeepPostFor302Redirects(true)
                 }
-            val defaultHeader = getDefaultHeaders((linkStream.referer.ifEmpty {
-                data.first().referer
-            }).ifEmpty {
+            val referer = headers?.get("referer").takeIf {
+                !it.isNullOrEmpty()
+            } ?: headers?.get("http-referer").takeIf {
+                !it.isNullOrEmpty()
+            } ?: linkStream.referer.takeIf {
+                it.isNotEmpty()
+            } ?: linkStream.m3u8Link.getBaseUrl()
+
+            val defaultHeader = getDefaultHeaders(referer.ifEmpty {
                 data.first().m3u8Link.getBaseUrl()
             }, linkStream)
             headers?.let { prop ->
