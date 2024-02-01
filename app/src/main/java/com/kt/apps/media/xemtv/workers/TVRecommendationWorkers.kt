@@ -9,7 +9,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.tvprovider.media.tv.*
 import androidx.work.ListenableWorker
-import androidx.work.Worker
 import androidx.work.WorkerParameters
 import androidx.work.rxjava3.RxWorker
 import com.kt.apps.core.Constants
@@ -39,6 +38,10 @@ class TVRecommendationWorkers(
         RoomDataBase.getInstance(context)
             .tvChannelRecommendationDao()
     }
+    private val favoriteDAO by lazy {
+        RoomDataBase.getInstance(context)
+            .videoFavoriteDao()
+    }
 
     override fun createWork(): Single<Result> {
         return try {
@@ -47,6 +50,11 @@ class TVRecommendationWorkers(
                     insertOrUpdateWatchNextChannel(
                         params.inputData.getString(EXTRA_TV_PROGRAM_ID)!!
                     )
+                        .toSingleDefault(Result.success())
+                }
+
+                Type.FAVOURITE.value -> {
+                    insertOrUpdateFavouritePreviewProgram()
                         .toSingleDefault(Result.success())
                 }
 
@@ -66,6 +74,74 @@ class TVRecommendationWorkers(
         .appendPath(resources.getResourceTypeName(id))
         .appendPath(resources.getResourceEntryName(id))
         .build()
+
+    @SuppressLint("RestrictedApi")
+    fun insertOrUpdateFavouritePreviewProgram(): Completable {
+        return favoriteDAO.getAll()
+            .flatMapCompletable {
+                val previewChannelId = getPreviewChannelId(
+                    previewChannelId = "tvChannelIMedia",
+                    previewChannelName = TV_PREVIEW_CHANNEL_DISPLAY_NAME,
+                    previewContentUri = Uri.parse("xemtv://tv/favourite")
+                )
+                val existingProgramList = getPreviewPrograms(context, previewChannelId)
+                val programHelper = PreviewChannelHelper(context)
+                existingProgramList.filter {
+                    it.interactionType == TvContractCompat.PreviewProgramColumns.INTERACTION_TYPE_LIKES
+                }.forEach {
+                    programHelper.deletePreviewProgram(it.id)
+                }
+                if (it.isEmpty()) {
+                    return@flatMapCompletable Completable.complete()
+                }
+                it.forEach {
+                    val programBuilder = PreviewProgram.Builder()
+                    val logoUrl = Uri.parse(it.logoUrl)
+                    val updatedProgram = programBuilder.setContentId(it.id)
+                        .setLogoUri(logoUrl)
+                        .setTitle(it.title)
+                        .setType(TvContractCompat.PreviewProgramColumns.TYPE_MOVIE)
+                        .setChannelId(previewChannelId)
+                        .setThumbnailUri(logoUrl)
+                        .setBrowsable(true)
+                        .setInteractionType(TvContractCompat.PreviewProgramColumns.INTERACTION_TYPE_LIKES)
+                        .setDurationMillis(0)
+                        .setPosterArtUri(logoUrl)
+                        .setReleaseDate(Calendar.getInstance(Locale.TAIWAN).time)
+                        .setSearchable(true)
+                        .setPosterArtUri(logoUrl)
+                        .setIntentUri(Uri.parse("xemtv://iptv/channel/${it.id}"))
+                        .build()
+                    programHelper.publishPreviewProgram(updatedProgram)
+                }
+                existingProgramList.filter {
+                    it.interactionType == TvContractCompat.PreviewProgramColumns.INTERACTION_TYPE_VIEWS
+                }.forEach {
+                    programHelper.deletePreviewProgram(it.id)
+                }
+                existingProgramList.filter {
+                    it.interactionType == TvContractCompat.PreviewProgramColumns.INTERACTION_TYPE_VIEWS
+                }.forEach { previewProgram ->
+                    programHelper.publishPreviewProgram(
+                        PreviewProgram.Builder().setContentId(previewProgram.contentId)
+                            .setLogoUri(previewProgram.logoUri)
+                            .setTitle(previewProgram.title)
+                            .setType(TvContractCompat.PreviewProgramColumns.TYPE_MOVIE)
+                            .setChannelId(previewProgram.channelId)
+                            .setThumbnailUri(previewProgram.thumbnailUri)
+                            .setBrowsable(true)
+                            .setInteractionType(TvContractCompat.PreviewProgramColumns.INTERACTION_TYPE_VIEWS)
+                            .setDurationMillis(0)
+                            .setReleaseDate(Calendar.getInstance(Locale.TAIWAN).time)
+                            .setSearchable(true)
+                            .setPosterArtUri(previewProgram.posterArtUri)
+                            .setIntentUri(previewProgram.intentUri)
+                            .build()
+                    )
+                }
+                Completable.complete()
+            }
+    }
 
     @SuppressLint("RestrictedApi")
     fun insertOrUpdateWatchNextChannel(programId: String): Completable {
@@ -189,11 +265,6 @@ class TVRecommendationWorkers(
                     message = resourceUri(App.get().resources, com.kt.apps.core.R.drawable.app_icon_fg).toString()
                 )
                 val id = com.kt.apps.core.R.drawable.app_icon_fg
-                val logoUri = if (id == -1) {
-                    Uri.parse("android.resource://com.kt.apps.media.xemtv/drawable/app_icon_fg")
-                } else {
-                    resourceUri(App.get().resources, com.kt.apps.core.R.drawable.app_icon_fg)
-                }
                 val channelUpdate = channelBuilder.setDisplayName(displayName)
                     .setLogo(Uri.parse("android.resource://com.kt.apps.media.xemtv/drawable/app_icon_fg"))
                     .setDescription("iMedia")
@@ -238,6 +309,7 @@ class TVRecommendationWorkers(
                         .setChannelId(channelProviderId)
                         .setThumbnailUri(tvChannel.logoChannel)
                         .setBrowsable(true)
+                        .setInteractionType(TvContractCompat.PreviewProgramColumns.INTERACTION_TYPE_VIEWS)
                         .setDurationMillis(0)
                         .setPosterArtUri(tvChannel.logoChannel)
                         .setReleaseDate(Calendar.getInstance(Locale.TAIWAN).time)
@@ -271,6 +343,65 @@ class TVRecommendationWorkers(
             .doOnComplete {
                 Logger.d(this@TVRecommendationWorkers, message = "Insert preview channel success")
             }
+    }
+
+    private fun getPreviewChannelId(
+        previewChannelId: String,
+        previewChannelName: String,
+        previewContentUri: Uri = Uri.parse("xemtv://tv/dashboard"),
+    ): Long {
+        val allChannels: List<PreviewChannel> = try {
+            getAllChannels(context)
+        } catch (exc: IllegalArgumentException) {
+            listOf()
+        }
+        if (DEBUG) {
+            allChannels.forEach {
+                Logger.d(this, message = "$it")
+            }
+        }
+
+        val tvChannelProviderId: String = previewChannelId
+
+        val displayName: String = previewChannelName
+
+        val channelUri = previewContentUri
+
+        val existingChannel = allChannels.find { it.internalProviderId == tvChannelProviderId }
+
+        if (DEBUG) {
+            Logger.d(this, message = "existingChannel: $existingChannel")
+        }
+
+        val channelBuilder = if (existingChannel == null) {
+            PreviewChannel.Builder()
+        } else {
+            PreviewChannel.Builder(existingChannel)
+        }
+
+        Logger.e(
+            this@TVRecommendationWorkers,
+            message = resourceUri(App.get().resources, com.kt.apps.core.R.drawable.app_icon_fg).toString()
+        )
+        val channelUpdate = channelBuilder.setDisplayName(displayName)
+            .setLogo(Uri.parse("android.resource://com.kt.apps.media.xemtv/drawable/app_icon_fg"))
+            .setDescription("iMedia")
+            .setInternalProviderId(tvChannelProviderId)
+            .setAppLinkIntentUri(channelUri)
+            .build()
+
+        val channelProviderId = if (existingChannel == null) {
+            PreviewChannelHelper(context)
+                .publishChannel(channelUpdate)
+        } else {
+            PreviewChannelHelper(context)
+                .updatePreviewChannel(
+                    existingChannel.id,
+                    channelUpdate
+                )
+            existingChannel.id
+        }
+        return channelProviderId
     }
 
     private fun mapToEntity(providerId: Long) = { channel: TVChannel ->
@@ -310,7 +441,7 @@ class TVRecommendationWorkers(
     }
 
     enum class Type(val value: Int) {
-        ALL(1), WATCH_NEXT(2)
+        ALL(1), WATCH_NEXT(2), FAVOURITE(3)
     }
 
     companion object {

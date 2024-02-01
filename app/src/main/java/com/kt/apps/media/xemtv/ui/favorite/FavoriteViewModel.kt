@@ -2,6 +2,8 @@ package com.kt.apps.media.xemtv.ui.favorite
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.base.viewmodels.BaseFavoriteViewModel
 import com.kt.apps.core.extensions.ExtensionsChannelAndConfig
@@ -11,13 +13,15 @@ import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.tv.model.TVChannel
 import com.kt.apps.core.tv.usecase.GetChannelLinkStreamById
+import com.kt.apps.media.xemtv.workers.TVRecommendationWorkers
 import io.reactivex.rxjava3.disposables.Disposable
 import javax.inject.Inject
 
 class FavoriteViewModel @Inject constructor(
     private val _repository: IFavoriteRepository,
     private val roomDataBase: RoomDataBase,
-    private val getChannelLinkStreamById: GetChannelLinkStreamById
+    private val getChannelLinkStreamById: GetChannelLinkStreamById,
+    private val workManager: androidx.work.WorkManager
 ) : BaseFavoriteViewModel(_repository) {
 
     fun saveTVChannel(tvChannel: TVChannel) {
@@ -38,6 +42,7 @@ class FavoriteViewModel @Inject constructor(
                 )
             ).subscribe({
                 _saveIptvChannelLiveData.postValue(DataState.Success(tvChannel))
+                onShowFavouriteToMain()
                 Logger.d(this@FavoriteViewModel, "Save", "$tvChannel")
             }, {
                 _saveIptvChannelLiveData.postValue(DataState.Error(it))
@@ -100,6 +105,20 @@ class FavoriteViewModel @Inject constructor(
                 _deleteIptvChannelLiveData.postValue(DataState.Error(it))
                 Logger.e(this@FavoriteViewModel, "DeleteError", it)
             })
+        )
+    }
+
+    override fun onShowFavouriteToMain() {
+        super.onShowFavouriteToMain()
+        workManager.enqueue(
+            OneTimeWorkRequestBuilder<TVRecommendationWorkers>()
+                .addTag(TVRecommendationWorkers::class.java.name)
+                .setInputData(
+                    Data.Builder()
+                        .putInt(TVRecommendationWorkers.EXTRA_TYPE, TVRecommendationWorkers.Type.FAVOURITE.value)
+                        .build()
+                )
+                .build()
         )
     }
 

@@ -40,7 +40,7 @@ class FavoriteRepositoryImpl @Inject constructor(
             category = iptv.tvGroup,
             logoUrl = iptv.logoChannel,
             type = VideoFavoriteDTO.Type.IPTV,
-            sourceFrom = iptv.sourceFrom
+            sourceFrom = iptv.extensionSourceId
         )
         return favoriteDao.save(itemToInsert)
             .subscribeOn(Schedulers.io())

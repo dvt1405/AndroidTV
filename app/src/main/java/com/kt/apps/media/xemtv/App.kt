@@ -1,6 +1,7 @@
 package com.kt.apps.media.xemtv
 
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.os.bundleOf
@@ -8,6 +9,7 @@ import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.WorkQuery
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.autoupdate.di.DaggerAppUpdateComponent
@@ -25,6 +27,7 @@ import com.kt.apps.media.xemtv.di.AppComponents
 import com.kt.apps.media.xemtv.di.DaggerAppComponents
 import com.kt.apps.media.xemtv.di.module.TVVoiceSelectorModule
 import com.kt.apps.media.xemtv.ui.main.MainActivity
+import com.kt.apps.media.xemtv.workers.TVRecommendationWorkers
 import com.kt.apps.voiceselector.VoiceSelectorManager
 import com.kt.apps.voiceselector.di.DaggerVoiceSelectorComponent
 import com.kt.apps.voiceselector.di.VoiceSelectorComponent

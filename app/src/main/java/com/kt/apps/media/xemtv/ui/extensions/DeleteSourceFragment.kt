@@ -14,6 +14,7 @@ import com.kt.apps.core.extensions.ParserExtensionsSource
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.utils.showSuccessDialog
+import com.kt.apps.media.xemtv.ui.favorite.FavoriteViewModel
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
 import dagger.android.HasAndroidInjector
@@ -42,6 +43,10 @@ class DeleteSourceFragment(
 
     private val extensionsViewModel by lazy {
         ViewModelProvider(this, viewModelFactory)[ExtensionsViewModel::class.java]
+    }
+
+    private val videoFavouriteViewModel by lazy {
+        ViewModelProvider(this, viewModelFactory)[FavoriteViewModel::class.java]
     }
 
     override fun onAttach(context: Context) {
@@ -83,6 +88,7 @@ class DeleteSourceFragment(
                             requireActivity().showSuccessDialog(content = "Xoá nguồn kênh thành công", onSuccessListener = {
                                 onDeleteSuccess()
                             })
+                            videoFavouriteViewModel.onShowFavouriteToMain()
                             requireActivity().supportFragmentManager
                                 .beginTransaction()
                                 .remove(this)

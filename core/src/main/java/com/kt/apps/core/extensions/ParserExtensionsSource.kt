@@ -245,7 +245,7 @@ class ParserExtensionsSource @Inject constructor(
             if (time > 1) {
                 isBackup = true
             }
-            return@retry time < 3 && canRetry
+            return@retry time < 3 && canRetry && !Thread.currentThread().isInterrupted
         }.doOnComplete {
             Logger.d(this@ParserExtensionsSource, "ParseStreaming", "Complete ${extension.sourceUrl}")
             storage.saveLastRefreshExtensions(extension)
@@ -259,15 +259,20 @@ class ParserExtensionsSource @Inject constructor(
             Logger.d(this@ParserExtensionsSource, "ParseStreaming", "Dispose ${extension.sourceUrl}")
             pendingObservableSourceStatus[extension.sourceUrl] = Status.DISPOSED
             pendingObservableSourceStatus.remove(extension.sourceUrl)
-        }.subscribeOn(Schedulers.io())
-        return parserSource
+        }
+        return parserSource.subscribeOn(Schedulers.io())
     }
 
+    @Throws(Exception::class)
     private fun executeHttpCall(
         extension: ExtensionsConfig,
         isFollowRedirect: Boolean,
         isBackup: Boolean
     ): BufferedReader {
+        val canRetry = !Thread.currentThread().isAlive || Thread.currentThread().isInterrupted
+        if (!Thread.currentThread().isAlive || Thread.currentThread().isInterrupted) {
+            throw ParserIPTVThrowable(false, "Thread interrupted!")
+        }
         val response = try {
             client
                 .newBuilder()
@@ -328,9 +333,11 @@ class ParserExtensionsSource @Inject constructor(
                 )
                 return executeHttpCall(useHttp, isFollowRedirect, isBackup)
             } else if (e is UnknownHostException) {
-                throw ParserIPTVThrowable(true, message = "Http call error ${e.message}")
+                throw ParserIPTVThrowable(canRetry, message = "Http call error ${e.message}")
             } else {
-                throw ParserIPTVThrowable(true, message = "Http call error ${e.message}")
+                throw ParserIPTVThrowable(
+                    canRetry, message = "Http call error $e"
+                )
             }
         }
 
