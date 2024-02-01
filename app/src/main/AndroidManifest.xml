@@ -8,7 +8,9 @@
 
     <uses-permission android:name="${applicationId}.MEDIA" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
@@ -146,6 +148,7 @@
                 <data android:host="bongda" />
                 <data android:host="tv" />
                 <data android:host="radio" />
+                <data android:host="iptv" />
 
                 <data android:pathPrefix="/match" />
                 <data android:pathPrefix="/channel" />

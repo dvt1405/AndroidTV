@@ -17,6 +17,8 @@ import com.kt.apps.core.base.BaseActivity
 import com.kt.apps.core.base.BasePlaybackFragment
 import com.kt.apps.core.base.DataState
 import com.kt.apps.core.logging.Logger
+import com.kt.apps.core.storage.local.RoomDataBase
+import com.kt.apps.core.storage.local.dto.VideoFavoriteDTO
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.football.model.FootballMatchWithStreamLink
 import com.kt.apps.media.xemtv.R
@@ -28,6 +30,7 @@ import com.kt.apps.media.xemtv.ui.football.FootballPlaybackFragment
 import com.kt.apps.media.xemtv.ui.football.FootballViewModel
 import com.kt.apps.media.xemtv.ui.main.MainActivity
 import dagger.android.HasAndroidInjector
+import io.reactivex.rxjava3.disposables.CompositeDisposable
 import kotlinx.parcelize.Parcelize
 import javax.inject.Inject
 
@@ -35,6 +38,9 @@ import javax.inject.Inject
 class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInjector {
     override val layoutRes: Int
         get() = R.layout.activity_playback
+
+    @Inject
+    lateinit var roomDatabase: RoomDataBase
 
     override fun initView(savedInstanceState: Bundle?) {
     }
@@ -72,7 +78,7 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
     override fun initAction(savedInstanceState: Bundle?) {
         Logger.d(this@PlaybackActivity, "InstanceState", "$savedInstanceState")
         Logger.d(this@PlaybackActivity, "initAction", "${intent.extras} - ${intent.data}")
-        when (intent.getParcelableExtra<Type>(EXTRA_PLAYBACK_TYPE)) {
+        when (intent.getParcelableExtra<Type?>(EXTRA_PLAYBACK_TYPE)) {
             Type.FOOTBALL -> {
                 footballViewModel.getAllMatches()
                 supportFragmentManager.beginTransaction()
@@ -172,6 +178,59 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
                 intent?.data = null
             }
 
+            deepLink.host.equals(Constants.HOST_IPTV) -> {
+                val id = deepLink.lastPathSegment
+                Logger.d(this,"GetFavourite", "ID: $id")
+                val disposable = CompositeDisposable()
+                disposable.add(
+                    roomDatabase.videoFavoriteDao()
+                        .getById(id!!, VideoFavoriteDTO.Type.IPTV.name)
+                        .subscribeOn(io.reactivex.rxjava3.schedulers.Schedulers.io())
+                        .observeOn(io.reactivex.rxjava3.android.schedulers.AndroidSchedulers.mainThread())
+                        .subscribe({
+                            Logger.d(this@PlaybackActivity,"GetFavourite", "$it")
+                            favoriteViewModel.selectedItem.observe(this) {
+                                Logger.d(this@PlaybackActivity,"GetFavourite", "Item: $it")
+                                if (it is DataState.None) {
+                                    return@observe
+                                }
+                                if (it is DataState.Success) {
+                                    startPlaybackExtensionsChannel(
+                                        Intent().apply {
+                                            putExtra(
+                                                EXTRA_PLAYBACK_TYPE,
+                                                Type.EXTENSION as Parcelable
+                                            )
+                                            putExtra(
+                                                EXTRA_ITEM_TO_PLAY,
+                                                it.data.channel as Parcelable
+                                            )
+                                            putExtra(
+                                                EXTRA_EXTENSIONS_ID,
+                                                it.data.config as Parcelable
+                                            )
+                                        }
+                                    )
+                                    favoriteViewModel.clearLastSelectedStreamingTask()
+                                    favoriteViewModel.selectedItem.removeObservers(this)
+                                } else if (it is DataState.Error) {
+                                    showErrorDialog(
+                                        content = it.throwable.message,
+                                        autoDismiss = false
+                                    )
+                                }
+                            }
+                            favoriteViewModel.getResultForItem(it)
+                        }, {
+                            Logger.e(this@PlaybackActivity,"GetFavourite", it)
+                            showErrorDialog(
+                                content = it.message,
+                                autoDismiss = false
+                            )
+                        })
+                )
+            }
+
             else -> {
                 startActivity(Intent(this, MainActivity::class.java)
                     .apply {
@@ -199,7 +258,7 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
         Logger.d(this, message = "OnNewIntent: ${intent?.getParcelableExtra<Type>(EXTRA_PLAYBACK_TYPE)}")
         Logger.d(
             this, message = "OnNewIntent: ${
-                intent?.extras?.getParcelable<FootballMatchWithStreamLink>(
+                intent?.extras?.getParcelable<FootballMatchWithStreamLink?>(
                     EXTRA_FOOTBALL_MATCH
                 )
             }"
@@ -208,7 +267,7 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
         intent?.data?.let {
             playContentByDeepLink(it, null)
         }
-        when (intent?.getParcelableExtra<Type>(EXTRA_PLAYBACK_TYPE)) {
+        when (intent?.getParcelableExtra<Type?>(EXTRA_PLAYBACK_TYPE)) {
             Type.FOOTBALL -> {
                 Logger.d(this, message = "Football")
                 footballViewModel.getAllMatches()

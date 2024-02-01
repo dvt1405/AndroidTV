@@ -125,57 +125,6 @@ class MainTVDataSource @Inject constructor(
         return onlineSource
     }
 
-    private fun getFireStoreSource(): Observable<List<TVChannel>> {
-        if (isVipDb) {
-            return getFirebaseSourceVip()
-        }
-        return Observable.create<List<TVChannel>> { emitter ->
-            fireStoreDataBase.collection("tv_channels_by_version")
-                .document("2")
-                .get()
-                .addOnSuccessListener {
-                    val jsonObject = JSONObject(it.data!!["alls"]!!.toString())
-                    val totalList = mutableListOf<TVChannel>()
-                    supportGroups.forEach {
-                        val listJsonArr = jsonObject.optJSONArray(it.name)
-                        if (listJsonArr != null && listJsonArr.length() > 0) {
-                            val list = Gson().fromJson<List<TVChannelFromDB?>>(
-                                listJsonArr.toString(),
-                                TypeToken.getParameterized(List::class.java, TVChannelFromDB::class.java).type
-                            ).filterNotNull()
-                            if (list.isNotEmpty()) {
-                                totalList.addAll(
-                                    list.mapToListChannel()
-                                        .sortedBy(ITVDataSource.sortTVChannel())
-                                        .filter {
-                                            if (!allowInternational) {
-                                                it.tvGroup != TVChannelGroup.Intenational.name &&
-                                                        (it.tvGroup != TVChannelGroup.Kid.name)
-                                            } else {
-                                                true
-                                            }
-                                        }
-                                )
-                            }
-                        }
-                    }
-                    saveToRoomDB(totalList)
-                    if (emitter.isDisposed) {
-                        return@addOnSuccessListener
-                    }
-                    fireStoreDataBase.clearPersistence()
-                    emitter.onNext(totalList)
-                    emitter.onComplete()
-                }
-                .addOnFailureListener {
-                    if (!emitter.isDisposed) {
-                        emitter.onError(it)
-                    }
-                }
-        }.retry { t1, t2 ->
-            t1 < 3
-        }
-    }
     private fun newGetFireStoreSource() = if (isVipDb) {
         getFirebaseSourceVip()
     } else {

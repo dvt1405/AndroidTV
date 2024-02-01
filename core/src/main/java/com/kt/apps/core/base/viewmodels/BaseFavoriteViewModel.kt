@@ -53,6 +53,7 @@ open class BaseFavoriteViewModel @Inject constructor(
         saveTask = repository.saveIptv(iptvChannel)
             .subscribe({
                 _saveIptvChannelLiveData.postValue(DataState.Success(iptvChannel))
+                onShowFavouriteToMain()
                 Logger.d(this@BaseFavoriteViewModel, tag = "SaveFavoriteSuccess", message = "$iptvChannel")
             }, {
                 _saveIptvChannelLiveData.postValue(DataState.Error(it))
@@ -60,6 +61,10 @@ open class BaseFavoriteViewModel @Inject constructor(
                 Logger.e(this@BaseFavoriteViewModel, tag = "SaveFavoriteError", exception = it)
             })
         add(saveTask!!)
+    }
+
+    open fun onShowFavouriteToMain() {
+
     }
 
     fun saveFavorite(tvChannelDTO: TVChannelDTO) {
@@ -90,6 +95,7 @@ open class BaseFavoriteViewModel @Inject constructor(
             .subscribe({
                 _deleteIptvChannelLiveData.postValue(DataState.Success(iptvChannel))
                 getListFavorite()
+                onShowFavouriteToMain()
                 Logger.d(this@BaseFavoriteViewModel, tag = "DeleteFavorite", message = "$iptvChannel")
             }, {
                 _deleteIptvChannelLiveData.postValue(DataState.Error(it))

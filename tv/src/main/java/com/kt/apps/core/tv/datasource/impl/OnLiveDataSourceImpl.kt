@@ -71,11 +71,12 @@ class OnLiveDataSourceImpl @Inject constructor(
         val body = document.parse()
         body.select("script").forEach {
             if (it.html().contains("LivePlayer")) {
-                val szLang = regexExtract(it.html(), "var szLang\\s*=\\s*'([^']*)'")
-                val szLocalCode = regexExtract(it.html(), "var szLocalCode\\s*=\\s*'([^']*)'")
-                val szBjId = regexExtract(it.html(), "var szBjId\\s*=\\s*'([^']*)'")
-                val szBjNick = regexExtract(it.html(), "var szBjNick\\s*=\\s*'([^']*)'")
-                val nBroadNo = regexExtract(it.html(), "var nBroadNo\\s*=\\s*(\\d+);")
+                val html = it.html()
+                val szLang = regexExtract(html, "var szLang\\s*=\\s*'([^']*)'")
+                val szLocalCode = regexExtract(html, "var szLocalCode\\s*=\\s*'([^']*)'")
+                val szBjId = regexExtract(html, "var szBjId\\s*=\\s*'([^']*)'")
+                val szBjNick = regexExtract(html, "var szBjNick\\s*=\\s*'([^']*)'")
+                val nBroadNo = regexExtract(html, "var nBroadNo\\s*=\\s*(\\d+);")
                 println("szLang=$szLang, szLocalCode=$szLocalCode, szBjId=$szBjId, szBjNick=$szBjNick, nBroadNo=$nBroadNo")
                 return LivePlayer(szLang, szLocalCode, szBjId, szBjNick, nBroadNo)
             }

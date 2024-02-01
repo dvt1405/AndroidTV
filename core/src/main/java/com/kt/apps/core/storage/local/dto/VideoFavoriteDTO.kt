@@ -19,6 +19,10 @@ class VideoFavoriteDTO(
         TV, RADIO, IPTV
     }
 
+    override fun toString(): String {
+        return "VideoFavoriteDTO(id='$id', url='$url', title='$title', category='$category', logoUrl='$logoUrl', sourceFrom='$sourceFrom', type=$type)"
+    }
+
     companion object {
         fun fromIPTVChannel(iptvChannel: ExtensionsChannel) = VideoFavoriteDTO(
             id = iptvChannel.channelId,
