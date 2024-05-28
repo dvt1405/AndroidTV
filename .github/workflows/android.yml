@@ -82,6 +82,7 @@ jobs:
         cd ./gh-pages
         git config user.name "GitHub Actions"
         git config user.email "dvt1405@github.com"
+        rm *.apk
         git add .
         git commit -m "Commit before rebase"
         git pull --rebase
