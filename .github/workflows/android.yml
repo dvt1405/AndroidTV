@@ -21,12 +21,6 @@ jobs:
       with:
         java-version: '18'
         distribution: 'temurin'
-    
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
-      with:
-        api-level: 33
-        build-tools-version: '33.0.2'
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
@@ -74,7 +68,9 @@ jobs:
 
     - name: Copy APK file to other GitHub Pages repository
       run: |
-        rm ./gh-pages/*.apk
+        cd ./gh-pages
+        rm *.apk
+        cd ~
         cp ${{steps.apk.outputs.apk_file}} ./gh-pages/${{steps.apk.outputs.apk_file_name}}.apk
         cp ${{steps.apk.outputs.apk_file_mobile}} ./gh-pages/${{steps.apk.outputs.apk_file_mobile_name}}.apk
     
