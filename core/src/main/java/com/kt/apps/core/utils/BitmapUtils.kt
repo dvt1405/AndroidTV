@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.HardwareRenderer
-import android.graphics.PixelFormat
 import android.graphics.RenderEffect
 import android.graphics.RenderNode
 import android.graphics.Shader
@@ -185,80 +184,89 @@ fun ImageView.loadImgByUrl(url: String, scaleType: ScaleType = ScaleType.CENTER_
             ): Boolean {
                 this@loadImgByUrl.setImageBitmap(resource)
 
-                val bitmap = Blur.of(context, resource, BlurFactor().apply {
-                    this.width =
-                        ((resource?.width
-                            ?: 50) / 2 * context.resources.displayMetrics.scaledDensity).toInt()
-                    this.height =
-                        ((resource?.height
-                            ?: 120) / 2 * context.resources.displayMetrics.scaledDensity).toInt()
-                    this.radius = 10
-                    this.sampling = 1
-                })
-                MAIN_HANDLER.post {
-                    this@loadImgByUrl.background = BitmapDrawable(context.resources, bitmap)
-                }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     this@loadImgByUrl.setImageBitmap(resource)
-                    BITMAP_THREAD_POOL.execute {
-                        val imgReader = ImageReader.newInstance(
-                            resource?.width ?: 50,
-                            resource?.height ?: 120,
-                            PixelFormat.RGBA_8888,
-                            1,
-                            HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE or HardwareBuffer.USAGE_GPU_COLOR_OUTPUT
-                        )
-                        val renderNode = RenderNode("BlurEffect")
-                        val hardwareRenderer = HardwareRenderer()
-                        hardwareRenderer.setSurface(imgReader.surface)
-                        hardwareRenderer.setContentRoot(renderNode)
-                        renderNode.setPosition(0, 0, imgReader.width * 4, imgReader.height * 4)
-                        val blurEffect = RenderEffect.createBlurEffect(
-                            50f, 50f,
-                            Shader.TileMode.MIRROR
-                        )
-                        renderNode.setRenderEffect(blurEffect)
-                        val renderCanvas = renderNode.beginRecording()
-                        val backgroundBitmap = resource!!.copy(Bitmap.Config.ARGB_8888, true)
-                        renderCanvas.drawBitmap(
-                            backgroundBitmap,
-                            0f,
-                            0f,
-                            null
-                        )
-                        renderNode.endRecording()
-                        hardwareRenderer.createRenderRequest()
-                            .setWaitForPresent(true)
-                            .syncAndDraw()
-                        val image =
-                            imgReader.acquireNextImage() ?: throw RuntimeException("No Image")
-                        val hardwareBuffer =
-                            image.hardwareBuffer ?: throw RuntimeException("No HardwareBuffer")
-                        val bitmap = Bitmap.wrapHardwareBuffer(hardwareBuffer, null)
-                            ?: throw RuntimeException("Create Bitmap Failed")
-                        MAIN_HANDLER.post {
-                            this@loadImgByUrl.background = BitmapDrawable(context.resources, bitmap)
+                    try {
+                        BITMAP_THREAD_POOL.execute {
+                            val imgReader = ImageReader.newInstance(
+                                resource?.width ?: 50,
+                                resource?.height ?: 120,
+                                1,
+                                1,
+                                HardwareBuffer.USAGE_GPU_SAMPLED_IMAGE or HardwareBuffer.USAGE_GPU_COLOR_OUTPUT
+                            )
+                            val renderNode = RenderNode("BlurEffect")
+                            val hardwareRenderer = HardwareRenderer()
+                            hardwareRenderer.setSurface(imgReader.surface)
+                            hardwareRenderer.setContentRoot(renderNode)
+                            renderNode.setPosition(0, 0, imgReader.width * 4, imgReader.height * 4)
+                            val blurEffect = RenderEffect.createBlurEffect(
+                                50f, 50f,
+                                Shader.TileMode.MIRROR
+                            )
+                            renderNode.setRenderEffect(blurEffect)
+                            val renderCanvas = renderNode.beginRecording()
+                            val backgroundBitmap = resource!!.copy(Bitmap.Config.ARGB_8888, true)
+                            renderCanvas.drawBitmap(
+                                backgroundBitmap,
+                                0f,
+                                0f,
+                                null
+                            )
+                            renderNode.endRecording()
+                            hardwareRenderer.createRenderRequest()
+                                .setWaitForPresent(true)
+                                .syncAndDraw()
+                            val image =
+                                imgReader.acquireNextImage() ?: throw RuntimeException("No Image")
+                            val hardwareBuffer =
+                                image.hardwareBuffer ?: throw RuntimeException("No HardwareBuffer")
+                            val bitmap = Bitmap.wrapHardwareBuffer(hardwareBuffer, null)
+                                ?: throw RuntimeException("Create Bitmap Failed")
+                            MAIN_HANDLER.post {
+                                this@loadImgByUrl.background = BitmapDrawable(context.resources, bitmap)
+                            }
+                            hardwareBuffer.close()
+                            image.close()
+                            imgReader.close()
+                            renderNode.discardDisplayList()
+                            hardwareRenderer.destroy()
                         }
-                        hardwareBuffer.close()
-                        image.close()
-                        imgReader.close()
-                        renderNode.discardDisplayList()
-                        hardwareRenderer.destroy()
+
+                    } catch (e: Exception) {
+                        blurBackgroundBelowAndroidS(resource)
                     }
                 } else {
-                    BITMAP_THREAD_POOL.execute {
-                        val newBitmap = ImageBlurUtils.blur(
+                    blurBackgroundBelowAndroidS(resource)
+                }
+                return true
+            }
+
+            private fun blurBackgroundBelowAndroidS(resource: Bitmap?) {
+                BITMAP_THREAD_POOL.execute {
+                    val newBitmap = try {
+                        ImageBlurUtils.blur(
                             context,
                             resource!!,
                             Color.WHITE,
                             25f
                         )
-                        MAIN_HANDLER.post {
-                            this@loadImgByUrl.background = BitmapDrawable(context.resources, newBitmap)
-                        }
+                    } catch (e: Exception) {
+                        Blur.of(context, resource, BlurFactor().apply {
+                            this.width =
+                                ((resource?.width
+                                    ?: 50) / 2 * context.resources.displayMetrics.scaledDensity).toInt()
+                            this.height =
+                                ((resource?.height
+                                    ?: 120) / 2 * context.resources.displayMetrics.scaledDensity).toInt()
+                            this.radius = 10
+                            this.sampling = 1
+                        })
+                    }
+                    MAIN_HANDLER.post {
+                        this@loadImgByUrl.background = BitmapDrawable(context.resources, newBitmap)
                     }
                 }
-                return true
             }
 
 
