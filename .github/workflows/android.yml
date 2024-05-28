@@ -69,7 +69,7 @@ jobs:
     - name: Copy APK file to other GitHub Pages repository
       run: |
         cd ./gh-pages
-        rm *.apk
+        find . -type f -name "*.apk" -exec rm -f {} \;
         cd ~
         cp ${{steps.apk.outputs.apk_file}} ./gh-pages/${{steps.apk.outputs.apk_file_name}}.apk
         cp ${{steps.apk.outputs.apk_file_mobile}} ./gh-pages/${{steps.apk.outputs.apk_file_mobile_name}}.apk
