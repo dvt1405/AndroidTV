@@ -1,7 +1,6 @@
 package com.kt.apps.core.service
 
 import android.content.SharedPreferences
-import androidx.core.os.bundleOf
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -9,7 +8,6 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.kt.apps.core.Constants
 import com.kt.apps.core.base.CoreApp
 import com.kt.apps.core.extensions.ParserExtensionsProgramSchedule
-import com.kt.apps.core.logging.IActionLogger
 import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.IKeyValueStorage
 import com.kt.apps.core.storage.getDefaultEpgUrl
@@ -27,9 +25,6 @@ class CloudMessagingService : FirebaseMessagingService(), HasAndroidInjector {
 
     @Inject
     lateinit var sharedPreferences: SharedPreferences
-
-    @Inject
-    lateinit var actionLogger: IActionLogger
 
     @Inject
     lateinit var roomDataBase: RoomDataBase
@@ -57,7 +52,6 @@ class CloudMessagingService : FirebaseMessagingService(), HasAndroidInjector {
                     "data: ${message.data}" +
                     "}"
         )
-        actionLogger.log("FCMMsgReceive", bundleOf("fcmData" to "${message.data}"))
 
         message.data.forEach {
             when (it.key) {
