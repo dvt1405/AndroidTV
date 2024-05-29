@@ -24,12 +24,12 @@ ext {
             tv    : 21
     ]
     buildVersionNameNumberInMonth = [
-            mobile: 3,
-            tv    : 3
+            mobile: 1,
+            tv    : 1
     ]
     buildVersionNumberInDay = [
-            mobile: 2,
-            tv    : 1
+            mobile: 3,
+            tv    : 2
     ]
     extVersionCode = [
             mobile: getVersionCode(buildVersionNumberInDay['mobile']),
