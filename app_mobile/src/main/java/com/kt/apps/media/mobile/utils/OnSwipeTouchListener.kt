@@ -7,7 +7,6 @@ import android.view.MotionEvent
 import android.view.View
 import com.kt.apps.core.utils.TAG
 import kotlin.math.abs
-import kotlin.math.log
 
 open class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
 
@@ -38,7 +37,13 @@ open class OnSwipeTouchListener(ctx: Context) : View.OnTouchListener {
         }
 
 
-        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        override fun onFling(
+            e1: MotionEvent?,
+            e2: MotionEvent,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            e1 ?: return super.onFling(e1, e2, velocityX, velocityY)
             Log.d(TAG, "onFling: $e1 $e2")
             var result = false
             try {
