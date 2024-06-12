@@ -77,11 +77,12 @@ class PortraitLayoutHandler(private val weakActivity: WeakReference<ComplexActiv
             }
 
             override fun onFling(
-                e1: MotionEvent,
+                e1: MotionEvent?,
                 e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean {
+                e1 ?: return super.onFling(e1, e2, velocityX, velocityY)
                 val diffY = e2.y - e1.y
                 if (abs(diffY) > swipeThreshold && abs(velocityY) > velocitySwipeThreshold) {
                     if (diffY > 0) {
