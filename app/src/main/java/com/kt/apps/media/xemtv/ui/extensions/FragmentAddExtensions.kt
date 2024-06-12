@@ -26,7 +26,6 @@ import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.utils.showErrorDialog
 import com.kt.apps.core.utils.showSuccessDialog
 import com.kt.apps.media.xemtv.R
-import kotlinx.coroutines.flow.combine
 import javax.inject.Inject
 
 
@@ -204,8 +203,8 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
         extensionsViewModel.addExtensionConfigLiveData.removeObservers(viewLifecycleOwner)
         extensionsViewModel.addExtensionConfigLiveData.observe(viewLifecycleOwner,
             object : Observer<DataState<ExtensionsConfig>> {
-                override fun onChanged(t: DataState<ExtensionsConfig>?) {
-                    when (t) {
+                override fun onChanged(value: DataState<ExtensionsConfig>) {
+                    when (value) {
                         is DataState.Success -> {
                             progressManager.hide()
                             showSuccessDialog(
@@ -231,11 +230,11 @@ class FragmentAddExtensions : BaseRowSupportFragment() {
                             if (context?.isNetworkAvailable() == true) {
                                 showErrorDialog(
                                     titleText = "Lỗi thêm nguồn video",
-                                    content = t.throwable.message)
+                                    content = value.throwable.message)
                             } else {
                                 showErrorDialog(content = "Vui lòng kiểm tra kết nối internet và thử lại!")
                             }
-                            Logger.e(this@FragmentAddExtensions, exception = t.throwable)
+                            Logger.e(this@FragmentAddExtensions, exception = value.throwable)
                         }
 
                         else -> {

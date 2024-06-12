@@ -19,7 +19,6 @@ android {
         versionName extVersionName.tv
         setProperty("archivesBaseName", "iMedia.$versionName")
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles "consumer-rules.pro"
         kapt {
             arguments {
                 arg("room.schemaLocation", "$projectDir/schemas")
