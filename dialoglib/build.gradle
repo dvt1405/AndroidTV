@@ -5,10 +5,10 @@ group ='cn.pedant.sweetalert'
 android {
     namespace 'cn.pedant.Sweetalert'
 
-    compileSdk 33
+    compileSdk 34
     defaultConfig {
         minSdk 21
-        targetSdk 33
+        targetSdk 34
     }
     lint {
         abortOnError false

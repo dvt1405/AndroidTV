@@ -16,8 +16,8 @@ static def getVersionName(def buildNumber, def prefixVersionName = "") {
 
 ext {
     extCompileSdkVersion = [
-            mobile: 33,
-            tv    : 33
+            mobile: 34,
+            tv    : 34
     ]
     extMinSdkVersion = [
             mobile: 21,
@@ -39,7 +39,7 @@ ext {
             mobile: getVersionName(buildVersionNameNumberInMonth['mobile'], "Mobile."),
             tv    : getVersionName(buildVersionNameNumberInMonth['tv'])
     ]
-    roomDatabaseVersion = '2.5.2'
+    roomDatabaseVersion = '2.6.1'
     firebaseBomVersion = '32.2.2'
     appDependencies = [
             coreKt            : 'androidx.core:core-ktx:1.10.1',
@@ -84,13 +84,13 @@ ext {
     ]
 
     daggerDependencies = [
-            daggerAndroid       : "com.google.dagger:dagger-android:2.44",
-            daggerAndroidSupport: "com.google.dagger:dagger-android-support:2.44",
+            daggerAndroid       : "com.google.dagger:dagger-android:2.51.1",
+            daggerAndroidSupport: "com.google.dagger:dagger-android-support:2.51.1",
     ]
 
     complier = [
-            kapDaggerCompiler        : "com.google.dagger:dagger-compiler:2.44",
-            kapDaggerAndroidProcessor: "com.google.dagger:dagger-android-processor:2.44",
+            kapDaggerCompiler        : "com.google.dagger:dagger-compiler:2.51.1",
+            kapDaggerAndroidProcessor: "com.google.dagger:dagger-android-processor:2.51.1",
             glide                    : "com.github.bumptech.glide:compiler:4.14.2",
             roomCompiler             : "androidx.room:room-compiler:$roomDatabaseVersion",
             roomArch                 : "android.arch.persistence.room:compiler:1.1.1"
