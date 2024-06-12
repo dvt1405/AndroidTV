@@ -154,7 +154,7 @@ class IMediaSessionService : MediaBrowserServiceCompat() {
                         this,
                         2,
                         sessionIntent,
-                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                        PendingIntent.FLAG_IMMUTABLE
                     )
                 } else {
                     PendingIntent.getActivity(this, 2, sessionIntent, 0)
