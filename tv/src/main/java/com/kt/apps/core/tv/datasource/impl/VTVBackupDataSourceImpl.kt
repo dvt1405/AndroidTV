@@ -1,9 +1,19 @@
 package com.kt.apps.core.tv.datasource.impl
 
+import android.content.Context
+import android.os.Handler
+import android.os.Looper
+import android.webkit.CookieManager
+import android.webkit.JavascriptInterface
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.google.gson.Gson
 import com.kt.apps.core.Constants
+import com.kt.apps.core.logging.Logger
 import com.kt.apps.core.storage.local.RoomDataBase
 import com.kt.apps.core.storage.local.dto.MapChannel
 import com.kt.apps.core.tv.datasource.ITVDataSource
@@ -14,8 +24,6 @@ import com.kt.apps.core.tv.model.TVChannelLinkStream
 import com.kt.apps.core.tv.model.TVDataSourceFrom
 import com.kt.apps.core.tv.storage.TVStorage
 import com.kt.apps.core.utils.getBaseUrl
-import com.kt.apps.core.utils.removeAllSpecialChars
-import com.kt.apps.core.utils.toOrigin
 import com.kt.apps.core.utils.trustEveryone
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
@@ -28,10 +36,12 @@ import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.Jsoup
 import java.io.IOException
+import java.util.concurrent.CountDownLatch
 import java.util.regex.Pattern
 import javax.inject.Inject
 
 class VTVBackupDataSourceImpl @Inject constructor(
+    private val context: Context,
     private val dataBase: RoomDataBase,
     private val sharePreference: TVStorage,
     private val client: OkHttpClient
@@ -41,7 +51,7 @@ class VTVBackupDataSourceImpl @Inject constructor(
 
     private val config: ChannelSourceConfig by lazy {
         ChannelSourceConfig(
-            baseUrl = "https://vtvgo.vn",
+            baseUrl = "https://vtvgo.vn/",
             mainPagePath = "trang-chu.html",
             getLinkStreamPath = "ajax-get-stream"
         )
@@ -141,26 +151,10 @@ class VTVBackupDataSourceImpl @Inject constructor(
     }
 
     override fun getTvLinkFromDetail(tvChannel: TVChannel, isBackup: Boolean): Observable<TVChannelLinkStream> {
-        val cache = sharePreference.getTvByGroup(TVDataSourceFrom.VTV_BACKUP.name)
         trustEveryone()
-        return if (_cookie.isEmpty() || cache.isEmpty()) {
-            getTvList()
-                .flatMap { list ->
-                    createM3u8ObservableSource(list, tvChannel)
-                }
-        } else {
-            createM3u8ObservableSource(cache, tvChannel)
-        }
-
-    }
-
-    private fun createM3u8ObservableSource(
-        cache: List<TVChannel>,
-        kenhTvDetail: TVChannel
-    ) = Observable.create { emitter ->
-        val channel = mapFromChannelDetail(cache, kenhTvDetail)
-        try {
-            getLinkStream(channel, {
+        Logger.d(this@VTVBackupDataSourceImpl, message = "getTvLinkFromDetail: $tvChannel")
+        return Observable.create { emitter ->
+            getLinkStream(tvChannel, {
                 if (emitter.isDisposed) {
                     return@getLinkStream
                 }
@@ -172,31 +166,16 @@ class VTVBackupDataSourceImpl @Inject constructor(
                 }
                 emitter.onError(it)
             }
-        } catch (e: Exception) {
-            if (emitter.isDisposed) {
-                return@create
-            }
-            Firebase.crashlytics.recordException(e)
-            emitter.onError(e)
         }
     }
 
-    private fun mapFromChannelDetail(
-        cache: List<TVChannel>,
-        tvDetail: TVChannel
-    ) = try {
-        cache.first { item ->
-            item.channelId.equals(tvDetail.channelId, ignoreCase = true)
-        }
-    } catch (e: Exception) {
-        val name = tvDetail.tvChannelName.removeAllSpecialChars()
-            .lowercase()
-            .trim()
-            .removeSuffix("hd")
-            .trim()
-            .lowercase()
-        cache.first {
-            it.tvChannelName.lowercase().contains(name)
+    internal class GetHtml() {
+        var html: String? = null
+        var onComplete: () -> Unit = {}
+        @JavascriptInterface
+        fun getHtmPage(html: String) {
+            this.html = html
+            onComplete()
         }
     }
 
@@ -205,14 +184,44 @@ class VTVBackupDataSourceImpl @Inject constructor(
         onSuccess: (data: TVChannelLinkStream) -> Unit,
         onError: (t: Throwable) -> Unit
     ) {
-        val document = Jsoup.connect(channelTvDetail.tvChannelWebDetailPage)
-            .cookies(_cookie)
-            .header("referer", channelTvDetail.tvChannelWebDetailPage)
-            .header("origin", channelTvDetail.tvChannelWebDetailPage.toOrigin())
-            .execute()
-        _cookie.putAll(document.cookies())
+        val countDownLatch = CountDownLatch(1)
+        val htmlCheck = GetHtml()
+        Handler(Looper.getMainLooper()).post {
+            val view = WebView(context)
+            htmlCheck.onComplete = {
+                countDownLatch.countDown()
+                mMainHandler.post {
+                    view.onPause()
+                    view.destroy()
+                }
+            }
+            view.addJavascriptInterface(htmlCheck, "HtmlCheck")
+            view.settings.javaScriptEnabled = true
+            view.settings.userAgentString = Constants.USER_AGENT
+            view.webChromeClient = object : WebChromeClient() {
+                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                    super.onProgressChanged(view, newProgress)
+                }
+            }
+            view.webViewClient = object : WebViewClient() {
 
-        val body = document.parse().body()
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    return true
+                }
+
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    Logger.d(this@VTVBackupDataSourceImpl, message = "onPageFinished: $url")
+                    view?.loadUrl("javascript:window.HtmlCheck.getHtmPage('<html>'+document.getElementsByTagName('html')[0].innerHTML+'</html>');")
+                }
+            }
+            view.loadUrl(channelTvDetail.tvChannelWebDetailPage)
+        }
+        countDownLatch.await()
+        val body = Jsoup.parse(htmlCheck.html)
         val script = body.getElementsByTag("script")
         for (it in script) {
             val html = it.html().trim()
@@ -252,11 +261,12 @@ class VTVBackupDataSourceImpl @Inject constructor(
             .add("time", time)
             .add("token", token)
             .build()
-        val url = "${config.baseUrl}/${config.getLinkStreamPath}"
+        val url = "${config.baseUrl}${config.getLinkStreamPath}"
         val request = Request.Builder()
             .url(url)
             .post(bodyRequest)
-            .header("cookie", buildCookie())
+            .header("cookie", CookieManager.getInstance()
+                .getCookie(config.baseUrl))
             .header("X-Requested-With", "XMLHttpRequest")
             .header("Accept-Language", "en-US,en;q=0.5")
             .header("sec-fetch-site", "same-origin")
@@ -310,46 +320,6 @@ class VTVBackupDataSourceImpl @Inject constructor(
         return cookieBuilder.toString().trim().removeSuffix(";")
     }
 
-    private fun getRealChunks(
-        streamUrl: List<String>,
-        onSuccess: (realChunks: List<String>) -> Unit,
-        onError: (t: Throwable) -> Unit
-    ) {
-        val m3u8Url = streamUrl.first()
-        client.newCall(
-            Request.Builder()
-                .url(m3u8Url)
-                .addHeader("Origin", config.baseUrl.removeSuffix("/"))
-                .addHeader("Referer", config.baseUrl.toHttpUrl().toString())
-                .addHeader("Cookie", buildCookie())
-                .addHeader("User-Agent", Constants.USER_AGENT)
-                .addHeader("Host", m3u8Url.toHttpUrl().host)
-                .build()
-        ).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                onError(e)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                val res: List<String>? = response.body?.string()?.let {
-                    val realChunks = it.split("\n").filter {
-                        it.trim().isNotEmpty() && !it.trim().startsWith("#")
-                    }
-                    val index = m3u8Url.indexOf(".m3u8")
-                    val subUrl = m3u8Url.substring(0, index + 5)
-                    val lastIndex = subUrl.lastIndexOf("/")
-                    val host = subUrl.substring(0, lastIndex)
-                    realChunks.map {
-                        "$host/$it"
-                    }
-                }
-
-                res?.let { onSuccess(it) } ?: onSuccess(listOf(m3u8Url))
-            }
-
-        })
-    }
-
     private fun getVarFromHtml(name: String, text: String): String? {
         val regex = "(?<=var\\s$name\\s=\\s\').*?(?=\')"
         val pattern = Pattern.compile(regex)
@@ -377,6 +347,10 @@ class VTVBackupDataSourceImpl @Inject constructor(
             if (v == null) return false
         }
         return true
+    }
+
+    companion object {
+        private val mMainHandler = Handler(Looper.getMainLooper())
     }
 
 }

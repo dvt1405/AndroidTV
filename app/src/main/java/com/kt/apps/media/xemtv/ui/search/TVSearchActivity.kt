@@ -96,7 +96,7 @@ class TVSearchActivity : BaseActivity<ActivityTvSearchBinding>() {
     }
 
     @SuppressLint("MissingSuperCall")
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         commitSearchFragment(intent)
     }

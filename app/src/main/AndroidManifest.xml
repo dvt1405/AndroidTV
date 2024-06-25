@@ -24,59 +24,59 @@
         android:name="android.software.leanback"
         android:required="true" />
 
+    <queries>
+        <package android:name="com.google.android.googlequicksearchbox" />
+    </queries>
+
     <application
         android:name=".App"
         android:allowBackup="true"
         android:banner="@drawable/banner"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:largeHeap="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.XemTv"
         android:usesCleartextTraffic="true"
         tools:targetApi="tiramisu">
 
-        <meta-data android:name="android.app.default_searchable"
+
+        <meta-data
+            android:name="android.app.default_searchable"
             android:value=".ui.search.TVSearchActivity" />
 
         <activity
-            android:theme="@style/Theme.XemTv.Overlay"
             android:name=".ui.DialogActivity"
-            android:exported="false" />
-
+            android:exported="false"
+            android:theme="@style/Theme.XemTv.Overlay" />
         <activity
             android:name=".ui.search.TVSearchActivity"
-            android:launchMode="singleTop"
+            android:exported="true"
             android:label="@string/app_name_search"
-            android:theme="@style/Theme.XemTv.Overlay"
-            android:exported="true">
-
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.XemTv.Overlay">
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
 
                 <category android:name="android.intent.category.DEFAULT" />
-
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="xemtv"/>
-                <data android:host="iptv"/>
-                <data android:pathPrefix="/search"/>
-
+                <data android:scheme="xemtv" />
+                <data android:host="iptv" />
+                <data android:pathPrefix="/search" />
             </intent-filter>
 
             <meta-data
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
-
         <activity
             android:name=".ui.main.MainActivity"
             android:banner="@drawable/banner"
@@ -103,26 +103,26 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="xemtv"/>
-
-                <data android:host="tv"/>
-                <data android:host="bongda"/>
-                <data android:host="radio"/>
-
-                <data android:pathPrefix="/dashboard"/>
+                <data android:scheme="xemtv" />
+                <data android:host="tv" />
+                <data android:host="bongda" />
+                <data android:host="radio" />
+                <data android:pathPrefix="/dashboard" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.media.action.MEDIA_PLAY_FROM_SEARCH" />
             </intent-filter>
-            <meta-data android:name="android.app.default_searchable"
-                android:value=".ui.search.TVSearchActivity" />
 
-            <meta-data android:name="android.app.shortcuts"
+            <meta-data
+                android:name="android.app.default_searchable"
+                android:value=".ui.search.TVSearchActivity" />
+            <meta-data
+                android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
+
             <intent-filter>
                 <action android:name="android.intent.action.SEARCH" />
             </intent-filter>
-
         </activity>
         <activity
             android:name=".ui.details.DetailsActivity"
@@ -142,14 +142,12 @@
                 <data android:scheme="xemtv" />
                 <data android:scheme="https" />
                 <data android:scheme="xembongda" />
-
                 <data android:host="xemtivihd.net" />
                 <data android:host="xemtivihd.net/xemtv" />
                 <data android:host="bongda" />
                 <data android:host="tv" />
                 <data android:host="radio" />
                 <data android:host="iptv" />
-
                 <data android:pathPrefix="/match" />
                 <data android:pathPrefix="/channel" />
             </intent-filter>
@@ -181,10 +179,7 @@
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="${applicationId}.androidx-startup"
-            tools:node="remove">
-        </provider>
+            tools:node="remove"></provider>
     </application>
-    <queries>
-        <package android:name="com.google.android.googlequicksearchbox" />
-    </queries>
+
 </manifest>

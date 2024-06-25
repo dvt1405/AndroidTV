@@ -1,5 +1,6 @@
 package com.kt.apps.core.tv.datasource.impl
 
+import android.util.Log
 import androidx.core.os.bundleOf
 import com.google.android.gms.tasks.Task
 import com.google.firebase.database.DataSnapshot
@@ -31,6 +32,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import org.jsoup.Jsoup
+import java.util.Calendar
+import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 
@@ -186,6 +189,12 @@ class VDataSourceImpl @Inject constructor(
             if (emitter.isDisposed) {
                 return@create
             }
+            val timeStamp = Calendar.getInstance().time
+            val timeStampExp = Calendar.getInstance().apply {
+                this.timeInMillis += 48 * 24 * 60 * 60 * 1000L
+            }.time
+            val randomId: String = UUID.randomUUID().toString()
+            val jti: String = UUID.randomUUID().toString().replace("-", "")
             body.getElementById("__NEXT_DATA__")?.let {
                 val text = it.html()
                 val jsonObject = JSONObject(text)
@@ -198,11 +207,23 @@ class VDataSourceImpl @Inject constructor(
                     }
                 val listStreamLink = try {
                     getTVLinkStream(
-                        token = token ?: buildJWT(),
+                        token = buildJWT(
+                            timeStamp = timeStamp,
+                            timeStampExp = timeStampExp,
+                            randomId = randomId,
+                            jti = jti,
+                        ),
                         tvChannel = tvChannel,
-                        slug = tvChannel.tvChannelWebDetailPage.removePrefix("https://vieon.vn")
+                        slug = tvChannel.tvChannelWebDetailPage.removePrefix("https://vieon.vn"),
+                        profileToken = buildProfileToken(
+                            timeStamp = timeStamp,
+                            timeStampExp = timeStampExp,
+                            randomId = randomId,
+                            jti = jti
+                        )
                     )
                 } catch (e: Exception) {
+                    Logger.e(this@VDataSourceImpl, exception = e)
                     if (!emitter.isDisposed) {
                         emitter.onError(e)
                     }
@@ -211,18 +232,23 @@ class VDataSourceImpl @Inject constructor(
                 if (emitter.isDisposed) {
                     return@create
                 }
-                emitter.onNext(
-                    TVChannelLinkStream(
-                        tvChannel,
-                        listStreamLink.map {
-                            TVChannel.Url.fromUrl(
-                                url = it,
-                                referer = tvChannel.tvChannelWebDetailPage,
-                                origin = tvChannel.tvChannelWebDetailPage.getBaseUrl()
-                            )
-                        }
+                if (listStreamLink.isEmpty()) {
+                    Log.d("TAG", "Empty Data")
+                    emitter.onError(Throwable("Empty Data"))
+                } else {
+                    emitter.onNext(
+                        TVChannelLinkStream(
+                            tvChannel,
+                            listStreamLink.map {
+                                TVChannel.Url.fromUrl(
+                                    url = it,
+                                    referer = tvChannel.tvChannelWebDetailPage,
+                                    origin = tvChannel.tvChannelWebDetailPage.getBaseUrl()
+                                )
+                            }
+                        )
                     )
-                )
+                }
             }
             if (emitter.isDisposed) {
                 return@create
@@ -264,7 +290,8 @@ class VDataSourceImpl @Inject constructor(
     private fun getTVLinkStream(
         token: String,
         tvChannel: TVChannel,
-        slug: String
+        slug: String,
+        profileToken: String
     ): MutableList<String> {
         val baseUrl = apiUrl
         val request = Request.Builder()
@@ -279,6 +306,7 @@ class VDataSourceImpl @Inject constructor(
             .header("Content-Type", "application/json;charset=UTF-8")
             .header("Origin", "https://vieon.vn")
             .header("Referer", tvChannel.tvChannelWebDetailPage)
+            .header("Profile-Token", profileToken)
             .header(
                 "User-Agent",
                 "Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Mobile Safari/537.36"
@@ -351,46 +379,102 @@ class VDataSourceImpl @Inject constructor(
     /// time_stamp = System.currentTimeMillis() / 1000
     private val jwtDefault by lazy {
         "{\n" +
+                "  \"iss\": \"VO\",\n" +
+                "  \"sub\": \"$RANDOM_ID\",\n" +
                 "  \"exp\": {time_stamp_exp},\n" +
-                "  \"jti\": \"$JTI\",\n" +
-                "  \"aud\": \"\",\n" +
                 "  \"iat\": {time_stamp},\n" +
-                "  \"iss\": \"VieOn\",\n" +
-                "  \"nbf\": {time_stamp},\n" +
-                "  \"sub\": \"anonymous_$RANDOM_ID-$RANDOM_ID_2-{time_stamp}\",\n" +
+                "  \"jti\": \"$JTI\",\n" +
                 "  \"scope\": \"$DEFAULT_SCOPE\",\n" +
-                "  \"di\": \"$RANDOM_ID-$RANDOM_ID_2-{time_stamp}\",\n" +
+                "  \"di\": \"$RANDOM_ID_2\",\n" +
                 "  \"ua\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36\",\n" +
                 "  \"dt\": \"web\",\n" +
-                "  \"mth\": \"anonymous_login\",\n" +
-                "  \"md\": \"\",\n" +
+                "  \"mth\": \"mobile\",\n" +
                 "  \"ispre\": 0,\n" +
-                "  \"version\": \"\"\n" +
+                "  \"md\": \"Mac OS 10.15.7\",\n" +
+                "  \"version\": \"1626171878\",\n" +
+                "  \"isg\": 0,\n" +
+                "  \"adid\": \"\",\n" +
+                "  \"aud\": \"VO\"\n" +
                 "}"
     }
 
-    fun buildJWT(
-        timeStamp: Long = System.currentTimeMillis() / 1000,
-        timeStampExp: Long = System.currentTimeMillis() / 1000 + 48 * HOUR,
+    private val profile by lazy {
+        "{" +
+                "\"exp\":{time_stamp_exp}," +
+                "\"jti\": \"$JTI\"," +
+                "\"iss\": \"vieon.vn\"," +
+                "\"sub\": \"$RANDOM_ID\"," +
+                "\"uid\": \"$RANDOM_ID\"," +
+                "\"isKid\": 0\n" +
+                "}"
+    }
+
+    private fun buildJWT(
+        timeStamp: Date = Calendar.getInstance().time,
+        timeStampExp: Date = Calendar.getInstance().apply {
+            this.timeInMillis += 48 * 60 * 60 * 1000L
+        }.time,
         randomId: String = UUID.randomUUID().toString(),
         randomId2: String = UUID.randomUUID().toString(),
         jti: String = UUID.randomUUID().toString(),
         scope: String = DEFAULT_SCOPE
     ): String {
-        val jwtStr = jwtDefault
+        val key = Jwts.SIG.HS256.key().build()
+        val jws = Jwts.builder()
+            .issuer("VO")
+            .subject(randomId)
+            .expiration(timeStampExp)
+            .issuedAt(timeStamp)
+            .id(jti.replace("-", ""))
+            .claim("scope", scope)
+            .claim("di", randomId2.replace("-", ""))
+            .claim("ua", Constants.USER_AGENT)
+            .claim("dt", "web")
+            .claim("mth", "mobile")
+            .claim("md", "Mac OS 10.15.7")
+            .claim("ispre", 0)
+            .claim("version", "1626171878")
+            .claim("isg", 0)
+            .claim("adid", "")
+            .setAudience("VO")
+            .header()
+            .add("typ", "JWT")
+            .and()
+            .signWith(key)
+            .compact()
+        return jws
+    }
+
+    private fun buildProfileToken(
+        timeStamp: Date = Calendar.getInstance().time,
+        timeStampExp: Date = Calendar.getInstance().apply {
+            this.timeInMillis += 48 * 24 * 60 * 60 * 1000L
+        }.time,
+        randomId: String = UUID.randomUUID().toString(),
+        jti: String = UUID.randomUUID().toString(),
+    ): String {
+        val profile = profile
             .replace("{time_stamp}", timeStamp.toString())
             .replace("{time_stamp_exp}", timeStampExp.toString())
             .replace(RANDOM_ID, randomId)
-            .replace(RANDOM_ID_2, randomId2)
             .replace(JTI, jti)
-            .replace(DEFAULT_SCOPE, scope)
             .also {
-                Logger.d(this@VDataSourceImpl, message = "jwtStr: $it")
+                Logger.d(this@VDataSourceImpl, message = "profileStr: $it")
             }
-
         val key = Jwts.SIG.HS256.key().build()
-        val jws = Jwts.builder().subject(jwtStr).signWith(key).compact()
-        return jws
+        val profileToken = Jwts.builder()
+            .expiration(timeStampExp)
+            .id(jti)
+            .issuer("vieon.vn")
+            .subject(randomId)
+            .claim("uid", jti)
+            .claim("isKid", 0)
+            .header()
+            .add("typ", "JWT")
+            .and()
+            .signWith(key)
+            .compact()
+        return profileToken
     }
 
     companion object {
