@@ -253,7 +253,7 @@ class PlaybackActivity : BaseActivity<ActivityPlaybackBinding>(), HasAndroidInje
         ViewModelProvider(this, factory)[FavoriteViewModel::class.java]
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         Logger.d(this, message = "OnNewIntent: ${intent?.getParcelableExtra<Type>(EXTRA_PLAYBACK_TYPE)}")
         Logger.d(

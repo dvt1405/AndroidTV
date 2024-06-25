@@ -151,9 +151,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }?.invalidateNavDrawerSelectedPosition()
     }
 
-    override fun onNewIntent(intent: Intent?) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        intent?.data?.let { uri ->
+        intent.data?.let { uri ->
             supportFragmentManager.findFragmentById(R.id.main_browse_fragment)
                 ?.takeIf {
                     it is DashboardFragment

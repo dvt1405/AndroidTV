@@ -112,5 +112,7 @@ dependencies {
     implementation otherLibs.values()
     implementation media.values()
     implementation rxJavaDependencies.values()
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.2'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.2'
 //    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
 }

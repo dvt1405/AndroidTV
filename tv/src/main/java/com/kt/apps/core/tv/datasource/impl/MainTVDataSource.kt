@@ -1,6 +1,7 @@
 package com.kt.apps.core.tv.datasource.impl
 
 import android.content.Context
+import android.util.Log
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -273,23 +274,17 @@ class MainTVDataSource @Inject constructor(
                 Observable.just(webUrl.first())
                     .flatMap {
                         getStreamUrlByWebUrlAndSrc(it, tvChannel, false)
-                    }.switchIfEmpty {
-                        it.onError(Throwable("EmptyData"))
-                    }.retry(1)
-                    .onErrorResumeNext {
-                        val newWebUrl = tvChannel.urls.toMutableList()
-                        newWebUrl.remove(webUrl.first())
-
-                        getTvLinkFromDetail(
-                            tvChannel.copy(
-                                urls = newWebUrl
-                            ), true
-                        )
                     }
+                    .switchIfEmpty { observer ->
+                        observer.onError(Throwable("EmptyData"))
+                    }.retry(1)
             } else {
                 if (webUrl.size > 1) {
                     if (streamingUrl.isNotEmpty()) {
                         webUrl.addAll(streamingUrl)
+                    }
+                    webUrl.forEach {
+                        Logger.d(this@MainTVDataSource, message = "$it")
                     }
 
                     Observable.fromIterable(webUrl).flatMap {
@@ -344,7 +339,8 @@ class MainTVDataSource @Inject constructor(
             tvChannelWebDetailPage = url.url,
             referer = url.url
         )
-        Logger.d(this@MainTVDataSource, message = "getStreamUrlByWebUrlAndSrc: $backupChannel")
+        Logger.d(this@MainTVDataSource, message = "getStreamUrlByWebUrlAndSrc: $url")
+        Logger.d(this@MainTVDataSource, message = "getStreamUrlByWebUrlAndSrc: $tvChannel")
         return when (url.dataSource) {
             TVChannelURLSrc.VTV.value -> {
                 vtvDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
@@ -381,14 +377,35 @@ class MainTVDataSource @Inject constructor(
             else -> {
                 vDataSourceImpl.getTvLinkFromDetail(backupChannel, isBackup)
             }
+        }.switchIfEmpty { observer ->
+            Logger.d(this@MainTVDataSource, message = "Empty Data")
+            observer.onError(Throwable("Empty Data"))
         }.onErrorResumeNext {
-            Observable.just(
-                TVChannelLinkStream(
-                    tvChannel,
-                    emptyList()
-                )
-            )
+            val nextUrl = findNextUrl(url, tvChannel)
+            if (nextUrl != null) {
+                Logger.d(this@MainTVDataSource, message = "NexUrl: $nextUrl")
+                getStreamUrlByWebUrlAndSrc(nextUrl, tvChannel, false)
+            } else {
+                Observable.error(it)
+            }
         }
+    }
+
+    private fun findNextUrl(url: TVChannel.Url, tvChannel: TVChannel): TVChannel.Url? {
+        val currentIndex = tvChannel.urls.map {
+            it.url
+        }.indexOf(url.url)
+
+        if (currentIndex == tvChannel.urls.size - 1) {
+            return null
+        }
+
+        for (i in currentIndex + 1 until tvChannel.urls.size) {
+            if (tvChannel.urls[i].type == TVChannelUrlType.WEB_PAGE.value) {
+                return tvChannel.urls[i]
+            }
+        }
+        return null
     }
 
     data class TVChannelFromDB @JvmOverloads constructor(
